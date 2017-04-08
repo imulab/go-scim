@@ -16,8 +16,8 @@ type predicate interface {
 type predicateFunc func(Complex) bool
 
 type predicateImpl struct {
-	filter 		FilterNode
-	attrSource	AttributeSource
+	filter     FilterNode
+	attrSource AttributeSource
 }
 
 func (impl *predicateImpl) evaluate(c Complex) bool {
@@ -123,7 +123,8 @@ func (impl *predicateImpl) prFunc(filter FilterNode) predicateFunc {
 			return false
 		}
 
-		lVal := reflect.ValueOf(<-c.Get(filter.Left().Data().(Path)))
+		key := filter.Left().Data().(Path)
+		lVal := reflect.ValueOf(<-c.Get(key, impl.attrSource))
 		if !lVal.IsValid() {
 			return false
 		}
@@ -176,7 +177,7 @@ func (impl *predicateImpl) stringOp(lhs, rhs FilterNode, c Complex, op func(a, b
 		return false
 	}
 
-	lVal := reflect.ValueOf(<-c.Get(key))
+	lVal := reflect.ValueOf(<-c.Get(key, impl.attrSource))
 	if !lVal.IsValid() {
 		return false
 	} else if lVal.Kind() == reflect.Interface {
@@ -212,7 +213,7 @@ func (impl *predicateImpl) compare(lhs, rhs FilterNode, c Complex) comparison {
 		return invalid
 	}
 
-	lVal := reflect.ValueOf(<-c.Get(key))
+	lVal := reflect.ValueOf(<-c.Get(key, impl.attrSource))
 	if !lVal.IsValid() {
 		return invalid
 	} else if lVal.Kind() == reflect.Interface {
@@ -301,9 +302,10 @@ func (impl *predicateImpl) kindOf(v reflect.Value, kinds ...reflect.Kind) bool {
 }
 
 type comparison int
+
 const (
 	invalid = comparison(-2)
-	less	= comparison(-1)
-	equal	= comparison(0)
+	less    = comparison(-1)
+	equal   = comparison(0)
 	greater = comparison(1)
 )

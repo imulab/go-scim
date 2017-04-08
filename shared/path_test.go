@@ -2,6 +2,7 @@ package shared
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -278,5 +279,47 @@ func TestNewFilter(t *testing.T) {
 		},
 	} {
 		test.assertion(NewFilter(test.text))
+	}
+}
+
+func TestPath_SeparateAtLast(t *testing.T) {
+	for _, test := range []struct {
+		pathText  string
+		assertion func(a, b Path)
+	}{
+		{
+			// single path
+			"foo",
+			func(a, b Path) {
+				assert.Nil(t, a)
+				assert.Equal(t, "foo", b.Base())
+				assert.Nil(t, b.Next())
+			},
+		},
+		{
+			// duplex path
+			"name.familyName",
+			func(a, b Path) {
+				assert.Equal(t, "name", a.Base())
+				assert.Nil(t, a.Next())
+				assert.Equal(t, "familyName", b.Base())
+				assert.Nil(t, b.Next())
+			},
+		},
+		{
+			// duplex path with filter
+			"emails[type eq \"work\"].value",
+			func(a, b Path) {
+				assert.Equal(t, "emails", a.Base())
+				assert.NotNil(t, a.FilterRoot())
+				assert.Nil(t, a.Next())
+				assert.Equal(t, "value", b.Base())
+				assert.Nil(t, b.Next())
+			},
+		},
+	} {
+		p, err := NewPath(test.pathText)
+		require.Nil(t, err)
+		test.assertion(p.SeparateAtLast())
 	}
 }

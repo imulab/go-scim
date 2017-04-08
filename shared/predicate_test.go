@@ -1,9 +1,9 @@
 package shared
 
 import (
-	"testing"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestEvaluatePredicate(t *testing.T) {
@@ -11,10 +11,10 @@ func TestEvaluatePredicate(t *testing.T) {
 	require.NotNil(t, sch)
 	require.Nil(t, err)
 
-	for _, test := range []struct{
-		filterText 	string
-		data 		Complex
-		expect 		bool
+	for _, test := range []struct {
+		filterText string
+		data       Complex
+		expect     bool
 	}{
 		{
 			"userName eq \"david\"",
@@ -56,7 +56,7 @@ func TestEvaluatePredicate(t *testing.T) {
 			Complex{"meta": map[string]interface{}{"created": "2017-01-01"}},
 			true,
 		},
-	}{
+	} {
 		filter, err := NewFilter(test.filterText)
 		require.Nil(t, err)
 		require.NotNil(t, filter)

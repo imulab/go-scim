@@ -1,9 +1,9 @@
 package shared
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestParseSchema(t *testing.T) {
@@ -18,9 +18,9 @@ func TestSchema_GetAttribute(t *testing.T) {
 	require.NotNil(t, sch)
 	require.Nil(t, err)
 
-	for _, test := range []struct{
-		pathText 	string
-		assertion 	func(attr *Attribute)
+	for _, test := range []struct {
+		pathText  string
+		assertion func(attr *Attribute)
 	}{
 		{
 			"schemas",
@@ -71,7 +71,7 @@ func TestSchema_GetAttribute(t *testing.T) {
 				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User:groups.value", attr.Assist.FullPath)
 			},
 		},
-	}{
+	} {
 		p, err := NewPath(test.pathText)
 		require.Nil(t, err)
 		test.assertion(sch.GetAttribute(p, true))

@@ -1,12 +1,12 @@
 package shared
 
 import (
-	"strings"
-	"fmt"
-	"path/filepath"
-	"os"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 func ParseSchema(filePath string) (*Schema, string, error) {
@@ -40,11 +40,11 @@ type AttributeSource interface {
 }
 
 type Schema struct {
-	Schemas     []string              `json:"schemas"`
-	Id          string                `json:"id"`
-	Name        string                `json:"name"`
-	Description string                `json:"description"`
-	Attributes  []*Attribute          `json:"attributes"`
+	Schemas     []string     `json:"schemas"`
+	Id          string       `json:"id"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Attributes  []*Attribute `json:"attributes"`
 }
 
 func (s *Schema) ToAttribute() *Attribute {

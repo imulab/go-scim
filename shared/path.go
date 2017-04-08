@@ -12,10 +12,12 @@ import (
 // i.e. 'emails' in 'emails.value'
 // i.e. 'groups[type Eq "direct"]' in 'groups[type Eq "direct"].value'
 type Path interface {
-	Next() Path             // next Path, nil means this is the last one
-	Value() string          // text value, unprocessed
-	Base() string           // base Path value, i.e. 'groups' in 'groups[type Eq "direct"]'
-	FilterRoot() FilterNode // root of the filter tree, i.e. 'Eq' in 'type Eq "direct"'
+	Next() Path                   // next Path, nil means this is the last one
+	Value() string                // text value, unprocessed
+	Base() string                 // base Path value, i.e. 'groups' in 'groups[type Eq "direct"]'
+	FilterRoot() FilterNode       // root of the filter tree, i.e. 'Eq' in 'type Eq "direct"'
+	SeparateAtLast() (Path, Path) // break up the path chain at the last node
+	CollectValue() string         // all path value downstream, separated by period.
 }
 
 // interface to represent a node in the filter tree
@@ -469,6 +471,29 @@ func (p *path) Next() Path             { return p.next }
 func (p *path) Value() string          { return p.text }
 func (p *path) Base() string           { return p.base }
 func (p *path) FilterRoot() FilterNode { return p.filterRoot }
+func (p *path) SeparateAtLast() (Path, Path) {
+	if p.Next() == nil {
+		return nil, p
+	}
+
+	var c Path = p
+	for c.Next().Next() != nil {
+		c = c.Next()
+	}
+
+	var last = c.Next()
+	c.(*path).next = nil
+	return p, last
+}
+func (p *path) CollectValue() string {
+	v := make([]string, 0)
+	var c Path = p
+	for c.Next() != nil {
+		v = append(v, c.Value())
+		c = c.Next()
+	}
+	return strings.Join(v, ".")
+}
 
 // implementation of FilterNode
 type filterNode struct {
