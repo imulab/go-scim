@@ -83,5 +83,5 @@ type NoAttributeError struct {
 }
 
 func (e *NoAttributeError) Error() string {
-	return fmt.Sprintf("No attribute defined for path (segment) '%s", e.Path)
+	return fmt.Sprintf("No attribute defined for path (segment) '%s'", e.Path)
 }

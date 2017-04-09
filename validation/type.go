@@ -3,6 +3,7 @@ package validation
 import (
 	. "github.com/davidiamyou/go-scim/shared"
 	"reflect"
+	"sync"
 )
 
 func ValidateType(subj *Resource, sch *Schema) (err error) {
@@ -17,12 +18,25 @@ func ValidateType(subj *Resource, sch *Schema) (err error) {
 		}
 	}()
 
-	validateTypeWithReflection(reflect.ValueOf(subj.Complex), sch.ToAttribute())
+	typeValidatorInstance.validateTypeWithReflection(reflect.ValueOf(subj.Complex), sch.ToAttribute())
 	err = nil
 	return
 }
 
-func validateTypeWithReflection(v reflect.Value, attr *Attribute) {
+var (
+	singleTypeValidator	sync.Once
+	typeValidatorInstance 	*typeValidator
+)
+
+func init() {
+	singleTypeValidator.Do(func() {
+		typeValidatorInstance = &typeValidator{}
+	})
+}
+
+type typeValidator struct {}
+
+func (tv *typeValidator) validateTypeWithReflection(v reflect.Value, attr *Attribute) {
 	if attr.Mutability == ReadOnly {
 		return
 	}
@@ -65,7 +79,7 @@ func validateTypeWithReflection(v reflect.Value, attr *Attribute) {
 		subAttr := attr.Clone()
 		subAttr.MultiValued = false
 		for i := 0; i < v.Len(); i++ {
-			validateTypeWithReflection(v.Index(i), subAttr)
+			tv.validateTypeWithReflection(v.Index(i), subAttr)
 		}
 
 	case reflect.Map:
@@ -84,7 +98,7 @@ func validateTypeWithReflection(v reflect.Value, attr *Attribute) {
 				panic(ErrorCentral.NoAttribute(p.Value()))
 			}
 
-			validateTypeWithReflection(v.MapIndex(k), subAttr)
+			tv.validateTypeWithReflection(v.MapIndex(k), subAttr)
 		}
 
 	default:

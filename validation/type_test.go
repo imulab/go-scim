@@ -109,7 +109,6 @@ func TestValidateType(t *testing.T) {
 			},
 			func(err error) {
 				assert.NotNil(t, err)
-				t.Log(err.Error())
 				assert.IsType(t, &NoAttributeError{}, err)
 				assert.Equal(t, "foo", err.(*NoAttributeError).Path)
 			},
