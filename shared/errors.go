@@ -7,12 +7,12 @@ import (
 
 var (
 	oneErrorFactory sync.Once
-	ErrorCentral    ErrorFactory
+	Error           ErrorFactory
 )
 
 func init() {
 	oneErrorFactory.Do(func() {
-		ErrorCentral = &errorFactory{}
+		Error = &errorFactory{}
 	})
 }
 
@@ -21,6 +21,7 @@ type ErrorFactory interface {
 	InvalidFilter(filter, detail string) error
 	InvalidType(path, expect, got string) error
 	NoAttribute(path string) error
+	MissingRequiredProperty(path string) error
 	Text(template string, args ...interface{}) error
 }
 
@@ -84,4 +85,18 @@ type NoAttributeError struct {
 
 func (e *NoAttributeError) Error() string {
 	return fmt.Sprintf("No attribute defined for path (segment) '%s'", e.Path)
+}
+
+func (f *errorFactory) MissingRequiredProperty(path string) error {
+	return &MissingRequiredPropertyError{path}
+}
+
+// Missing Required Property
+
+type MissingRequiredPropertyError struct {
+	Path string
+}
+
+func (e *MissingRequiredPropertyError) Error() string {
+	return fmt.Sprintf("Missing required property value at '%s'", e.Path)
 }

@@ -13,7 +13,7 @@ func ValidateType(subj *Resource, sch *Schema) (err error) {
 			case error:
 				err = r.(error)
 			default:
-				err = ErrorCentral.Text("%v", r)
+				err = Error.Text("%v", r)
 			}
 		}
 	}()
@@ -24,8 +24,8 @@ func ValidateType(subj *Resource, sch *Schema) (err error) {
 }
 
 var (
-	singleTypeValidator	sync.Once
-	typeValidatorInstance 	*typeValidator
+	singleTypeValidator   sync.Once
+	typeValidatorInstance *typeValidator
 )
 
 func init() {
@@ -34,7 +34,7 @@ func init() {
 	})
 }
 
-type typeValidator struct {}
+type typeValidator struct{}
 
 func (tv *typeValidator) validateTypeWithReflection(v reflect.Value, attr *Attribute) {
 	if attr.Mutability == ReadOnly {
@@ -53,27 +53,27 @@ func (tv *typeValidator) validateTypeWithReflection(v reflect.Value, attr *Attri
 	switch v.Kind() {
 	case reflect.String:
 		if !attr.ExpectsString() {
-			panic(ErrorCentral.InvalidType(attr.Assist.FullPath, TypeString, v.Type().Name()))
+			tv.throw(Error.InvalidType(attr.Assist.FullPath, TypeString, v.Type().Name()))
 		}
 
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
 		if !attr.ExpectsInteger() {
-			panic(ErrorCentral.InvalidType(attr.Assist.FullPath, TypeInteger, v.Type().Name()))
+			tv.throw(Error.InvalidType(attr.Assist.FullPath, TypeInteger, v.Type().Name()))
 		}
 
 	case reflect.Float32, reflect.Float64:
 		if !attr.ExpectsFloat() {
-			panic(ErrorCentral.InvalidType(attr.Assist.FullPath, TypeDecimal, v.Type().Name()))
+			tv.throw(Error.InvalidType(attr.Assist.FullPath, TypeDecimal, v.Type().Name()))
 		}
 
 	case reflect.Bool:
 		if !attr.ExpectsBool() {
-			panic(ErrorCentral.InvalidType(attr.Assist.FullPath, TypeBoolean, v.Type().Name()))
+			tv.throw(Error.InvalidType(attr.Assist.FullPath, TypeBoolean, v.Type().Name()))
 		}
 
 	case reflect.Array, reflect.Slice:
 		if !attr.MultiValued {
-			panic(ErrorCentral.InvalidType(attr.Assist.FullPath, "array", v.Type().Name()))
+			tv.throw(Error.InvalidType(attr.Assist.FullPath, "array", v.Type().Name()))
 		}
 
 		subAttr := attr.Clone()
@@ -84,24 +84,28 @@ func (tv *typeValidator) validateTypeWithReflection(v reflect.Value, attr *Attri
 
 	case reflect.Map:
 		if !attr.ExpectsComplex() {
-			panic(ErrorCentral.InvalidType(attr.Assist.FullPath, TypeComplex, v.Type().Name()))
+			tv.throw(Error.InvalidType(attr.Assist.FullPath, TypeComplex, v.Type().Name()))
 		}
 
 		for _, k := range v.MapKeys() {
 			p, err := NewPath(k.String())
 			if err != nil {
-				panic(err)
+				tv.throw(err)
 			}
 
 			subAttr := attr.GetAttribute(p, false)
 			if subAttr == nil {
-				panic(ErrorCentral.NoAttribute(p.Value()))
+				tv.throw(Error.NoAttribute(p.Value()))
 			}
 
 			tv.validateTypeWithReflection(v.MapIndex(k), subAttr)
 		}
 
 	default:
-		panic(ErrorCentral.InvalidType(attr.Assist.FullPath, "unhandled type", v.Type().Name()))
+		tv.throw(Error.InvalidType(attr.Assist.FullPath, "unhandled type", v.Type().Name()))
 	}
+}
+
+func (tv *typeValidator) throw(err error) {
+	panic(err)
 }

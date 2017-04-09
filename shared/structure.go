@@ -92,7 +92,7 @@ func (c Complex) Evaluate(filter FilterNode, guide AttributeSource) bool {
 func (c Complex) Set(p Path, value interface{}, guide AttributeSource) error {
 	attr := guide.GetAttribute(p, true)
 	if attr == nil {
-		return ErrorCentral.InvalidPath(p.CollectValue(), "no attribute found")
+		return Error.InvalidPath(p.CollectValue(), "no attribute found")
 	}
 
 	// TODO validate

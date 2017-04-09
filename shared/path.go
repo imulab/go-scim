@@ -43,7 +43,7 @@ const (
 func NewPath(text string) (Path, error) {
 	text = strings.TrimSpace(text)
 	if len(text) == 0 {
-		return nil, ErrorCentral.InvalidPath(text, "empty path")
+		return nil, Error.InvalidPath(text, "empty path")
 	}
 
 	var (
@@ -74,7 +74,7 @@ func NewPath(text string) (Path, error) {
 
 	this = strings.TrimSpace(this)
 	if len(this) == 0 {
-		return nil, ErrorCentral.InvalidPath(text, "empty component")
+		return nil, Error.InvalidPath(text, "empty component")
 	} else {
 		lbIdx := strings.Index(this, "[")
 		rbIdx := strings.Index(this, "]")
@@ -92,7 +92,7 @@ func NewPath(text string) (Path, error) {
 			thisPath = &path{text: this, base: thisBase, next: nil, filterRoot: thisFilter.(*filterNode)}
 
 		default:
-			return nil, ErrorCentral.InvalidPath(text, "invalid placement of filter brackets")
+			return nil, Error.InvalidPath(text, "invalid placement of filter brackets")
 		}
 	}
 
@@ -112,7 +112,7 @@ func NewPath(text string) (Path, error) {
 func NewFilter(text string) (FilterNode, error) {
 	text = strings.TrimSpace(text)
 	if len(text) == 0 {
-		return nil, ErrorCentral.InvalidFilter(text, "empty filter")
+		return nil, Error.InvalidFilter(text, "empty filter")
 	}
 
 	tokenizer := &filterTokenizer{
@@ -122,7 +122,7 @@ func NewFilter(text string) (FilterNode, error) {
 		tokens:    make([]*filterNode, 0),
 	}
 	if err := tokenizer.tokenize(); err != nil {
-		return nil, ErrorCentral.InvalidFilter(text, err.Error())
+		return nil, Error.InvalidFilter(text, err.Error())
 	}
 
 	sy := &shuntingYard{
@@ -132,7 +132,7 @@ func NewFilter(text string) (FilterNode, error) {
 	}
 	root, err := sy.run(tokenizer.tokens)
 	if err != nil {
-		return nil, ErrorCentral.InvalidFilter(text, err.Error())
+		return nil, Error.InvalidFilter(text, err.Error())
 	}
 
 	return root, nil

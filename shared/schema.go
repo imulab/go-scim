@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -95,6 +96,24 @@ type Attribute struct {
 	Uniqueness      string       `json:"uniqueness"`
 	ReferenceTypes  []string     `json:"referenceTypes"`
 	Assist          *Assist      `json:"_assist"`
+}
+
+func (a *Attribute) Assigned(v reflect.Value) bool {
+	if !v.IsValid() {
+		return false
+	}
+
+	switch v.Kind() {
+	case reflect.Interface, reflect.Ptr:
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.String, reflect.Map, reflect.Array, reflect.Slice:
+		return v.Len() > 0
+	default:
+		return true
+	}
 }
 
 func (a *Attribute) Clone() *Attribute {
