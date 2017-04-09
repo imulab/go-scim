@@ -52,6 +52,7 @@ func (s *Schema) ToAttribute() *Attribute {
 	return &Attribute{
 		Type:          TypeComplex,
 		MultiValued:   false,
+		Mutability:    ReadWrite,
 		SubAttributes: s.Attributes,
 		Assist:        &Assist{JSONName: "", Path: "", FullPath: ""},
 	}

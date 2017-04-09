@@ -22,6 +22,7 @@ type ErrorFactory interface {
 	InvalidType(path, expect, got string) error
 	NoAttribute(path string) error
 	MissingRequiredProperty(path string) error
+	MutabilityViolation(path string) error
 	Text(template string, args ...interface{}) error
 }
 
@@ -99,4 +100,18 @@ type MissingRequiredPropertyError struct {
 
 func (e *MissingRequiredPropertyError) Error() string {
 	return fmt.Sprintf("Missing required property value at '%s'", e.Path)
+}
+
+func (f *errorFactory) MutabilityViolation(path string) error {
+	return &MutabilityViolationError{path}
+}
+
+// Mutability Violation Error
+
+type MutabilityViolationError struct {
+	Path string
+}
+
+func (e *MutabilityViolationError) Error() string {
+	return fmt.Sprintf("Violated mutability rule at '%s'", e.Path)
 }
