@@ -97,6 +97,62 @@ type Attribute struct {
 	Assist          *Assist      `json:"_assist"`
 }
 
+func (a *Attribute) Clone() *Attribute {
+	return &Attribute{
+		Name:            a.Name,
+		Type:            a.Type,
+		SubAttributes:   a.SubAttributes,
+		MultiValued:     a.MultiValued,
+		Description:     a.Description,
+		Required:        a.Required,
+		CanonicalValues: a.CanonicalValues,
+		CaseExact:       a.CaseExact,
+		Mutability:      a.Mutability,
+		Returned:        a.Returned,
+		Uniqueness:      a.Uniqueness,
+		ReferenceTypes:  a.ReferenceTypes,
+		Assist:          a.Assist,
+	}
+}
+
+func (a *Attribute) ExpectsString() bool {
+	switch a.Type {
+	case TypeString, TypeDateTime, TypeReference, TypeBinary:
+		return !a.MultiValued
+	default:
+		return false
+	}
+}
+
+func (a *Attribute) ExpectsStringArray() bool {
+	switch a.Type {
+	case TypeString, TypeDateTime, TypeReference, TypeBinary:
+		return a.MultiValued
+	default:
+		return false
+	}
+}
+
+func (a *Attribute) ExpectsInteger() bool {
+	return !a.MultiValued && a.Type == TypeInteger
+}
+
+func (a *Attribute) ExpectsFloat() bool {
+	return !a.MultiValued && a.Type == TypeDecimal
+}
+
+func (a *Attribute) ExpectsBool() bool {
+	return !a.MultiValued && a.Type == TypeBoolean
+}
+
+func (a *Attribute) ExpectsComplex() bool {
+	return !a.MultiValued && a.Type == TypeComplex
+}
+
+func (a *Attribute) ExpectsComplexArray() bool {
+	return a.MultiValued && a.Type == TypeComplex
+}
+
 func (a *Attribute) GetAttribute(p Path, recursive bool) *Attribute {
 	if p == nil {
 		return a

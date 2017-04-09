@@ -1,10 +1,10 @@
 package shared
 
 import (
-	"path/filepath"
-	"os"
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 // SCIM resource
