@@ -7,6 +7,14 @@ import (
 	"testing"
 )
 
+func TestParseResource(t *testing.T) {
+	r, json, err := ParseResource("../resources/tests/user_1.json")
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	assert.NotEmpty(t, json)
+	assert.Equal(t, "6B69753B-4E38-444E-8AC6-9D0E4D644D80", r.Complex["id"])
+}
+
 func TestComplex_Set(t *testing.T) {
 	sch, _, err := ParseSchema("../resources/tests/user_schema.json")
 	require.NotNil(t, sch)

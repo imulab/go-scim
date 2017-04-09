@@ -1,5 +1,43 @@
 package shared
 
+import (
+	"path/filepath"
+	"os"
+	"io/ioutil"
+	"encoding/json"
+)
+
+// SCIM resource
+type Resource struct {
+	Complex
+}
+
+func ParseResource(filePath string) (*Resource, string, error) {
+	path, err := filepath.Abs(filePath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, "", err
+	}
+	defer file.Close()
+
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, "", err
+	}
+
+	data := make(map[string]interface{}, 0)
+	err = json.Unmarshal(fileBytes, &data)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return &Resource{Complex(data)}, string(fileBytes), nil
+}
+
 // SCIM complex data structure, Not thread-safe
 type Complex map[string]interface{}
 
