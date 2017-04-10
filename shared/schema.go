@@ -165,6 +165,10 @@ func (a *Attribute) ExpectsBool() bool {
 	return !a.MultiValued && a.Type == TypeBoolean
 }
 
+func (a *Attribute) ExpectsBinary() bool {
+	return !a.MultiValued && a.Type == TypeBinary
+}
+
 func (a *Attribute) ExpectsComplex() bool {
 	return !a.MultiValued && a.Type == TypeComplex
 }

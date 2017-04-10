@@ -12,13 +12,13 @@ import (
 // i.e. 'emails' in 'emails.value'
 // i.e. 'groups[type Eq "direct"]' in 'groups[type Eq "direct"].value'
 type Path interface {
-	Next() Path                   		// next Path, nil means this is the last one
-	Value() string                		// text value, unprocessed
-	Base() string                 		// base Path value, i.e. 'groups' in 'groups[type Eq "direct"]'
-	FilterRoot() FilterNode       		// root of the filter tree, i.e. 'Eq' in 'type Eq "direct"'
-	SeparateAtLast() (Path, Path) 		// break up the path chain at the last node
-	CollectValue() string         		// all path value downstream, separated by period.
-	CorrectCase(AttributeSource, bool)	// correct the case to defined values, and whether process downstream as well
+	Next() Path                        // next Path, nil means this is the last one
+	Value() string                     // text value, unprocessed
+	Base() string                      // base Path value, i.e. 'groups' in 'groups[type Eq "direct"]'
+	FilterRoot() FilterNode            // root of the filter tree, i.e. 'Eq' in 'type Eq "direct"'
+	SeparateAtLast() (Path, Path)      // break up the path chain at the last node
+	CollectValue() string              // all path value downstream, separated by period.
+	CorrectCase(AttributeSource, bool) // correct the case to defined values, and whether process downstream as well
 }
 
 // interface to represent a node in the filter tree

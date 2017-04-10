@@ -23,6 +23,7 @@ type ErrorFactory interface {
 	NoAttribute(path string) error
 	MissingRequiredProperty(path string) error
 	MutabilityViolation(path string) error
+	InvalidParam(name, expect, got string) error
 	Text(template string, args ...interface{}) error
 }
 
@@ -57,7 +58,11 @@ type InvalidFilterError struct {
 }
 
 func (e InvalidFilterError) Error() string {
-	return fmt.Sprintf("Filter [%s] is invalid: %s", e.Filter, e.Detail)
+	if len(e.Filter) > 0 {
+		return fmt.Sprintf("Filter [%s] is invalid: %s", e.Filter, e.Detail)
+	} else {
+		return fmt.Sprintf("Filter is invalid: %s", e.Detail)
+	}
 }
 
 func (f *errorFactory) InvalidType(path, expect, got string) error {
@@ -114,4 +119,20 @@ type MutabilityViolationError struct {
 
 func (e *MutabilityViolationError) Error() string {
 	return fmt.Sprintf("Violated mutability rule at '%s'", e.Path)
+}
+
+func (f *errorFactory) InvalidParam(name, expect, got string) error {
+	return &InvalidParamError{name, expect, got}
+}
+
+// Invalid Param Error
+
+type InvalidParamError struct {
+	Name   string
+	Expect string
+	Got    string
+}
+
+func (e *InvalidParamError) Error() string {
+	return fmt.Sprintf("Invalid parameter for %s, expect %s, but got %s", e.Name, e.Expect, e.Got)
 }
