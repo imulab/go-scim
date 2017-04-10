@@ -4,6 +4,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"fmt"
+	"strings"
 )
 
 func TestNewPath(t *testing.T) {
@@ -321,5 +323,56 @@ func TestPath_SeparateAtLast(t *testing.T) {
 		p, err := NewPath(test.pathText)
 		require.Nil(t, err)
 		test.assertion(p.SeparateAtLast())
+	}
+}
+
+func TestPath_CorrectCase(t *testing.T) {
+	sch, _, err := ParseSchema("../resources/tests/user_schema.json")
+	require.Nil(t, err)
+	require.NotNil(t, sch)
+
+	for _, test := range []struct{
+		pathText 	string
+		assertion 	func(p Path)
+	}{
+		{
+			"UserName",
+			func(p Path) {
+				assert.Equal(t, "userName", p.Base())
+			},
+		},
+		{
+			fmt.Sprintf("%s:UserName", strings.ToLower(UserUrn)),
+			func(p Path) {
+				assert.Equal(t, fmt.Sprintf("%s:userName", UserUrn), p.Base())
+			},
+		},
+		{
+			"Name.FamilyName",
+			func(p Path) {
+				assert.Equal(t, "name", p.Base())
+				assert.Equal(t, "familyName", p.Next().Base())
+			},
+		},
+		{
+			fmt.Sprintf("%s:Name.FamilyName", strings.ToLower(UserUrn)),
+			func(p Path) {
+				assert.Equal(t, fmt.Sprintf("%s:name", UserUrn), p.Base())
+				assert.Equal(t, "familyName", p.Next().Base())
+			},
+		},
+		{
+			"Emails[Type eq \"home\"].Value",
+			func(p Path) {
+				assert.Equal(t, "emails", p.Base())
+				assert.Equal(t, "type", p.FilterRoot().Left().Data().(Path).Base())
+				assert.Equal(t, "value", p.Next().Base())
+			},
+		},
+	}{
+		p, err := NewPath(test.pathText)
+		require.Nil(t, err)
+		p.CorrectCase(sch, true)
+		test.assertion(p)
 	}
 }

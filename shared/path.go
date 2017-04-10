@@ -12,12 +12,13 @@ import (
 // i.e. 'emails' in 'emails.value'
 // i.e. 'groups[type Eq "direct"]' in 'groups[type Eq "direct"].value'
 type Path interface {
-	Next() Path                   // next Path, nil means this is the last one
-	Value() string                // text value, unprocessed
-	Base() string                 // base Path value, i.e. 'groups' in 'groups[type Eq "direct"]'
-	FilterRoot() FilterNode       // root of the filter tree, i.e. 'Eq' in 'type Eq "direct"'
-	SeparateAtLast() (Path, Path) // break up the path chain at the last node
-	CollectValue() string         // all path value downstream, separated by period.
+	Next() Path                   		// next Path, nil means this is the last one
+	Value() string                		// text value, unprocessed
+	Base() string                 		// base Path value, i.e. 'groups' in 'groups[type Eq "direct"]'
+	FilterRoot() FilterNode       		// root of the filter tree, i.e. 'Eq' in 'type Eq "direct"'
+	SeparateAtLast() (Path, Path) 		// break up the path chain at the last node
+	CollectValue() string         		// all path value downstream, separated by period.
+	CorrectCase(AttributeSource, bool)	// correct the case to defined values, and whether process downstream as well
 }
 
 // interface to represent a node in the filter tree
@@ -26,6 +27,7 @@ type FilterNode interface {
 	Type() FilterNodeType
 	Left() FilterNode
 	Right() FilterNode
+	CorrectCase(guide AttributeSource)
 }
 
 // type of the filter node
@@ -471,6 +473,7 @@ func (p *path) Next() Path             { return p.next }
 func (p *path) Value() string          { return p.text }
 func (p *path) Base() string           { return p.base }
 func (p *path) FilterRoot() FilterNode { return p.filterRoot }
+
 func (p *path) SeparateAtLast() (Path, Path) {
 	if p.Next() == nil {
 		return nil, p
@@ -485,6 +488,7 @@ func (p *path) SeparateAtLast() (Path, Path) {
 	c.(*path).next = nil
 	return p, last
 }
+
 func (p *path) CollectValue() string {
 	v := make([]string, 0)
 	var c Path = p
@@ -493,6 +497,24 @@ func (p *path) CollectValue() string {
 		c = c.Next()
 	}
 	return strings.Join(v, ".")
+}
+
+func (p *path) CorrectCase(guide AttributeSource, recursive bool) {
+	attr := guide.GetAttribute(p, false)
+
+	switch strings.ToLower(p.base) {
+	case strings.ToLower(attr.Name):
+		p.base = attr.Name
+	case strings.ToLower(attr.Assist.FullPath):
+		p.base = attr.Assist.FullPath
+	}
+
+	if p.filterRoot != nil {
+		p.filterRoot.CorrectCase(attr)
+	}
+	if recursive && p.next != nil {
+		p.next.CorrectCase(attr, recursive)
+	}
 }
 
 // implementation of FilterNode
@@ -507,6 +529,17 @@ func (n *filterNode) Data() interface{}    { return n.data }
 func (n *filterNode) Type() FilterNodeType { return n.typ }
 func (n *filterNode) Left() FilterNode     { return n.left }
 func (n *filterNode) Right() FilterNode    { return n.right }
+func (n *filterNode) CorrectCase(guide AttributeSource) {
+	if n.left != nil {
+		n.left.CorrectCase(guide)
+	}
+	if n.typ == PathOperand {
+		n.data.(Path).CorrectCase(guide, true)
+	}
+	if n.right != nil {
+		n.right.CorrectCase(guide)
+	}
+}
 
 func init() {
 	oneTokenFactory.Do(func() {
