@@ -18,5 +18,5 @@ type Repository interface {
 
 	Delete(id string) error
 
-	Search(payload SearchRequest) (ListResponse, error)
+	Search(payload SearchRequest) (*ListResponse, error)
 }

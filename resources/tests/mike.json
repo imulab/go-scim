@@ -1,0 +1,90 @@
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+  "id": "c29ddf00-be78-4a00-8251-3737e7f87d96",
+  "externalId": "005",
+  "userName": "mike",
+  "name": {
+    "formatted": "Mike X",
+    "familyName": "X",
+    "givenName": "Mike",
+    "middleName": "",
+    "honorificPrefix": "Mr.",
+    "honorificSuffix": ""
+  },
+  "displayName": "Mike X",
+  "nickName": "Mike",
+  "profileUrl": "https://login.example.com/mikex",
+  "emails": [
+    {
+      "value": "mike@example.com",
+      "type": "work",
+      "primary": true
+    },
+    {
+      "value": "mike@home.com",
+      "type": "home"
+    }
+  ],
+  "addresses": [
+    {
+      "type": "work",
+      "streetAddress": "重庆路123号",
+      "locality": "上海",
+      "region": "",
+      "postalCode": "200321",
+      "country": "CN",
+      "formatted": "123 Chongqing St., Shanghai, CN, 200321",
+      "primary": true
+    },
+    {
+      "type": "home",
+      "streetAddress": "124 Home Street",
+      "locality": "Shanghai",
+      "region": "",
+      "postalCode": "200124",
+      "country": "CN",
+      "formatted": "124 Home Street, Shanghai, CN, 200124"
+    }
+  ],
+  "phoneNumbers": [
+    {
+      "value": "123-456-1111",
+      "type": "work"
+    }
+  ],
+  "ims": [
+    {
+      "value": "1234561111",
+      "type": "qq",
+      "primary": true
+    },
+    {
+      "value": "mikex",
+      "type": "wechat"
+    }
+  ],
+  "photos": [
+    {
+      "value": "https://photos.example.com/profilephoto/72930000000Ccne/F",
+      "type": "photo"
+    },
+    {
+      "value": "https://photos.example.com/profilephoto/72930000000Ccne/T",
+      "type": "thumbnail"
+    }
+  ],
+  "userType": "Employee",
+  "title": "Developer",
+  "preferredLanguage": "en-US",
+  "locale": "en-US",
+  "timezone": "Asia/Shanghai",
+  "active":true,
+  "password": "t1meMa$heen",
+  "meta": {
+    "resourceType": "User",
+    "created": "2016-01-27T04:56:22Z",
+    "lastModified": "2016-05-17T04:42:34Z",
+    "version": "W\/\"a330bc54f0671c9\"",
+    "location": "/v2/Users/c29ddf00-be78-4a00-8251-3737e7f87d96"
+  }
+}

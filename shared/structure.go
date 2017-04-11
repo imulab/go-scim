@@ -12,6 +12,17 @@ type Resource struct {
 	Complex
 }
 
+func (r *Resource) GetId() string {
+	if id, ok := r.Complex["id"].(string); ok {
+		return id
+	}
+	return ""
+}
+
+func (r *Resource) GetData() Complex {
+	return r.Complex
+}
+
 func ParseResource(filePath string) (*Resource, string, error) {
 	path, err := filepath.Abs(filePath)
 	if err != nil {
