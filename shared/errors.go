@@ -25,6 +25,7 @@ type ErrorFactory interface {
 	MutabilityViolation(path string) error
 	InvalidParam(name, expect, got string) error
 	ResourceNotFound(id string) error
+	Duplicate(path string, value interface{}) error
 	Text(template string, args ...interface{}) error
 }
 
@@ -153,4 +154,18 @@ func (e ResourceNotFoundError) Error() string {
 		return fmt.Sprintf("Resource not found for id '%s'", e.Id)
 	}
 	return "Resource not found"
+}
+
+func (f *errorFactory) Duplicate(path string, value interface{}) error {
+	return &DuplicateError{path, value}
+}
+
+// Duplicate Error
+type DuplicateError struct {
+	Path  string
+	Value interface{}
+}
+
+func (e DuplicateError) Error() string {
+	return fmt.Sprintf("Resource has duplicate value '%v' at path '%s'", e.Value, e.Path)
 }
