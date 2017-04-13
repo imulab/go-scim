@@ -206,7 +206,7 @@ type Assist struct {
 const (
 	UserUrn         = "urn:ietf:params:scim:schemas:core:2.0:User"
 	GroupUrn        = "urn:ietf:params:scim:schemas:core:2.0:Group"
-	ResourceTypeUrn = "urn:ietf:params:scim:schemas:core:2.0:ResourceType"
+	ResourceTypeUrn = "urn:ietf:params:scim:schemas:core:2.0:resourceType"
 	SPConfigUrn     = "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"
 	SchemaUrn       = "urn:ietf:params:scim:schemas:core:2.0:Schema"
 	ErrorUrn        = "urn:ietf:params:scim:api:messages:2.0:Error"
@@ -241,4 +241,7 @@ const (
 
 	External = "external"
 	Uri      = "uri"
+
+	User  = "User"
+	Group = "Group"
 )
