@@ -1,7 +1,6 @@
-package mutate
+package shared
 
 import (
-	. "github.com/davidiamyou/go-scim/shared"
 	"reflect"
 	"sync"
 )

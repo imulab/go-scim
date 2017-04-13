@@ -1,7 +1,6 @@
-package validation
+package shared
 
 import (
-	. "github.com/davidiamyou/go-scim/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"reflect"

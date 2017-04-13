@@ -1,8 +1,7 @@
-package validation
+package shared
 
 import (
 	"fmt"
-	. "github.com/davidiamyou/go-scim/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
