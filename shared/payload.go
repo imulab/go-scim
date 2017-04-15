@@ -1,16 +1,55 @@
 package shared
 
-import "bytes"
+import (
+	"bytes"
+	"encoding/json"
+)
 
 // ----------------------------------
 // List Response
 // ----------------------------------
 type ListResponse struct {
-	Schemas      []string       `json:"schemas"`
-	TotalResults int            `json:"totalResults"`
-	ItemsPerPage int            `json:"itemsPerPage"`
-	StartIndex   int            `json:"startIndex"`
-	Resources    []DataProvider `json:"Resources"`
+	Schemas      []string
+	TotalResults int
+	ItemsPerPage int
+	StartIndex   int
+	Resources    []DataProvider
+}
+
+type listResponseMarshalHelper struct {
+	abstractMarshalHelper
+	Data *ListResponse
+}
+
+func (h *listResponseMarshalHelper) MarshalJSON() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	buf.WriteString("[")
+	for i, dp := range h.Data.Resources {
+		if i > 0 {
+			buf.WriteString(",")
+		}
+		b, err := MarshalJSON(dp, h.Guide, h.Attributes, h.ExcludedAttributes)
+		if err != nil {
+			return nil, err
+		}
+		buf.Write(b)
+	}
+	buf.WriteString("]")
+
+	raw := json.RawMessage(buf.Bytes())
+	return json.Marshal(struct {
+		Schemas      []string         `json:"schemas"`
+		TotalResults int              `json:"totalResults"`
+		ItemsPerPage int              `json:"itemsPerPage"`
+		StartIndex   int              `json:"startIndex"`
+		Resources    *json.RawMessage `json:"Resources"`
+	}{
+		Schemas:      h.Data.Schemas,
+		TotalResults: h.Data.TotalResults,
+		ItemsPerPage: h.Data.ItemsPerPage,
+		StartIndex:   h.Data.StartIndex,
+		Resources:    &raw,
+	})
 }
 
 // ----------------------------------

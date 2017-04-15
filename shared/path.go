@@ -271,7 +271,7 @@ func (m tokenMetadataMap) get(key interface{}) tokenMetadata {
 }
 
 // create a filterNode out of the face value, note that anything that cannot be resolved to
-// logical, relational or constant token will be treated as path, which could delay error
+// logical, relational or constant token will be treated as path, which could delay throw
 // from being discovered
 type tokenFactory struct{}
 
@@ -492,7 +492,7 @@ func (p *path) SeparateAtLast() (Path, Path) {
 func (p *path) CollectValue() string {
 	v := make([]string, 0)
 	var c Path = p
-	for c.Next() != nil {
+	for c != nil {
 		v = append(v, c.Value())
 		c = c.Next()
 	}

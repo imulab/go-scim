@@ -99,6 +99,17 @@ type Attribute struct {
 	Assist          *Assist      `json:"_assist"`
 }
 
+func (a *Attribute) EqualsToPath(p Path) bool {
+	switch strings.ToLower(p.CollectValue()) {
+	case strings.ToLower(a.Assist.FullPath):
+		return true
+	case strings.ToLower(a.Assist.Path):
+		return true
+	default:
+		return false
+	}
+}
+
 func (a *Attribute) Assigned(v reflect.Value) bool {
 	if !v.IsValid() {
 		return false
@@ -133,6 +144,26 @@ func (a *Attribute) Clone() *Attribute {
 		ReferenceTypes:  a.ReferenceTypes,
 		Assist:          a.Assist,
 	}
+}
+
+func (a *Attribute) TypeExpectation() string {
+	var expects string = ""
+	switch a.Type {
+	case TypeString, TypeBinary, TypeReference, TypeDateTime:
+		expects = "string"
+	case TypeInteger:
+		expects = "integer"
+	case TypeDecimal:
+		expects = "decimal"
+	case TypeBoolean:
+		expects = "boolean"
+	case TypeComplex:
+		expects = "complex"
+	}
+	if a.MultiValued {
+		expects += " array"
+	}
+	return expects
 }
 
 func (a *Attribute) ExpectsString() bool {
