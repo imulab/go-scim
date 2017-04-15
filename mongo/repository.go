@@ -61,10 +61,18 @@ func (r *repository) handleError(err error, args ...interface{}) error {
 	}
 	switch {
 	case err.Error() == "not found":
-		if len(args) > 0 {
-			return Error.ResourceNotFound(fmt.Sprintf("%v", args[0]))
+		if len(args) > 1 {
+			return Error.ResourceNotFound(
+				fmt.Sprintf("%v", args[0]),
+				fmt.Sprintf("%v", args[1]),
+			)
+		} else if len(args) > 0 {
+			return Error.ResourceNotFound(
+				fmt.Sprintf("%v", args[0]),
+				"",
+			)
 		}
-		return Error.ResourceNotFound("")
+		return Error.ResourceNotFound("", "")
 	default:
 		return err
 	}
@@ -77,12 +85,18 @@ func (r *repository) Create(provider DataProvider) error {
 	return r.handleError(c.Insert(provider.GetData()))
 }
 
-func (r *repository) Get(id string) (DataProvider, error) {
+func (r *repository) Get(id, version string) (DataProvider, error) {
 	c, cleanUp := r.getCollection()
 	defer cleanUp()
 
 	data := make(map[string]interface{}, 0)
-	err := c.Find(bson.M{"id": id}).One(&data)
+	var query bson.M
+	if len(version) == 0 {
+		query = bson.M{"id": id}
+	} else {
+		query = bson.M{"id": id, "meta.version": version}
+	}
+	err := c.Find(query).One(&data)
 	if err != nil {
 		return nil, r.handleError(err, id)
 	}
@@ -107,19 +121,31 @@ func (r *repository) Count(query string) (int, error) {
 	return count, r.handleError(err)
 }
 
-func (r *repository) Update(provider DataProvider) error {
+func (r *repository) Update(id, version string, provider DataProvider) error {
 	c, cleanUp := r.getCollection()
 	defer cleanUp()
 
-	err := c.Update(bson.M{"id": provider.GetId()}, provider.GetData())
+	var query bson.M
+	if len(version) == 0 {
+		query = bson.M{"id": id}
+	} else {
+		query = bson.M{"id": id, "meta.version": version}
+	}
+	err := c.Update(query, provider.GetData())
 	return r.handleError(err, provider.GetId())
 }
 
-func (r *repository) Delete(id string) error {
+func (r *repository) Delete(id, version string) error {
 	c, cleanUp := r.getCollection()
 	defer cleanUp()
 
-	err := c.Remove(bson.M{"id": id})
+	var query bson.M
+	if len(version) == 0 {
+		query = bson.M{"id": id}
+	} else {
+		query = bson.M{"id": id, "meta.version": version}
+	}
+	err := c.Remove(query)
 	return r.handleError(err, id)
 }
 

@@ -8,22 +8,24 @@ type DataProvider interface {
 type Repository interface {
 	Create(provider DataProvider) error
 
-	Get(id string) (DataProvider, error)
+	Get(id, version string) (DataProvider, error)
 
 	GetAll() ([]Complex, error)
 
 	Count(query string) (int, error)
 
-	Update(provider DataProvider) error
+	Update(id, version string, provider DataProvider) error
 
-	Delete(id string) error
+	Delete(id, version string) error
 
 	Search(payload SearchRequest) (*ListResponse, error)
 }
 
 // An simple in memory database fit for test use and read only production use
-// this implementation only implements Create, Get, GetAll, Update, Delete
-// this implementation is not thread safe
+// this implementation:
+// - only implements Create, Get, GetAll, Update, Delete
+// - is not thread safe
+// - ignores the version argument
 type mapRepository struct {
 	data map[string]DataProvider
 }
@@ -33,9 +35,9 @@ func (r *mapRepository) Create(provider DataProvider) error {
 	return nil
 }
 
-func (r *mapRepository) Get(id string) (DataProvider, error) {
+func (r *mapRepository) Get(id, version string) (DataProvider, error) {
 	if dp, ok := r.data[id]; !ok {
-		return nil, Error.ResourceNotFound(id)
+		return nil, Error.ResourceNotFound(id, version)
 	} else {
 		return dp, nil
 	}
@@ -53,18 +55,18 @@ func (r *mapRepository) Count(query string) (int, error) {
 	return 0, Error.Text("not implemented")
 }
 
-func (r *mapRepository) Update(provider DataProvider) error {
-	if _, ok := r.data[provider.GetId()]; !ok {
-		return Error.ResourceNotFound(provider.GetId())
+func (r *mapRepository) Update(id, version string, provider DataProvider) error {
+	if _, ok := r.data[id]; !ok {
+		return Error.ResourceNotFound(id, version)
 	} else {
-		r.data[provider.GetId()] = provider
+		r.data[id] = provider
 		return nil
 	}
 }
 
-func (r *mapRepository) Delete(id string) error {
+func (r *mapRepository) Delete(id, version string) error {
 	if _, ok := r.data[id]; !ok {
-		return Error.ResourceNotFound(id)
+		return Error.ResourceNotFound(id, version)
 	} else {
 		delete(r.data, id)
 		return nil

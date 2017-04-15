@@ -153,12 +153,16 @@ func (s *mapPropertySource) GetBool(key string) bool     { return s.data[key].(b
 // Mock Database that was created to support TestGroupAssignment_AssignValue
 type roTestMockDB struct{ data map[string]DataProvider }
 
-func (r *roTestMockDB) Create(provider DataProvider) error  { return Error.Text("not implemented") }
-func (r *roTestMockDB) Get(id string) (DataProvider, error) { return nil, Error.Text("not implemented") }
-func (r *roTestMockDB) GetAll() ([]Complex, error)          { return nil, Error.Text("not implemented") }
-func (r *roTestMockDB) Count(query string) (int, error)     { return 0, Error.Text("not implemented") }
-func (r *roTestMockDB) Update(provider DataProvider) error  { return Error.Text("not implemented") }
-func (r *roTestMockDB) Delete(id string) error              { return Error.Text("not implemented") }
+func (r *roTestMockDB) Create(provider DataProvider) error { return Error.Text("not implemented") }
+func (r *roTestMockDB) Get(id, version string) (DataProvider, error) {
+	return nil, Error.Text("not implemented")
+}
+func (r *roTestMockDB) GetAll() ([]Complex, error)      { return nil, Error.Text("not implemented") }
+func (r *roTestMockDB) Count(query string) (int, error) { return 0, Error.Text("not implemented") }
+func (r *roTestMockDB) Update(id, version string, provider DataProvider) error {
+	return Error.Text("not implemented")
+}
+func (r *roTestMockDB) Delete(id, version string) error { return Error.Text("not implemented") }
 func (r *roTestMockDB) Search(payload SearchRequest) (*ListResponse, error) {
 	// supports test user u_001, u_002, u_003, u_004
 	// supports test group g_001, g_002, g_003

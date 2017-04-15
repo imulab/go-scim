@@ -78,10 +78,21 @@ func TestRepository_Get(t *testing.T) {
 
 	for _, test := range []struct {
 		id        string
+		version   string
 		assertion func(provider DataProvider, err error)
 	}{
 		{
 			r.GetId(),
+			"",
+			func(provider DataProvider, err error) {
+				assert.NotNil(t, provider)
+				assert.Nil(t, err)
+				assert.Equal(t, r.GetId(), provider.GetId())
+			},
+		},
+		{
+			r.GetId(),
+			"W/\"a330bc54f0671c9\"",
 			func(provider DataProvider, err error) {
 				assert.NotNil(t, provider)
 				assert.Nil(t, err)
@@ -90,6 +101,7 @@ func TestRepository_Get(t *testing.T) {
 		},
 		{
 			"foo",
+			"",
 			func(provider DataProvider, err error) {
 				assert.Nil(t, provider)
 				assert.NotNil(t, err)
@@ -97,8 +109,17 @@ func TestRepository_Get(t *testing.T) {
 				assert.Equal(t, "foo", err.(*ResourceNotFoundError).Id)
 			},
 		},
+		{
+			r.GetId(),
+			"invalidVersion",
+			func(provider DataProvider, err error) {
+				assert.Nil(t, provider)
+				assert.NotNil(t, err)
+				assert.IsType(t, &ResourceNotFoundError{}, err)
+			},
+		},
 	} {
-		test.assertion(repo.Get(test.id))
+		test.assertion(repo.Get(test.id, test.version))
 	}
 }
 
@@ -137,9 +158,10 @@ func TestRepository_Update(t *testing.T) {
 	repo := getTestRepository(sch)
 
 	r.Complex["userName"] = "foo"
-	repo.Update(r)
+	version := r.GetData()["meta"].(map[string]interface{})["version"].(string)
+	repo.Update(r.GetId(), version, r)
 
-	r0, err := repo.Get(r.GetId())
+	r0, err := repo.Get(r.GetId(), "")
 	assert.Nil(t, err)
 	assert.Equal(t, r.GetId(), r0.GetId())
 	assert.Equal(t, "foo", r0.GetData()["userName"])
@@ -155,12 +177,12 @@ func TestRepository_Delete(t *testing.T) {
 	require.Nil(t, err)
 
 	repo := getTestRepository(sch)
-	err = repo.Delete(r.GetId())
+	err = repo.Delete(r.GetId(), "")
 	assert.NotNil(t, err)
 	assert.IsType(t, &ResourceNotFoundError{}, err)
 
 	testSession.Copy().DB(dbName).C(collectionName).Insert(r.Complex)
-	err = repo.Delete(r.GetId())
+	err = repo.Delete(r.GetId(), "")
 	assert.Nil(t, err)
 
 	count, err := testSession.Copy().DB(dbName).C(collectionName).Count()

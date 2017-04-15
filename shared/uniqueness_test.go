@@ -52,12 +52,12 @@ func TestValidateUniqueness(t *testing.T) {
 // If the query contains "foo", returns 1, else
 type mockRepository struct{}
 
-func (r *mockRepository) Create(provider DataProvider) error                  { return nil }
-func (r *mockRepository) Get(id string) (DataProvider, error)                 { return nil, nil }
-func (r *mockRepository) GetAll() ([]Complex, error)                          { return nil, nil }
-func (r *mockRepository) Update(provider DataProvider) error                  { return nil }
-func (r *mockRepository) Delete(id string) error                              { return nil }
-func (r *mockRepository) Search(payload SearchRequest) (*ListResponse, error) { return nil, nil }
+func (r *mockRepository) Create(provider DataProvider) error                     { return nil }
+func (r *mockRepository) Get(id, version string) (DataProvider, error)           { return nil, nil }
+func (r *mockRepository) GetAll() ([]Complex, error)                             { return nil, nil }
+func (r *mockRepository) Update(id, version string, provider DataProvider) error { return nil }
+func (r *mockRepository) Delete(id, version string) error                        { return nil }
+func (r *mockRepository) Search(payload SearchRequest) (*ListResponse, error)    { return nil, nil }
 func (r *mockRepository) Count(query string) (int, error) {
 	if strings.Contains(query, "foo") {
 		return 1, nil

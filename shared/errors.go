@@ -24,7 +24,7 @@ type ErrorFactory interface {
 	MissingRequiredProperty(path string) error
 	MutabilityViolation(path string) error
 	InvalidParam(name, expect, got string) error
-	ResourceNotFound(id string) error
+	ResourceNotFound(id, version string) error
 	Duplicate(path string, value interface{}) error
 	Text(template string, args ...interface{}) error
 }
@@ -139,18 +139,22 @@ func (e *InvalidParamError) Error() string {
 	return fmt.Sprintf("Invalid parameter for %s, expect %s, but got %s", e.Name, e.Expect, e.Got)
 }
 
-func (f *errorFactory) ResourceNotFound(id string) error {
-	return &ResourceNotFoundError{id}
+func (f *errorFactory) ResourceNotFound(id, version string) error {
+	return &ResourceNotFoundError{id, version}
 }
 
 // Resource Not Found
 
 type ResourceNotFoundError struct {
-	Id string
+	Id      string
+	Version string
 }
 
 func (e ResourceNotFoundError) Error() string {
 	if len(e.Id) > 0 {
+		if len(e.Version) > 0 {
+			return fmt.Sprintf("Resource not found for id '%s' and version '%s'", e.Id, e.Version)
+		}
 		return fmt.Sprintf("Resource not found for id '%s'", e.Id)
 	}
 	return "Resource not found"
