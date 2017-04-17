@@ -36,7 +36,7 @@ func TestMarshalJSON(t *testing.T) {
 				r, _, err := ParseResource("../resources/tests/user_1.json")
 				require.Nil(t, err)
 				require.NotNil(t, r)
-				return r, `{"id": "6B69753B-4E38-444E-8AC6-9D0E4D644D80"}`
+				return r, `{"schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"], "id": "6B69753B-4E38-444E-8AC6-9D0E4D644D80"}`
 			},
 			[]string{"id"},
 			nil,
@@ -46,7 +46,7 @@ func TestMarshalJSON(t *testing.T) {
 				r, _, err := ParseResource("../resources/tests/user_1.json")
 				require.Nil(t, err)
 				require.NotNil(t, r)
-				return r, `{"id": "6B69753B-4E38-444E-8AC6-9D0E4D644D80", "userName": "david@example.com"}`
+				return r, `{"schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"], "id": "6B69753B-4E38-444E-8AC6-9D0E4D644D80", "userName": "david@example.com"}`
 			},
 			nil,
 			[]string{
@@ -92,10 +92,12 @@ func TestMarshalJSON(t *testing.T) {
 					"startIndex": 1,
 					"Resources": [
 						{
+							"schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
 							"id": "6B69753B-4E38-444E-8AC6-9D0E4D644D80",
 							"userName": "david@example.com"
 						},
 						{
+							"schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
 							"id": "6B69753B-4E38-444E-8AC6-9D0E4D644D80",
 							"userName": "david@example.com"
 						}

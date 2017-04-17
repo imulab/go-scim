@@ -10,5 +10,7 @@ type PropertySource interface {
 
 // Common abstraction for logging providers
 type Logger interface {
-	// TODO
+	Info(template string, args ...interface{})
+	Debug(template string, args ...interface{})
+	Error(template string, args ...interface{})
 }

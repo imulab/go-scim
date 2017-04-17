@@ -48,6 +48,15 @@ type Schema struct {
 	Attributes  []*Attribute `json:"attributes"`
 }
 
+// TODO serialization helper for Schema
+func (s *Schema) GetId() string {
+	return s.Id
+}
+
+func (s *Schema) GetData() Complex {
+	return nil
+}
+
 func (s *Schema) ToAttribute() *Attribute {
 	return &Attribute{
 		Type:          TypeComplex,
@@ -235,7 +244,7 @@ type Assist struct {
 }
 
 const (
-	UserUrn         = "urn:ietf:params:scim:schemas:core:2.0:User"
+	UserUrn         = "urn:ietf:params:scim:schemas:core:2.0:UserResourceType"
 	GroupUrn        = "urn:ietf:params:scim:schemas:core:2.0:Group"
 	ResourceTypeUrn = "urn:ietf:params:scim:schemas:core:2.0:resourceType"
 	SPConfigUrn     = "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"
@@ -273,6 +282,9 @@ const (
 	External = "external"
 	Uri      = "uri"
 
-	User  = "User"
-	Group = "Group"
+	UserResourceType   = "User"
+	GroupResourceType  = "Group"
+	SchemaResourceType = "Schema"
+	ResourceTypeResourceType = "ResourceType"
+	ServiceProviderConfigResourceType = "ServiceProviderConfig"
 )

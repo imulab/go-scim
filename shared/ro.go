@@ -8,6 +8,7 @@ import (
 	"math"
 	"strings"
 	"time"
+	"context"
 )
 
 func NewIdAssignment() ReadOnlyAssignment {
@@ -23,13 +24,13 @@ func NewGroupAssignment(groupRepository Repository) ReadOnlyAssignment {
 }
 
 type ReadOnlyAssignment interface {
-	AssignValue(r *Resource) error
+	AssignValue(r *Resource, ctx context.Context) error
 }
 
 // Generates id value with UUID v4
 type idAssignment struct{}
 
-func (ro *idAssignment) AssignValue(r *Resource) error {
+func (ro *idAssignment) AssignValue(r *Resource, ctx context.Context) error {
 	r.Complex["id"] = uuid.NewV4().String()
 	return nil
 }
@@ -41,7 +42,7 @@ type metaAssignment struct {
 	resourceType string
 }
 
-func (ro *metaAssignment) AssignValue(r *Resource) error {
+func (ro *metaAssignment) AssignValue(r *Resource, ctx context.Context) error {
 	id := r.Complex["id"].(string)
 	if len(id) == 0 {
 		return Error.Text("Cannot assign value to meta: no id")
@@ -87,7 +88,7 @@ type groupAssignment struct {
 	groupRepo Repository
 }
 
-func (ro *groupAssignment) AssignValue(r *Resource) error {
+func (ro *groupAssignment) AssignValue(r *Resource, ctx context.Context) error {
 	allGroups := make([]interface{}, 0)
 	addToAllGroups := func(dp DataProvider, direct bool) {
 		g := map[string]interface{}{

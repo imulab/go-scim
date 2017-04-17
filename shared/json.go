@@ -105,6 +105,12 @@ type encOpts struct {
 }
 
 func (opt encOpts) shouldEncode(v reflect.Value, attr *Attribute) bool {
+	// id and schemas are ALWAYS included
+	switch attr.Name {
+	case "id", "schemas":
+		return true
+	}
+
 	// overriding the default set
 	if len(opt.attributes) > 0 {
 		for _, p := range opt.attributes {

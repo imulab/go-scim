@@ -5,12 +5,14 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"context"
 )
 
 func TestIdAssignment_AssignValue(t *testing.T) {
 	ro := NewIdAssignment()
 	r := &Resource{Complex{}}
-	ro.AssignValue(r)
+	ctx := context.Background()
+	ro.AssignValue(r, ctx)
 	assert.NotEmpty(t, r.GetId())
 }
 
@@ -21,7 +23,7 @@ func TestMetaAssignment_AssignValue(t *testing.T) {
 			"scim.resources.group.locationBase": "http://scim.com/Groups",
 		},
 	}
-	ro := NewMetaAssignment(properties, User)
+	ro := NewMetaAssignment(properties, UserResourceType)
 
 	for _, test := range []struct {
 		r         *Resource
@@ -30,7 +32,7 @@ func TestMetaAssignment_AssignValue(t *testing.T) {
 		{
 			&Resource{Complex{"id": "foo"}},
 			func(meta map[string]interface{}, err error) {
-				assert.Equal(t, User, meta["resourceType"])
+				assert.Equal(t, UserResourceType, meta["resourceType"])
 				assert.Equal(t, "http://scim.com/Users/foo", meta["location"])
 				assert.NotEmpty(t, meta["created"])
 				assert.NotEmpty(t, meta["lastModified"])
@@ -41,7 +43,7 @@ func TestMetaAssignment_AssignValue(t *testing.T) {
 			&Resource{Complex{
 				"id": "foo",
 				"meta": map[string]interface{}{
-					"resourceType": User,
+					"resourceType": UserResourceType,
 					"location":     "http://scim.com/Users/foo",
 					"created":      "2017-04-13T01:50:13Z",
 					"lastModified": "2017-04-13T01:50:13Z",
@@ -49,7 +51,7 @@ func TestMetaAssignment_AssignValue(t *testing.T) {
 				},
 			}},
 			func(meta map[string]interface{}, err error) {
-				assert.Equal(t, User, meta["resourceType"])
+				assert.Equal(t, UserResourceType, meta["resourceType"])
 				assert.Equal(t, "http://scim.com/Users/foo", meta["location"])
 				assert.Equal(t, "2017-04-13T01:50:13Z", meta["created"])
 				assert.NotEqual(t, "2017-04-13T01:50:13Z", meta["lastModified"])
@@ -57,7 +59,8 @@ func TestMetaAssignment_AssignValue(t *testing.T) {
 			},
 		},
 	} {
-		err := ro.AssignValue(test.r)
+		ctx := context.Background()
+		err := ro.AssignValue(test.r, ctx)
 		test.assertion(test.r.Complex["meta"].(map[string]interface{}), err)
 	}
 }
@@ -136,7 +139,8 @@ func TestGroupAssignment_AssignValue(t *testing.T) {
 		},
 	} {
 		r := &Resource{Complex{"id": test.userId}}
-		err := ro.AssignValue(r)
+		ctx := context.Background()
+		err := ro.AssignValue(r, ctx)
 		assert.Nil(t, err)
 		test.assertion(r.Complex["groups"].([]interface{}))
 	}
