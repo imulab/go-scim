@@ -7,6 +7,23 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+func NewMongoRepositoryWithUrl(url, db, collection string, sch *Schema, constructor func(Complex) DataProvider) (Repository, error) {
+	repo := &repository{}
+	if session, err := mgo.Dial(url); err != nil {
+		return nil, err
+	} else {
+		repo.session = session
+		repo.db = db
+		repo.collection = collection
+		repo.schema = sch
+		repo.constructor = constructor
+		if err := repo.ensureIndexes(); err != nil {
+			return nil, err
+		}
+		return repo, nil
+	}
+}
+
 func NewMongoRepository(
 	info *mgo.DialInfo,
 	db, collection string,

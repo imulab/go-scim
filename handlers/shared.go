@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"net/http"
-	. "github.com/davidiamyou/go-scim/shared"
-	"fmt"
-	"io/ioutil"
-	"encoding/json"
-	"strings"
 	"context"
+	"encoding/json"
+	"fmt"
+	. "github.com/davidiamyou/go-scim/shared"
 	"github.com/satori/go.uuid"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"time"
 )
 
@@ -54,7 +54,7 @@ func ErrorCheck(err error) {
 }
 
 var (
-	errorTemplate = `{"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"], "Status": "%d", "scimType":"%s", "detail":"%s"}`
+	errorTemplate    = `{"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"], "Status": "%d", "scimType":"%s", "detail":"%s"}`
 	errorTemplateAlt = `{"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"], "Status": "%d", "detail":"%s"}`
 )
 
@@ -222,7 +222,7 @@ func ParseBodyAsResource(req *http.Request) (*Resource, error) {
 		return nil, Error.InvalidParam("request body", "json conforming to resource syntax", err.Error())
 	}
 
-	return &Resource{Complex:Complex(data)}, nil
+	return &Resource{Complex: Complex(data)}, nil
 }
 
 // response info

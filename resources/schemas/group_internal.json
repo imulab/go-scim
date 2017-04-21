@@ -1,0 +1,291 @@
+{
+  "id" : "urn:ietf:params:scim:schemas:core:2.0:Group",
+  "name" : "Group",
+  "description" : "Group",
+  "attributes" : [
+    {
+      "name": "schemas",
+      "description": "An array of Strings containing URIs that are used to indicate the namespaces of the SCIM schemas that define the attributes present in the current JSON structure.",
+      "type": "reference",
+      "multiValued": true,
+      "required": true,
+      "caseExact": true,
+      "mutability": "readWrite",
+      "returned": "default",
+      "uniqueness": "none",
+      "referenceTypes": [ "uri" ],
+      "canonicalValues": [
+        "urn:ietf:params:scim:schemas:core:2.0:User",
+        "urn:ietf:params:scim:schemas:core:2.0:Group",
+        "urn:ietf:params:scim:schemas:core:2.0:ResourceType",
+        "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig",
+        "urn:ietf:params:scim:schemas:core:2.0:Schema"
+      ],
+      "subAttributes": [],
+      "_assist": {
+        "_jsonName": "schemas",
+        "_path": "schemas",
+        "_full_path": "schemas",
+        "_arrayIndexKey": []
+      }
+    },
+    {
+      "name": "id",
+      "description": "A unique identifier for a SCIM resource as defined by the service provider.",
+      "type": "string",
+      "multiValued": false,
+      "required": true,
+      "caseExact": true,
+      "mutability": "readOnly",
+      "returned": "always",
+      "uniqueness": "global",
+      "referenceTypes": [],
+      "canonicalValues": [],
+      "subAttributes": [],
+      "_assist": {
+        "_jsonName": "id",
+        "_path": "id",
+        "_full_path": "id",
+        "_arrayIndexKey": []
+      }
+    },
+    {
+      "name": "externalId",
+      "description": "A String that is an identifier for the resource as defined by the provisioning client.",
+      "type": "string",
+      "multiValued": false,
+      "required": false,
+      "caseExact": true,
+      "mutability": "readWrite",
+      "returned": "default",
+      "uniqueness": "none",
+      "referenceTypes": [],
+      "canonicalValues": [],
+      "subAttributes": [],
+      "_assist": {
+        "_jsonName": "externalId",
+        "_path": "externalId",
+        "_full_path": "externalId",
+        "_arrayIndexKey": []
+      }
+    },
+    {
+      "name": "meta",
+      "description": "A complex attribute containing resource metadata.",
+      "type": "complex",
+      "multiValued": false,
+      "required": false,
+      "caseExact": false,
+      "mutability": "readOnly",
+      "returned": "default",
+      "uniqueness": "none",
+      "referenceTypes": [],
+      "canonicalValues": [],
+      "subAttributes": [
+        {
+          "name": "resourceType",
+          "description": "The name of the resource type of the resource.",
+          "type": "string",
+          "multiValued": false,
+          "required": false,
+          "caseExact": true,
+          "mutability": "readOnly",
+          "returned": "default",
+          "uniqueness": "none",
+          "referenceTypes": [],
+          "canonicalValues": [],
+          "subAttributes": [],
+          "_assist": {
+            "_jsonName": "resourceType",
+            "_path": "meta.resourceType",
+            "_full_path": "meta.resourceType",
+            "_arrayIndexKey": []
+          }
+        },
+        {
+          "name": "created",
+          "description": "The \"DateTime\" that the resource was added to the service provider.",
+          "type": "datetime",
+          "multiValued": false,
+          "required": false,
+          "caseExact": true,
+          "mutability": "readOnly",
+          "returned": "default",
+          "uniqueness": "none",
+          "referenceTypes": [],
+          "canonicalValues": [],
+          "subAttributes": [],
+          "_assist": {
+            "_jsonName": "created",
+            "_path": "meta.created",
+            "_full_path": "meta.created",
+            "_arrayIndexKey": []
+          }
+        },
+        {
+          "name": "lastModified",
+          "description": "The most recent DateTime that the details of this resource were updated at the service provider.",
+          "type": "datetime",
+          "multiValued": false,
+          "required": false,
+          "caseExact": true,
+          "mutability": "readOnly",
+          "returned": "default",
+          "uniqueness": "none",
+          "referenceTypes": [],
+          "canonicalValues": [],
+          "subAttributes": [],
+          "_assist": {
+            "_jsonName": "lastModified",
+            "_path": "meta.lastModified",
+            "_full_path": "meta.lastModified",
+            "_arrayIndexKey": []
+          }
+        },
+        {
+          "name": "location",
+          "description": "The URI of the resource being returned.",
+          "type": "reference",
+          "multiValued": false,
+          "required": false,
+          "caseExact": true,
+          "mutability": "readOnly",
+          "returned": "default",
+          "uniqueness": "none",
+          "referenceTypes": [ "uri" ],
+          "canonicalValues": [],
+          "subAttributes": [],
+          "_assist": {
+            "_jsonName": "location",
+            "_path": "meta.location",
+            "_full_path": "meta.location",
+            "_arrayIndexKey": []
+          }
+        },
+        {
+          "name": "version",
+          "description": "The version of the resource being returned.",
+          "type": "string",
+          "multiValued": false,
+          "required": false,
+          "caseExact": true,
+          "mutability": "readOnly",
+          "returned": "default",
+          "uniqueness": "none",
+          "referenceTypes": [],
+          "canonicalValues": [],
+          "subAttributes": [],
+          "_assist": {
+            "_jsonName": "version",
+            "_path": "meta.version",
+            "_full_path": "meta.version",
+            "_arrayIndexKey": []
+          }
+        }
+      ],
+      "_assist": {
+        "_jsonName": "meta",
+        "_path": "meta",
+        "_full_path": "meta",
+        "_arrayIndexKey": []
+      }
+    },
+    {
+      "name" : "displayName",
+      "type" : "string",
+      "multiValued" : false,
+      "description" : "A human-readable name for the Group. REQUIRED.",
+      "required" : false,
+      "caseExact" : false,
+      "mutability" : "readWrite",
+      "returned" : "default",
+      "uniqueness" : "none",
+      "_assist": {
+        "_jsonName": "displayName",
+        "_path": "displayName",
+        "_full_path": "urn:ietf:params:scim:schemas:core:2.0:Group:displayName",
+        "_arrayIndexKey": []
+      }
+    },
+    {
+      "name" : "members",
+      "type" : "complex",
+      "multiValued" : true,
+      "description" : "A list of members of the Group.",
+      "required" : false,
+      "subAttributes" : [
+        {
+          "name" : "value",
+          "type" : "string",
+          "multiValued" : false,
+          "description" : "Identifier of the member of this Group.",
+          "required" : false,
+          "caseExact" : false,
+          "mutability" : "immutable",
+          "returned" : "default",
+          "uniqueness" : "none",
+          "_assist": {
+            "_jsonName": "value",
+            "_path": "members.value",
+            "_full_path": "urn:ietf:params:scim:schemas:core:2.0:Group:members.value",
+            "_arrayIndexKey": []
+          }
+        },
+        {
+          "name" : "$ref",
+          "type" : "reference",
+          "referenceTypes" : [
+            "User",
+            "Group"
+          ],
+          "multiValued" : false,
+          "description" : "The URI corresponding to a SCIM resource that is a member of this Group.",
+          "required" : false,
+          "caseExact" : false,
+          "mutability" : "immutable",
+          "returned" : "default",
+          "uniqueness" : "none",
+          "_assist": {
+            "_jsonName": "$ref",
+            "_path": "members.$ref",
+            "_full_path": "urn:ietf:params:scim:schemas:core:2.0:Group:members.$ref",
+            "_arrayIndexKey": []
+          }
+        },
+        {
+          "name" : "type",
+          "type" : "string",
+          "multiValued" : false,
+          "description" : "A label indicating the type of resource, e.g., 'User' or 'Group'.",
+          "required" : false,
+          "caseExact" : false,
+          "canonicalValues" : [
+            "User",
+            "Group"
+          ],
+          "mutability" : "immutable",
+          "returned" : "default",
+          "uniqueness" : "none",
+          "_assist": {
+            "_jsonName": "type",
+            "_path": "members.type",
+            "_full_path": "urn:ietf:params:scim:schemas:core:2.0:Group:members.type",
+            "_arrayIndexKey": []
+          }
+        }
+      ],
+      "mutability" : "readWrite",
+      "returned" : "default",
+      "_assist": {
+        "_jsonName": "members",
+        "_path": "members",
+        "_full_path": "urn:ietf:params:scim:schemas:core:2.0:Group:members",
+        "_arrayIndexKey": ["value"]
+      }
+    }
+  ],
+  "meta" : {
+    "resourceType" : "Schema",
+    "location" : "/v2/Schemas/urn:ietf:params:scim:schemas:core:2.0:Group"
+  }
+}

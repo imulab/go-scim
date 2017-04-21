@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 	"math"
 	"strings"
 	"time"
-	"context"
 )
 
 func NewIdAssignment() ReadOnlyAssignment {

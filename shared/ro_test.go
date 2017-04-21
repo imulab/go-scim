@@ -1,11 +1,11 @@
 package shared
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"strings"
 	"testing"
-	"context"
 )
 
 func TestIdAssignment_AssignValue(t *testing.T) {

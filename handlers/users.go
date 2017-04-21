@@ -1,15 +1,15 @@
 package handlers
 
 import (
-	"net/http"
-	"github.com/davidiamyou/go-scim/shared"
-	"fmt"
 	"context"
+	"fmt"
+	"github.com/davidiamyou/go-scim/shared"
+	"net/http"
 )
 
-func GetUserById(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+func GetUserByIdHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
-	sch := server.Schema(shared.UserResourceType)
+	sch := server.InternalSchema(shared.UserUrn)
 
 	id, version := ParseIdAndVersion(r, server.UrlParam)
 

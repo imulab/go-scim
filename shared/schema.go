@@ -282,9 +282,9 @@ const (
 	External = "external"
 	Uri      = "uri"
 
-	UserResourceType   = "User"
-	GroupResourceType  = "Group"
-	SchemaResourceType = "Schema"
-	ResourceTypeResourceType = "ResourceType"
+	UserResourceType                  = "User"
+	GroupResourceType                 = "Group"
+	SchemaResourceType                = "Schema"
+	ResourceTypeResourceType          = "ResourceType"
 	ServiceProviderConfigResourceType = "ServiceProviderConfig"
 )

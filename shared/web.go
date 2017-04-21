@@ -1,11 +1,11 @@
 package shared
 
 type RequestId struct{}
-type RequestTimestamp struct {}
+type RequestTimestamp struct{}
 type RequestType struct{}
 
 const (
-	_		= iota
+	_ = iota
 	GetUserById
 	CreateUser
 	ReplaceUser
