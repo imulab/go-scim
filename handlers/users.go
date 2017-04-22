@@ -51,6 +51,58 @@ func CreateUserHandler(r *http.Request, server ScimServer, ctx context.Context) 
 	return
 }
 
+func ReplaceUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+	ri = newResponse()
+	sch := server.InternalSchema(shared.UserUrn)
+	repo := server.Repository(shared.UserResourceType)
+
+	resource, err := ParseBodyAsResource(r)
+	ErrorCheck(err)
+
+	id, version := ParseIdAndVersion(r, server.UrlParam)
+	ctx = context.WithValue(ctx, shared.ResourceId{}, id)
+	reference, err := repo.Get(id, version)
+	ErrorCheck(err)
+
+	err = server.ValidateType(resource, sch, ctx)
+	ErrorCheck(err)
+
+	err = server.CorrectCase(resource, sch, ctx)
+	ErrorCheck(err)
+
+	err = server.ValidateRequired(resource, sch, ctx)
+	ErrorCheck(err)
+
+	err = server.ValidateMutability(resource, reference.(*shared.Resource), sch, ctx)
+	ErrorCheck(err)
+
+	err = server.ValidateUniqueness(resource, sch, repo, ctx)
+	ErrorCheck(err)
+
+	err = server.AssignReadOnlyValue(resource, ctx)
+	ErrorCheck(err)
+
+	err = repo.Update(id, version, resource)
+	ErrorCheck(err)
+
+	json, err := server.MarshalJSON(resource, sch, []string{}, []string{})
+	ErrorCheck(err)
+
+	location := resource.GetData()["meta"].(map[string]interface{})["location"].(string)
+	newVersion := resource.GetData()["meta"].(map[string]interface{})["version"].(string)
+
+	ri.Status(http.StatusOK)
+	ri.ScimJsonHeader()
+	if len(newVersion) > 0 {
+		ri.ETagHeader(newVersion)
+	}
+	if len(location) > 0 {
+		ri.LocationHeader(location)
+	}
+	ri.Body(json)
+	return
+}
+
 func QueryUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 	sch := server.InternalSchema(shared.UserUrn)
@@ -111,7 +163,7 @@ func GetUserByIdHandler(r *http.Request, server ScimServer, ctx context.Context)
 	ErrorCheck(err)
 	location := dp.GetData()["meta"].(map[string]interface{})["location"].(string)
 
-	json, err := server.MarshalJSON(dp.GetData(), sch, attributes, excludedAttributes)
+	json, err := server.MarshalJSON(dp, sch, attributes, excludedAttributes)
 	ErrorCheck(err)
 
 	ri.Status(http.StatusOK)

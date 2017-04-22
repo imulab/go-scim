@@ -56,19 +56,23 @@ func (abs abstractMarshalHelper) newEncOpts() (encOpts, error) {
 	}
 	if len(abs.Attributes) > 0 {
 		for _, attr := range abs.Attributes {
-			if p, err := NewPath(attr); err != nil {
-				return opt, err
-			} else {
-				opt.attributes = append(opt.attributes, p)
+			if len(attr) > 0 {
+				if p, err := NewPath(attr); err != nil {
+					return opt, err
+				} else {
+					opt.attributes = append(opt.attributes, p)
+				}
 			}
 		}
 	}
 	if len(abs.ExcludedAttributes) > 0 {
 		for _, attr := range abs.ExcludedAttributes {
-			if p, err := NewPath(attr); err != nil {
-				return opt, err
-			} else {
-				opt.excludedAttributes = append(opt.excludedAttributes, p)
+			if len(attr) > 0 {
+				if p, err := NewPath(attr); err != nil {
+					return opt, err
+				} else {
+					opt.excludedAttributes = append(opt.excludedAttributes, p)
+				}
 			}
 		}
 	}

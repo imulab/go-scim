@@ -54,7 +54,24 @@ func (uv *uniquenessValidator) validateUniquenessWithReflection(v reflect.Value,
 			if err != nil {
 				uv.throw(err, ctx)
 			} else if count > 0 {
-				uv.throw(Error.Duplicate(attr.Assist.Path, v0.Interface()), ctx)
+				requestType := ctx.Value(RequestType{}).(int)
+				switch requestType {
+				case ReplaceUser, ReplaceGroup, PatchUser, PatchGroup:
+					if count > 1 {
+						uv.throw(Error.Duplicate(attr.Assist.Path, v0.Interface()), ctx)
+					} else {
+						resourceId := ctx.Value(ResourceId{}).(string)
+						lr, err := repo.Search(SearchRequest{Filter: query, StartIndex: 1})
+						if err != nil {
+							uv.throw(Error.Text("Cannot verify uniqueness: %s", err.Error()), ctx)
+						}
+						if resourceId != lr.Resources[0].GetData()["id"].(string) {
+							uv.throw(Error.Duplicate(attr.Assist.Path, v0.Interface()), ctx)
+						}
+					}
+				default:
+					uv.throw(Error.Duplicate(attr.Assist.Path, v0.Interface()), ctx)
+				}
 			}
 		}
 

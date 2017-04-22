@@ -1,6 +1,7 @@
 package shared
 
 type RequestId struct{}
+type ResourceId struct{}
 type RequestTimestamp struct{}
 type RequestType struct{}
 

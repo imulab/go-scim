@@ -84,6 +84,7 @@ func main() {
 	mux.DeleteFunc("/Users/:resourceId", wrap(web.DeleteUserByIdHandler, scim.DeleteUser))
 	mux.GetFunc("/Users", wrap(web.QueryUserHandler, scim.QueryUser))
 	mux.PostFunc("/Users/.search", wrap(web.QueryUserHandler, scim.QueryUser))
+	mux.PutFunc("/Users/:resourceId", wrap(web.ReplaceUserHandler, scim.ReplaceUser))
 
 	http.ListenAndServe(":8080", mux)
 }
