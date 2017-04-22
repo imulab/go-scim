@@ -2,9 +2,10 @@ package shared
 
 import (
 	"reflect"
+	"context"
 )
 
-func ValidateMutability(subj *Resource, ref *Resource, sch *Schema) (err error) {
+func ValidateMutability(subj *Resource, ref *Resource, sch *Schema, ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch r.(type) {
@@ -20,7 +21,7 @@ func ValidateMutability(subj *Resource, ref *Resource, sch *Schema) (err error) 
 		subjBaseStack: NewStackWithoutLimit(),
 		refBaseStack:  NewStackWithoutLimit(),
 	}
-	validator.stepIn(reflect.ValueOf(subj.Complex), reflect.ValueOf(ref.Complex), sch.ToAttribute())
+	validator.stepIn(reflect.ValueOf(subj.Complex), reflect.ValueOf(ref.Complex), sch.ToAttribute(), ctx)
 
 	err = nil
 	return
@@ -31,7 +32,7 @@ type mutabilityValidator struct {
 	refBaseStack  Stack
 }
 
-func (mv *mutabilityValidator) stepIn(sv, rv reflect.Value, attr *Attribute) {
+func (mv *mutabilityValidator) stepIn(sv, rv reflect.Value, attr *Attribute, ctx context.Context) {
 	if !attr.Assigned(sv) || !attr.Assigned(rv) {
 		return
 	}
@@ -48,12 +49,12 @@ func (mv *mutabilityValidator) stepIn(sv, rv reflect.Value, attr *Attribute) {
 
 	mv.subjBaseStack.Push(sv)
 	mv.refBaseStack.Push(rv)
-	mv.validateMutabilityWithReflection(attr)
+	mv.validateMutabilityWithReflection(attr, ctx)
 	mv.subjBaseStack.Pop()
 	mv.refBaseStack.Pop()
 }
 
-func (mv *mutabilityValidator) validateMutabilityWithReflection(guide *Attribute) {
+func (mv *mutabilityValidator) validateMutabilityWithReflection(guide *Attribute, ctx context.Context) {
 	for _, attr := range guide.SubAttributes {
 		subjVal := mv.getSubjectValue(attr)
 		refVal := mv.getReferenceValue(attr)
@@ -61,7 +62,7 @@ func (mv *mutabilityValidator) validateMutabilityWithReflection(guide *Attribute
 		switch attr.Type {
 		case TypeComplex:
 			if attr.MultiValued {
-				mv.compareAndCopy(subjVal, refVal, attr)
+				mv.compareAndCopy(subjVal, refVal, attr, ctx)
 				if attr.Assigned(subjVal) && attr.Assigned(refVal) {
 					if subjVal.Kind() == reflect.Interface {
 						subjVal = subjVal.Elem()
@@ -76,22 +77,22 @@ func (mv *mutabilityValidator) validateMutabilityWithReflection(guide *Attribute
 							subjElemVal := subjVal.Index(i)
 							refElemVal := refVal.Index(j)
 							if mv.matches(subjElemVal, refElemVal, elemAttr.Assist.ArrayIndexKey) {
-								mv.stepIn(subjElemVal, refElemVal, elemAttr)
+								mv.stepIn(subjElemVal, refElemVal, elemAttr, ctx)
 							}
 						}
 					}
 				}
 			} else {
-				mv.compareAndCopy(subjVal, refVal, attr)
-				mv.stepIn(subjVal, refVal, attr)
+				mv.compareAndCopy(subjVal, refVal, attr, ctx)
+				mv.stepIn(subjVal, refVal, attr, ctx)
 			}
 		default:
-			mv.compareAndCopy(subjVal, refVal, attr)
+			mv.compareAndCopy(subjVal, refVal, attr, ctx)
 		}
 	}
 }
 
-func (mv *mutabilityValidator) compareAndCopy(sv, rv reflect.Value, attr *Attribute) {
+func (mv *mutabilityValidator) compareAndCopy(sv, rv reflect.Value, attr *Attribute, ctx context.Context) {
 	switch attr.Mutability {
 	case ReadOnly:
 		baseVal := mv.subjBaseStack.Peek().(reflect.Value)
@@ -101,10 +102,10 @@ func (mv *mutabilityValidator) compareAndCopy(sv, rv reflect.Value, attr *Attrib
 		if !mv.safeIsNil(rv) {
 			if !mv.safeIsNil(sv) {
 				if !reflect.DeepEqual(sv.Interface(), rv.Interface()) {
-					mv.throw(Error.MutabilityViolation(attr.Assist.FullPath))
+					mv.throw(Error.MutabilityViolation(attr.Assist.FullPath), ctx)
 				}
 			} else {
-				mv.throw(Error.MutabilityViolation(attr.Assist.FullPath))
+				mv.throw(Error.MutabilityViolation(attr.Assist.FullPath), ctx)
 			}
 		}
 	}
@@ -162,6 +163,6 @@ func (mv *mutabilityValidator) safeIsNil(value reflect.Value) bool {
 	}
 }
 
-func (mv *mutabilityValidator) throw(err error) {
+func (mv *mutabilityValidator) throw(err error, ctx context.Context) {
 	panic(err)
 }

@@ -25,12 +25,14 @@ type ScimServer interface {
 	Schema(id string) *Schema
 	InternalSchema(id string) *Schema
 
+	// case
+	CorrectCase(subj *Resource, sch *Schema, ctx context.Context) error
+
 	// validation
-	// TODO add context
-	ValidateType(subj *Resource, sch *Schema) error
-	ValidateRequired(subj *Resource, sch *Schema) error
-	ValidateMutability(subj *Resource, ref *Resource, sch *Schema) error
-	ValidateUniqueness(subj *Resource, sch *Schema, repo Repository) error
+	ValidateType(subj *Resource, sch *Schema, ctx context.Context) error
+	ValidateRequired(subj *Resource, sch *Schema, ctx context.Context) error
+	ValidateMutability(subj *Resource, ref *Resource, sch *Schema, ctx context.Context) error
+	ValidateUniqueness(subj *Resource, sch *Schema, repo Repository, ctx context.Context) error
 
 	// read only generation
 	AssignReadOnlyValue(r *Resource, ctx context.Context) error

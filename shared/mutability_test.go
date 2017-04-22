@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
+	"context"
 )
 
 func TestValidateMutability(t *testing.T) {
@@ -204,8 +205,9 @@ func TestValidateMutability(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, r1)
 
+		ctx := context.Background()
 		subj := test.getResource(r0)
 		ref := test.getReference(r1)
-		test.assertion(subj, ref, ValidateMutability(subj, ref, test.getSchema(sch)))
+		test.assertion(subj, ref, ValidateMutability(subj, ref, test.getSchema(sch), ctx))
 	}
 }

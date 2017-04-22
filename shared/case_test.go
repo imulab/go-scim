@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
+	"context"
 )
 
 func TestCorrectCase(t *testing.T) {
@@ -84,7 +85,8 @@ func TestCorrectCase(t *testing.T) {
 		require.NotNil(t, r1)
 		r1 = test.getResource(r1)
 
-		err = CorrectCase(r1, sch)
+		ctx := context.Background()
+		err = CorrectCase(r1, sch, ctx)
 
 		assert.Nil(t, err)
 		assert.True(t, reflect.DeepEqual(r0.Complex, r1.Complex))

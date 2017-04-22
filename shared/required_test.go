@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"context"
 )
 
 func TestValidateRequired(t *testing.T) {
@@ -114,6 +115,7 @@ func TestValidateRequired(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, r)
 
-		test.assertion(ValidateRequired(test.getResource(r), test.getSchema(sch)))
+		ctx := context.Background()
+		test.assertion(ValidateRequired(test.getResource(r), test.getSchema(sch), ctx))
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+	"context"
 )
 
 func TestValidateUniqueness(t *testing.T) {
@@ -44,7 +45,8 @@ func TestValidateUniqueness(t *testing.T) {
 		require.NotNil(t, r)
 		r = test.getResource(r)
 
-		test.assertion(ValidateUniqueness(r, sch, repo))
+		ctx := context.Background()
+		test.assertion(ValidateUniqueness(r, sch, repo, ctx))
 	}
 }
 

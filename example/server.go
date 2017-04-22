@@ -139,17 +139,20 @@ func (ss *simpleServer) InternalSchema(id string) *scim.Schema {
 		panic(scim.Error.Text("unknown schema id %s", id))
 	}
 }
-func (ss *simpleServer) ValidateType(subj *scim.Resource, sch *scim.Schema) error {
-	return scim.ValidateType(subj, sch)
+func (ss *simpleServer) CorrectCase(subj *scim.Resource, sch *scim.Schema, ctx context.Context) error {
+	return scim.CorrectCase(subj, sch, ctx)
 }
-func (ss *simpleServer) ValidateRequired(subj *scim.Resource, sch *scim.Schema) error {
-	return scim.ValidateRequired(subj, sch)
+func (ss *simpleServer) ValidateType(subj *scim.Resource, sch *scim.Schema, ctx context.Context) error {
+	return scim.ValidateType(subj, sch, ctx)
 }
-func (ss *simpleServer) ValidateMutability(subj *scim.Resource, ref *scim.Resource, sch *scim.Schema) error {
-	return scim.ValidateMutability(subj, ref, sch)
+func (ss *simpleServer) ValidateRequired(subj *scim.Resource, sch *scim.Schema, ctx context.Context) error {
+	return scim.ValidateRequired(subj, sch, ctx)
 }
-func (ss *simpleServer) ValidateUniqueness(subj *scim.Resource, sch *scim.Schema, repo scim.Repository) error {
-	return scim.ValidateUniqueness(subj, sch, repo)
+func (ss *simpleServer) ValidateMutability(subj *scim.Resource, ref *scim.Resource, sch *scim.Schema, ctx context.Context) error {
+	return scim.ValidateMutability(subj, ref, sch, ctx)
+}
+func (ss *simpleServer) ValidateUniqueness(subj *scim.Resource, sch *scim.Schema, repo scim.Repository, ctx context.Context) error {
+	return scim.ValidateUniqueness(subj, sch, repo, ctx)
 }
 func (ss *simpleServer) AssignReadOnlyValue(r *scim.Resource, ctx context.Context) (err error) {
 	requestType := ctx.Value(scim.RequestType{}).(int)

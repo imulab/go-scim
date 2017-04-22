@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"context"
 )
 
 // TODO need to check context, if create, threshold is 0, if put, patch, threshold is 1
-func ValidateUniqueness(subj *Resource, sch *Schema, repo Repository) (err error) {
+func ValidateUniqueness(subj *Resource, sch *Schema, repo Repository, ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch r.(type) {
@@ -19,7 +20,7 @@ func ValidateUniqueness(subj *Resource, sch *Schema, repo Repository) (err error
 		}
 	}()
 
-	uniquenessValidatorInstance.validateUniquenessWithReflection(reflect.ValueOf(subj.Complex), sch.ToAttribute(), repo)
+	uniquenessValidatorInstance.validateUniquenessWithReflection(reflect.ValueOf(subj.Complex), sch.ToAttribute(), repo, ctx)
 	return
 }
 
@@ -36,7 +37,7 @@ func init() {
 
 type uniquenessValidator struct{}
 
-func (uv *uniquenessValidator) validateUniquenessWithReflection(v reflect.Value, guide *Attribute, repo Repository) {
+func (uv *uniquenessValidator) validateUniquenessWithReflection(v reflect.Value, guide *Attribute, repo Repository, ctx context.Context) {
 	for _, attr := range guide.SubAttributes {
 		v0 := v.MapIndex(reflect.ValueOf(attr.Name))
 		if !attr.Assigned(v0) {
@@ -51,18 +52,18 @@ func (uv *uniquenessValidator) validateUniquenessWithReflection(v reflect.Value,
 			query := fmt.Sprintf("%s eq \"%v\"", attr.Assist.Path, v0.Interface())
 			count, err := repo.Count(query)
 			if err != nil {
-				uv.throw(err)
+				uv.throw(err, ctx)
 			} else if count > 0 {
-				uv.throw(Error.Duplicate(attr.Assist.Path, v0.Interface()))
+				uv.throw(Error.Duplicate(attr.Assist.Path, v0.Interface()), ctx)
 			}
 		}
 
 		if attr.ExpectsComplex() && v0.Kind() == reflect.Map {
-			uv.validateUniquenessWithReflection(v0, attr, repo)
+			uv.validateUniquenessWithReflection(v0, attr, repo, ctx)
 		}
 	}
 }
 
-func (uv *uniquenessValidator) throw(err error) {
+func (uv *uniquenessValidator) throw(err error, ctx context.Context) {
 	panic(err)
 }

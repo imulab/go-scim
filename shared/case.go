@@ -3,9 +3,10 @@ package shared
 import (
 	"reflect"
 	"sync"
+	"context"
 )
 
-func CorrectCase(subj *Resource, sch *Schema) (err error) {
+func CorrectCase(subj *Resource, sch *Schema, ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch r.(type) {
@@ -17,7 +18,7 @@ func CorrectCase(subj *Resource, sch *Schema) (err error) {
 		}
 	}()
 
-	caseCorrectionInstance.correctCaseWithReflection(reflect.ValueOf(subj.Complex), sch.ToAttribute())
+	caseCorrectionInstance.correctCaseWithReflection(reflect.ValueOf(subj.Complex), sch.ToAttribute(), ctx)
 
 	err = nil
 	return
@@ -25,7 +26,7 @@ func CorrectCase(subj *Resource, sch *Schema) (err error) {
 
 type caseCorrection struct{}
 
-func (cc *caseCorrection) correctCaseWithReflection(v reflect.Value, attr *Attribute) {
+func (cc *caseCorrection) correctCaseWithReflection(v reflect.Value, attr *Attribute, ctx context.Context) {
 	if !v.IsValid() {
 		return
 	}
@@ -38,15 +39,15 @@ func (cc *caseCorrection) correctCaseWithReflection(v reflect.Value, attr *Attri
 	switch v.Kind() {
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < v.Len(); i++ {
-			cc.correctCaseWithReflection(v.Index(i), attr)
+			cc.correctCaseWithReflection(v.Index(i), attr, ctx)
 		}
 
 	case reflect.Map:
-		cc.resetMapKey(v, attr)
+		cc.resetMapKey(v, attr, ctx)
 	}
 }
 
-func (cc *caseCorrection) resetMapKey(m reflect.Value, guide *Attribute) {
+func (cc *caseCorrection) resetMapKey(m reflect.Value, guide *Attribute, ctx context.Context) {
 	if m.Kind() != reflect.Map {
 		return
 	}
@@ -54,12 +55,12 @@ func (cc *caseCorrection) resetMapKey(m reflect.Value, guide *Attribute) {
 	for _, k := range m.MapKeys() {
 		p, err := NewPath(k.String())
 		if err != nil {
-			cc.throw(Error.NoAttribute(p.Value()))
+			cc.throw(Error.NoAttribute(p.Value()), ctx)
 		}
 
 		attr := guide.GetAttribute(p, false)
 		if attr == nil {
-			cc.throw(Error.NoAttribute(p.Value()))
+			cc.throw(Error.NoAttribute(p.Value()), ctx)
 		}
 
 		v := m.MapIndex(k)
@@ -69,11 +70,11 @@ func (cc *caseCorrection) resetMapKey(m reflect.Value, guide *Attribute) {
 			m.SetMapIndex(k, reflect.Value{})
 		}
 
-		cc.correctCaseWithReflection(v, attr)
+		cc.correctCaseWithReflection(v, attr, ctx)
 	}
 }
 
-func (cc *caseCorrection) throw(err error) {
+func (cc *caseCorrection) throw(err error, ctx context.Context) {
 	panic(err)
 }
 
