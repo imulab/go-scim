@@ -141,7 +141,12 @@ func ErrorRecovery(next EndpointHandler) EndpointHandler {
 				case *ResourceNotFoundError:
 					switch req.Method {
 					case http.MethodPut, http.MethodPatch, http.MethodDelete:
-						info.Status(http.StatusPreconditionFailed)
+						_, version := ParseIdAndVersion(req, server.UrlParam)
+						if len(version) == 0 {
+							info.Status(http.StatusNotFound)
+						} else {
+							info.Status(http.StatusPreconditionFailed)
+						}
 					default:
 						info.Status(http.StatusNotFound)
 					}

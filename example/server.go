@@ -80,6 +80,7 @@ func main() {
 	mux.Prefix("/v2")
 	mux.GetFunc("/Users/:resourceId", wrap(web.GetUserByIdHandler, scim.GetUserById))
 	mux.PostFunc("/Users", wrap(web.CreateUserHandler, scim.CreateUser))
+	mux.DeleteFunc("/Users/:resourceId", wrap(web.DeleteUserByIdHandler, scim.DeleteUser))
 
 	http.ListenAndServe(":8080", mux)
 }

@@ -51,6 +51,19 @@ func CreateUserHandler(r *http.Request, server ScimServer, ctx context.Context) 
 	return
 }
 
+func DeleteUserByIdHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+	ri = newResponse()
+
+	id, version := ParseIdAndVersion(r, server.UrlParam)
+	repo := server.Repository(shared.UserResourceType)
+
+	err := repo.Delete(id, version)
+	ErrorCheck(err)
+
+	ri.Status(http.StatusNoContent)
+	return
+}
+
 func GetUserByIdHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 	sch := server.InternalSchema(shared.UserUrn)
