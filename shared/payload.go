@@ -98,19 +98,23 @@ func (sr SearchRequest) Validate(guide AttributeSource) error {
 	}
 
 	if guide != nil {
-		if corrected, err := sr.correctPathCase(sr.SortBy, guide); err != nil {
-			return err
-		} else {
-			sr.SortBy = corrected
+		if len(sr.SortBy) > 0 {
+			if corrected, err := sr.correctPathCase(sr.SortBy, guide); err != nil {
+				return err
+			} else {
+				sr.SortBy = corrected
+			}
 		}
 
 		if len(sr.Attributes) > 0 {
 			updated := make([]string, 0)
 			for _, each := range sr.Attributes {
-				if corrected, err := sr.correctPathCase(each, guide); err != nil {
-					return err
-				} else {
-					updated = append(updated, corrected)
+				if len(each) > 0 {
+					if corrected, err := sr.correctPathCase(each, guide); err != nil {
+						return err
+					} else {
+						updated = append(updated, corrected)
+					}
 				}
 			}
 			sr.Attributes = updated
@@ -119,10 +123,12 @@ func (sr SearchRequest) Validate(guide AttributeSource) error {
 		if len(sr.ExcludedAttributes) > 0 {
 			updated := make([]string, 0)
 			for _, each := range sr.Attributes {
-				if corrected, err := sr.correctPathCase(each, guide); err != nil {
-					return err
-				} else {
-					updated = append(updated, corrected)
+				if len(each) > 0 {
+					if corrected, err := sr.correctPathCase(each, guide); err != nil {
+						return err
+					} else {
+						updated = append(updated, corrected)
+					}
 				}
 			}
 			sr.ExcludedAttributes = updated

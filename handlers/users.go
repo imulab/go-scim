@@ -51,6 +51,31 @@ func CreateUserHandler(r *http.Request, server ScimServer, ctx context.Context) 
 	return
 }
 
+func QueryUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+	ri = newResponse()
+	sch := server.InternalSchema(shared.UserUrn)
+
+	attributes, excludedAttributes := ParseInclusionAndExclusionAttributes(r)
+
+	sr, err := ParseSearchRequest(r, server)
+	ErrorCheck(err)
+
+	err = sr.Validate(sch)
+	ErrorCheck(err)
+
+	repo := server.Repository(shared.UserResourceType)
+	lr, err := repo.Search(sr)
+	ErrorCheck(err)
+
+	json, err := server.MarshalJSON(lr, sch, attributes, excludedAttributes)
+	ErrorCheck(err)
+
+	ri.Status(http.StatusOK)
+	ri.ScimJsonHeader()
+	ri.Body(json)
+	return
+}
+
 func DeleteUserByIdHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 

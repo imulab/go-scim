@@ -8,6 +8,7 @@ import (
 	"github.com/satori/go.uuid"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -230,6 +231,63 @@ func ParseBodyAsResource(req *http.Request) (*Resource, error) {
 	}
 
 	return &Resource{Complex: Complex(data)}, nil
+}
+
+func ParseSearchRequest(req *http.Request, server ScimServer) (SearchRequest, error) {
+	switch req.Method {
+	case http.MethodGet:
+		sr := SearchRequest{
+			Schemas:    []string{SearchUrn},
+			StartIndex: 1,
+			Count:      server.Property().GetInt("scim.protocol.itemsPerPage"),
+		}
+		sr.Attributes = strings.Split(req.URL.Query().Get("attributes"), ",")
+		sr.ExcludedAttributes = strings.Split(req.URL.Query().Get("excludedAttributes"), ",")
+		sr.Filter = req.URL.Query().Get("filter")
+		sr.SortBy = req.URL.Query().Get("sortBy")
+		sr.SortOrder = req.URL.Query().Get("sortOrder")
+		if v := req.URL.Query().Get("startIndex"); len(v) > 0 {
+			if i, err := strconv.Atoi(v); err != nil {
+				return SearchRequest{}, Error.InvalidParam("startIndex", "1-based integer", v)
+			} else {
+				if i < 1 {
+					sr.StartIndex = 1
+				} else {
+					sr.StartIndex = i
+				}
+			}
+		}
+		if v := req.URL.Query().Get("count"); len(v) > 0 {
+			if i, err := strconv.Atoi(v); err != nil {
+				return SearchRequest{}, Error.InvalidParam("count", "non-negative integer", v)
+			} else {
+				if i < 0 {
+					sr.Count = 0
+				} else {
+					sr.Count = i
+				}
+			}
+		}
+		return sr, nil
+
+	case http.MethodPost:
+		sr := SearchRequest{
+			StartIndex: 1,
+			Count:      server.Property().GetInt("scim.protocol.itemsPerPage"),
+		}
+		reqBody, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			return SearchRequest{}, err
+		}
+		err = json.Unmarshal(reqBody, &sr)
+		if err != nil {
+			return SearchRequest{}, err
+		}
+		return sr, nil
+
+	default:
+		return SearchRequest{}, Error.Text("%s method is not supported for search request", req.Method)
+	}
 }
 
 // response info

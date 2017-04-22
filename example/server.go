@@ -21,6 +21,7 @@ func initConfiguration() {
 			"scim.resources.schema.internalGroup.path": "../resources/schemas/group_internal.json",
 			"scim.resources.schema.user.path":          "../resources/schemas/user.json",
 			"scim.resources.schema.group.path":         "../resources/schemas/group.json",
+			"scim.protocol.itemsPerPage":               10,
 			"mongo.url":                                "mongodb://localhost:32794/scim_example?maxPoolSize=100",
 			"mongo.db":                                 "scim_example",
 			"mongo.collection.user":                    "users",
@@ -81,6 +82,8 @@ func main() {
 	mux.GetFunc("/Users/:resourceId", wrap(web.GetUserByIdHandler, scim.GetUserById))
 	mux.PostFunc("/Users", wrap(web.CreateUserHandler, scim.CreateUser))
 	mux.DeleteFunc("/Users/:resourceId", wrap(web.DeleteUserByIdHandler, scim.DeleteUser))
+	mux.GetFunc("/Users", wrap(web.QueryUserHandler, scim.QueryUser))
+	mux.PostFunc("/Users/.search", wrap(web.QueryUserHandler, scim.QueryUser))
 
 	http.ListenAndServe(":8080", mux)
 }
