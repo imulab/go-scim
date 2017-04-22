@@ -1,8 +1,8 @@
 package shared
 
 import (
-	"reflect"
 	"context"
+	"reflect"
 )
 
 func ValidateMutability(subj *Resource, ref *Resource, sch *Schema, ctx context.Context) (err error) {

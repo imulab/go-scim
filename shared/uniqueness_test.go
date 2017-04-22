@@ -1,11 +1,11 @@
 package shared
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
-	"context"
 )
 
 func TestValidateUniqueness(t *testing.T) {

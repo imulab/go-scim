@@ -72,13 +72,14 @@ func initConfiguration() {
 
 func main() {
 	initConfiguration()
-	endpoint := web.Endpoint
-	recovery := web.ErrorRecovery
-	inject := web.InjectRequestScope
+	wrap := func(handler web.EndpointHandler, requestType int) http.HandlerFunc {
+		return web.Endpoint(web.InjectRequestScope(web.ErrorRecovery(handler), requestType), exampleServer)
+	}
 
 	mux := bone.New()
 	mux.Prefix("/v2")
-	mux.GetFunc("/Users/:resourceId", endpoint(inject(recovery(web.GetUserByIdHandler), scim.GetUserById), exampleServer))
+	mux.GetFunc("/Users/:resourceId", wrap(web.GetUserByIdHandler, scim.GetUserById))
+	mux.PostFunc("/Users", wrap(web.CreateUserHandler, scim.CreateUser))
 
 	http.ListenAndServe(":8080", mux)
 }
@@ -132,9 +133,9 @@ func (ss *simpleServer) Schema(id string) *scim.Schema {
 func (ss *simpleServer) InternalSchema(id string) *scim.Schema {
 	switch id {
 	case scim.UserUrn:
-		return userSchema
+		return userSchemaInternal
 	case scim.GroupUrn:
-		return groupSchema
+		return groupSchemaInternal
 	default:
 		panic(scim.Error.Text("unknown schema id %s", id))
 	}

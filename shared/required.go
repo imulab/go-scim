@@ -1,9 +1,9 @@
 package shared
 
 import (
+	"context"
 	"reflect"
 	"sync"
-	"context"
 )
 
 func ValidateRequired(subj *Resource, sch *Schema, ctx context.Context) (err error) {

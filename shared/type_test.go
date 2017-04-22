@@ -1,11 +1,11 @@
 package shared
 
 import (
+	"context"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"context"
 )
 
 func TestValidateType(t *testing.T) {
