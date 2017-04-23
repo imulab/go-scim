@@ -1,24 +1,24 @@
 package shared
 
 import (
-	"testing"
-	"github.com/stretchr/testify/require"
 	"context"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"reflect"
+	"testing"
 )
 
 func TestApplyPatch(t *testing.T) {
 	sch, _, err := ParseSchema("../resources/tests/user_schema.json")
 	require.Nil(t, err)
 
-	for _, test := range []struct{
-		patch 		Patch
-		assertion 	func(r *Resource, err error)
+	for _, test := range []struct {
+		patch     Patch
+		assertion func(r *Resource, err error)
 	}{
 		{
 			// add: simple path
-			Patch{Op:Add, Path:"userName", Value: "foo"},
+			Patch{Op: Add, Path: "userName", Value: "foo"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "foo", r.GetData()["userName"])
@@ -26,7 +26,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// add: duplex path
-			Patch{Op:Add, Path:"name.familyName", Value: "foo"},
+			Patch{Op: Add, Path: "name.familyName", Value: "foo"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "foo", r.GetData()["name"].(map[string]interface{})["familyName"])
@@ -34,7 +34,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// add: implicit path
-			Patch{Op:Add, Path:"", Value: map[string]interface{}{ "userName": "foo", "externalId": "bar" }},
+			Patch{Op: Add, Path: "", Value: map[string]interface{}{"userName": "foo", "externalId": "bar"}},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "foo", r.GetData()["userName"])
@@ -43,7 +43,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// add: multiValued
-			Patch{Op:Add, Path:"emails", Value: map[string]interface{}{"value": "foo@bar.com"}},
+			Patch{Op: Add, Path: "emails", Value: map[string]interface{}{"value": "foo@bar.com"}},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				emailsVal := reflect.ValueOf(r.GetData()["emails"])
@@ -56,7 +56,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// add : duplex multivalued
-			Patch{Op:Add, Path:"emails.value", Value: "foo@bar.com"},
+			Patch{Op: Add, Path: "emails.value", Value: "foo@bar.com"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				emailsVal := reflect.ValueOf(r.GetData()["emails"])
@@ -70,7 +70,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// add: duplex multivalued with filter
-			Patch{Op:Add, Path:"emails[type eq \"work\"].value", Value: "foo@bar.com"},
+			Patch{Op: Add, Path: "emails[type eq \"work\"].value", Value: "foo@bar.com"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				emailsVal := reflect.ValueOf(r.GetData()["emails"])
@@ -84,7 +84,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// replace: simple path
-			Patch{Op:Replace, Path:"userName", Value: "foo"},
+			Patch{Op: Replace, Path: "userName", Value: "foo"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "foo", r.GetData()["userName"])
@@ -92,7 +92,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// replace: duplex path
-			Patch{Op:Replace, Path:"name.familyName", Value: "foo"},
+			Patch{Op: Replace, Path: "name.familyName", Value: "foo"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "foo", r.GetData()["name"].(map[string]interface{})["familyName"])
@@ -100,7 +100,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// replace : duplex multivalued
-			Patch{Op:Add, Path:"emails.value", Value: "foo@bar.com"},
+			Patch{Op: Add, Path: "emails.value", Value: "foo@bar.com"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				emailsVal := reflect.ValueOf(r.GetData()["emails"])
@@ -114,7 +114,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// replace: duplex multivalued with filter
-			Patch{Op:Add, Path:"emails[type eq \"work\"].value", Value: "foo@bar.com"},
+			Patch{Op: Add, Path: "emails[type eq \"work\"].value", Value: "foo@bar.com"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				emailsVal := reflect.ValueOf(r.GetData()["emails"])
@@ -128,7 +128,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// remove: simple path
-			Patch{Op:Remove, Path:"userName"},
+			Patch{Op: Remove, Path: "userName"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				assert.Nil(t, r.GetData()["userName"])
@@ -136,7 +136,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// remove: duplex path
-			Patch{Op:Remove, Path:"name.familyName"},
+			Patch{Op: Remove, Path: "name.familyName"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				assert.Nil(t, r.GetData()["name"].(map[string]interface{})["familyName"])
@@ -144,7 +144,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// remove: multiValued
-			Patch{Op:Remove, Path:"emails"},
+			Patch{Op: Remove, Path: "emails"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				assert.Nil(t, r.GetData()["emails"])
@@ -152,7 +152,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// remove : duplex multivalued
-			Patch{Op:Remove, Path:"emails.value"},
+			Patch{Op: Remove, Path: "emails.value"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				emailsVal := reflect.ValueOf(r.GetData()["emails"])
@@ -166,7 +166,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// replace: duplex multivalued with filter
-			Patch{Op:Remove, Path:"emails[type eq \"work\"].value"},
+			Patch{Op: Remove, Path: "emails[type eq \"work\"].value"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				emailsVal := reflect.ValueOf(r.GetData()["emails"])
@@ -179,7 +179,7 @@ func TestApplyPatch(t *testing.T) {
 		},
 		{
 			// replace: duplex multivalued with filter
-			Patch{Op:Remove, Path:"emails[type eq \"work\"]"},
+			Patch{Op: Remove, Path: "emails[type eq \"work\"]"},
 			func(r *Resource, err error) {
 				assert.Nil(t, err)
 				emailsVal := reflect.ValueOf(r.GetData()["emails"])
@@ -190,7 +190,7 @@ func TestApplyPatch(t *testing.T) {
 				assert.NotEqual(t, "work", emailsVal.Index(0).Elem().MapIndex(reflect.ValueOf("type")).Interface())
 			},
 		},
-	}{
+	} {
 		r, _, err := ParseResource("../resources/tests/user_1.json")
 		require.Nil(t, err)
 

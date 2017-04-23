@@ -17,7 +17,7 @@ func ApplyPatch(patch Patch, subj *Resource, sch *Schema, ctx context.Context) (
 		}
 	}()
 
-	ps := patchState{patch:patch}
+	ps := patchState{patch: patch, sch: sch, ctx: ctx}
 
 	var path Path
 	if len(patch.Path) == 0 {
@@ -43,11 +43,11 @@ func ApplyPatch(patch Patch, subj *Resource, sch *Schema, ctx context.Context) (
 
 	switch patch.Op {
 	case Add:
-		ps.applyPatchAdd(path, v, subj, sch, ctx)
+		ps.applyPatchAdd(path, v, subj)
 	case Replace:
-		ps.applyPatchReplace(path, v, subj, sch, ctx)
+		ps.applyPatchReplace(path, v, subj)
 	case Remove:
-		ps.applyPatchRemove(path, subj, sch, ctx)
+		ps.applyPatchRemove(path, subj)
 	default:
 		err = Error.InvalidParam("Op", "one of [add|remove|replace]", patch.Op)
 	}
@@ -55,8 +55,10 @@ func ApplyPatch(patch Patch, subj *Resource, sch *Schema, ctx context.Context) (
 }
 
 type patchState struct {
-	patch 		Patch
-	destAttr 	*Attribute
+	patch    Patch
+	destAttr *Attribute
+	sch      *Schema
+	ctx      context.Context
 }
 
 func (ps *patchState) throw(err error, ctx context.Context) {
@@ -65,21 +67,21 @@ func (ps *patchState) throw(err error, ctx context.Context) {
 	}
 }
 
-func (ps *patchState) applyPatchRemove(p Path, subj *Resource, sch *Schema, ctx context.Context) {
+func (ps *patchState) applyPatchRemove(p Path, subj *Resource) {
 	basePath, lastPath := p.SeparateAtLast()
 	baseChannel := make(chan interface{}, 1)
 	if basePath == nil {
-		go func(){
+		go func() {
 			baseChannel <- subj.Complex
 			close(baseChannel)
 		}()
 	} else {
-		baseChannel = subj.Get(basePath, sch)
+		baseChannel = subj.Get(basePath, ps.sch)
 	}
 
-	var baseAttr AttributeSource = sch
+	var baseAttr AttributeSource = ps.sch
 	if basePath != nil {
-		baseAttr = sch.GetAttribute(basePath, true)
+		baseAttr = ps.sch.GetAttribute(basePath, true)
 	}
 
 	for base := range baseChannel {
@@ -101,9 +103,9 @@ func (ps *patchState) applyPatchRemove(p Path, subj *Resource, sch *Schema, ctx 
 					origVal := baseVal.MapIndex(keyVal)
 					baseAttr = baseAttr.GetAttribute(lastPath, false)
 					reverseRoot := &filterNode{
-						data:Not,
-						typ:LogicalOperator,
-						left:lastPath.FilterRoot().(*filterNode),
+						data: Not,
+						typ:  LogicalOperator,
+						left: lastPath.FilterRoot().(*filterNode),
 					}
 					newElemChannel := MultiValued(origVal.Interface().([]interface{})).Filter(reverseRoot, baseAttr)
 					newArr := make([]interface{}, 0)
@@ -130,25 +132,25 @@ func (ps *patchState) applyPatchRemove(p Path, subj *Resource, sch *Schema, ctx 
 				case reflect.Map:
 					elemVal.SetMapIndex(keyVal, reflect.Value{})
 				default:
-					ps.throw(Error.InvalidPath(ps.patch.Path, "array base contains non-map"), ctx)
+					ps.throw(Error.InvalidPath(ps.patch.Path, "array base contains non-map"), ps.ctx)
 				}
 			}
 		default:
-			ps.throw(Error.InvalidPath(ps.patch.Path, "base evaluated to non-map and non-array."), ctx)
+			ps.throw(Error.InvalidPath(ps.patch.Path, "base evaluated to non-map and non-array."), ps.ctx)
 		}
 	}
 }
 
-func (ps *patchState) applyPatchReplace(p Path, v reflect.Value, subj *Resource, sch *Schema, ctx context.Context) {
+func (ps *patchState) applyPatchReplace(p Path, v reflect.Value, subj *Resource) {
 	basePath, lastPath := p.SeparateAtLast()
 	baseChannel := make(chan interface{}, 1)
 	if basePath == nil {
-		go func(){
+		go func() {
 			baseChannel <- subj.Complex
 			close(baseChannel)
 		}()
 	} else {
-		baseChannel = subj.Get(basePath, sch)
+		baseChannel = subj.Get(basePath, ps.sch)
 	}
 
 	for base := range baseChannel {
@@ -163,19 +165,19 @@ func (ps *patchState) applyPatchReplace(p Path, v reflect.Value, subj *Resource,
 	}
 }
 
-func (ps *patchState) applyPatchAdd(p Path, v reflect.Value, subj *Resource, sch *Schema, ctx context.Context) {
+func (ps *patchState) applyPatchAdd(p Path, v reflect.Value, subj *Resource) {
 	if p == nil {
 		if v.Kind() != reflect.Map {
-			ps.throw(Error.InvalidParam("value of add op", "to be complex (for implicit path)", "non-complex"), ctx)
+			ps.throw(Error.InvalidParam("value of add op", "to be complex (for implicit path)", "non-complex"), ps.ctx)
 		}
 		for _, k := range v.MapKeys() {
 			v0 := v.MapIndex(k)
 			if err := ApplyPatch(Patch{
-				Op:Add,
-				Path:k.String(),
-				Value:v0.Interface(),
-			}, subj, sch, ctx); err != nil {
-				ps.throw(err, ctx)
+				Op:    Add,
+				Path:  k.String(),
+				Value: v0.Interface(),
+			}, subj, ps.sch, ps.ctx); err != nil {
+				ps.throw(err, ps.ctx)
 			}
 		}
 	} else {
@@ -183,12 +185,12 @@ func (ps *patchState) applyPatchAdd(p Path, v reflect.Value, subj *Resource, sch
 		baseChannel := make(chan interface{}, 1)
 
 		if basePath == nil {
-			go func(){
+			go func() {
 				baseChannel <- subj.Complex
 				close(baseChannel)
 			}()
 		} else {
-			baseChannel = subj.Get(basePath, sch)
+			baseChannel = subj.Get(basePath, ps.sch)
 		}
 
 		for base := range baseChannel {
@@ -206,12 +208,26 @@ func (ps *patchState) applyPatchAdd(p Path, v reflect.Value, subj *Resource, sch
 				if ps.destAttr.MultiValued {
 					origVal := baseVal.MapIndex(keyVal)
 					if !origVal.IsValid() {
-						baseVal.SetMapIndex(keyVal, reflect.ValueOf([]interface{}{v.Interface()}))
+						switch v.Kind() {
+						case reflect.Array, reflect.Slice:
+							baseVal.SetMapIndex(keyVal, v)
+						default:
+							baseVal.SetMapIndex(keyVal, reflect.ValueOf([]interface{}{v.Interface()}))
+						}
+
 					} else {
 						if origVal.Kind() == reflect.Interface {
 							origVal = origVal.Elem()
 						}
-						newArr := MultiValued(origVal.Interface().([]interface{})).Add(v.Interface())
+						var newArr MultiValued
+						switch v.Kind() {
+						case reflect.Array, reflect.Slice:
+							for i := 0; i < v.Len(); i++ {
+								newArr = MultiValued(origVal.Interface().([]interface{})).Add(v.Index(i).Interface())
+							}
+						default:
+							newArr = MultiValued(origVal.Interface().([]interface{})).Add(v.Interface())
+						}
 						baseVal.SetMapIndex(keyVal, reflect.ValueOf(newArr))
 					}
 				} else {
@@ -227,13 +243,12 @@ func (ps *patchState) applyPatchAdd(p Path, v reflect.Value, subj *Resource, sch
 					case reflect.Map:
 						elemVal.SetMapIndex(reflect.ValueOf(lastPath.Base()), v)
 					default:
-						ps.throw(Error.InvalidPath(ps.patch.Path, "array base contains non-map"), ctx)
+						ps.throw(Error.InvalidPath(ps.patch.Path, "array base contains non-map"), ps.ctx)
 					}
 				}
 			default:
-				ps.throw(Error.InvalidPath(ps.patch.Path, "base evaluated to non-map and non-array."), ctx)
+				ps.throw(Error.InvalidPath(ps.patch.Path, "base evaluated to non-map and non-array."), ps.ctx)
 			}
 		}
 	}
 }
-

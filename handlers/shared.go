@@ -29,6 +29,9 @@ type ScimServer interface {
 	// case
 	CorrectCase(subj *Resource, sch *Schema, ctx context.Context) error
 
+	// patch
+	ApplyPatch(patch Patch, subj *Resource, sch *Schema, ctx context.Context) error
+
 	// validation
 	ValidateType(subj *Resource, sch *Schema, ctx context.Context) error
 	ValidateRequired(subj *Resource, sch *Schema, ctx context.Context) error
@@ -231,6 +234,19 @@ func ParseBodyAsResource(req *http.Request) (*Resource, error) {
 	}
 
 	return &Resource{Complex: Complex(data)}, nil
+}
+
+func ParseModification(req *http.Request) (Modification, error) {
+	m := Modification{}
+	reqBody, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return Modification{}, err
+	}
+	err = json.Unmarshal(reqBody, &m)
+	if err != nil {
+		return Modification{}, err
+	}
+	return m, nil
 }
 
 func ParseSearchRequest(req *http.Request, server ScimServer) (SearchRequest, error) {

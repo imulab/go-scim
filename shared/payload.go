@@ -3,7 +3,68 @@ package shared
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 )
+
+// ----------------------------------
+// Patch
+// ----------------------------------
+type Modification struct {
+	Schemas []string `json:"schemas"`
+	Ops     []Patch  `json:"Operations"`
+}
+
+const (
+	Add     = "add"
+	Remove  = "remove"
+	Replace = "replace"
+)
+
+type Patch struct {
+	Op    string      `json:"op"`
+	Path  string      `json:"path"`
+	Value interface{} `json:"value"`
+}
+
+func (m Modification) Validate() error {
+	if len(m.Schemas) != 1 && m.Schemas[0] != PatchOpUrn {
+		return Error.InvalidParam("schemas", PatchOpUrn, fmt.Sprintf("%+v", m.Schemas))
+	}
+
+	if len(m.Ops) == 0 {
+		return Error.InvalidParam("Operations", "at least one patch operation", "none")
+	}
+
+	for _, patch := range m.Ops {
+		switch patch.Op {
+		case Add:
+			if patch.Value == nil {
+				return Error.InvalidParam("value of add op", "to be present", "nil")
+			} else if len(patch.Path) == 0 {
+				if _, ok := patch.Value.(map[string]interface{}); !ok {
+					return Error.InvalidParam("value of add op", "to be complex (for implicit path)", "non-complex")
+				}
+			}
+		case Replace:
+			if patch.Value == nil {
+				return Error.InvalidParam("value of replace op", "to be present", "nil")
+			} else if len(patch.Path) == 0 {
+				return Error.InvalidParam("path", "to be present", "empty")
+			}
+		case Remove:
+			if patch.Value != nil {
+				return Error.InvalidParam("value of remove op", "to be nil", "non-nil")
+			} else if len(patch.Path) == 0 {
+				return Error.InvalidParam("path", "to be present", "empty")
+			}
+
+		default:
+			return Error.InvalidParam("Op", "one of [add|remove|replace]", patch.Op)
+		}
+	}
+
+	return nil
+}
 
 // ----------------------------------
 // List Response

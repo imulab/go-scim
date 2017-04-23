@@ -51,6 +51,69 @@ func CreateUserHandler(r *http.Request, server ScimServer, ctx context.Context) 
 	return
 }
 
+func PatchUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+	ri = newResponse()
+	sch := server.InternalSchema(shared.UserUrn)
+	repo := server.Repository(shared.UserResourceType)
+
+	id, version := ParseIdAndVersion(r, server.UrlParam)
+	ctx = context.WithValue(ctx, shared.ResourceId{}, id)
+
+	resource, err := repo.Get(id, version)
+	ErrorCheck(err)
+
+	mod, err := ParseModification(r)
+	ErrorCheck(err)
+	err = mod.Validate()
+	ErrorCheck(err)
+
+	for _, patch := range mod.Ops {
+		err = server.ApplyPatch(patch, resource.(*shared.Resource), sch, ctx)
+		ErrorCheck(err)
+	}
+
+	reference, err := repo.Get(id, version)
+	ErrorCheck(err)
+
+	err = server.ValidateType(resource.(*shared.Resource), sch, ctx)
+	ErrorCheck(err)
+
+	err = server.CorrectCase(resource.(*shared.Resource), sch, ctx)
+	ErrorCheck(err)
+
+	err = server.ValidateRequired(resource.(*shared.Resource), sch, ctx)
+	ErrorCheck(err)
+
+	err = server.ValidateMutability(resource.(*shared.Resource), reference.(*shared.Resource), sch, ctx)
+	ErrorCheck(err)
+
+	err = server.ValidateUniqueness(resource.(*shared.Resource), sch, repo, ctx)
+	ErrorCheck(err)
+
+	err = server.AssignReadOnlyValue(resource.(*shared.Resource), ctx)
+	ErrorCheck(err)
+
+	err = repo.Update(id, version, resource)
+	ErrorCheck(err)
+
+	json, err := server.MarshalJSON(resource, sch, []string{}, []string{})
+	ErrorCheck(err)
+
+	location := resource.GetData()["meta"].(map[string]interface{})["location"].(string)
+	newVersion := resource.GetData()["meta"].(map[string]interface{})["version"].(string)
+
+	ri.Status(http.StatusOK)
+	ri.ScimJsonHeader()
+	if len(newVersion) > 0 {
+		ri.ETagHeader(newVersion)
+	}
+	if len(location) > 0 {
+		ri.LocationHeader(location)
+	}
+	ri.Body(json)
+	return
+}
+
 func ReplaceUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 	sch := server.InternalSchema(shared.UserUrn)

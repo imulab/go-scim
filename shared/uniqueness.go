@@ -7,7 +7,6 @@ import (
 	"sync"
 )
 
-// TODO need to check context, if create, threshold is 0, if put, patch, threshold is 1
 func ValidateUniqueness(subj *Resource, sch *Schema, repo Repository, ctx context.Context) (err error) {
 	defer func() {
 		if r := recover(); r != nil {

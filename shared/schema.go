@@ -251,7 +251,7 @@ const (
 	SchemaUrn       = "urn:ietf:params:scim:schemas:core:2.0:Schema"
 	ErrorUrn        = "urn:ietf:params:scim:api:messages:2.0:Error"
 	ListResponseUrn = "urn:ietf:params:scim:api:messages:2.0:ListResponse"
-	PathOpUrn       = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+	PatchOpUrn      = "urn:ietf:params:scim:api:messages:2.0:PatchOp"
 	SearchUrn       = "urn:ietf:params:scim:api:messages:2.0:SearchRequest"
 	BulkRequestUrn  = "urn:ietf:params:scim:api:messages:2.0:BulkRequest"
 	BulkResponseUrn = "urn:ietf:params:scim:api:messages:2.0:BulkResponse"

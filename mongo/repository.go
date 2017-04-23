@@ -118,6 +118,7 @@ func (r *repository) Get(id, version string) (DataProvider, error) {
 		return nil, r.handleError(err, id)
 	}
 
+	delete(data, "_id")
 	return r.construct(Complex(data)), nil
 }
 

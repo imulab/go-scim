@@ -85,6 +85,7 @@ func main() {
 	mux.GetFunc("/Users", wrap(web.QueryUserHandler, scim.QueryUser))
 	mux.PostFunc("/Users/.search", wrap(web.QueryUserHandler, scim.QueryUser))
 	mux.PutFunc("/Users/:resourceId", wrap(web.ReplaceUserHandler, scim.ReplaceUser))
+	mux.PatchFunc("/Users/:resourceId", wrap(web.PatchUserHandler, scim.PatchUser))
 
 	http.ListenAndServe(":8080", mux)
 }
@@ -147,6 +148,9 @@ func (ss *simpleServer) InternalSchema(id string) *scim.Schema {
 }
 func (ss *simpleServer) CorrectCase(subj *scim.Resource, sch *scim.Schema, ctx context.Context) error {
 	return scim.CorrectCase(subj, sch, ctx)
+}
+func (ss *simpleServer) ApplyPatch(patch scim.Patch, subj *scim.Resource, sch *scim.Schema, ctx context.Context) error {
+	return scim.ApplyPatch(patch, subj, sch, ctx)
 }
 func (ss *simpleServer) ValidateType(subj *scim.Resource, sch *scim.Schema, ctx context.Context) error {
 	return scim.ValidateType(subj, sch, ctx)
