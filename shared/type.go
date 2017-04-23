@@ -2,7 +2,6 @@ package shared
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"sync"
 )
@@ -94,11 +93,8 @@ func (tv *typeValidator) validateTypeWithReflection(v reflect.Value, attr *Attri
 				tv.throw(err, ctx)
 			}
 
-			fmt.Println(p.Value())
-			fmt.Printf("%+v\n", attr)
 			subAttr := attr.GetAttribute(p, false)
 			if subAttr == nil {
-				fmt.Println("here")
 				tv.throw(Error.NoAttribute(p.Value()), ctx)
 			}
 

@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func CreateUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+func CreateUserHandler(r shared.WebRequest, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 	sch := server.InternalSchema(shared.UserUrn)
 
@@ -51,12 +51,12 @@ func CreateUserHandler(r *http.Request, server ScimServer, ctx context.Context) 
 	return
 }
 
-func PatchUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+func PatchUserHandler(r shared.WebRequest, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 	sch := server.InternalSchema(shared.UserUrn)
 	repo := server.Repository(shared.UserResourceType)
 
-	id, version := ParseIdAndVersion(r, server.UrlParam)
+	id, version := ParseIdAndVersion(r)
 	ctx = context.WithValue(ctx, shared.ResourceId{}, id)
 
 	resource, err := repo.Get(id, version)
@@ -114,7 +114,7 @@ func PatchUserHandler(r *http.Request, server ScimServer, ctx context.Context) (
 	return
 }
 
-func ReplaceUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+func ReplaceUserHandler(r shared.WebRequest, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 	sch := server.InternalSchema(shared.UserUrn)
 	repo := server.Repository(shared.UserResourceType)
@@ -122,7 +122,7 @@ func ReplaceUserHandler(r *http.Request, server ScimServer, ctx context.Context)
 	resource, err := ParseBodyAsResource(r)
 	ErrorCheck(err)
 
-	id, version := ParseIdAndVersion(r, server.UrlParam)
+	id, version := ParseIdAndVersion(r)
 	ctx = context.WithValue(ctx, shared.ResourceId{}, id)
 	reference, err := repo.Get(id, version)
 	ErrorCheck(err)
@@ -166,7 +166,7 @@ func ReplaceUserHandler(r *http.Request, server ScimServer, ctx context.Context)
 	return
 }
 
-func QueryUserHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+func QueryUserHandler(r shared.WebRequest, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 	sch := server.InternalSchema(shared.UserUrn)
 
@@ -191,10 +191,10 @@ func QueryUserHandler(r *http.Request, server ScimServer, ctx context.Context) (
 	return
 }
 
-func DeleteUserByIdHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+func DeleteUserByIdHandler(r shared.WebRequest, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 
-	id, version := ParseIdAndVersion(r, server.UrlParam)
+	id, version := ParseIdAndVersion(r)
 	repo := server.Repository(shared.UserResourceType)
 
 	err := repo.Delete(id, version)
@@ -204,11 +204,11 @@ func DeleteUserByIdHandler(r *http.Request, server ScimServer, ctx context.Conte
 	return
 }
 
-func GetUserByIdHandler(r *http.Request, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
+func GetUserByIdHandler(r shared.WebRequest, server ScimServer, ctx context.Context) (ri *ResponseInfo) {
 	ri = newResponse()
 	sch := server.InternalSchema(shared.UserUrn)
 
-	id, version := ParseIdAndVersion(r, server.UrlParam)
+	id, version := ParseIdAndVersion(r)
 
 	if len(version) > 0 {
 		count, err := server.Repository(shared.UserResourceType).Count(

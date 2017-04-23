@@ -22,3 +22,11 @@ const (
 	RootQuery
 	BulkOp
 )
+
+type WebRequest interface {
+	Target() string
+	Method() string
+	Header(name string) string
+	Param(name string) string
+	Body() ([]byte, error)
+}

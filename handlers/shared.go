@@ -6,7 +6,6 @@ import (
 	"fmt"
 	. "github.com/davidiamyou/go-scim/shared"
 	"github.com/satori/go.uuid"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,9 +17,7 @@ type ScimServer interface {
 	// utilities
 	Property() PropertySource
 	Logger() Logger
-
-	// request
-	UrlParam(name string, req *http.Request) string
+	WebRequest(r *http.Request) WebRequest
 
 	// schema
 	Schema(id string) *Schema
@@ -49,7 +46,7 @@ type ScimServer interface {
 }
 
 // functional interface for all endpoints to implement
-type EndpointHandler func(r *http.Request, server ScimServer, ctx context.Context) *ResponseInfo
+type EndpointHandler func(r WebRequest, server ScimServer, ctx context.Context) *ResponseInfo
 
 // throw the error out immediately
 // error handlers are supposed to recover it and write appropriate responses
@@ -65,7 +62,7 @@ var (
 )
 
 func ErrorRecovery(next EndpointHandler) EndpointHandler {
-	return func(req *http.Request, server ScimServer, ctx context.Context) (info *ResponseInfo) {
+	return func(req WebRequest, server ScimServer, ctx context.Context) (info *ResponseInfo) {
 		defer func() {
 			if r := recover(); r != nil {
 				info = newResponse()
@@ -143,9 +140,9 @@ func ErrorRecovery(next EndpointHandler) EndpointHandler {
 					))
 
 				case *ResourceNotFoundError:
-					switch req.Method {
+					switch req.Method() {
 					case http.MethodPut, http.MethodPatch, http.MethodDelete:
-						_, version := ParseIdAndVersion(req, server.UrlParam)
+						_, version := ParseIdAndVersion(req)
 						if len(version) == 0 {
 							info.Status(http.StatusNotFound)
 						} else {
@@ -181,7 +178,7 @@ func ErrorRecovery(next EndpointHandler) EndpointHandler {
 }
 
 func InjectRequestScope(next EndpointHandler, requestType int) EndpointHandler {
-	return func(req *http.Request, server ScimServer, ctx context.Context) (info *ResponseInfo) {
+	return func(req WebRequest, server ScimServer, ctx context.Context) (info *ResponseInfo) {
 		ctx = context.WithValue(ctx, RequestId{}, uuid.NewV4().String())
 		ctx = context.WithValue(ctx, RequestTimestamp{}, time.Now().Unix())
 		ctx = context.WithValue(ctx, RequestType{}, requestType)
@@ -192,7 +189,7 @@ func InjectRequestScope(next EndpointHandler, requestType int) EndpointHandler {
 func Endpoint(next EndpointHandler, server ScimServer) http.HandlerFunc {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		ctx := context.Background()
-		resp := next(req, server, ctx)
+		resp := next(server.WebRequest(req), server, ctx)
 		rw.WriteHeader(resp.statusCode)
 		for k, v := range resp.headers {
 			rw.Header().Set(k, v)
@@ -201,28 +198,25 @@ func Endpoint(next EndpointHandler, server ScimServer) http.HandlerFunc {
 	})
 }
 
-// function to parse url param
-type UrlParamParseFunc func(name string, req *http.Request) string
-
-func ParseIdAndVersion(req *http.Request, paramExtractor UrlParamParseFunc) (id, version string) {
-	id = paramExtractor("resourceId", req)
-	switch req.Method {
+func ParseIdAndVersion(req WebRequest) (id, version string) {
+	id = req.Param("resourceId")
+	switch req.Method() {
 	case http.MethodGet:
-		version = req.Header.Get("If-None-Match")
+		version = req.Header("If-None-Match")
 	case http.MethodPut, http.MethodPatch, http.MethodDelete:
-		version = req.Header.Get("If-Match")
+		version = req.Header("If-Match")
 	}
 	return
 }
 
-func ParseInclusionAndExclusionAttributes(req *http.Request) (attributes, excludedAttributes []string) {
-	attributes = strings.Split(req.URL.Query().Get("attributes"), ",")
-	excludedAttributes = strings.Split(req.URL.Query().Get("excludedAttributes"), ",")
+func ParseInclusionAndExclusionAttributes(req WebRequest) (attributes, excludedAttributes []string) {
+	attributes = strings.Split(req.Param("attributes"), ",")
+	excludedAttributes = strings.Split(req.Param("excludedAttributes"), ",")
 	return
 }
 
-func ParseBodyAsResource(req *http.Request) (*Resource, error) {
-	raw, err := ioutil.ReadAll(req.Body)
+func ParseBodyAsResource(req WebRequest) (*Resource, error) {
+	raw, err := req.Body()
 	if err != nil {
 		return nil, Error.Text("failed to read request: %s", err.Error())
 	}
@@ -236,9 +230,9 @@ func ParseBodyAsResource(req *http.Request) (*Resource, error) {
 	return &Resource{Complex: Complex(data)}, nil
 }
 
-func ParseModification(req *http.Request) (Modification, error) {
+func ParseModification(req WebRequest) (Modification, error) {
 	m := Modification{}
-	reqBody, err := ioutil.ReadAll(req.Body)
+	reqBody, err := req.Body()
 	if err != nil {
 		return Modification{}, err
 	}
@@ -249,20 +243,20 @@ func ParseModification(req *http.Request) (Modification, error) {
 	return m, nil
 }
 
-func ParseSearchRequest(req *http.Request, server ScimServer) (SearchRequest, error) {
-	switch req.Method {
+func ParseSearchRequest(req WebRequest, server ScimServer) (SearchRequest, error) {
+	switch req.Method() {
 	case http.MethodGet:
 		sr := SearchRequest{
 			Schemas:    []string{SearchUrn},
 			StartIndex: 1,
 			Count:      server.Property().GetInt("scim.protocol.itemsPerPage"),
 		}
-		sr.Attributes = strings.Split(req.URL.Query().Get("attributes"), ",")
-		sr.ExcludedAttributes = strings.Split(req.URL.Query().Get("excludedAttributes"), ",")
-		sr.Filter = req.URL.Query().Get("filter")
-		sr.SortBy = req.URL.Query().Get("sortBy")
-		sr.SortOrder = req.URL.Query().Get("sortOrder")
-		if v := req.URL.Query().Get("startIndex"); len(v) > 0 {
+		sr.Attributes = strings.Split(req.Param("attributes"), ",")
+		sr.ExcludedAttributes = strings.Split(req.Param("excludedAttributes"), ",")
+		sr.Filter = req.Param("filter")
+		sr.SortBy = req.Param("sortBy")
+		sr.SortOrder = req.Param("sortOrder")
+		if v := req.Param("startIndex"); len(v) > 0 {
 			if i, err := strconv.Atoi(v); err != nil {
 				return SearchRequest{}, Error.InvalidParam("startIndex", "1-based integer", v)
 			} else {
@@ -273,7 +267,7 @@ func ParseSearchRequest(req *http.Request, server ScimServer) (SearchRequest, er
 				}
 			}
 		}
-		if v := req.URL.Query().Get("count"); len(v) > 0 {
+		if v := req.Param("count"); len(v) > 0 {
 			if i, err := strconv.Atoi(v); err != nil {
 				return SearchRequest{}, Error.InvalidParam("count", "non-negative integer", v)
 			} else {
@@ -291,7 +285,7 @@ func ParseSearchRequest(req *http.Request, server ScimServer) (SearchRequest, er
 			StartIndex: 1,
 			Count:      server.Property().GetInt("scim.protocol.itemsPerPage"),
 		}
-		reqBody, err := ioutil.ReadAll(req.Body)
+		reqBody, err := req.Body()
 		if err != nil {
 			return SearchRequest{}, err
 		}

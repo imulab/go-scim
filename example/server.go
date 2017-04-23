@@ -7,6 +7,7 @@ import (
 	"github.com/davidiamyou/go-scim/mongo"
 	scim "github.com/davidiamyou/go-scim/shared"
 	"github.com/go-zoo/bone"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -119,11 +120,9 @@ type simpleServer struct {
 	groupAssignment     scim.ReadOnlyAssignment
 }
 
-func (ss *simpleServer) Property() scim.PropertySource { return ss.propertySource }
-func (ss *simpleServer) Logger() scim.Logger           { return ss.logger }
-func (ss *simpleServer) UrlParam(name string, req *http.Request) string {
-	return extractUrlParameter(name, req)
-}
+func (ss *simpleServer) Property() scim.PropertySource              { return ss.propertySource }
+func (ss *simpleServer) Logger() scim.Logger                        { return ss.logger }
+func (ss *simpleServer) WebRequest(r *http.Request) scim.WebRequest { return HttpWebRequest{Req: r} }
 func (ss *simpleServer) Schema(id string) *scim.Schema {
 	switch id {
 	case "":
@@ -230,4 +229,21 @@ func (pl *printLogger) Debug(template string, args ...interface{}) {
 }
 func (pl *printLogger) Error(template string, args ...interface{}) {
 	fmt.Println("[ERROR] "+template, args)
+}
+
+// http request source
+type HttpWebRequest struct{ Req *http.Request }
+
+func (hwr HttpWebRequest) Target() string            { return hwr.Req.RequestURI }
+func (hwr HttpWebRequest) Method() string            { return hwr.Req.Method }
+func (hwr HttpWebRequest) Header(name string) string { return hwr.Req.Header.Get(name) }
+func (hwr HttpWebRequest) Body() ([]byte, error)     { return ioutil.ReadAll(hwr.Req.Body) }
+func (hwr HttpWebRequest) Param(name string) string {
+	if v := hwr.Req.URL.Query().Get(name); len(v) > 0 {
+		return v
+	} else if v := bone.GetValue(hwr.Req, name); len(v) > 0 {
+		return v
+	} else {
+		return ""
+	}
 }
