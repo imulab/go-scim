@@ -21,6 +21,10 @@ const (
 	DeleteGroup
 	RootQuery
 	BulkOp
+	GetSchemaById
+	GetAllSchema
+	GetSPConfig
+	GetAllResourceType
 )
 
 type WebRequest interface {

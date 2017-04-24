@@ -97,6 +97,9 @@ func main() {
 	mux.PutFunc("/Groups/:resourceId", wrap(web.ReplaceGroupHandler, scim.ReplaceGroup))
 	mux.PatchFunc("/Groups/:resourceId", wrap(web.PatchGroupHandler, scim.PatchGroup))
 
+	mux.GetFunc("/Schemas/:resourceId", wrap(web.GetSchemaByIdHandler, scim.GetSchemaById))
+	mux.GetFunc("/Schemas", wrap(web.GetAllSchemaHandler, scim.GetSchemaById))
+
 	http.ListenAndServe(":8080", mux)
 }
 
@@ -134,18 +137,18 @@ func (ss *simpleServer) Logger() scim.Logger                        { return ss.
 func (ss *simpleServer) WebRequest(r *http.Request) scim.WebRequest { return HttpWebRequest{Req: r} }
 func (ss *simpleServer) Schema(id string) *scim.Schema {
 	switch id {
-	case "":
-		return rootSchemaInternal
 	case scim.UserUrn:
-		return userSchemaInternal
+		return userSchema
 	case scim.GroupUrn:
-		return groupSchemaInternal
+		return groupSchema
 	default:
 		panic(scim.Error.Text("unknown schema id %s", id))
 	}
 }
 func (ss *simpleServer) InternalSchema(id string) *scim.Schema {
 	switch id {
+	case "":
+		return rootSchemaInternal
 	case scim.UserUrn:
 		return userSchemaInternal
 	case scim.GroupUrn:

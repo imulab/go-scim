@@ -34,7 +34,7 @@ func MarshalJSON(v interface{}, sch *Schema, attributes []string, excludedAttrib
 		return json.Marshal(m)
 
 	default:
-		return nil, Error.Text("unsupported marshal type %T", v)
+		return json.Marshal(v)
 	}
 }
 

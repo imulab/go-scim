@@ -41,20 +41,11 @@ type AttributeSource interface {
 }
 
 type Schema struct {
-	Schemas     []string     `json:"schemas"`
-	Id          string       `json:"id"`
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	Attributes  []*Attribute `json:"attributes"`
-}
-
-// TODO serialization helper for Schema
-func (s *Schema) GetId() string {
-	return s.Id
-}
-
-func (s *Schema) GetData() Complex {
-	return nil
+	Schemas     []string     `json:"schemas,omitempty"`
+	Id          string       `json:"id,omitempty"`
+	Name        string       `json:"name,omitempty"`
+	Description string       `json:"description,omitempty"`
+	Attributes  []*Attribute `json:"attributes,omitempty"`
 }
 
 func (s *Schema) ToAttribute() *Attribute {
@@ -93,19 +84,19 @@ func (s *Schema) GetAttribute(p Path, recursive bool) *Attribute {
 }
 
 type Attribute struct {
-	Name            string       `json:"name"`
-	Type            string       `json:"type"`
-	SubAttributes   []*Attribute `json:"subAttributes"`
+	Name            string       `json:"name,omitempty"`
+	Type            string       `json:"type,omitempty"`
+	SubAttributes   []*Attribute `json:"subAttributes,omitempty"`
 	MultiValued     bool         `json:"multiValued"`
-	Description     string       `json:"description"`
+	Description     string       `json:"description,omitempty"`
 	Required        bool         `json:"required"`
-	CanonicalValues []string     `json:"canonicalValues"`
-	CaseExact       bool         `json:"caseExact"`
-	Mutability      string       `json:"mutability"`
-	Returned        string       `json:"returned"`
-	Uniqueness      string       `json:"uniqueness"`
-	ReferenceTypes  []string     `json:"referenceTypes"`
-	Assist          *Assist      `json:"_assist"`
+	CanonicalValues []string     `json:"canonicalValues,omitempty"`
+	CaseExact       bool         `json:"caseExact,omitempty"`
+	Mutability      string       `json:"mutability,omitempty"`
+	Returned        string       `json:"returned,omitempty"`
+	Uniqueness      string       `json:"uniqueness,omitempty"`
+	ReferenceTypes  []string     `json:"referenceTypes,omitempty"`
+	Assist          *Assist      `json:"-"`
 }
 
 func (a *Attribute) EqualsToPath(p Path) bool {
@@ -244,7 +235,7 @@ type Assist struct {
 }
 
 const (
-	UserUrn         = "urn:ietf:params:scim:schemas:core:2.0:UserResourceType"
+	UserUrn         = "urn:ietf:params:scim:schemas:core:2.0:User"
 	GroupUrn        = "urn:ietf:params:scim:schemas:core:2.0:Group"
 	ResourceTypeUrn = "urn:ietf:params:scim:schemas:core:2.0:resourceType"
 	SPConfigUrn     = "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"
