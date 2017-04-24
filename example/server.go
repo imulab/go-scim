@@ -80,6 +80,7 @@ func main() {
 
 	mux := bone.New()
 	mux.Prefix("/v2")
+
 	mux.GetFunc("/Users/:resourceId", wrap(web.GetUserByIdHandler, scim.GetUserById))
 	mux.PostFunc("/Users", wrap(web.CreateUserHandler, scim.CreateUser))
 	mux.DeleteFunc("/Users/:resourceId", wrap(web.DeleteUserByIdHandler, scim.DeleteUser))
@@ -87,6 +88,14 @@ func main() {
 	mux.PostFunc("/Users/.search", wrap(web.QueryUserHandler, scim.QueryUser))
 	mux.PutFunc("/Users/:resourceId", wrap(web.ReplaceUserHandler, scim.ReplaceUser))
 	mux.PatchFunc("/Users/:resourceId", wrap(web.PatchUserHandler, scim.PatchUser))
+
+	mux.GetFunc("/Groups/:resourceId", wrap(web.GetGroupByIdHandler, scim.GetGroupById))
+	mux.PostFunc("/Groups", wrap(web.CreateGroupHandler, scim.CreateGroup))
+	mux.DeleteFunc("/Groups/:resourceId", wrap(web.DeleteGroupByIdHandler, scim.DeleteGroup))
+	mux.GetFunc("/Groups", wrap(web.QueryGroupHandler, scim.QueryGroup))
+	mux.PostFunc("/Groups/.search", wrap(web.QueryGroupHandler, scim.QueryGroup))
+	mux.PutFunc("/Groups/:resourceId", wrap(web.ReplaceGroupHandler, scim.ReplaceGroup))
+	mux.PatchFunc("/Groups/:resourceId", wrap(web.PatchGroupHandler, scim.PatchGroup))
 
 	http.ListenAndServe(":8080", mux)
 }
