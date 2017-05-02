@@ -22,8 +22,11 @@ func initConfiguration() {
 			"scim.resources.schema.internalGroup.path": "../resources/schemas/group_internal.json",
 			"scim.resources.schema.user.path":          "../resources/schemas/user.json",
 			"scim.resources.schema.group.path":         "../resources/schemas/group.json",
+			"scim.resources.resourceType.user":	    "../resources/resource_types/user.json",
+			"scim.resources.resourceType.group":	    "../resources/resource_types/group.json",
+			"scim.resources.spConfig":	    	    "../resources/sp_config/sp_config.json",
 			"scim.protocol.itemsPerPage":               10,
-			"mongo.url":                                "mongodb://localhost:32794/scim_example?maxPoolSize=100",
+			"mongo.url":                                "mongodb://localhost:32768/scim_example?maxPoolSize=100",
 			"mongo.db":                                 "scim_example",
 			"mongo.collection.user":                    "users",
 			"mongo.collection.group":                   "groups",
@@ -46,6 +49,14 @@ func initConfiguration() {
 	web.ErrorCheck(err)
 	groupSchema = s
 
+	userResourceType, _, err := scim.ParseResource(propertySource.GetString("scim.resources.resourceType.user"))
+	web.ErrorCheck(err)
+	groupResourceType, _, err := scim.ParseResource(propertySource.GetString("scim.resources.resourceType.group"))
+	web.ErrorCheck(err)
+
+	spConfig, _, err := scim.ParseResource(propertySource.GetString("scim.resources.spConfig"))
+	web.ErrorCheck(err)
+
 	resourceConstructor := func(c scim.Complex) scim.DataProvider { return &scim.Resource{Complex: c} }
 	userRepo, err = mongo.NewMongoRepositoryWithUrl(
 		propertySource.GetString("mongo.url"),
@@ -61,6 +72,13 @@ func initConfiguration() {
 		groupSchemaInternal,
 		resourceConstructor)
 	web.ErrorCheck(err)
+	resourceTypeRepo = scim.NewMapRepository(map[string]scim.DataProvider{
+		userResourceType.GetId():  userResourceType,
+		groupResourceType.GetId(): groupResourceType,
+	})
+	spConfigRepo = scim.NewMapRepository(map[string]scim.DataProvider{
+		"": spConfig,
+	})
 
 	exampleServer = &simpleServer{
 		logger:              &printLogger{},
@@ -99,6 +117,10 @@ func main() {
 
 	mux.GetFunc("/Schemas/:resourceId", wrap(web.GetSchemaByIdHandler, scim.GetSchemaById))
 	mux.GetFunc("/Schemas", wrap(web.GetAllSchemaHandler, scim.GetSchemaById))
+
+	mux.GetFunc("/ResourceTypes", wrap(web.GetAllResourceTypeHandler, scim.GetAllResourceType))
+
+	mux.GetFunc("/ServiceProviderConfig", wrap(web.GetServiceProviderConfigHandler, scim.GetSPConfig))
 
 	http.ListenAndServe(":8080", mux)
 }
@@ -218,9 +240,6 @@ func (ss *simpleServer) Repository(identifier string) scim.Repository {
 		panic(scim.Error.Text("no repo matches identifier %s", identifier))
 	}
 }
-
-// url parameter extractor
-func extractUrlParameter(name string, req *http.Request) string { return bone.GetValue(req, name) }
 
 // simple map based property source
 type mapPropertySource struct{ data map[string]interface{} }
