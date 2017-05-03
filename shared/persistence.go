@@ -84,3 +84,127 @@ func NewMapRepository(initialData map[string]DataProvider) Repository {
 		return &mapRepository{data: initialData}
 	}
 }
+
+// simple factory method to return a repository query method
+// to easily put together a query only repository by composing
+// several repositories, useful when implementing root query functions
+func CompositeSearchFunc(
+	repositories ...Repository,
+) func(payload SearchRequest) (*ListResponse, error) {
+	return func(payload SearchRequest) (*ListResponse, error) {
+		// prepare plans
+		skipQuota, limitQuota := 0, 0
+		grandListResponse := &ListResponse{
+			Schemas:      []string{ListResponseUrn},
+			StartIndex:   payload.StartIndex,
+			ItemsPerPage: payload.Count,
+			TotalResults: 0,
+			Resources:    make([]DataProvider, 0),
+		}
+
+		// set parameter defaults
+		if payload.StartIndex < 1 {
+			skipQuota = 0
+		} else {
+			skipQuota = payload.StartIndex - 1
+		}
+
+		if payload.Count > 0 {
+			limitQuota = payload.Count
+		} else {
+			limitQuota = 0
+		}
+
+		// generate plan structures
+		plans := make([]*queryExecutionPlan, 0, len(repositories))
+		for _, n := range repositories {
+			plans = append(plans, &queryExecutionPlan{repo: n})
+		}
+		for _, plan := range plans {
+			count, err := plan.repo.Count(payload.Filter)
+			if err != nil {
+				plan.skipAll = true
+			} else {
+				plan.resultCount = count
+			}
+			grandListResponse.TotalResults += count
+		}
+
+		// devise plans
+		for _, plan := range plans {
+			if plan.skipAll {
+				continue
+			}
+
+			if limitQuota <= 0 {
+				plan.skipAll = true
+				continue
+			}
+
+			if plan.resultCount <= 0 {
+				plan.skipAll = true
+				continue
+			}
+
+			if skipQuota <= 0 {
+				// take a look at limit
+				plan.skipAll = false
+				plan.skip = 0
+				if limitQuota < plan.resultCount {
+					plan.limit = limitQuota
+				} else {
+					plan.limit = plan.resultCount
+				}
+				limitQuota -= plan.limit
+			} else {
+				// continue to skip
+				if plan.resultCount > skipQuota {
+					// partial results needed
+					plan.skipAll = false
+					plan.skip = skipQuota
+					if limitQuota < plan.resultCount-plan.skip {
+						plan.limit = limitQuota
+					} else {
+						plan.limit = plan.resultCount - plan.skip
+					}
+					limitQuota -= plan.limit
+				} else {
+					plan.skipAll = true
+				}
+				skipQuota -= plan.resultCount
+			}
+		}
+
+		// execution plan
+		for _, plan := range plans {
+			if plan.skipAll || plan.limit == 0 {
+				continue
+			}
+
+			listResp, err := plan.repo.Search(SearchRequest{
+				Filter:             payload.Filter,
+				StartIndex:         plan.skip,
+				Count:              plan.limit,
+				SortBy:             payload.SortBy,
+				SortOrder:          payload.SortOrder,
+				Attributes:         payload.Attributes,
+				ExcludedAttributes: payload.ExcludedAttributes,
+				Schemas:            payload.Schemas,
+			})
+			if err != nil {
+				return nil, err
+			}
+			grandListResponse.Resources = append(grandListResponse.Resources, listResp.Resources...)
+		}
+
+		return grandListResponse, nil
+	}
+}
+
+type queryExecutionPlan struct {
+	repo        Repository
+	resultCount int
+	skipAll     bool
+	skip        int
+	limit       int
+}

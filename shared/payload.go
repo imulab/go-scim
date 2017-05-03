@@ -4,7 +4,103 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
 )
+
+// ----------------------------------
+// Bulk
+// ----------------------------------
+type bulkOp struct {
+	Method  string `json:"method"`
+	BulkId  string `json:"bulkId"`
+	Version string `json:"version"`
+}
+
+type BulkReq struct {
+	Schemas      []string    `json:"schemas"`
+	FailOnErrors int         `json:"failOnErrors"`
+	Operations   []BulkReqOp `json:"Operations"`
+}
+
+type BulkReqOp struct {
+	bulkOp
+	Path string          `json:"path"`
+	Data json.RawMessage `json:"data"`
+}
+
+func (br BulkReq) Validate(ps PropertySource) error {
+	if len(br.Schemas) != 1 || br.Schemas[0] != BulkRequestUrn {
+		return Error.InvalidParam("schema", BulkRequestUrn, "other content")
+	}
+
+	for _, op := range br.Operations {
+		if err := op.validate(ps); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (op BulkReqOp) validate(ps PropertySource) error {
+	switch strings.ToUpper(op.Method) {
+	case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+	default:
+		return Error.InvalidParam("method", "one of ['post','put','patch','delete']", op.Method)
+	}
+
+	userUri := ps.GetString("scim.protocol.uri.user")
+	groupUri := ps.GetString("scim.protocol.uri.group")
+	if http.MethodPost == strings.ToUpper(op.Method) {
+		switch op.Path {
+		case userUri, groupUri:
+		default:
+			return Error.InvalidParam("path", fmt.Sprintf("one of ['%s','%s']", userUri, groupUri), op.Path)
+		}
+	} else {
+		switch {
+		case strings.HasPrefix(op.Path, userUri+"/"):
+		case strings.HasPrefix(op.Path, groupUri+"/"):
+		default:
+			return Error.InvalidParam("path", fmt.Sprintf("one of ['%s/<id>','%s/<id>']", userUri, groupUri), op.Path)
+		}
+	}
+
+	switch strings.ToUpper(op.Method) {
+	case http.MethodPost, http.MethodPut, http.MethodPatch:
+		if len(op.Data) == 0 {
+			return Error.InvalidParam("data", "to be present", "nothing")
+		}
+	}
+
+	return nil
+}
+
+type BulkResp struct {
+	Schemas    []string      `json:"schemas"`
+	Operations []*BulkRespOp `json:"Operations"`
+}
+
+type BulkRespOp struct {
+	bulkOp
+	Location string          `json:"location"`
+	Response json.RawMessage `json:"response,omitempty"`
+	Status   int             `json:"status"`
+}
+
+func (bro BulkRespOp) Populate(origReq BulkReqOp, resp WebResponse) {
+	bro.Method = strings.ToLower(origReq.Method)
+	bro.BulkId = origReq.BulkId
+	bro.Version = resp.GetHeader("ETag")
+	bro.Location = resp.GetHeader("Location")
+	bro.Status = resp.GetStatus()
+	if resp.GetStatus() > 299 {
+		bro.Response = json.RawMessage(resp.GetBody())
+	} else {
+		bro.Response = json.RawMessage{}
+	}
+}
 
 // ----------------------------------
 // Patch

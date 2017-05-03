@@ -315,6 +315,18 @@ func newResponse() *ResponseInfo {
 	}
 }
 
+func (ri *ResponseInfo) GetStatus() int {
+	return ri.statusCode
+}
+
+func (ri *ResponseInfo) GetHeader(name string) string {
+	return ri.headers[name]
+}
+
+func (ri *ResponseInfo) GetBody() []byte {
+	return ri.responseBody
+}
+
 func (ri *ResponseInfo) Status(statusCode int) *ResponseInfo {
 	ri.statusCode = statusCode
 	return ri
@@ -343,4 +355,40 @@ func (ri *ResponseInfo) Header(k, v string) *ResponseInfo {
 func (ri *ResponseInfo) Body(content []byte) *ResponseInfo {
 	ri.responseBody = content
 	return ri
+}
+
+// bulk web request, implements WebRequest
+type BulkWebRequest struct {
+	target  string
+	method  string
+	headers map[string]string
+	params  map[string]string
+	body    []byte
+}
+
+func (bwr BulkWebRequest) Target() string            { return bwr.target }
+func (bwr BulkWebRequest) Method() string            { return bwr.method }
+func (bwr BulkWebRequest) Header(name string) string { return bwr.headers[name] }
+func (bwr BulkWebRequest) Param(name string) string  { return bwr.params[name] }
+func (bwr BulkWebRequest) Body() ([]byte, error)     { return bwr.body, nil }
+func (bwr BulkWebRequest) Populate(op BulkReqOp, ps PropertySource) {
+	userUri := ps.GetString("scim.protocol.uri.user")
+	groupUri := ps.GetString("scim.protocol.uri.user")
+
+	bwr.target = op.Path
+	bwr.method = strings.ToUpper(op.Method)
+	bwr.headers = make(map[string]string, 0)
+	bwr.params = make(map[string]string, 0)
+	switch bwr.method {
+	case http.MethodPut, http.MethodPatch, http.MethodDelete:
+		if strings.HasPrefix(bwr.target, userUri+"/") {
+			bwr.params["resourceId"] = strings.TrimPrefix(bwr.target, userUri+"/")
+		} else if strings.HasPrefix(bwr.target, groupUri+"/") {
+			bwr.params["resourceId"] = strings.TrimPrefix(bwr.target, groupUri+"/")
+		}
+	}
+	switch bwr.method {
+	case http.MethodPost, http.MethodPut, http.MethodPatch:
+		bwr.body = []byte(op.Data)
+	}
 }

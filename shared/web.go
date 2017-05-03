@@ -34,3 +34,9 @@ type WebRequest interface {
 	Param(name string) string
 	Body() ([]byte, error)
 }
+
+type WebResponse interface {
+	GetStatus() int
+	GetHeader(name string) string
+	GetBody() []byte
+}

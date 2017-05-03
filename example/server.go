@@ -22,10 +22,12 @@ func initConfiguration() {
 			"scim.resources.schema.internalGroup.path": "../resources/schemas/group_internal.json",
 			"scim.resources.schema.user.path":          "../resources/schemas/user.json",
 			"scim.resources.schema.group.path":         "../resources/schemas/group.json",
-			"scim.resources.resourceType.user":	    "../resources/resource_types/user.json",
-			"scim.resources.resourceType.group":	    "../resources/resource_types/group.json",
-			"scim.resources.spConfig":	    	    "../resources/sp_config/sp_config.json",
+			"scim.resources.resourceType.user":         "../resources/resource_types/user.json",
+			"scim.resources.resourceType.group":        "../resources/resource_types/group.json",
+			"scim.resources.spConfig":                  "../resources/sp_config/sp_config.json",
 			"scim.protocol.itemsPerPage":               10,
+			"scim.protocol.uri.user":                   "/Users",
+			"scim.protocol.uri.group":                  "/Groups",
 			"mongo.url":                                "mongodb://localhost:32768/scim_example?maxPoolSize=100",
 			"mongo.db":                                 "scim_example",
 			"mongo.collection.user":                    "users",
@@ -72,6 +74,12 @@ func initConfiguration() {
 		groupSchemaInternal,
 		resourceConstructor)
 	web.ErrorCheck(err)
+	rootQueryRepo = &mongoRootQueryRepository{
+		repos: []scim.Repository{
+			userRepo,
+			groupRepo,
+		},
+	}
 	resourceTypeRepo = scim.NewMapRepository(map[string]scim.DataProvider{
 		userResourceType.GetId():  userResourceType,
 		groupResourceType.GetId(): groupResourceType,
@@ -115,8 +123,13 @@ func main() {
 	mux.PutFunc("/Groups/:resourceId", wrap(web.ReplaceGroupHandler, scim.ReplaceGroup))
 	mux.PatchFunc("/Groups/:resourceId", wrap(web.PatchGroupHandler, scim.PatchGroup))
 
+	mux.PostFunc("/Bulk", wrap(web.BulkHandler, scim.BulkOp))
+
+	mux.GetFunc("/", wrap(web.RootQueryHandler, scim.RootQuery))
+	mux.PostFunc("/.search", wrap(web.RootQueryHandler, scim.RootQuery))
+
 	mux.GetFunc("/Schemas/:resourceId", wrap(web.GetSchemaByIdHandler, scim.GetSchemaById))
-	mux.GetFunc("/Schemas", wrap(web.GetAllSchemaHandler, scim.GetSchemaById))
+	mux.GetFunc("/Schemas", wrap(web.GetAllSchemaHandler, scim.GetAllSchema))
 
 	mux.GetFunc("/ResourceTypes", wrap(web.GetAllResourceTypeHandler, scim.GetAllResourceType))
 
@@ -138,6 +151,7 @@ var (
 var (
 	userRepo,
 	groupRepo,
+	rootQueryRepo,
 	resourceTypeRepo,
 	spConfigRepo scim.Repository
 )
@@ -228,6 +242,8 @@ func (ss *simpleServer) MarshalJSON(v interface{}, sch *scim.Schema, attributes 
 }
 func (ss *simpleServer) Repository(identifier string) scim.Repository {
 	switch identifier {
+	case "":
+		return rootQueryRepo
 	case scim.UserResourceType:
 		return userRepo
 	case scim.GroupResourceType:
@@ -277,4 +293,23 @@ func (hwr HttpWebRequest) Param(name string) string {
 	} else {
 		return ""
 	}
+}
+
+// mongo root query repository
+type mongoRootQueryRepository struct {
+	repos []scim.Repository
+}
+
+func (m *mongoRootQueryRepository) Create(provider scim.DataProvider) error { panic("not implemented") }
+func (m *mongoRootQueryRepository) Get(id, version string) (scim.DataProvider, error) {
+	panic("not implemented")
+}
+func (m *mongoRootQueryRepository) GetAll() ([]scim.Complex, error) { panic("not implemented") }
+func (m *mongoRootQueryRepository) Count(query string) (int, error) { panic("not implemented") }
+func (m *mongoRootQueryRepository) Update(id, version string, provider scim.DataProvider) error {
+	panic("not implemented")
+}
+func (m *mongoRootQueryRepository) Delete(id, version string) error { panic("not implemented") }
+func (m *mongoRootQueryRepository) Search(payload scim.SearchRequest) (*scim.ListResponse, error) {
+	return scim.CompositeSearchFunc(m.repos...)(payload)
 }
