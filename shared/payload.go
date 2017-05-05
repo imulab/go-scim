@@ -295,7 +295,7 @@ func (sr SearchRequest) Validate(guide AttributeSource) error {
 	return nil
 }
 func (sr SearchRequest) correctPathCase(text string, guide AttributeSource) (string, error) {
-	p, err := NewPath(sr.SortBy)
+	p, err := NewPath(text)
 	if err != nil {
 		return "", err
 	}

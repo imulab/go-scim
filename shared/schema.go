@@ -96,7 +96,7 @@ type Attribute struct {
 	Returned        string       `json:"returned,omitempty"`
 	Uniqueness      string       `json:"uniqueness,omitempty"`
 	ReferenceTypes  []string     `json:"referenceTypes,omitempty"`
-	Assist          *Assist      `json:"-"`
+	Assist          *Assist      `json:"_assist"`
 }
 
 func (a *Attribute) EqualsToPath(p Path) bool {

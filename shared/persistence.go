@@ -181,7 +181,7 @@ func CompositeSearchFunc(
 				continue
 			}
 
-			listResp, err := plan.repo.Search(SearchRequest{
+			sr := SearchRequest{
 				Filter:             payload.Filter,
 				StartIndex:         plan.skip,
 				Count:              plan.limit,
@@ -190,7 +190,15 @@ func CompositeSearchFunc(
 				Attributes:         payload.Attributes,
 				ExcludedAttributes: payload.ExcludedAttributes,
 				Schemas:            payload.Schemas,
-			})
+			}
+			if sr.StartIndex < 1 {
+				sr.StartIndex = 1
+			}
+			if sr.Count < 0 {
+				sr.Count = 0
+			}
+
+			listResp, err := plan.repo.Search(sr)
 			if err != nil {
 				return nil, err
 			}
