@@ -99,6 +99,36 @@ type Attribute struct {
 	Assist          *Assist      `json:"_assist"`
 }
 
+func (a *Attribute) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Name            string       `json:"name,omitempty"`
+		Type            string       `json:"type,omitempty"`
+		SubAttributes   []*Attribute `json:"subAttributes,omitempty"`
+		MultiValued     bool         `json:"multiValued"`
+		Description     string       `json:"description,omitempty"`
+		Required        bool         `json:"required"`
+		CanonicalValues []string     `json:"canonicalValues,omitempty"`
+		CaseExact       bool         `json:"caseExact,omitempty"`
+		Mutability      string       `json:"mutability,omitempty"`
+		Returned        string       `json:"returned,omitempty"`
+		Uniqueness      string       `json:"uniqueness,omitempty"`
+		ReferenceTypes  []string     `json:"referenceTypes,omitempty"`
+	}{
+		a.Name,
+		a.Type,
+		a.SubAttributes,
+		a.MultiValued,
+		a.Description,
+		a.Required,
+		a.CanonicalValues,
+		a.CaseExact,
+		a.Mutability,
+		a.Returned,
+		a.Uniqueness,
+		a.ReferenceTypes,
+	})
+}
+
 func (a *Attribute) EqualsToPath(p Path) bool {
 	switch strings.ToLower(p.CollectValue()) {
 	case strings.ToLower(a.Assist.FullPath):
