@@ -57,6 +57,17 @@ func TestNewPath(t *testing.T) {
 				assert.Nil(t, head.Next().Next())
 			},
 		},
+		{
+			// urn path
+			"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User.employeeNumber",
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Equal(t, "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User", head.Base())
+				assert.Equal(t, "employeeNumber", head.Next().Base())
+				assert.Nil(t, head.Next().Next())
+			},
+		},
 	} {
 		test.assertion(NewPath(test.text))
 	}

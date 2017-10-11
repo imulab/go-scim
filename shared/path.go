@@ -42,7 +42,7 @@ const (
 	Parenthesis
 )
 
-var reg, regerr = regexp.Compile("^(?i)([a-z]+:)+2")
+var reg, _ = regexp.Compile("^(?i)([a-z]+:)+2")
 
 // create a new Path from text
 func NewPath(text string) (Path, error) {
