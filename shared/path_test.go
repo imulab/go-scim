@@ -24,12 +24,33 @@ func TestNewPath(t *testing.T) {
 			},
 		},
 		{
+			// single with urn
+			"urn:ietf:params:scim:schemas:core:2.0:User:userName",
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Nil(t, head.Next())
+				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User:userName", head.Base())
+			},
+		},
+		{
 			// duplex
 			"name.familyName",
 			func(head Path, err error) {
 				assert.Nil(t, err)
 				assert.NotNil(t, head)
 				assert.Equal(t, "name", head.Base())
+				assert.Equal(t, "familyName", head.Next().Base())
+				assert.Nil(t, head.Next().Next())
+			},
+		},
+		{
+			// duplex with urn
+			"urn:ietf:params:scim:schemas:core:2.0:User:name.familyName",
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User:name", head.Base())
 				assert.Equal(t, "familyName", head.Next().Base())
 				assert.Nil(t, head.Next().Next())
 			},
