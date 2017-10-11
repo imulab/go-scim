@@ -3,6 +3,7 @@ package shared
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -41,6 +42,8 @@ const (
 	Parenthesis
 )
 
+var reg, regerr = regexp.Compile("^(?i)([a-z]+:)+2")
+
 // create a new Path from text
 func NewPath(text string) (Path, error) {
 	text = strings.TrimSpace(text)
@@ -60,7 +63,7 @@ func NewPath(text string) (Path, error) {
 		case quoteRune:
 			textMode = !textMode
 		case periodRune:
-			if !textMode && strings.ToLower(text[:i]) != "urn:ietf:params:scim:schemas:core:2" {
+			if !textMode && !reg.MatchString(text) {
 				idx = i
 				break
 			}
