@@ -40,6 +40,9 @@ func (dec *ScimDecoder) decode(data []byte, v reflect.Value, opt *decodeOpt) (in
 		if attr, err := dec.Attributes.Get(tag); err != nil {
 			return err
 		} else {
+
+			// TODO if attribute's requiredSchema isn't present, skip this.
+
 			if attr.IsSimpleField() {
 				if val, err := dec.attemptGetValue(data, attr); err == nil && val.IsValid() {
 					dec.setValue(v, field, val)
@@ -47,7 +50,11 @@ func (dec *ScimDecoder) decode(data []byte, v reflect.Value, opt *decodeOpt) (in
 					return err
 				}
 			} else if attr.IsSimpleArray() {
-
+				if val, err := dec.attemptGetArrayValue(data, attr); err == nil && val.IsValid() {
+					dec.setValue(v, field, val)
+				} else {
+					return err
+				}
 			} else if attr.IsObject() {
 
 			} else if attr.IsObjectArray() {
@@ -83,6 +90,32 @@ func (dec *ScimDecoder) attemptGetValue(data []byte, attr *resource.Attribute) (
 			if b, err := parser.GetBoolean(data, key); err == nil {
 				return reflect.ValueOf(b), nil
 			}
+		}
+	}
+
+	if attr.Required {
+		return reflect.Value{}, &RequiredPathNotFoundError{Path: attr.Guide.Tag}
+	}
+
+	return reflect.Value{}, nil
+}
+
+func (dec *ScimDecoder) attemptGetArrayValue(data []byte, attr *resource.Attribute) (reflect.Value, error) {
+	for _, key := range attr.Guide.Aliases {
+		switch attr.Type {
+		case resource.TypeString, resource.TypeReference, resource.TypeDateTime, resource.TypeBinary:
+			strArray := []string{}
+			if _, err := parser.ArrayEach(data, func(value []byte, dataType parser.ValueType, offset int, err error){
+				strArray = append(strArray, string(value))
+			}, key); err == nil {
+				return reflect.ValueOf(strArray), nil
+			}
+		case resource.TypeInteger:
+			// TODO
+		case resource.TypeDecimal:
+			// TODO
+		case resource.TypeBoolean:
+			// TODO
 		}
 	}
 
