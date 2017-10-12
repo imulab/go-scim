@@ -17,8 +17,9 @@ func TestDecode(t *testing.T) {
 		Attributes: av,
 	}
 
-	json := []byte(`{"schemas":["urn:ietf:params:scim:schemas:core:2.0:User"], "id": "abc", "userName": "david", "active": true}`)
+	json := []byte(`{"schemas":["urn:ietf:params:scim:schemas:core:2.0:User"], "id": "abc", "emails" : [{ "value":"foo@bar.com" }], "name" : { "familyName": "Qiu" }, "userName": "david", "active": true}`)
 	v, err := decoder.Decode(json)
+
 	t.Logf("%+v", v)
 	t.Logf("%+v", err)
 }

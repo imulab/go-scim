@@ -30,12 +30,14 @@ func (dec *ScimDecoder) Decode(data []byte) (interface{}, error) {
 		return nil, ErrorJson
 	} else if v, err := dec.Factory.NewResource(opt.schemas); err != nil {
 		return nil, err
+	} else if val, err := dec.decode(data, reflect.ValueOf(v), opt); err != nil {
+		return nil, err
 	} else {
-		return dec.decode(data, reflect.ValueOf(v), opt)
+		return val.Interface(), nil
 	}
 }
 
-func (dec *ScimDecoder) decode(data []byte, v reflect.Value, opt *decodeOpt) (interface{}, error) {
+func (dec *ScimDecoder) decode(data []byte, v reflect.Value, opt *decodeOpt) (reflect.Value, error) {
 	if err := dec.forEachTag(v, func(field reflect.StructField, tag string) error {
 		if attr, err := dec.Attributes.Get(tag); err != nil {
 			return err
@@ -56,14 +58,35 @@ func (dec *ScimDecoder) decode(data []byte, v reflect.Value, opt *decodeOpt) (in
 					return err
 				}
 			} else if attr.IsObject() {
-
+				if objJsonBytes, err := dec.attemptGetBytes(data, attr); err != nil {
+					return err
+				} else if len(objJsonBytes) > 0 {
+					if objVal, err := dec.decode(objJsonBytes, reflect.New(field.Type), opt); err != nil {
+						return err
+					} else {
+						dec.setValue(v, field, objVal.Elem())
+					}
+				}
 			} else if attr.IsObjectArray() {
-
+				if arrayJsonBytes, err := dec.attemptGetBytes(data, attr); err != nil {
+					return err
+				} else if len(arrayJsonBytes) > 0 {
+					slice := reflect.MakeSlice(field.Type, 0, 0)
+					dec.setValue(v, field, slice)
+					if _, err := parser.ArrayEach(arrayJsonBytes, func(value []byte, dataType parser.ValueType, offset int, err error) {
+						elemVal := reflect.New(field.Type.Elem().Elem())
+						if elemVal, err := dec.decode(value, elemVal, opt); err == nil {
+							dec.setValue(v, field, reflect.Append(slice, elemVal))
+						}
+					}); err != nil {
+						return err
+					}
+				}
 			}
 		}
 		return nil
 	}); err != nil {
-		return nil, err
+		return reflect.Value{}, err
 	}
 	return v, nil
 }
@@ -100,6 +123,20 @@ func (dec *ScimDecoder) attemptGetValue(data []byte, attr *resource.Attribute) (
 	return reflect.Value{}, nil
 }
 
+func (dec *ScimDecoder) attemptGetBytes(data []byte, attr *resource.Attribute) ([]byte, error) {
+	for _, key := range attr.Guide.Aliases {
+		if bytes, _, _, err := parser.Get(data, key); err == nil {
+			return bytes, nil
+		}
+	}
+
+	if attr.Required {
+		return nil, &RequiredPathNotFoundError{Path: attr.Guide.Tag}
+	}
+
+	return nil, nil
+}
+
 func (dec *ScimDecoder) attemptGetArrayValue(data []byte, attr *resource.Attribute) (reflect.Value, error) {
 	for _, key := range attr.Guide.Aliases {
 		switch attr.Type {
@@ -127,7 +164,6 @@ func (dec *ScimDecoder) attemptGetArrayValue(data []byte, attr *resource.Attribu
 }
 
 func (dec *ScimDecoder) setValue(base reflect.Value, field reflect.StructField, val reflect.Value) {
-	fmt.Println(field.Name + " set")
 	if base.Elem().FieldByName(field.Name).CanSet() {
 		base.Elem().FieldByName(field.Name).Set(val)
 	}

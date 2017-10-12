@@ -1,5 +1,9 @@
 package resource
 
+// Domain design rule of thumb
+// - Use struct for nested objects
+// - Use slice of pointers to struct for arrays
+
 type User struct {
 	Core
 	Username 		string 			`scim:"urn:ietf:params:scim:schemas:core:2.0:User:userName"`

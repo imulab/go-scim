@@ -24,12 +24,19 @@ func GetAttributeVault(schemas ...*Schema) AttributeVault {
 	oneVault.Do(func() {
 		vault = &mapAttributeVault{data:make(map[string]*Attribute)}
 		for _, sch := range schemas {
-			for _, attr := range sch.Attributes {
-				vault.data[strings.ToLower(attr.Guide.Tag)] = attr
-			}
+			indexAttributes(sch.Attributes...)
 		}
 	})
 	return vault
+}
+
+func indexAttributes(attributes ...*Attribute) {
+	for _, attr := range attributes {
+		vault.data[strings.ToLower(attr.Guide.Tag)] = attr
+		if attr.SubAttributes != nil {
+			indexAttributes(attr.SubAttributes...)
+		}
+	}
 }
 
 // Main entry point of getting an attribute by a corresponding SCIM tag value.
