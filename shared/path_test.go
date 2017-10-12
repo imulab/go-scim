@@ -90,6 +90,26 @@ func TestNewPath(t *testing.T) {
 				assert.Nil(t, head.Next().Next())
 			},
 		},
+		{
+			// urn path
+			"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Equal(t, "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User", head.Base())
+				assert.Nil(t, head.Next())
+			},
+		},
+		{
+			// urn path
+			"urn:ietf:params:scim:schemas:extension:account:2.0:Password",
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Equal(t, "urn:ietf:params:scim:schemas:extension:account:2.0:Password", head.Base())
+				assert.Nil(t, head.Next())
+			},
+		},
 	} {
 		test.assertion(NewPath(test.text))
 	}
