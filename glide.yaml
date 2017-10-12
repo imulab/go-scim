@@ -3,6 +3,7 @@ import:
 - package: github.com/satori/go.uuid
   version: ~1.1.0
 - package: gopkg.in/mgo.v2
+- package: github.com/buger/jsonparser
 testImport:
 - package: gopkg.in/ory-am/dockertest.v3
 - package: github.com/stretchr/testify
