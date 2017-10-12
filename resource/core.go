@@ -4,7 +4,7 @@ type Core struct {
 	Schemas 	[]string 	`scim:"schemas"`
 	Id 			string 		`scim:"id"`
 	ExternalId 	string 		`scim:"externalId"`
-	Meta 		Meta 		`scim:"meta"`
+	Meta 		*Meta 		`scim:"meta"`
 }
 
 type Meta struct {

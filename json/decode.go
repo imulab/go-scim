@@ -61,10 +61,10 @@ func (dec *ScimDecoder) decode(data []byte, v reflect.Value, opt *decodeOpt) (re
 				if objJsonBytes, err := dec.attemptGetBytes(data, attr); err != nil {
 					return err
 				} else if len(objJsonBytes) > 0 {
-					if objVal, err := dec.decode(objJsonBytes, reflect.New(field.Type), opt); err != nil {
+					if objVal, err := dec.decode(objJsonBytes, reflect.New(field.Type.Elem()), opt); err != nil {
 						return err
 					} else {
-						dec.setValue(v, field, objVal.Elem())
+						dec.setValue(v, field, objVal)
 					}
 				}
 			} else if attr.IsObjectArray() {

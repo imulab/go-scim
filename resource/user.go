@@ -1,13 +1,22 @@
 package resource
 
 // Domain design rule of thumb
-// - Use struct for nested objects
-// - Use slice of pointers to struct for arrays
+// - use struct for embedding
+// - use string for string/datetime/reference/binary type
+// - use int64 for integer type
+// - use float64 for decimal type
+// - use bool for boolean type
+// - use slice of string for multiValued string/datetime/reference/binary type
+// - use slice of int64 for multiValued integer type
+// - use slice of float64 for multiValued decimal type
+// - use slice of bool for multiValued boolean type
+// - use pointer to struct for complex type
+// - use slice of pointers to struct for multiValued complex type
 
 type User struct {
 	Core
 	Username 		string 			`scim:"urn:ietf:params:scim:schemas:core:2.0:User:userName"`
-	Name 			Name 			`scim:"urn:ietf:params:scim:schemas:core:2.0:User:name"`
+	Name 			*Name 			`scim:"urn:ietf:params:scim:schemas:core:2.0:User:name"`
 	DisplayName 	string 			`scim:"urn:ietf:params:scim:schemas:core:2.0:User:displayName"`
 	NickName 		string 			`scim:"urn:ietf:params:scim:schemas:core:2.0:User:nickName"`
 	ProfileUrl 		string 			`scim:"urn:ietf:params:scim:schemas:core:2.0:User:profileUrl"`

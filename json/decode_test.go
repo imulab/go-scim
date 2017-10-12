@@ -21,5 +21,6 @@ func TestDecode(t *testing.T) {
 	v, err := decoder.Decode(json)
 
 	t.Logf("%+v", v)
+	t.Logf("%+v", v.(*resource.User).Name)
 	t.Logf("%+v", err)
 }
