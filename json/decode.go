@@ -8,6 +8,9 @@ import (
 	"fmt"
 )
 
+// TODO improve error reporting
+// TODO improve comments
+
 var (
 	ErrorJson = errors.New("Malformed JSON")
 )
