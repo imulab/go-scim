@@ -91,6 +91,15 @@ func TestApplyPatch(t *testing.T) {
 			},
 		},
 		{
+			// replace: implicit path
+			Patch{Op: Replace, Value: map[string]interface{}{"userName": "foo", "externalId": "bar"}},
+			func(r *Resource, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "foo", r.GetData()["userName"])
+				assert.Equal(t, "bar", r.GetData()["externalId"])
+			},
+		},
+		{
 			// replace: duplex path
 			Patch{Op: Replace, Path: "name.familyName", Value: "foo"},
 			func(r *Resource, err error) {

@@ -142,6 +142,23 @@ func (ps *patchState) applyPatchRemove(p Path, subj *Resource) {
 }
 
 func (ps *patchState) applyPatchReplace(p Path, v reflect.Value, subj *Resource) {
+	if p == nil {
+		if v.Kind() != reflect.Map {
+			ps.throw(Error.InvalidParam("value of replace op", "to be complex (for implicit path)", "non-complex"), ps.ctx)
+		}
+		for _, k := range v.MapKeys() {
+			v0 := v.MapIndex(k)
+			if err := ApplyPatch(Patch{
+				Op:    Replace,
+				Path:  k.String(),
+				Value: v0.Interface(),
+			}, subj, ps.sch, ps.ctx); err != nil {
+				ps.throw(err, ps.ctx)
+			}
+		}
+		return
+	}
+
 	basePath, lastPath := p.SeparateAtLast()
 	baseChannel := make(chan interface{}, 1)
 	if basePath == nil {
