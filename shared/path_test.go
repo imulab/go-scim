@@ -34,6 +34,51 @@ func TestNewPath(t *testing.T) {
 				assert.Nil(t, head.Next().Next())
 			},
 		},
+		// single with UserUrn
+		{
+			fmt.Sprintf("%s:UserName", strings.ToLower(UserUrn)),
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Equal(t, fmt.Sprintf("%s:UserName", strings.ToLower(UserUrn)), head.Base())
+				assert.Nil(t, head.Next())
+			},
+		},
+		// duplex with UserUrn
+		{
+			fmt.Sprintf("%s:Name.FamilyName", strings.ToLower(UserUrn)),
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Equal(t, fmt.Sprintf("%s:Name", strings.ToLower(UserUrn)), head.Base())
+				assert.NotNil(t, head.Next())
+				assert.Equal(t, "FamilyName", head.Next().Base())
+				assert.Nil(t, head.Next().Next())
+			},
+		},
+
+		// single with UserEnterpriseUrn
+		{
+			UserEnterpriseUrn,
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Equal(t, UserEnterpriseUrn, head.Base())
+				assert.Nil(t, head.Next())
+			},
+		},
+		// duplex with UserEnterpriseUrn
+		{
+			fmt.Sprintf("%s.department", UserEnterpriseUrn),
+			func(head Path, err error) {
+				assert.Nil(t, err)
+				assert.NotNil(t, head)
+				assert.Equal(t, UserEnterpriseUrn, head.Base())
+				assert.NotNil(t, head.Next())
+				assert.Equal(t, "department", head.Next().Base())
+				assert.Nil(t, head.Next().Next())
+			},
+		},
 		{
 			// single filter
 			"emails[value eq \"david@foo.com\"]",

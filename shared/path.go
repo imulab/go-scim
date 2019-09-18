@@ -60,7 +60,7 @@ func NewPath(text string) (Path, error) {
 		case quoteRune:
 			textMode = !textMode
 		case periodRune:
-			if !textMode && strings.ToLower(text[:i]) != "urn:ietf:params:scim:schemas:core:2" {
+			if !textMode && (strings.ToLower(text[:i]) != "urn:ietf:params:scim:schemas:core:2" && strings.ToLower(text[:i]) != "urn:ietf:params:scim:schemas:extension:enterprise:2") {
 				idx = i
 				break
 			}

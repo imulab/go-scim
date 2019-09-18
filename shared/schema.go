@@ -277,6 +277,8 @@ const (
 	BulkRequestUrn  = "urn:ietf:params:scim:api:messages:2.0:BulkRequest"
 	BulkResponseUrn = "urn:ietf:params:scim:api:messages:2.0:BulkResponse"
 
+	UserEnterpriseUrn = "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+
 	TypeString    = "string"
 	TypeBoolean   = "boolean"
 	TypeBinary    = "binary"
