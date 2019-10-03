@@ -236,10 +236,6 @@ func (sr SearchRequest) Validate(guide AttributeSource) error {
 		return Error.InvalidParam("search request", "search operation urn", "non-search urn")
 	}
 
-	if len(sr.Filter) == 0 {
-		return Error.InvalidParam("search request", "query string", "empty string")
-	}
-
 	if sr.StartIndex < 1 {
 		sr.StartIndex = 1
 	}
