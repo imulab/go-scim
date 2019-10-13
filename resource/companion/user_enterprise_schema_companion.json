@@ -1,0 +1,35 @@
+{
+  "schema": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+  "dbAlias": "enterpriseUser",
+  "metadata": [
+    {
+      "path": "employeeNumber"
+    },
+    {
+      "path": "costCenter"
+    },
+    {
+      "path": "organization"
+    },
+    {
+      "path": "division"
+    },
+    {
+      "path": "department"
+    },
+    {
+      "path": "manager"
+    },
+    {
+      "path": "manager.value"
+    },
+    {
+      "path": "manager.$ref",
+      "dbAlias": "ref"
+    },
+    {
+      "path": "manager.displayName",
+      "annotation": ["@copy:{\"resource\": \"User\", \"query\": \"id eq \\\"%s\\\"\", \"argsValues\": [\"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager:$ref\"]}"]
+    }
+  ]
+}

@@ -1,0 +1,357 @@
+{
+  "id": "urn:ietf:params:scim:schemas:core:2.0:User",
+  "name": "User",
+  "description": "Defined attributes for the user schema",
+  "attributes": [
+    {
+      "name": "userName",
+      "type": "string",
+      "required": true,
+      "uniqueness": "server"
+    },
+    {
+      "name": "name",
+      "type": "complex",
+      "subAttributes": [
+        {
+          "name": "formatted",
+          "type": "string"
+        },
+        {
+          "name": "familyName",
+          "type": "string"
+        },
+        {
+          "name": "givenName",
+          "type": "string"
+        },
+        {
+          "name": "middleName",
+          "type": "string"
+        },
+        {
+          "name": "honorificPrefix",
+          "type": "string"
+        },
+        {
+          "name": "honorificSuffix",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "displayName",
+      "type": "string"
+    },
+    {
+      "name": "nickName",
+      "type": "string"
+    },
+    {
+      "name": "profileUrl",
+      "type": "reference",
+      "referenceTypes": ["external"]
+    },
+    {
+      "name": "title",
+      "type": "string"
+    },
+    {
+      "name": "userType",
+      "type": "string",
+      "canonicalValues": [
+        "Contractor",
+        "Employee",
+        "Intern",
+        "Temp",
+        "External",
+        "Internal",
+        "Unknown"
+      ]
+    },
+    {
+      "name": "preferredLanguage",
+      "type": "string",
+      "canonicalValues": [
+        "zh_CN",
+        "en_US",
+        "en_CA"
+      ]
+    },
+    {
+      "name": "locale",
+      "type": "string",
+      "canonicalValues": [
+        "en_CA",
+        "fr_CA",
+        "en_US",
+        "zh_CN"
+      ]
+    },
+    {
+      "name": "timezone",
+      "type": "string",
+      "canonicalValues": [
+        "Asia/Shanghai",
+        "Asia/Beijing",
+        "America/New_York",
+        "America/Toronto"
+      ]
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "required": true
+    },
+    {
+      "name": "password",
+      "type": "string",
+      "mutability": "writeOnly",
+      "returned": "never"
+    },
+    {
+      "name": "emails",
+      "type": "complex",
+      "multiValued": true,
+      "required": true,
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "canonicalValues": [
+            "work",
+            "home",
+            "other"
+          ]
+        },
+        {
+          "name": "primary",
+          "type": "boolean"
+        },
+        {
+          "name": "display",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "phoneNumbers",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "canonicalValues": [
+            "work",
+            "home",
+            "mobile",
+            "fax",
+            "pager",
+            "other"
+          ]
+        },
+        {
+          "name": "primary",
+          "type": "boolean"
+        },
+        {
+          "name": "display",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "ims",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "canonicalValues": ["skype", "qq", "wechat", "weibo", "other"]
+        },
+        {
+          "name": "primary",
+          "type": "boolean"
+        },
+        {
+          "name": "display",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "photos",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "reference",
+          "referenceTypes": ["external"]
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "canonicalValues": [
+            "photo",
+            "thumbnail"
+          ]
+        },
+        {
+          "name": "primary",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "name": "addresses",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "formatted",
+          "type": "string"
+        },
+        {
+          "name": "streetAddress",
+          "type": "string"
+        },
+        {
+          "name": "locality",
+          "type": "string"
+        },
+        {
+          "name": "region",
+          "type": "string"
+        },
+        {
+          "name": "postalCode",
+          "type": "string"
+        },
+        {
+          "name": "country",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "canonicalValues": ["work", "home", "id", "driver", "other"]
+        },
+        {
+          "name": "primary",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "name": "groups",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string",
+          "mutability": "readOnly"
+        },
+        {
+          "name": "$ref",
+          "type": "reference",
+          "mutability": "readOnly"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "mutability": "readOnly",
+          "canonicalValues": ["direct", "indirect"]
+        },
+        {
+          "name": "display",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "entitlements",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "primary",
+          "type": "boolean"
+        },
+        {
+          "name": "display",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "primary",
+          "type": "boolean"
+        },
+        {
+          "name": "display",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "x509Certificates",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "value",
+          "type": "binary"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "name": "primary",
+          "type": "boolean"
+        },
+        {
+          "name": "display",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}

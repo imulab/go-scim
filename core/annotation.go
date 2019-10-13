@@ -17,4 +17,8 @@ var (
 	// and 'lastModified' are both assigned the current time, and 'version' is assigned to an initial value; During
 	// non-delete resource modifications, 'lastModified' is set to current time and 'version' is bumped.
 	AnnotationMeta = "@meta"
+
+	// Denotes the field is a 'password' property. Its content shall be hashed before it is saved to database. When
+	// doing comparison, the query value shall also be hashed before doing the comparison.
+	AnnotationPassword = "@password"
 )
