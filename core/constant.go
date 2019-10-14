@@ -37,3 +37,22 @@ const (
 
 // Datetime format
 const ISO8601 = "2006-01-02T15:04:05"
+
+// query tokens
+const (
+	LeftParen  = "("
+	RightParen = ")"
+	And        = "and"
+	Or         = "or"
+	Not        = "not"
+	Eq         = "eq"
+	Ne         = "ne"
+	Sw         = "sw"
+	Ew         = "ew"
+	Co         = "co"
+	Pr         = "pr"
+	Gt         = "gt"
+	Ge         = "ge"
+	Lt         = "lt"
+	Le         = "le"
+)

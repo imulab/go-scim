@@ -1,6 +1,9 @@
 package core
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // SCIM attribute contains metadata and rules for a field in SCIM resource.
 type Attribute struct {
@@ -47,6 +50,16 @@ func (attr *Attribute) setDefaults() {
 // attribute in case insensitive fashion.
 func (attr *Attribute) GoesBy(name string) bool {
 	return attr != nil && strings.ToLower(name) == strings.ToLower(attr.Name)
+}
+
+// Returns a proper name for this attribute suitable for display purposes. Defaults
+// to the attribute's name, and will use the metadata's path value, if available.
+func (attr *Attribute) DisplayName() string {
+	name := attr.Name
+	if attr.Metadata != nil && len(attr.Metadata.Path) > 0 {
+		name = attr.Metadata.Path
+	}
+	return name
 }
 
 // Return an attribute same to this attribute, but with multiValued set to false.
@@ -159,4 +172,20 @@ func (attr *Attribute) Copy() *Attribute {
 		ReferenceTypes:  referenceTypes,
 		Metadata:        metadata,
 	}
+}
+
+// Returns a noTarget error about the attribute, depending on the step's type.
+func (attr *Attribute) errNoTarget(step *step) error {
+	if step.IsPath() {
+		return Errors.noTarget(fmt.Sprintf("%s does not have the specified sub attributes.", attr.DisplayName()))
+	} else if step.IsOperator() {
+		return Errors.noTarget(fmt.Sprintf("%s cannot be filtered.", attr.DisplayName()))
+	} else {
+		return Errors.noTarget(fmt.Sprintf("%s cannot be processed by given step", attr.DisplayName()))
+	}
+}
+
+// Returns an invalidValue error about the attribute.
+func (attr *Attribute) errInvalidValue() error {
+	return Errors.invalidValue(fmt.Sprintf("value is invalid or incompatible for attribute %s", attr.DisplayName()))
 }

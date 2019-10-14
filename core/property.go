@@ -286,11 +286,26 @@ func (c *complexProperty) syncIndex() {
 	}
 }
 
+// Return the boolean sub property whose metadata marked as 'exclusive' and has the value 'true'. If
+// no such sub property, returns nil.
+func (c *complexProperty) getExclusiveTrue() *booleanProperty {
+	for _, sub := range c.props {
+		if sub.Attribute().Type == TypeBoolean && sub.Raw() == true {
+			return sub.(*booleanProperty)
+		}
+	}
+	return nil
+}
+
 // A SCIM multiValued property. The Raw() value call returns a slice of the non-unassigned member property's
 // Raw() value call result. Since this slice is computed on the fly, this call might be expensive.
 type multiValuedProperty struct {
 	attr  *Attribute
 	props []Property
+
+	// reference to the exclusively true boolean property
+	// from the complex property elements, if any.
+	excl  *booleanProperty
 }
 
 func (m *multiValuedProperty) Attribute() *Attribute {

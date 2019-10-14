@@ -17,6 +17,24 @@ func (s ScimError) Error() string {
 	return fmt.Sprintf("%s: %s", s.Type, s.Message)
 }
 
+// Append some hint information to the end of this error
+func (s ScimError) Hint(hint string) error {
+	return &ScimError{
+		Status:  s.Status,
+		Type:    s.Type,
+		Message: s.Message + " " + hint,
+	}
+}
+
+// Convenience method to wrap any error with hint
+func ErrAppendHint(err error, hint string) error {
+	if se, ok := err.(*ScimError); ok {
+		return se.Hint(hint)
+	} else {
+		return Errors.internal(err.Error()).(*ScimError).Hint(hint)
+	}
+}
+
 var (
 	// Entry point to create a SCIM error.
 	Errors	= &errorFactory{}
