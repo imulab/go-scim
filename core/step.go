@@ -102,6 +102,24 @@ func (f stepFactory) NewPath(path string) *step {
 	}
 }
 
+// Create a new linked list of path steps and return its head.
+func (f stepFactory) NewPathChain(paths ...string) *step {
+	if len(paths) < 0 {
+		return nil
+	}
+
+	var (
+		head = &step{}	// dummy head
+		cursor = head
+	)
+	for _, path := range paths {
+		cursor.Next = f.NewPath(path)
+		cursor = cursor.Next
+	}
+
+	return head.Next
+}
+
 // Create a new logical operator step
 func (f stepFactory) NewLogicalOperator(op string) *step {
 	return &step{

@@ -332,12 +332,12 @@ func (c *complexProperty) Get(step *step) (interface{}, error) {
 		return nil, c.attr.errNoTarget(step)
 	}
 
-	idx, ok := c.index[strings.ToLower(step.Token)]
-	if !ok {
+	subProp, err := c.getSubProperty(step.Token)
+	if err != nil {
 		return nil, c.attr.errNoTarget(step)
 	}
 
-	return c.props[idx].(Crud).Get(step.Next)
+	return subProp.(Crud).Get(step.Next)
 }
 
 func (c *complexProperty) Add(step *step, value interface{}) error {
@@ -349,12 +349,12 @@ func (c *complexProperty) Add(step *step, value interface{}) error {
 		return c.attr.errNoTarget(step)
 	}
 
-	idx, ok := c.index[strings.ToLower(step.Token)]
-	if !ok {
+	subProp, err := c.getSubProperty(step.Token)
+	if err != nil {
 		return c.attr.errNoTarget(step)
 	}
 
-	return c.props[idx].(Crud).Add(step.Next, value)
+	return subProp.(Crud).Add(step.Next, value)
 }
 
 func (c *complexProperty) selfAdd(value interface{}) error {
@@ -368,12 +368,11 @@ func (c *complexProperty) selfAdd(value interface{}) error {
 	}
 
 	for k, v := range m {
-		idx, ok := c.index[strings.ToLower(k)]
-		if !ok {
+		p, err := c.getSubProperty(k)
+		if err != nil {
 			return c.attr.errNoTarget(Steps.NewPath(c.attr.DisplayName() + "." + k))
 		}
-
-		if err := c.props[idx].(Crud).Add(nil, v); err != nil {
+		if err := p.(Crud).Add(nil, v); err != nil {
 			return err
 		}
 	}
@@ -390,12 +389,12 @@ func (c *complexProperty) Replace(step *step, value interface{}) error {
 		return c.attr.errNoTarget(step)
 	}
 
-	idx, ok := c.index[strings.ToLower(step.Token)]
-	if !ok {
+	subProp, err := c.getSubProperty(step.Token)
+	if err != nil {
 		return c.attr.errNoTarget(step)
 	}
 
-	return c.props[idx].(Crud).Replace(step.Next, value)
+	return subProp.(Crud).Replace(step.Next, value)
 }
 
 func (c *complexProperty) selfReplace(value interface{}) error {
@@ -413,7 +412,7 @@ func (c *complexProperty) selfReplace(value interface{}) error {
 		m0[strings.ToLower(k)] = v
 	}
 
-	for _, sub := range c.props {
+	for _, sub := range c.subProps {
 		if nv, ok := m0[strings.ToLower(sub.Attribute().Name)]; ok && nv != nil {
 			if err := sub.(Crud).Replace(nil, nv); err != nil {
 				return err
@@ -437,16 +436,16 @@ func (c *complexProperty) Delete(step *step) error {
 		return c.attr.errNoTarget(step)
 	}
 
-	idx, ok := c.index[strings.ToLower(step.Token)]
-	if !ok {
+	subProp, err := c.getSubProperty(step.Token)
+	if err != nil {
 		return c.attr.errNoTarget(step)
 	}
 
-	return c.props[idx].(Crud).Delete(step.Next)
+	return subProp.(Crud).Delete(step.Next)
 }
 
 func (c *complexProperty) selfDelete() error {
-	for _, sub := range c.props {
+	for _, sub := range c.subProps {
 		if err := sub.(Crud).Delete(nil); err != nil {
 			return err
 		}

@@ -1,5 +1,7 @@
 package core
 
+import "strings"
+
 var (
 	// Entry point to create a new resource
 	Resources = resourceFactory{}
@@ -59,13 +61,20 @@ func (f propertyFactory) New(attr *Attribute) Property {
 func (f propertyFactory) NewComplex(attr *Attribute) *complexProperty {
 	container := &complexProperty{
 		attr:  attr,
-		props: make([]Property, 0, len(attr.SubAttributes)),
+		subProps: make(map[string]Property, 0),
 	}
 
 	for _, subAttr := range attr.SubAttributes {
-		container.props = append(container.props, f.New(subAttr))
+		container.subProps[strings.ToLower(subAttr.Name)] = f.New(subAttr)
 	}
-	container.syncIndex()
 
 	return container
+}
+
+func (f propertyFactory) NewComplexOf(attr *Attribute, value map[string]interface{}) *complexProperty {
+	prop := f.NewComplex(attr)
+	for k, v := range value {
+		_ = prop.Replace(Steps.NewPath(k), v)
+	}
+	return prop
 }

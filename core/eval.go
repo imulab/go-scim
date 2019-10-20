@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -74,7 +73,7 @@ func (c *complexProperty) evaluateRelational(root *step) (bool, error) {
 		err error
 	)
 	{
-		cursor := root
+		cursor := root.Left
 		prop = c
 
 		for cursor != nil {
@@ -169,12 +168,4 @@ func (c *complexProperty) evaluateRelational(root *step) (bool, error) {
 	default:
 		panic("not a relational operator")
 	}
-}
-
-func (c *complexProperty) getSubProperty(name string) (Property, error) {
-	idx, ok := c.index[strings.ToLower(name)]
-	if !ok {
-		return nil, Errors.noTarget(fmt.Sprintf("%s.%s does not yield a target", c.attr.DisplayName(), name))
-	}
-	return c.props[idx], nil
 }

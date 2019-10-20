@@ -1,6 +1,9 @@
 package core
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Property represents a field in SCIM resource. It maintains the field metadata its attributes.
 type Property interface {
@@ -240,11 +243,7 @@ func (r *referenceProperty) IsPresent() bool {
 // builds this map on the fly, such call may be expensive.
 type complexProperty struct {
 	attr  *Attribute
-	props []Property
-
-	// props stores the index of property in the props slice, indexed to the lower case form of
-	// the attribute name.
-	index map[string]int
+	subProps map[string]Property
 }
 
 func (c *complexProperty) Attribute() *Attribute {
@@ -253,20 +252,24 @@ func (c *complexProperty) Attribute() *Attribute {
 
 func (c *complexProperty) Raw() interface{} {
 	values := make(map[string]interface{})
-	for _, prop := range c.props {
-		values[prop.Attribute().Name] = prop.Raw()
+	for _, p := range c.subProps {
+		values[p.Attribute().Name] = p.Raw()
 	}
 	return values
 }
 
 func (c *complexProperty) Children() []Property {
-	return c.props
+	subProps := make([]Property, 0)
+	for _, p := range c.subProps {
+		subProps = append(subProps, p)
+	}
+	return subProps
 }
 
 // If all sub properties are unassigned, this complex property is unassigned.
 func (c *complexProperty) IsUnassigned() bool {
-	for _, prop := range c.props {
-		if !prop.IsUnassigned() {
+	for _, p := range c.subProps {
+		if !p.IsUnassigned() {
 			return false
 		}
 	}
@@ -278,23 +281,24 @@ func (c *complexProperty) IsPresent() bool {
 	return true
 }
 
-// Re-compute the index for properties
-func (c *complexProperty) syncIndex() {
-	c.index = make(map[string]int)
-	for i, prop := range c.props {
-		c.index[strings.ToLower(prop.Attribute().Name)] = i
-	}
-}
-
 // Return the boolean sub property whose metadata marked as 'exclusive' and has the value 'true'. If
 // no such sub property, returns nil.
 func (c *complexProperty) getExclusiveTrue() *booleanProperty {
-	for _, sub := range c.props {
-		if sub.Attribute().Type == TypeBoolean && sub.Raw() == true {
-			return sub.(*booleanProperty)
+	for _, p := range c.subProps {
+		if p.Attribute().Type == TypeBoolean && p.Raw() == true {
+			return p.(*booleanProperty)
 		}
 	}
 	return nil
+}
+
+// Return the sub property by the name (case insensitive)
+func (c *complexProperty) getSubProperty(name string) (Property, error) {
+	p, ok := c.subProps[strings.ToLower(name)]
+	if !ok {
+		return nil, Errors.noTarget(fmt.Sprintf("%s.%s does not yield a target", c.attr.DisplayName(), name))
+	}
+	return p, nil
 }
 
 // A SCIM multiValued property. The Raw() value call returns a slice of the non-unassigned member property's
