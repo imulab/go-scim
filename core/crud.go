@@ -28,6 +28,8 @@ type Crud interface {
 	Delete(step *step) error
 }
 
+// --- stringProperty implementation of Crud ---
+
 func (s *stringProperty) Get(step *step) (interface{}, error) {
 	if step != nil {
 		return nil, s.attr.errNoTarget(step)
@@ -66,6 +68,8 @@ func (s *stringProperty) Delete(step *step) error {
 	s.v = nil
 	return nil
 }
+
+// --- integerProperty implementation of Crud ---
 
 func (i *integerProperty) Get(step *step) (interface{}, error) {
 	if step != nil {
@@ -116,6 +120,8 @@ func (i *integerProperty) Delete(step *step) error {
 	return nil
 }
 
+// --- decimalProperty implementation of Crud ---
+
 func (d *decimalProperty) Get(step *step) (interface{}, error) {
 	if step != nil {
 		return nil, d.attr.errNoTarget(step)
@@ -163,6 +169,8 @@ func (d *decimalProperty) Delete(step *step) error {
 	return nil
 }
 
+// --- booleanProperty implementation of Crud ---
+
 func (b *booleanProperty) Get(step *step) (interface{}, error) {
 	if step != nil {
 		return nil, b.attr.errNoTarget(step)
@@ -201,6 +209,8 @@ func (b *booleanProperty) Delete(step *step) error {
 	b.v = nil
 	return nil
 }
+
+// --- dateTimeProperty implementation of Crud ---
 
 func (d *dateTimeProperty) Get(step *step) (interface{}, error) {
 	if step != nil {
@@ -243,6 +253,8 @@ func (d *dateTimeProperty) Delete(step *step) error {
 	return nil
 }
 
+// --- binaryProperty implementation of Crud ---
+
 func (b *binaryProperty) Get(step *step) (interface{}, error) {
 	if step != nil {
 		return nil, b.attr.errNoTarget(step)
@@ -284,6 +296,8 @@ func (b *binaryProperty) Delete(step *step) error {
 	return nil
 }
 
+// --- referenceProperty implementation of Crud ---
+
 func (r *referenceProperty) Get(step *step) (interface{}, error) {
 	if step != nil {
 		return nil, r.attr.errNoTarget(step)
@@ -322,6 +336,8 @@ func (r *referenceProperty) Delete(step *step) error {
 	r.v = nil
 	return nil
 }
+
+// --- complexProperty implementation of Crud ---
 
 func (c *complexProperty) Get(step *step) (interface{}, error) {
 	if step == nil {
@@ -460,9 +476,11 @@ func (c *complexProperty) selfDelete() error {
 	return nil
 }
 
+// --- multiValuedProperty implementation of Crud ---
+
 func (m *multiValuedProperty) Get(step *step) (interface{}, error) {
 	if step == nil {
-		return m, nil
+		return m.Raw(), nil
 	}
 
 	var results []interface{}
@@ -556,12 +574,18 @@ func (m *multiValuedProperty) selfAdd(value interface{}) error {
 		return m.attr.errInvalidValue()
 	}
 
+	// This method mechanically appends a new value to existing elements. It does not
+	// check for existence (i.e. do identity comparison of new value against existing
+	// elements). The design thinks it's easier and clearer to isolate and postpone
+	// this process to the validation period in protocol implementation.
+
 	elem := Properties.New(m.attr.ToSingleValued())
 	if err := elem.(Crud).Replace(nil, value); err != nil {
 		return m.attr.errInvalidValue()
 	}
 
 	m.props = append(m.props, elem)
+	m.updateExclusive()
 	return nil
 }
 
@@ -700,30 +724,23 @@ func (m *multiValuedProperty) updateExclusive() {
 	}
 
 	// short circuit if the complex attribute has no exclusive boolean sub attribute
-	hasExcl := false
-	for _, subAttr := range m.attr.SubAttributes {
-		if subAttr.Type == TypeBoolean && subAttr.Metadata != nil && subAttr.Metadata.IsExclusive {
-			hasExcl = true
-			break
-		}
-	}
-	if !hasExcl {
+	if !m.attr.HasExclusiveSubAttribute() {
 		return
 	}
 
 	// ranging through the elements, if having a new exclusive boolean property, switch off the old exclusive
 	// boolean property; if no exclusive boolean property at all, clear the cache.
-	hasExcl = false
+	hasExclTrue := false
 	for _, elem := range m.props {
 		if excl := elem.(*complexProperty).getExclusiveTrue(); excl != nil {
-			hasExcl = true
+			hasExclTrue = true
 			if m.excl != nil && m.excl != excl {
-				_ = m.excl.Replace(nil, false)
+				_ = m.excl.Delete(nil)
 			}
 			m.excl = excl
 		}
 	}
-	if !hasExcl {
+	if !hasExclTrue {
 		m.excl = nil
 	}
 }
@@ -738,4 +755,5 @@ var (
 	_ Crud = (*binaryProperty)(nil)
 	_ Crud = (*referenceProperty)(nil)
 	_ Crud = (*complexProperty)(nil)
+	_ Crud = (*multiValuedProperty)(nil)
 )

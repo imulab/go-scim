@@ -77,6 +77,10 @@ func (d *decimalProperty) IsEqualTo(other interface{}) bool {
 }
 
 func (b *booleanProperty) IsEqualTo(other interface{}) bool {
+	if other == nil {
+		return b.v == nil || !*(b.v)
+	}
+
 	if _, ok := other.(bool); !ok {
 		return false
 	}

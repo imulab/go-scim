@@ -88,6 +88,13 @@ func (i *integerProperty) IsPresent() bool {
 	return i.v != nil
 }
 
+func (i *integerProperty) Hash() int64 {
+	if i.v == nil {
+		return 0
+	}
+	return *(i.v)
+}
+
 // A SCIM decimal property. The value is stored as a pointer to Go's builtin float64 type.
 // The Raw() value call returns either nil or float64 type.
 type decimalProperty struct {
@@ -299,6 +306,25 @@ func (c *complexProperty) getSubProperty(name string) (Property, error) {
 		return nil, Errors.noTarget(fmt.Sprintf("%s.%s does not yield a target", c.attr.DisplayName(), name))
 	}
 	return p, nil
+}
+
+// Return a list of sub properties that is marked as 'identity' in metadata. If there is no such marked sub property,
+// Return all sub properties.
+func (c *complexProperty) getIdentityProps() []Property {
+	identityProps := make([]Property, 0, len(c.subProps))
+	for _, p := range c.subProps {
+		if p.Attribute() != nil && p.Attribute().Metadata != nil && p.Attribute().Metadata.IsIdentity {
+			identityProps = append(identityProps, p)
+		}
+	}
+
+	if len(identityProps) == 0 {
+		for _, p := range c.subProps {
+			identityProps = append(identityProps, p)
+		}
+	}
+
+	return identityProps
 }
 
 // A SCIM multiValued property. The Raw() value call returns a slice of the non-unassigned member property's

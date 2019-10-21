@@ -43,6 +43,10 @@ func (attr *Attribute) setDefaults() {
 	if len(attr.Uniqueness) == 0 {
 		attr.Uniqueness = UniquenessNone
 	}
+
+	if attr.Metadata == nil {
+		attr.Metadata = new(Metadata)
+	}
 }
 
 // Returns true if the property that this attribute represents can be addressed
@@ -172,6 +176,16 @@ func (attr *Attribute) Copy() *Attribute {
 		ReferenceTypes:  referenceTypes,
 		Metadata:        metadata,
 	}
+}
+
+// Return true if the attribute has a sub attribute of boolean type and is marked as exclusive
+func (attr *Attribute) HasExclusiveSubAttribute() bool {
+	for _, subAttr := range attr.SubAttributes {
+		if subAttr.Type == TypeBoolean && subAttr.Metadata != nil && subAttr.Metadata.IsExclusive {
+			return true
+		}
+	}
+	return false
 }
 
 // Returns a noTarget error about the attribute, depending on the step's type.
