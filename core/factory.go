@@ -1,6 +1,10 @@
 package core
 
-import "strings"
+import (
+	"encoding/base64"
+	"strings"
+	"time"
+)
 
 var (
 	// Entry point to create a new resource
@@ -77,4 +81,44 @@ func (f propertyFactory) NewComplexOf(attr *Attribute, value map[string]interfac
 		_ = prop.Replace(Steps.NewPath(k), v)
 	}
 	return prop
+}
+
+func (f propertyFactory) NewStringOf(attr *Attribute, value string) *stringProperty {
+	return &stringProperty{attr: attr, v: &value}
+}
+
+func (f propertyFactory) NewIntegerOf(attr *Attribute, value int64) *integerProperty {
+	return &integerProperty{attr: attr, v: &value}
+}
+
+func (f propertyFactory) NewDecimalOf(attr *Attribute, value float64) *decimalProperty {
+	return &decimalProperty{attr: attr, v: &value}
+}
+
+func (f propertyFactory) NewBoolean(attr *Attribute) *booleanProperty {
+	return &booleanProperty{attr: attr}
+}
+
+func (f propertyFactory) NewBooleanOf(attr *Attribute, value bool) *booleanProperty {
+	return &booleanProperty{attr: attr, v: &value}
+}
+
+func (f propertyFactory) NewDateTimeOf(attr *Attribute, value string) *dateTimeProperty {
+	_, err := time.Parse(ISO8601, value)
+	if err != nil {
+		panic(Errors.invalidValue("invalid date time value"))
+	}
+	return &dateTimeProperty{attr: attr, v:    &value}
+}
+
+func (f propertyFactory) NewBinaryOf(attr *Attribute, value string) *binaryProperty {
+	_, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		panic(Errors.invalidValue("invalid binary value"))
+	}
+	return &binaryProperty{attr: attr, v: &value}
+}
+
+func (f propertyFactory) NewReferenceOf(attr *Attribute, value string) *referenceProperty {
+	return &referenceProperty{attr: attr, v: &value}
 }
