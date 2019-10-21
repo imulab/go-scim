@@ -465,7 +465,265 @@ func TestCrudAdd(t *testing.T) {
 }
 
 func TestCrudReplace(t *testing.T) {
+	tests := []struct {
+		name   string
+		prop   Crud
+		step   *step
+		value  interface{}
+		expect func(t *testing.T, prop Crud, err error)
+	}{
+		{
+			name: "replace value of unassigned simple property",
+			prop: Properties.NewComplex(
+				&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
+					{Name: "userName", Type: TypeString},
+				}}),
+			step:  Steps.NewPath("userName"),
+			value: "foo",
+			expect: func(t *testing.T, prop Crud, err error) {
+				assert.Nil(t, err)
+				v, _ := prop.Get(Steps.NewPath("userName"))
+				assert.Equal(t, "foo", v)
+			},
+		},
+		{
+			name: "replace value of assigned simple property",
+			prop: Properties.NewComplexOf(
+				&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
+					{Name: "userName", Type: TypeString},
+				}},
+				map[string]interface{}{
+					"username": "foo",
+				},
+			),
+			step:  Steps.NewPath("userName"),
+			value: "bar",
+			expect: func(t *testing.T, prop Crud, err error) {
+				assert.Nil(t, err)
+				v, _ := prop.Get(Steps.NewPath("userName"))
+				assert.Equal(t, "bar", v)
+			},
+		},
+		{
+			name: "replace value of nested simple property",
+			prop: Properties.NewComplexOf(
+				&Attribute{
+					Type: TypeComplex,
+					SubAttributes: []*Attribute{
+						{
+							Name: "name",
+							Type: TypeComplex,
+							SubAttributes: []*Attribute{
+								{Name: "firstName", Type: TypeString},
+							},
+						},
+					},
+				},
+				map[string]interface{}{
+					"name": map[string]interface{}{
+						"firstName": "foo",
+					},
+				},
+			),
+			step:  Steps.NewPathChain("name", "firstName"),
+			value: "bar",
+			expect: func(t *testing.T, prop Crud, err error) {
+				assert.Nil(t, err)
+				v, _ := prop.Get(Steps.NewPathChain("name", "firstName"))
+				assert.Equal(t, "bar", v)
+			},
+		},
+		{
+			name: "replace element of a multiValued complex property (and switch exclusive)",
+			prop: Properties.NewComplexOf(
+				&Attribute{
+					Type: TypeComplex,
+					SubAttributes: []*Attribute{
+						{
+							Name:        "emails",
+							Type:        TypeComplex,
+							MultiValued: true,
+							SubAttributes: []*Attribute{
+								{
+									Name:     "value",
+									Type:     TypeString,
+									Metadata: &Metadata{IsIdentity: true},
+								},
+								{
+									Name:     "primary",
+									Type:     TypeBoolean,
+									Metadata: &Metadata{IsIdentity: true, IsExclusive: true},
+								},
+							},
+						},
+					},
+				},
+				map[string]interface{}{
+					"emails": []interface{}{
+						map[string]interface{}{
+							"value":   "foo@bar.com",
+							"primary": true,
+						},
+						map[string]interface{}{
+							"value": "foo2@bar.com",
+						},
+					},
+				},
+			),
+			step:   &step{
+				Token: "emails",
+				Typ:   stepPath,
+				Next:  &step{
+					Token: Ne,
+					Typ:   stepRelationalOperator,
+					Left:  &step{
+						Token: "primary",
+						Typ:   stepPath,
+					},
+					Right: &step{
+						Token: "true",
+						Typ:   stepLiteral,
+					},
+				},
+			},
+			value:  map[string]interface{}{
+				"value": "foo3@bar.com",
+				"primary": true,
+			},
+			expect: func(t *testing.T, prop Crud, err error) {
+				assert.Nil(t, err)
+				v, _ := prop.Get(Steps.NewPath("emails"))
+				assert.Len(t, v, 2)
 
+				getPrimaryOfValue := func(value string) interface{} {
+					v, err := prop.Get(&step{
+						Token: "emails",
+						Typ:   stepPath,
+						Next:  &step{
+							Token: Eq,
+							Typ:   stepRelationalOperator,
+							Left:  &step{
+								Token: "value",
+								Typ:   stepPath,
+							},
+							Right: &step{
+								Token: value,
+								Typ:   stepLiteral,
+							},
+							Next: &step{
+								Token: "primary",
+								Typ:   stepPath,
+							},
+						},
+					})
+					assert.Nil(t, err)
+					return v
+				}
+
+				assert.Len(t, getPrimaryOfValue("foo@bar.com"), 0)
+				assert.Len(t, getPrimaryOfValue("foo3@bar.com"), 1)
+			},
+		},
+		{
+			name: "replace sub property of an element in a multiValued complex property (and switch exclusive)",
+			prop: Properties.NewComplexOf(
+				&Attribute{
+					Type: TypeComplex,
+					SubAttributes: []*Attribute{
+						{
+							Name:        "emails",
+							Type:        TypeComplex,
+							MultiValued: true,
+							SubAttributes: []*Attribute{
+								{
+									Name:     "value",
+									Type:     TypeString,
+									Metadata: &Metadata{IsIdentity: true},
+								},
+								{
+									Name:     "primary",
+									Type:     TypeBoolean,
+									Metadata: &Metadata{IsIdentity: true, IsExclusive: true},
+								},
+							},
+						},
+					},
+				},
+				map[string]interface{}{
+					"emails": []interface{}{
+						map[string]interface{}{
+							"value":   "foo@bar.com",
+							"primary": true,
+						},
+						map[string]interface{}{
+							"value": "foo2@bar.com",
+						},
+					},
+				},
+			),
+			step:   &step{
+				Token: "emails",
+				Typ:   stepPath,
+				Next:  &step{
+					Token: Ne,
+					Typ:   stepRelationalOperator,
+					Left:  &step{
+						Token: "primary",
+						Typ:   stepPath,
+					},
+					Right: &step{
+						Token: "true",
+						Typ:   stepLiteral,
+					},
+					Next: &step{
+						Token: "primary",
+						Typ:   stepPath,
+					},
+				},
+			},
+			value:  true,
+			expect: func(t *testing.T, prop Crud, err error) {
+				assert.Nil(t, err)
+				v, _ := prop.Get(Steps.NewPath("emails"))
+				assert.Len(t, v, 2)
+
+				getPrimaryOfValue := func(value string) interface{} {
+					v, err := prop.Get(&step{
+						Token: "emails",
+						Typ:   stepPath,
+						Next:  &step{
+							Token: Eq,
+							Typ:   stepRelationalOperator,
+							Left:  &step{
+								Token: "value",
+								Typ:   stepPath,
+							},
+							Right: &step{
+								Token: value,
+								Typ:   stepLiteral,
+							},
+							Next: &step{
+								Token: "primary",
+								Typ:   stepPath,
+							},
+						},
+					})
+					assert.Nil(t, err)
+					return v
+				}
+
+				assert.Len(t, getPrimaryOfValue("foo@bar.com"), 0)
+				assert.Len(t, getPrimaryOfValue("foo2@bar.com"), 1)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.prop.Replace(test.step, test.value)
+			test.expect(t, test.prop, err)
+		})
+	}
 }
 
 func TestCrudDelete(t *testing.T) {
