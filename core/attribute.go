@@ -189,7 +189,7 @@ func (attr *Attribute) HasExclusiveSubAttribute() bool {
 }
 
 // Returns a noTarget error about the attribute, depending on the step's type.
-func (attr *Attribute) errNoTarget(step *step) error {
+func (attr *Attribute) errNoTarget(step *Step) error {
 	if step.IsPath() {
 		return Errors.noTarget(fmt.Sprintf("%s does not have the specified sub attributes.", attr.DisplayName()))
 	} else if step.IsOperator() {

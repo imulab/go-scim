@@ -9,7 +9,7 @@ func TestCrudGet(t *testing.T) {
 	tests := []struct {
 		name   string
 		prop   Crud
-		step   *step
+		step   *Step
 		expect func(t *testing.T, v interface{}, err error)
 	}{
 		{
@@ -110,17 +110,17 @@ func TestCrudGet(t *testing.T) {
 				},
 			),
 			// emails[value eq "foo@bar.com"]
-			step: &step{
+			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next: &step{
+				Next: &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
-					Left: &step{
+					Left: &Step{
 						Token: "value",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "foo@bar.com",
 						Typ:   stepLiteral,
 					},
@@ -156,21 +156,21 @@ func TestCrudGet(t *testing.T) {
 				},
 			),
 			// emails[value eq "foo@bar.com"].value
-			step: &step{
+			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next: &step{
+				Next: &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
-					Left: &step{
+					Left: &Step{
 						Token: "value",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "foo@bar.com",
 						Typ:   stepLiteral,
 					},
-					Next: &step{
+					Next: &Step{
 						Token: "value",
 						Typ:   stepPath,
 					},
@@ -196,7 +196,7 @@ func TestCrudAdd(t *testing.T) {
 	tests := []struct {
 		name   string
 		prop   Crud
-		step   *step
+		step   *Step
 		value  interface{}
 		expect func(t *testing.T, prop Crud, err error)
 	}{
@@ -333,21 +333,21 @@ func TestCrudAdd(t *testing.T) {
 				assert.Len(t, v, 3)
 
 				getPrimaryOfValue := func(value string) interface{} {
-					v, err := prop.Get(&step{
+					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &step{
+						Next:  &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &step{
+							Left:  &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
-							Right: &step{
+							Right: &Step{
 								Token: value,
 								Typ:   stepLiteral,
 							},
-							Next: &step{
+							Next: &Step{
 								Token: "primary",
 								Typ:   stepPath,
 							},
@@ -399,21 +399,21 @@ func TestCrudAdd(t *testing.T) {
 					},
 				},
 			),
-			step:   &step{
+			step:   &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &step{
+				Next:  &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
-					Left:  &step{
+					Left:  &Step{
 						Token: "value",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "foo2@bar.com",
 						Typ:   stepLiteral,
 					},
-					Next: &step{
+					Next: &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
@@ -426,21 +426,21 @@ func TestCrudAdd(t *testing.T) {
 				assert.Len(t, v, 2)
 
 				getPrimaryOfValue := func(value string) interface{} {
-					v, err := prop.Get(&step{
+					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &step{
+						Next:  &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &step{
+							Left:  &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
-							Right: &step{
+							Right: &Step{
 								Token: value,
 								Typ:   stepLiteral,
 							},
-							Next: &step{
+							Next: &Step{
 								Token: "primary",
 								Typ:   stepPath,
 							},
@@ -468,7 +468,7 @@ func TestCrudReplace(t *testing.T) {
 	tests := []struct {
 		name   string
 		prop   Crud
-		step   *step
+		step   *Step
 		value  interface{}
 		expect func(t *testing.T, prop Crud, err error)
 	}{
@@ -570,17 +570,17 @@ func TestCrudReplace(t *testing.T) {
 					},
 				},
 			),
-			step:   &step{
+			step:   &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &step{
+				Next:  &Step{
 					Token: Ne,
 					Typ:   stepRelationalOperator,
-					Left:  &step{
+					Left:  &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "true",
 						Typ:   stepLiteral,
 					},
@@ -596,21 +596,21 @@ func TestCrudReplace(t *testing.T) {
 				assert.Len(t, v, 2)
 
 				getPrimaryOfValue := func(value string) interface{} {
-					v, err := prop.Get(&step{
+					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &step{
+						Next:  &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &step{
+							Left:  &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
-							Right: &step{
+							Right: &Step{
 								Token: value,
 								Typ:   stepLiteral,
 							},
-							Next: &step{
+							Next: &Step{
 								Token: "primary",
 								Typ:   stepPath,
 							},
@@ -661,21 +661,21 @@ func TestCrudReplace(t *testing.T) {
 					},
 				},
 			),
-			step:   &step{
+			step:   &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &step{
+				Next:  &Step{
 					Token: Ne,
 					Typ:   stepRelationalOperator,
-					Left:  &step{
+					Left:  &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "true",
 						Typ:   stepLiteral,
 					},
-					Next: &step{
+					Next: &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
@@ -688,21 +688,21 @@ func TestCrudReplace(t *testing.T) {
 				assert.Len(t, v, 2)
 
 				getPrimaryOfValue := func(value string) interface{} {
-					v, err := prop.Get(&step{
+					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &step{
+						Next:  &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &step{
+							Left:  &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
-							Right: &step{
+							Right: &Step{
 								Token: value,
 								Typ:   stepLiteral,
 							},
-							Next: &step{
+							Next: &Step{
 								Token: "primary",
 								Typ:   stepPath,
 							},
@@ -730,7 +730,7 @@ func TestCrudDelete(t *testing.T) {
 	tests := []struct {
 		name   string
 		prop   Crud
-		step   *step
+		step   *Step
 		expect func(t *testing.T, prop Crud, err error)
 	}{
 		{
@@ -817,17 +817,17 @@ func TestCrudDelete(t *testing.T) {
 					},
 				},
 			),
-			step:   &step{
+			step:   &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &step{
+				Next:  &Step{
 					Token: Ne,
 					Typ:   stepRelationalOperator,
-					Left:  &step{
+					Left:  &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "true",
 						Typ:   stepLiteral,
 					},
@@ -877,21 +877,21 @@ func TestCrudDelete(t *testing.T) {
 					},
 				},
 			),
-			step:   &step{
+			step:   &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &step{
+				Next:  &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
-					Left:  &step{
+					Left:  &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "true",
 						Typ:   stepLiteral,
 					},
-					Next: &step{
+					Next: &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
@@ -903,21 +903,21 @@ func TestCrudDelete(t *testing.T) {
 				assert.Len(t, v, 2)
 
 				getPrimaryOfValue := func(value string) interface{} {
-					v, err := prop.Get(&step{
+					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &step{
+						Next:  &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &step{
+							Left:  &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
-							Right: &step{
+							Right: &Step{
 								Token: value,
 								Typ:   stepLiteral,
 							},
-							Next: &step{
+							Next: &Step{
 								Token: "primary",
 								Typ:   stepPath,
 							},

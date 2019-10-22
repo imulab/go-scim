@@ -9,7 +9,7 @@ func TestEvaluate(t *testing.T) {
 	tests := []struct {
 		name   string
 		prop   Evaluation
-		root   *step
+		root   *Step
 		expect func(t *testing.T, r bool, err error)
 	}{
 		{
@@ -25,14 +25,14 @@ func TestEvaluate(t *testing.T) {
 					"userName": "foo",
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Eq,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "userName",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "foo",
 					Typ:   stepLiteral,
 				},
@@ -55,14 +55,14 @@ func TestEvaluate(t *testing.T) {
 					"userName": "foo",
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Ne,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "userName",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "bar",
 					Typ:   stepLiteral,
 				},
@@ -85,14 +85,14 @@ func TestEvaluate(t *testing.T) {
 					"age": int64(10),
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Gt,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "age",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "8",
 					Typ:   stepLiteral,
 				},
@@ -115,14 +115,14 @@ func TestEvaluate(t *testing.T) {
 					"created": "2019-10-10T10:10:10",
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Lt,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "created",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "2019-11-11T11:11:11",
 					Typ:   stepLiteral,
 				},
@@ -145,14 +145,14 @@ func TestEvaluate(t *testing.T) {
 					"age": int64(10),
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Ge,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "age",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "10",
 					Typ:   stepLiteral,
 				},
@@ -175,14 +175,14 @@ func TestEvaluate(t *testing.T) {
 					"created": "2019-10-10T10:10:10",
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Le,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "created",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "2019-10-10T10:10:10",
 					Typ:   stepLiteral,
 				},
@@ -205,10 +205,10 @@ func TestEvaluate(t *testing.T) {
 					"schemas": []interface{}{},
 				},
 			),
-			root:   &step{
+			root:   &Step{
 				Token: Pr,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "schemas",
 					Typ:   stepPath,
 				},
@@ -231,14 +231,14 @@ func TestEvaluate(t *testing.T) {
 					"userName": "abc",
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Sw,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "userName",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "a",
 					Typ:   stepLiteral,
 				},
@@ -261,14 +261,14 @@ func TestEvaluate(t *testing.T) {
 					"userName": "abc",
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Ew,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "userName",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "c",
 					Typ:   stepLiteral,
 				},
@@ -291,14 +291,14 @@ func TestEvaluate(t *testing.T) {
 					"userName": "abc",
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Co,
 				Typ:   stepRelationalOperator,
-				Left: &step{
+				Left: &Step{
 					Token: "userName",
 					Typ:   stepPath,
 				},
-				Right: &step{
+				Right: &Step{
 					Token: "b",
 					Typ:   stepLiteral,
 				},
@@ -323,29 +323,29 @@ func TestEvaluate(t *testing.T) {
 					"age": int64(10),
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: And,
 				Typ:   stepLogicalOperator,
-				Left:  &step{
+				Left:  &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
-					Left: &step{
+					Left: &Step{
 						Token: "userName",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "foo",
 						Typ:   stepLiteral,
 					},
 				},
-				Right: &step{
+				Right: &Step{
 					Token: Gt,
 					Typ:   stepRelationalOperator,
-					Left: &step{
+					Left: &Step{
 						Token: "age",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "8",
 						Typ:   stepLiteral,
 					},
@@ -371,29 +371,29 @@ func TestEvaluate(t *testing.T) {
 					"age": int64(10),
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Or,
 				Typ:   stepLogicalOperator,
-				Left:  &step{
+				Left:  &Step{
 					Token: Ne,
 					Typ:   stepRelationalOperator,
-					Left: &step{
+					Left: &Step{
 						Token: "userName",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "foo",
 						Typ:   stepLiteral,
 					},
 				},
-				Right: &step{
+				Right: &Step{
 					Token: Gt,
 					Typ:   stepRelationalOperator,
-					Left: &step{
+					Left: &Step{
 						Token: "age",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "8",
 						Typ:   stepLiteral,
 					},
@@ -417,17 +417,17 @@ func TestEvaluate(t *testing.T) {
 					"userName": "foo",
 				},
 			),
-			root: &step{
+			root: &Step{
 				Token: Not,
 				Typ:   stepLogicalOperator,
-				Left:  &step{
+				Left:  &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
-					Left: &step{
+					Left: &Step{
 						Token: "userName",
 						Typ:   stepPath,
 					},
-					Right: &step{
+					Right: &Step{
 						Token: "bar",
 						Typ:   stepLiteral,
 					},

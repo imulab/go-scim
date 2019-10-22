@@ -16,38 +16,38 @@ const (
 )
 
 // A hybrid node representing a segment of path or a node in the filter tree.
-type step struct {
+type Step struct {
 	Token	string
 	Typ		int
-	Next	*step
-	Left	*step
-	Right	*step
+	Next	*Step
+	Left	*Step
+	Right	*Step
 }
 
 // Returns true if this step represents a path (segment).
-func (s step) IsPath() bool {
+func (s Step) IsPath() bool {
 	return s.Typ == stepPath
 }
 
 // Returns true if this step represents a logical or relational operator.
-func (s step) IsOperator() bool {
+func (s Step) IsOperator() bool {
 	return s.Typ == stepLogicalOperator || s.Typ == stepRelationalOperator
 }
 
 // Returns true if this step represents a literal value.
-func (s step) IsLiteral() bool {
+func (s Step) IsLiteral() bool {
 	return s.Typ == stepLiteral
 }
 
 // Returns true if this step represents a parenthesis.
-func (s step) IsParenthesis() bool {
+func (s Step) IsParenthesis() bool {
 	return s.Typ == stepParenthesis
 }
 
 // Strip quotes around the value. This method is supposed to be called when
 // the caller knows or assumes this step is a value step and contains a string
 // value.
-func (s step) stripQuotes() string {
+func (s Step) stripQuotes() string {
 	v := s.Token
 	v = strings.TrimPrefix(v, "\"")
 	v = strings.TrimSuffix(v, "\"")
@@ -55,7 +55,7 @@ func (s step) stripQuotes() string {
 }
 
 // Parse the value of this step and return the value in its compliant Go type.
-func (s step) compliantValue(attr *Attribute) (val interface{}, err error) {
+func (s Step) compliantValue(attr *Attribute) (val interface{}, err error) {
 	switch attr.Type {
 	case TypeString, TypeReference, TypeDateTime, TypeBinary:
 		val = s.stripQuotes()
@@ -81,11 +81,11 @@ var (
 	// Entry point for creating steps.
 	Steps = stepFactory{}
 	// Singleton for left and right parenthesis step.
-	leftParenStep = &step{
+	leftParenStep = &Step{
 		Token: LeftParen,
 		Typ:   stepParenthesis,
 	}
-	rightParenStep = &step{
+	rightParenStep = &Step{
 		Token: RightParen,
 		Typ: stepParenthesis,
 	}
@@ -95,21 +95,21 @@ var (
 type stepFactory struct{}
 
 // Create a new path step
-func (f stepFactory) NewPath(path string) *step {
-	return &step{
+func (f stepFactory) NewPath(path string) *Step {
+	return &Step{
 		Token: path,
 		Typ:   stepPath,
 	}
 }
 
 // Create a new linked list of path steps and return its head.
-func (f stepFactory) NewPathChain(paths ...string) *step {
+func (f stepFactory) NewPathChain(paths ...string) *Step {
 	if len(paths) < 0 {
 		return nil
 	}
 
 	var (
-		head = &step{}	// dummy head
+		head = &Step{} // dummy head
 		cursor = head
 	)
 	for _, path := range paths {
@@ -121,31 +121,31 @@ func (f stepFactory) NewPathChain(paths ...string) *step {
 }
 
 // Create a new logical operator step
-func (f stepFactory) NewLogicalOperator(op string) *step {
-	return &step{
+func (f stepFactory) NewLogicalOperator(op string) *Step {
+	return &Step{
 		Token: op,
 		Typ:   stepLogicalOperator,
 	}
 }
 
 // Create a new relational operator step
-func (f stepFactory) NewRelationalOperator(op string) *step {
-	return &step{
+func (f stepFactory) NewRelationalOperator(op string) *Step {
+	return &Step{
 		Token: op,
 		Typ:   stepRelationalOperator,
 	}
 }
 
 // Create a new literal step.
-func (f stepFactory) NewLiteral(val string) *step {
-	return &step{
+func (f stepFactory) NewLiteral(val string) *Step {
+	return &Step{
 		Token: val,
 		Typ:   stepLiteral,
 	}
 }
 
 // Create (return) a new parenthesis step.
-func (f stepFactory) NewParenthesis(paren string) *step {
+func (f stepFactory) NewParenthesis(paren string) *Step {
 	switch paren {
 	case LeftParen:
 		return leftParenStep

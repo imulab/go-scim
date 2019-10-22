@@ -9,10 +9,10 @@ type Evaluation interface {
 	Property
 
 	// Evaluate this property against the root of the filter tree.
-	Evaluate(root *step) (bool, error)
+	Evaluate(root *Step) (bool, error)
 }
 
-func (c *complexProperty) Evaluate(root *step) (r bool, err error) {
+func (c *complexProperty) Evaluate(root *Step) (r bool, err error) {
 	if root == nil {
 		return false, nil
 	}
@@ -30,7 +30,7 @@ func (c *complexProperty) Evaluate(root *step) (r bool, err error) {
 	return
 }
 
-func (c *complexProperty) evaluateLogical(root *step) (bool, error) {
+func (c *complexProperty) evaluateLogical(root *Step) (bool, error) {
 	switch strings.ToLower(root.Token) {
 	case And:
 		if l, err := c.Evaluate(root.Left); err != nil {
@@ -66,7 +66,7 @@ func (c *complexProperty) evaluateLogical(root *step) (bool, error) {
 	}
 }
 
-func (c *complexProperty) evaluateRelational(root *step) (bool, error) {
+func (c *complexProperty) evaluateRelational(root *Step) (bool, error) {
 	var (
 		prop Property
 		val interface{}

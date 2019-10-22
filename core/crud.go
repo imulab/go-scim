@@ -15,36 +15,36 @@ type Crud interface {
 	Property
 
 	// Get the property at the specified step. If the property does not exist the specified step, returns error.
-	Get(step *step) (interface{}, error)
+	Get(step *Step) (interface{}, error)
 
 	// Add / create a value to this property at the specified step. For simple properties,
 	// the operation is equivalent to a Replace operation.
-	Add(step *step, value interface{}) error
+	Add(step *Step, value interface{}) error
 
 	// Replace a value to this property at the specified step.
-	Replace(step *step, value interface{}) error
+	Replace(step *Step, value interface{}) error
 
 	// Delete a value to this property at the specified step.
-	Delete(step *step) error
+	Delete(step *Step) error
 }
 
 // --- stringProperty implementation of Crud ---
 
-func (s *stringProperty) Get(step *step) (interface{}, error) {
+func (s *stringProperty) Get(step *Step) (interface{}, error) {
 	if step != nil {
 		return nil, s.attr.errNoTarget(step)
 	}
 	return s.Raw(), nil
 }
 
-func (s *stringProperty) Add(step *step, value interface{}) error {
+func (s *stringProperty) Add(step *Step, value interface{}) error {
 	if value == nil {
 		return s.Delete(step)
 	}
 	return s.Replace(step, value)
 }
 
-func (s *stringProperty) Replace(step *step, value interface{}) error {
+func (s *stringProperty) Replace(step *Step, value interface{}) error {
 	if value == nil {
 		return s.Delete(step)
 	}
@@ -61,7 +61,7 @@ func (s *stringProperty) Replace(step *step, value interface{}) error {
 	}
 }
 
-func (s *stringProperty) Delete(step *step) error {
+func (s *stringProperty) Delete(step *Step) error {
 	if step != nil {
 		return s.attr.errNoTarget(step)
 	}
@@ -71,21 +71,21 @@ func (s *stringProperty) Delete(step *step) error {
 
 // --- integerProperty implementation of Crud ---
 
-func (i *integerProperty) Get(step *step) (interface{}, error) {
+func (i *integerProperty) Get(step *Step) (interface{}, error) {
 	if step != nil {
 		return nil, i.attr.errNoTarget(step)
 	}
 	return i.Raw(), nil
 }
 
-func (i *integerProperty) Add(step *step, value interface{}) error {
+func (i *integerProperty) Add(step *Step, value interface{}) error {
 	if value == nil {
 		return i.Delete(step)
 	}
 	return i.Replace(step, value)
 }
 
-func (i *integerProperty) Replace(step *step, value interface{}) error {
+func (i *integerProperty) Replace(step *Step, value interface{}) error {
 	if value == nil {
 		return i.Delete(step)
 	}
@@ -112,7 +112,7 @@ func (i *integerProperty) Replace(step *step, value interface{}) error {
 	return nil
 }
 
-func (i *integerProperty) Delete(step *step) error {
+func (i *integerProperty) Delete(step *Step) error {
 	if step != nil {
 		return i.attr.errNoTarget(step)
 	}
@@ -122,21 +122,21 @@ func (i *integerProperty) Delete(step *step) error {
 
 // --- decimalProperty implementation of Crud ---
 
-func (d *decimalProperty) Get(step *step) (interface{}, error) {
+func (d *decimalProperty) Get(step *Step) (interface{}, error) {
 	if step != nil {
 		return nil, d.attr.errNoTarget(step)
 	}
 	return d.Raw(), nil
 }
 
-func (d *decimalProperty) Add(step *step, value interface{}) error {
+func (d *decimalProperty) Add(step *Step, value interface{}) error {
 	if value == nil {
 		return d.Delete(step)
 	}
 	return d.Replace(step, value)
 }
 
-func (d *decimalProperty) Replace(step *step, value interface{}) error {
+func (d *decimalProperty) Replace(step *Step, value interface{}) error {
 	if value == nil {
 		return d.Delete(step)
 	}
@@ -161,7 +161,7 @@ func (d *decimalProperty) Replace(step *step, value interface{}) error {
 	return nil
 }
 
-func (d *decimalProperty) Delete(step *step) error {
+func (d *decimalProperty) Delete(step *Step) error {
 	if step != nil {
 		return d.attr.errNoTarget(step)
 	}
@@ -171,21 +171,21 @@ func (d *decimalProperty) Delete(step *step) error {
 
 // --- booleanProperty implementation of Crud ---
 
-func (b *booleanProperty) Get(step *step) (interface{}, error) {
+func (b *booleanProperty) Get(step *Step) (interface{}, error) {
 	if step != nil {
 		return nil, b.attr.errNoTarget(step)
 	}
 	return b.Raw(), nil
 }
 
-func (b *booleanProperty) Add(step *step, value interface{}) error {
+func (b *booleanProperty) Add(step *Step, value interface{}) error {
 	if value == nil {
 		return b.Delete(step)
 	}
 	return b.Replace(step, value)
 }
 
-func (b *booleanProperty) Replace(step *step, value interface{}) error {
+func (b *booleanProperty) Replace(step *Step, value interface{}) error {
 	if value == nil {
 		return b.Delete(step)
 	}
@@ -202,7 +202,7 @@ func (b *booleanProperty) Replace(step *step, value interface{}) error {
 	}
 }
 
-func (b *booleanProperty) Delete(step *step) error {
+func (b *booleanProperty) Delete(step *Step) error {
 	if step != nil {
 		return b.attr.errNoTarget(step)
 	}
@@ -212,21 +212,21 @@ func (b *booleanProperty) Delete(step *step) error {
 
 // --- dateTimeProperty implementation of Crud ---
 
-func (d *dateTimeProperty) Get(step *step) (interface{}, error) {
+func (d *dateTimeProperty) Get(step *Step) (interface{}, error) {
 	if step != nil {
 		return nil, d.attr.errNoTarget(step)
 	}
 	return d.Raw(), nil
 }
 
-func (d *dateTimeProperty) Add(step *step, value interface{}) error {
+func (d *dateTimeProperty) Add(step *Step, value interface{}) error {
 	if value == nil {
 		return d.Delete(step)
 	}
 	return d.Replace(step, value)
 }
 
-func (d *dateTimeProperty) Replace(step *step, value interface{}) error {
+func (d *dateTimeProperty) Replace(step *Step, value interface{}) error {
 	if value == nil {
 		return d.Delete(step)
 	}
@@ -245,7 +245,7 @@ func (d *dateTimeProperty) Replace(step *step, value interface{}) error {
 	}
 }
 
-func (d *dateTimeProperty) Delete(step *step) error {
+func (d *dateTimeProperty) Delete(step *Step) error {
 	if step != nil {
 		return d.attr.errNoTarget(step)
 	}
@@ -255,21 +255,21 @@ func (d *dateTimeProperty) Delete(step *step) error {
 
 // --- binaryProperty implementation of Crud ---
 
-func (b *binaryProperty) Get(step *step) (interface{}, error) {
+func (b *binaryProperty) Get(step *Step) (interface{}, error) {
 	if step != nil {
 		return nil, b.attr.errNoTarget(step)
 	}
 	return b.Raw(), nil
 }
 
-func (b *binaryProperty) Add(step *step, value interface{}) error {
+func (b *binaryProperty) Add(step *Step, value interface{}) error {
 	if value == nil {
 		return b.Delete(step)
 	}
 	return b.Replace(step, value)
 }
 
-func (b *binaryProperty) Replace(step *step, value interface{}) error {
+func (b *binaryProperty) Replace(step *Step, value interface{}) error {
 	if value == nil {
 		return b.Delete(step)
 	}
@@ -288,7 +288,7 @@ func (b *binaryProperty) Replace(step *step, value interface{}) error {
 	}
 }
 
-func (b *binaryProperty) Delete(step *step) error {
+func (b *binaryProperty) Delete(step *Step) error {
 	if step != nil {
 		return b.attr.errNoTarget(step)
 	}
@@ -298,21 +298,21 @@ func (b *binaryProperty) Delete(step *step) error {
 
 // --- referenceProperty implementation of Crud ---
 
-func (r *referenceProperty) Get(step *step) (interface{}, error) {
+func (r *referenceProperty) Get(step *Step) (interface{}, error) {
 	if step != nil {
 		return nil, r.attr.errNoTarget(step)
 	}
 	return r.Raw(), nil
 }
 
-func (r *referenceProperty) Add(step *step, value interface{}) error {
+func (r *referenceProperty) Add(step *Step, value interface{}) error {
 	if value == nil {
 		return r.Delete(step)
 	}
 	return r.Replace(step, value)
 }
 
-func (r *referenceProperty) Replace(step *step, value interface{}) error {
+func (r *referenceProperty) Replace(step *Step, value interface{}) error {
 	if value == nil {
 		return r.Delete(step)
 	}
@@ -329,7 +329,7 @@ func (r *referenceProperty) Replace(step *step, value interface{}) error {
 	}
 }
 
-func (r *referenceProperty) Delete(step *step) error {
+func (r *referenceProperty) Delete(step *Step) error {
 	if step != nil {
 		return r.attr.errNoTarget(step)
 	}
@@ -339,7 +339,7 @@ func (r *referenceProperty) Delete(step *step) error {
 
 // --- complexProperty implementation of Crud ---
 
-func (c *complexProperty) Get(step *step) (interface{}, error) {
+func (c *complexProperty) Get(step *Step) (interface{}, error) {
 	if step == nil {
 		return c.Raw(), nil
 	}
@@ -356,7 +356,7 @@ func (c *complexProperty) Get(step *step) (interface{}, error) {
 	return subProp.(Crud).Get(step.Next)
 }
 
-func (c *complexProperty) Add(step *step, value interface{}) error {
+func (c *complexProperty) Add(step *Step, value interface{}) error {
 	if step == nil {
 		return c.selfAdd(value)
 	}
@@ -396,7 +396,7 @@ func (c *complexProperty) selfAdd(value interface{}) error {
 	return nil
 }
 
-func (c *complexProperty) Replace(step *step, value interface{}) error {
+func (c *complexProperty) Replace(step *Step, value interface{}) error {
 	if step == nil {
 		return c.selfReplace(value)
 	}
@@ -443,7 +443,7 @@ func (c *complexProperty) selfReplace(value interface{}) error {
 	return nil
 }
 
-func (c *complexProperty) Delete(step *step) error {
+func (c *complexProperty) Delete(step *Step) error {
 	if step == nil {
 		return c.selfDelete()
 	}
@@ -478,7 +478,7 @@ func (c *complexProperty) selfDelete() error {
 
 // --- multiValuedProperty implementation of Crud ---
 
-func (m *multiValuedProperty) Get(step *step) (interface{}, error) {
+func (m *multiValuedProperty) Get(step *Step) (interface{}, error) {
 	if step == nil {
 		return m.Raw(), nil
 	}
@@ -527,7 +527,7 @@ func (m *multiValuedProperty) Get(step *step) (interface{}, error) {
 	return results, nil
 }
 
-func (m *multiValuedProperty) Add(step *step, value interface{}) error {
+func (m *multiValuedProperty) Add(step *Step, value interface{}) error {
 	if step == nil {
 		return m.selfAdd(value)
 	}
@@ -589,7 +589,7 @@ func (m *multiValuedProperty) selfAdd(value interface{}) error {
 	return nil
 }
 
-func (m *multiValuedProperty) Replace(step *step, value interface{}) error {
+func (m *multiValuedProperty) Replace(step *Step, value interface{}) error {
 	if step == nil {
 		return m.selfReplace(value)
 	}
@@ -653,7 +653,7 @@ func (m *multiValuedProperty) selfReplace(value interface{}) error {
 	return nil
 }
 
-func (m *multiValuedProperty) Delete(step *step) error {
+func (m *multiValuedProperty) Delete(step *Step) error {
 	if step == nil {
 		m.props = make([]Property, 0)
 		return nil
