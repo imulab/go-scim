@@ -45,10 +45,10 @@ type errorFactory struct {}
 
 // The specified filter syntax was invalid, or the specified attribute and
 // filter comparison combination is not supported.
-func (f errorFactory) invalidFilter(message string) error {
+func (f errorFactory) InvalidFilter(message string) error {
 	return &ScimError{
 		Status:  400,
-		Type:    "invalidFilter",
+		Type:    "InvalidFilter",
 		Message: message,
 	}
 }

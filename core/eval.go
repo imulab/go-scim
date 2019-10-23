@@ -24,7 +24,7 @@ func (c *complexProperty) Evaluate(root *Step) (r bool, err error) {
 		r, err = c.evaluateRelational(root)
 	default:
 		r = false
-		err = Errors.invalidFilter("invalid filter root, cannot be processed")
+		err = Errors.InvalidFilter("invalid filter root, cannot be processed")
 	}
 
 	return
@@ -78,7 +78,7 @@ func (c *complexProperty) evaluateRelational(root *Step) (bool, error) {
 
 		for cursor != nil {
 			if !cursor.IsPath() {
-				return false, Errors.invalidFilter("path in filter cannot contain other filters")
+				return false, Errors.InvalidFilter("path in filter cannot contain other filters")
 			}
 
 			prop, err = prop.(*complexProperty).getSubProperty(cursor.Token)
