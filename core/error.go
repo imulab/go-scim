@@ -92,7 +92,7 @@ func (f errorFactory) invalidSyntax(message string) error {
 }
 
 // The "path" attribute was invalid or malformed.
-func (f errorFactory) invalidPath(message string) error {
+func (f errorFactory) InvalidPath(message string) error {
 	return &ScimError{
 		Status:  400,
 		Type:    "invalidPath",
