@@ -716,7 +716,7 @@ func (fs *filterScanner) error(c byte, context string) int {
 	fs.err = core.Errors.InvalidFilter(strings.TrimSpace(
 		fmt.Sprintf("invalid character %s around %d. %s ", quoteChar(c), fs.bytes, context),
 	))
-	return scanPathError
+	return scanFilterError
 }
 
 func (fs *filterScanner) errInvalidOperator(c byte) int {

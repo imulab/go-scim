@@ -6,18 +6,23 @@ import (
 )
 
 func TestPathScanner(t *testing.T) {
+	type signals struct {
+		event   int
+		repeats int
+	}
+
 	RegisterPathNamespace("urn:ietf:params:scim:schemas:core:2.0:User")
 
 	tests := []struct {
 		name   string
 		path   string
 		print  bool
-		expect [][]int
+		expect []signals
 	}{
 		{
 			name: "simple path",
 			path: "username",
-			expect: [][]int{
+			expect: []signals{
 				{scanPathBeginStep, 1},
 				{scanPathContinue, 7},
 				{scanPathEndStep, 1},
@@ -26,7 +31,7 @@ func TestPathScanner(t *testing.T) {
 		{
 			name: "duplex path",
 			path: "meta.created",
-			expect: [][]int{
+			expect: []signals{
 				{scanPathBeginStep, 1},
 				{scanPathContinue, 3},
 				{scanPathEndStep, 1},
@@ -38,7 +43,7 @@ func TestPathScanner(t *testing.T) {
 		{
 			name: "simple path with urn prefix",
 			path: "urn:ietf:params:scim:schemas:core:2.0:User:userName",
-			expect: [][]int{
+			expect: []signals{
 				{scanPathBeginStep, 1},
 				{scanPathContinue, 41},
 				{scanPathEndStep, 1},
@@ -50,7 +55,7 @@ func TestPathScanner(t *testing.T) {
 		{
 			name: "duplex path with urn prefix",
 			path: "urn:ietf:params:scim:schemas:core:2.0:User:meta.created",
-			expect: [][]int{
+			expect: []signals{
 				{scanPathBeginStep, 1},
 				{scanPathContinue, 41},
 				{scanPathEndStep, 1},
@@ -65,7 +70,7 @@ func TestPathScanner(t *testing.T) {
 		{
 			name: "simple path with filter",
 			path: "emails[primary eq true]",
-			expect: [][]int{
+			expect: []signals{
 				{scanPathBeginStep, 1},
 				{scanPathContinue, 5},
 				{scanPathBeginFilter, 1},
@@ -77,7 +82,7 @@ func TestPathScanner(t *testing.T) {
 		{
 			name: "duplex path with filter",
 			path: "emails[primary eq true].value",
-			expect: [][]int{
+			expect: []signals{
 				{scanPathBeginStep, 1},
 				{scanPathContinue, 5},
 				{scanPathBeginFilter, 1},
@@ -107,10 +112,8 @@ func TestPathScanner(t *testing.T) {
 
 			m := 0
 			for _, k := range test.expect {
-				expectOp := k[0]
-				expectRepeat := k[1]
-				for i := 0; i < expectRepeat; i++ {
-					assert.Equal(t0, expectOp, ops[m])
+				for i := 0; i < k.repeats; i++ {
+					assert.Equal(t0, k.event, ops[m])
 					m++
 				}
 			}
