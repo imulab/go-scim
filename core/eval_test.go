@@ -205,7 +205,7 @@ func TestEvaluate(t *testing.T) {
 					"schemas": []interface{}{},
 				},
 			),
-			root:   &Step{
+			root: &Step{
 				Token: Pr,
 				Typ:   stepRelationalOperator,
 				Left: &Step{
@@ -320,13 +320,13 @@ func TestEvaluate(t *testing.T) {
 				},
 				map[string]interface{}{
 					"userName": "foo",
-					"age": int64(10),
+					"age":      int64(10),
 				},
 			),
 			root: &Step{
 				Token: And,
 				Typ:   stepLogicalOperator,
-				Left:  &Step{
+				Left: &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
 					Left: &Step{
@@ -368,13 +368,13 @@ func TestEvaluate(t *testing.T) {
 				},
 				map[string]interface{}{
 					"userName": "foo",
-					"age": int64(10),
+					"age":      int64(10),
 				},
 			),
 			root: &Step{
 				Token: Or,
 				Typ:   stepLogicalOperator,
-				Left:  &Step{
+				Left: &Step{
 					Token: Ne,
 					Typ:   stepRelationalOperator,
 					Left: &Step{
@@ -420,7 +420,7 @@ func TestEvaluate(t *testing.T) {
 			root: &Step{
 				Token: Not,
 				Typ:   stepLogicalOperator,
-				Left:  &Step{
+				Left: &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
 					Left: &Step{

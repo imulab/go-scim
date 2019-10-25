@@ -322,9 +322,9 @@ func TestCrudAdd(t *testing.T) {
 					},
 				},
 			),
-			step:   Steps.NewPath("emails"),
-			value:  map[string]interface{}{
-				"value": "foo3@bar.com",
+			step: Steps.NewPath("emails"),
+			value: map[string]interface{}{
+				"value":   "foo3@bar.com",
 				"primary": true,
 			},
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -336,10 +336,10 @@ func TestCrudAdd(t *testing.T) {
 					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &Step{
+						Next: &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &Step{
+							Left: &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
@@ -399,13 +399,13 @@ func TestCrudAdd(t *testing.T) {
 					},
 				},
 			),
-			step:   &Step{
+			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &Step{
+				Next: &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
-					Left:  &Step{
+					Left: &Step{
 						Token: "value",
 						Typ:   stepPath,
 					},
@@ -419,7 +419,7 @@ func TestCrudAdd(t *testing.T) {
 					},
 				},
 			},
-			value:  true,
+			value: true,
 			expect: func(t *testing.T, prop Crud, err error) {
 				assert.Nil(t, err)
 				v, _ := prop.Get(Steps.NewPath("emails"))
@@ -429,10 +429,10 @@ func TestCrudAdd(t *testing.T) {
 					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &Step{
+						Next: &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &Step{
+							Left: &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
@@ -570,13 +570,13 @@ func TestCrudReplace(t *testing.T) {
 					},
 				},
 			),
-			step:   &Step{
+			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &Step{
+				Next: &Step{
 					Token: Ne,
 					Typ:   stepRelationalOperator,
-					Left:  &Step{
+					Left: &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
@@ -586,8 +586,8 @@ func TestCrudReplace(t *testing.T) {
 					},
 				},
 			},
-			value:  map[string]interface{}{
-				"value": "foo3@bar.com",
+			value: map[string]interface{}{
+				"value":   "foo3@bar.com",
 				"primary": true,
 			},
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -599,10 +599,10 @@ func TestCrudReplace(t *testing.T) {
 					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &Step{
+						Next: &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &Step{
+							Left: &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
@@ -661,13 +661,13 @@ func TestCrudReplace(t *testing.T) {
 					},
 				},
 			),
-			step:   &Step{
+			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &Step{
+				Next: &Step{
 					Token: Ne,
 					Typ:   stepRelationalOperator,
-					Left:  &Step{
+					Left: &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
@@ -681,7 +681,7 @@ func TestCrudReplace(t *testing.T) {
 					},
 				},
 			},
-			value:  true,
+			value: true,
 			expect: func(t *testing.T, prop Crud, err error) {
 				assert.Nil(t, err)
 				v, _ := prop.Get(Steps.NewPath("emails"))
@@ -691,10 +691,10 @@ func TestCrudReplace(t *testing.T) {
 					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &Step{
+						Next: &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &Step{
+							Left: &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},
@@ -743,7 +743,7 @@ func TestCrudDelete(t *testing.T) {
 					"username": "foo",
 				},
 			),
-			step:  Steps.NewPath("userName"),
+			step: Steps.NewPath("userName"),
 			expect: func(t *testing.T, prop Crud, err error) {
 				assert.Nil(t, err)
 				v, err := prop.Get(Steps.NewPath("userName"))
@@ -772,7 +772,7 @@ func TestCrudDelete(t *testing.T) {
 					},
 				},
 			),
-			step:  Steps.NewPathChain("name", "firstName"),
+			step: Steps.NewPathChain("name", "firstName"),
 			expect: func(t *testing.T, prop Crud, err error) {
 				assert.Nil(t, err)
 				v, err := prop.Get(Steps.NewPathChain("name", "firstName"))
@@ -817,13 +817,13 @@ func TestCrudDelete(t *testing.T) {
 					},
 				},
 			),
-			step:   &Step{
+			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &Step{
+				Next: &Step{
 					Token: Ne,
 					Typ:   stepRelationalOperator,
-					Left:  &Step{
+					Left: &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
@@ -877,13 +877,13 @@ func TestCrudDelete(t *testing.T) {
 					},
 				},
 			),
-			step:   &Step{
+			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
-				Next:  &Step{
+				Next: &Step{
 					Token: Eq,
 					Typ:   stepRelationalOperator,
-					Left:  &Step{
+					Left: &Step{
 						Token: "primary",
 						Typ:   stepPath,
 					},
@@ -906,10 +906,10 @@ func TestCrudDelete(t *testing.T) {
 					v, err := prop.Get(&Step{
 						Token: "emails",
 						Typ:   stepPath,
-						Next:  &Step{
+						Next: &Step{
 							Token: Eq,
 							Typ:   stepRelationalOperator,
-							Left:  &Step{
+							Left: &Step{
 								Token: "value",
 								Typ:   stepPath,
 							},

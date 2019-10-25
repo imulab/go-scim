@@ -23,117 +23,117 @@ func TestPropertyRaw(t *testing.T) {
 		{
 			name:     "unassigned string reports nil value",
 			property: &stringProperty{},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Nil(t, v)
 			},
 		},
 		{
 			name:     "assigned string reports string value",
 			property: &stringProperty{v: &str},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Equal(t, str, v)
 			},
 		},
 		{
 			name:     "unassigned integer reports nil value",
 			property: &integerProperty{},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Nil(t, v)
 			},
 		},
 		{
 			name:     "assigned integer reports int64 value",
 			property: &integerProperty{v: &i},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Equal(t, i, v)
 			},
 		},
 		{
 			name:     "unassigned decimal reports nil value",
 			property: &decimalProperty{},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Nil(t, v)
 			},
 		},
 		{
 			name:     "assigned decimal reports float64 value",
 			property: &decimalProperty{v: &d},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Equal(t, d, v)
 			},
 		},
 		{
 			name:     "unassigned boolean reports nil value",
 			property: &booleanProperty{},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Nil(t, v)
 			},
 		},
 		{
 			name:     "assigned boolean reports bool value",
 			property: &booleanProperty{v: &b},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Equal(t, b, v)
 			},
 		},
 		{
 			name:     "unassigned dateTime reports nil value",
 			property: &dateTimeProperty{},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Nil(t, v)
 			},
 		},
 		{
 			name:     "assigned dateTime reports string value",
 			property: &dateTimeProperty{v: &dt},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Equal(t, dt, v)
 			},
 		},
 		{
 			name:     "unassigned reference reports nil value",
 			property: &referenceProperty{},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Nil(t, v)
 			},
 		},
 		{
 			name:     "assigned reference reports string value",
 			property: &referenceProperty{v: &ref},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Equal(t, ref, v)
 			},
 		},
 		{
 			name:     "unassigned binary reports nil value",
 			property: &binaryProperty{},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Nil(t, v)
 			},
 		},
 		{
 			name:     "assigned binary reports string value",
 			property: &binaryProperty{v: &str},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Equal(t, str, v)
 			},
 		},
 		{
 			name:     "unassigned multiValued reports zero length slice",
 			property: &multiValuedProperty{},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.Len(t, v, 0)
 			},
 		},
 		{
-			name:     "complex reports empty map",
+			name: "complex reports empty map",
 			property: &complexProperty{
 				subProps: map[string]Property{
 					"foo": &stringProperty{v: &str, attr: &Attribute{Name: "foo"}},
 					"bar": &stringProperty{attr: &Attribute{Name: "bar"}},
 				},
 			},
-			expect:   func(t *testing.T, v interface{}) {
+			expect: func(t *testing.T, v interface{}) {
 				assert.IsType(t, map[string]interface{}{}, v)
 				assert.Equal(t, "foo", v.(map[string]interface{})["foo"])
 				assert.Nil(t, v.(map[string]interface{})["bar"])

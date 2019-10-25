@@ -4,9 +4,9 @@ import "fmt"
 
 // A SCIM error.
 type ScimError struct {
-	Status		int			`json:"status"`
-	Type		string		`json:"error_type"`
-	Message		string		`json:"error_message"`
+	Status  int    `json:"status"`
+	Type    string `json:"error_type"`
+	Message string `json:"error_message"`
 }
 
 // Return the formatted error information for display.
@@ -37,11 +37,11 @@ func ErrAppendHint(err error, hint string) error {
 
 var (
 	// Entry point to create a SCIM error.
-	Errors	= &errorFactory{}
+	Errors = &errorFactory{}
 )
 
 // namespace for all error factory methods.
-type errorFactory struct {}
+type errorFactory struct{}
 
 // The specified filter syntax was invalid, or the specified attribute and
 // filter comparison combination is not supported.

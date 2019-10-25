@@ -69,8 +69,8 @@ func (c *complexProperty) evaluateLogical(root *Step) (bool, error) {
 func (c *complexProperty) evaluateRelational(root *Step) (bool, error) {
 	var (
 		prop Property
-		val interface{}
-		err error
+		val  interface{}
+		err  error
 	)
 	{
 		cursor := root.Left

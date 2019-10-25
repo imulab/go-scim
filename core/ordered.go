@@ -208,8 +208,8 @@ func (d *dateTimeProperty) compareWith(other interface{}) (r int, ok bool) {
 	}
 
 	var (
-		t1 	time.Time
-		t2 	time.Time
+		t1  time.Time
+		t2  time.Time
 		err error
 	)
 	{

@@ -33,7 +33,7 @@ func TestFilterCompiler(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		filter   string
+		filter string
 		assert func(t *testing.T, trail []expect, err error)
 	}{
 		{

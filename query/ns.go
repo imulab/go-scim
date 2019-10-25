@@ -6,8 +6,8 @@ var (
 
 type trie struct {
 	// true if a word's trie path ends at this node
-	w 		bool
-	next	map[byte]*trie
+	w    bool
+	next map[byte]*trie
 }
 
 func (t *trie) isWord() bool {

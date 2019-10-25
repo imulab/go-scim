@@ -107,8 +107,8 @@ func (d *dateTimeProperty) IsEqualTo(other interface{}) bool {
 	}
 
 	var (
-		v1 	time.Time
-		v2 	time.Time
+		v1  time.Time
+		v2  time.Time
 		err error
 	)
 	{

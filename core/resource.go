@@ -1,6 +1,6 @@
 package core
 
 type Resource struct {
-	rt		*ResourceType
-	base	*complexProperty
+	rt   *ResourceType
+	base *complexProperty
 }

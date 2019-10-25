@@ -7,13 +7,13 @@ import (
 )
 
 func TestParseSchema(t *testing.T) {
-	tests := []struct{
-		name 		string
-		filePath	string
-		assertion	func(t *testing.T, schema *Schema, err error)
+	tests := []struct {
+		name      string
+		filePath  string
+		assertion func(t *testing.T, schema *Schema, err error)
 	}{
 		{
-			name: "parse user schema",
+			name:     "parse user schema",
 			filePath: "../resource/schema/user_schema.json",
 			assertion: func(t *testing.T, schema *Schema, err error) {
 				assert.Nil(t, err)
@@ -22,7 +22,7 @@ func TestParseSchema(t *testing.T) {
 			},
 		},
 		{
-			name: "parse user enterprise extension schema",
+			name:     "parse user enterprise extension schema",
 			filePath: "../resource/schema/user_enterprise_schema.json",
 			assertion: func(t *testing.T, schema *Schema, err error) {
 				assert.Nil(t, err)

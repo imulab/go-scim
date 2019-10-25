@@ -25,13 +25,13 @@ func TestStartsWith(t *testing.T) {
 			expect: true,
 		},
 		{
-			name: 	"foo does not start with F (case sensitive)",
+			name:   "foo does not start with F (case sensitive)",
 			prop:   Properties.NewStringOf(&Attribute{Type: TypeString, CaseExact: true}, "foo"),
 			value:  "F",
 			expect: false,
 		},
 		{
-			name: "reference User starts with U (case should always be sensitive)",
+			name:   "reference User starts with U (case should always be sensitive)",
 			prop:   Properties.NewReferenceOf(&Attribute{Type: TypeString, CaseExact: true}, "User"),
 			value:  "U",
 			expect: true,
@@ -66,13 +66,13 @@ func TestEndsWith(t *testing.T) {
 			expect: true,
 		},
 		{
-			name: 	"foo does not end with O (case sensitive)",
+			name:   "foo does not end with O (case sensitive)",
 			prop:   Properties.NewStringOf(&Attribute{Type: TypeString, CaseExact: true}, "foo"),
 			value:  "O",
 			expect: false,
 		},
 		{
-			name: "reference User ends with r (case should always be sensitive)",
+			name:   "reference User ends with r (case should always be sensitive)",
 			prop:   Properties.NewReferenceOf(&Attribute{Type: TypeString, CaseExact: true}, "User"),
 			value:  "r",
 			expect: true,
@@ -107,13 +107,13 @@ func TestContains(t *testing.T) {
 			expect: true,
 		},
 		{
-			name: 	"foo does not contain O (case sensitive)",
+			name:   "foo does not contain O (case sensitive)",
 			prop:   Properties.NewStringOf(&Attribute{Type: TypeString, CaseExact: true}, "foo"),
 			value:  "O",
 			expect: false,
 		},
 		{
-			name: "reference User contains se (case should always be sensitive)",
+			name:   "reference User contains se (case should always be sensitive)",
 			prop:   Properties.NewReferenceOf(&Attribute{Type: TypeString, CaseExact: true}, "User"),
 			value:  "se",
 			expect: true,

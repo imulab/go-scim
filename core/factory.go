@@ -64,7 +64,7 @@ func (f propertyFactory) New(attr *Attribute) Property {
 // Create a new unassigned complex property.
 func (f propertyFactory) NewComplex(attr *Attribute) *complexProperty {
 	container := &complexProperty{
-		attr:  attr,
+		attr:     attr,
 		subProps: make(map[string]Property, 0),
 	}
 
@@ -108,7 +108,7 @@ func (f propertyFactory) NewDateTimeOf(attr *Attribute, value string) *dateTimeP
 	if err != nil {
 		panic(Errors.invalidValue("invalid date time value"))
 	}
-	return &dateTimeProperty{attr: attr, v:    &value}
+	return &dateTimeProperty{attr: attr, v: &value}
 }
 
 func (f propertyFactory) NewBinaryOf(attr *Attribute, value string) *binaryProperty {

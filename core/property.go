@@ -249,7 +249,7 @@ func (r *referenceProperty) IsPresent() bool {
 // Raw() value call returns a map of raw property values indexed to their attribute names. Since the call
 // builds this map on the fly, such call may be expensive.
 type complexProperty struct {
-	attr  *Attribute
+	attr     *Attribute
 	subProps map[string]Property
 }
 
@@ -335,7 +335,7 @@ type multiValuedProperty struct {
 
 	// reference to the exclusively true boolean property
 	// from the complex property elements, if any.
-	excl  *booleanProperty
+	excl *booleanProperty
 }
 
 func (m *multiValuedProperty) Attribute() *Attribute {

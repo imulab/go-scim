@@ -17,11 +17,11 @@ const (
 
 // A hybrid node representing a segment of path or a node in the filter tree.
 type Step struct {
-	Token	string
-	Typ		int
-	Next	*Step
-	Left	*Step
-	Right	*Step
+	Token string
+	Typ   int
+	Next  *Step
+	Left  *Step
+	Right *Step
 }
 
 // Returns true if this step represents a path (segment).
@@ -116,7 +116,7 @@ var (
 	}
 	rightParenStep = &Step{
 		Token: RightParen,
-		Typ: stepParenthesis,
+		Typ:   stepParenthesis,
 	}
 )
 
@@ -138,7 +138,7 @@ func (f stepFactory) NewPathChain(paths ...string) *Step {
 	}
 
 	var (
-		head = &Step{} // dummy head
+		head   = &Step{} // dummy head
 		cursor = head
 	)
 	for _, path := range paths {
