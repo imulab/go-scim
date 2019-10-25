@@ -44,6 +44,16 @@ func (s Step) IsParenthesis() bool {
 	return s.Typ == stepParenthesis
 }
 
+// Returns true if this step represents right parenthesis.
+func (s Step) IsLeftParenthesis() bool {
+	return s.Token == LeftParen && s.Typ == stepParenthesis
+}
+
+// Returns true if this step represents right parenthesis.
+func (s Step) IsRightParenthesis() bool {
+	return s.Token == RightParen && s.Typ == stepParenthesis
+}
+
 // Traverse the hybrid linked list / tree structure connected to the current step. cb is the callback function invoked
 // for each step; marker and done comprises the termination mechanism. When the current step finishes its traversal, it
 // compares itself against marker. If they are equal, invoke the done function to let the caller know we have returned
@@ -139,19 +149,21 @@ func (f stepFactory) NewPathChain(paths ...string) *Step {
 	return head.Next
 }
 
-// Create a new logical operator step
-func (f stepFactory) NewLogicalOperator(op string) *Step {
-	return &Step{
-		Token: op,
-		Typ:   stepLogicalOperator,
-	}
-}
-
-// Create a new relational operator step
-func (f stepFactory) NewRelationalOperator(op string) *Step {
-	return &Step{
-		Token: op,
-		Typ:   stepRelationalOperator,
+// Create a new logical or relational operator step
+func (f stepFactory) NewOperator(op string) *Step {
+	switch strings.ToLower(op) {
+	case And, Or, Not:
+		return &Step{
+			Token: op,
+			Typ:   stepLogicalOperator,
+		}
+	case Eq, Ne, Sw, Ew, Co, Gt, Ge, Lt, Le, Pr:
+		return &Step{
+			Token: op,
+			Typ:   stepRelationalOperator,
+		}
+	default:
+		panic("not an operator")
 	}
 }
 

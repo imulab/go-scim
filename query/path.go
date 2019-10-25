@@ -274,6 +274,7 @@ func (c *pathCompiler) hasMore() bool {
 	return c.op != scanPathEnd && c.op != scanPathError
 }
 
+// Produce the next token
 func (c *pathCompiler) next() (*core.Step, error) {
 	if c.op == scanPathError {
 		return nil, c.scan.err
@@ -288,8 +289,8 @@ func (c *pathCompiler) next() (*core.Step, error) {
 		return nil, nil
 	case scanPathBeginStep:
 		return c.scanStep()
-	//case scanPathBeginFilter:
-	//	return s.scanFilter()
+	case scanPathBeginFilter:
+		return c.scanFilter()
 	default:
 		return nil, core.Errors.InvalidPath("path could not be compiled.")
 	}
@@ -309,6 +310,23 @@ func (c *pathCompiler) scanStep() (*core.Step, error) {
 		return core.Steps.NewPath(string(c.data[start:end])), nil
 	case scanPathBeginFilter:
 		return core.Steps.NewPath(string(c.data[start:end])), nil
+	default:
+		return nil, core.Errors.InvalidPath("path could not be compiled.")
+	}
+}
+
+// Scan and make the filter step after reading scanPathBeginFilter op code. The work is delegated filterCompiler
+func (c *pathCompiler) scanFilter() (*core.Step, error) {
+	start := c.off
+	end := c.skipWhile(scanPathContinue)
+	switch c.op {
+	case scanPathEndFilter, scanPathEnd:
+		root, err := CompileFilter(string(c.data[start:end]))
+		if err != nil {
+			return nil, err
+		}
+		c.scanOne()
+		return root, nil
 	default:
 		return nil, core.Errors.InvalidPath("path could not be compiled.")
 	}

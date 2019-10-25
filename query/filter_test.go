@@ -1,9 +1,161 @@
 package query
 
 import (
+	"github.com/imulab/go-scim/core"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func TestFilterCompiler(t *testing.T) {
+	const (
+		step = iota
+		operator
+		literal
+		bad
+	)
+	type expect struct {
+		value string
+		typ   int
+	}
+	selectType := func(s *core.Step) int {
+		if s.IsPath() {
+			return step
+		} else if s.IsOperator() {
+			return operator
+		} else if s.IsLiteral() {
+			return literal
+		} else {
+			return bad
+		}
+	}
+
+	RegisterPathNamespace("urn:ietf:params:scim:schemas:core:2.0:User")
+
+	tests := []struct {
+		name   string
+		filter   string
+		assert func(t *testing.T, trail []expect, err error)
+	}{
+		{
+			name:   "simple filter",
+			filter: "username eq \"foo\"",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 3)
+
+				assert.Equal(t, core.Eq, trail[0].value)
+				assert.Equal(t, "username", trail[1].value)
+				assert.Equal(t, "\"foo\"", trail[2].value)
+
+				assert.Equal(t, operator, trail[0].typ)
+				assert.Equal(t, step, trail[1].typ)
+				assert.Equal(t, literal, trail[2].typ)
+			},
+		},
+		{
+			name:   "simple filter with parenthesis",
+			filter: "(age gt 10)",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 3)
+
+				assert.Equal(t, core.Gt, trail[0].value)
+				assert.Equal(t, "age", trail[1].value)
+				assert.Equal(t, "10", trail[2].value)
+
+				assert.Equal(t, operator, trail[0].typ)
+				assert.Equal(t, step, trail[1].typ)
+				assert.Equal(t, literal, trail[2].typ)
+			},
+		},
+		{
+			name:   "simple filter with urn prefix",
+			filter: "urn:ietf:params:scim:schemas:core:2.0:User:meta.created gt \"2019-10-10T10:10:10\"",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 5)
+
+				assert.Equal(t, core.Gt, trail[0].value)
+				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User", trail[1].value)
+				assert.Equal(t, "meta", trail[2].value)
+				assert.Equal(t, "created", trail[3].value)
+				assert.Equal(t, "\"2019-10-10T10:10:10\"", trail[4].value)
+
+				assert.Equal(t, operator, trail[0].typ)
+				assert.Equal(t, step, trail[1].typ)
+				assert.Equal(t, step, trail[2].typ)
+				assert.Equal(t, step, trail[3].typ)
+				assert.Equal(t, literal, trail[4].typ)
+			},
+		},
+		{
+			name:   "filter starts with not operator",
+			filter: "not (name pr)",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 3)
+
+				assert.Equal(t, core.Not, trail[0].value)
+				assert.Equal(t, core.Pr, trail[1].value)
+				assert.Equal(t, "name", trail[2].value)
+
+				assert.Equal(t, operator, trail[0].typ)
+				assert.Equal(t, operator, trail[1].typ)
+				assert.Equal(t, step, trail[2].typ)
+			},
+		},
+		{
+			name:   "composite filter",
+			filter: "(username eq \"foo\") and (age gt 10)",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 7)
+
+				assert.Equal(t, core.And, trail[0].value)
+				assert.Equal(t, core.Eq, trail[1].value)
+				assert.Equal(t, "username", trail[2].value)
+				assert.Equal(t, "\"foo\"", trail[3].value)
+				assert.Equal(t, core.Gt, trail[4].value)
+				assert.Equal(t, "age", trail[5].value)
+				assert.Equal(t, "10", trail[6].value)
+
+				assert.Equal(t, operator, trail[0].typ)
+				assert.Equal(t, operator, trail[1].typ)
+				assert.Equal(t, step, trail[2].typ)
+				assert.Equal(t, literal, trail[3].typ)
+				assert.Equal(t, operator, trail[4].typ)
+				assert.Equal(t, step, trail[5].typ)
+				assert.Equal(t, literal, trail[6].typ)
+			},
+		},
+		{
+			name:   "invalid filter: starts with literal",
+			filter: "\"hello\" eq false",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.NotNil(t, err)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root, err := CompileFilter(test.filter)
+			if err != nil || root == nil {
+				test.assert(t, nil, err)
+			} else {
+				trail := make([]expect, 0)
+				root.Walk(func(step *core.Step) {
+					trail = append(trail, expect{
+						value: step.Token,
+						typ:   selectType(step),
+					})
+				}, root, func() {
+					test.assert(t, trail, err)
+				})
+			}
+		})
+	}
+}
 
 func TestFilterScanner(t *testing.T) {
 	type signals struct {

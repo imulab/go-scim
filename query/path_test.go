@@ -72,11 +72,45 @@ func TestPathCompiler(t *testing.T) {
 				assert.Equal(t, step, trail[2].typ)
 			},
 		},
+		{
+			name: "simple path with filter",
+			path: "emails[primary eq true]",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 4)
+				assert.Equal(t, "emails", trail[0].value)
+				assert.Equal(t, core.Eq, trail[1].value)
+				assert.Equal(t, "primary", trail[2].value)
+				assert.Equal(t, "true", trail[3].value)
+				assert.Equal(t, step, trail[0].typ)
+				assert.Equal(t, operator, trail[1].typ)
+				assert.Equal(t, step, trail[2].typ)
+				assert.Equal(t, literal, trail[3].typ)
+			},
+		},
+		{
+			name: "duplex path with filter",
+			path: "emails[primary eq true].value",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 5)
+				assert.Equal(t, "emails", trail[0].value)
+				assert.Equal(t, core.Eq, trail[1].value)
+				assert.Equal(t, "primary", trail[2].value)
+				assert.Equal(t, "true", trail[3].value)
+				assert.Equal(t, "value", trail[4].value)
+				assert.Equal(t, step, trail[0].typ)
+				assert.Equal(t, operator, trail[1].typ)
+				assert.Equal(t, step, trail[2].typ)
+				assert.Equal(t, literal, trail[3].typ)
+				assert.Equal(t, step, trail[4].typ)
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			head, err := CompilePath(test.path)
+			head, err := CompilePath(test.path, true)
 			if err != nil || head == nil {
 				test.assert(t, nil, err)
 			} else {

@@ -23,6 +23,13 @@ const (
 	scanFilterEnd
 )
 
+// return code for pushOperator method of the filterCompiler
+const (
+	pushOpOk = iota
+	pushOpRightParenthesis
+	pushOpInsufficientPriority
+)
+
 // Return a string based explanation for the filter scanner events.
 func explainFilterEvent(op int) string {
 	switch op {
@@ -722,3 +729,260 @@ func (fs *filterScanner) error(c byte, context string) int {
 func (fs *filterScanner) errInvalidOperator(c byte) int {
 	return fs.error(c, "invalid operator")
 }
+
+// Compiler that utilizes filterScanner to convert a string based filter query to tree.
+type filterCompiler struct {
+	scan *filterScanner
+	// raw filter in bytes, appended by termination bytes (byte 0)
+	data []byte
+	// index to the next byte to be read in data
+	off int
+	// latest op code produced by filter scanner
+	op int
+	// operator stack used by shunting yard algorithm
+	opStack []*core.Step
+	// result/output stack used by shunting yard algorithm
+	rsStack []*core.Step
+}
+
+// Part of the shunting yard algorithm. Push the operator or parenthesis represented by the step argument onto the
+// operator stack, maintain priority. Return code to instruct caller for next steps.
+func (c *filterCompiler) pushOperator(step *core.Step) int {
+	if step.IsRightParenthesis() {
+		return pushOpRightParenthesis
+	}
+
+	if step.IsOperator() && len(c.opStack) > 0 {
+		// get top of stack and compare priority
+		p := c.opStack[len(c.opStack)-1]
+		if p.IsOperator() {
+			if opLeftAssociative(step.Token) && opPriority(step.Token) <= opPriority(p.Token) {
+				return pushOpInsufficientPriority
+			} else if opLeftAssociative(step.Token) && opPriority(step.Token) < opPriority(p.Token) {
+				return pushOpInsufficientPriority
+			}
+		}
+	}
+
+	// push onto stack
+	c.opStack = append(c.opStack, step)
+	return pushOpOk
+}
+
+// Part of the shunting yard algorithm. Pop operator off stack if it meets the condition. Else return nil.
+func (c *filterCompiler) popOperatorIf(condition func(top *core.Step) bool) *core.Step {
+	if len(c.opStack) == 0 {
+		return nil
+	}
+
+	top := c.opStack[len(c.opStack)-1]
+	if condition(top) {
+		// pop stack
+		c.opStack = c.opStack[0 : len(c.opStack)-1]
+		return top
+	}
+
+	return nil
+}
+
+// Part of the shunting yard algorithm. Push operators onto the result stack to form a tree.
+func (c *filterCompiler) pushBuildResult(step *core.Step) error {
+	// Literal: push and return
+	if step.IsLiteral() {
+		c.rsStack = append(c.rsStack, step)
+		return nil
+	}
+
+	// Path: re-compile and push
+	if step.IsPath() {
+		head, err := CompilePath(step.Token, false)
+		if err != nil {
+			return core.Errors.InvalidFilter("path in filter is invalid. (" + err.Error() + ")")
+		}
+		c.rsStack = append(c.rsStack, head)
+		return nil
+	}
+
+	// Assertion check:
+	// at this point, step must be operator and stack must not be empty
+	if !step.IsOperator() || len(c.rsStack) == 0 {
+		panic("algorithm flaw")
+	}
+
+	// Pop operators and literals based on operators' cardinality and assemble before
+	// push back in.
+	switch opCardinality(step.Token) {
+	case 1:
+		{
+			first := c.rsStack[len(c.rsStack)-1]
+			c.rsStack = c.rsStack[:len(c.rsStack)-1]
+			step.Left = first
+		}
+	case 2:
+		{
+			first, second := c.rsStack[len(c.rsStack)-1], c.rsStack[len(c.rsStack)-2]
+			c.rsStack = c.rsStack[:len(c.rsStack)-2]
+			step.Left = second
+			step.Right = first
+		}
+	default:
+		panic("unsupported cardinality")
+	}
+	c.rsStack = append(c.rsStack, step)
+
+	return nil
+}
+
+// Returns true if there could be more meaningful information to parsed.
+func (c *filterCompiler) hasMore() bool {
+	return c.op != scanFilterEnd && c.op != scanFilterError
+}
+
+// Produce the next token
+func (c *filterCompiler) next() (*core.Step, error) {
+	if c.op == scanFilterError {
+		return nil, c.scan.err
+	}
+
+	_ = c.scanWhile(scanFilterSkipSpace)
+
+	switch c.op {
+	case scanFilterEnd:
+		return nil, nil
+	case scanFilterParenthesis:
+		return core.Steps.NewParenthesis(string(c.data[c.off-1])), nil
+	case scanFilterBeginAny:
+		return c.scanOperatorOrPath()
+	case scanFilterBeginPath:
+		return c.scanPath()
+	case scanFilterBeginOp:
+		return c.scanOperator()
+	case scanFilterBeginLiteral:
+		return c.scanLiteral()
+	default:
+		return nil, core.Errors.InvalidFilter("cannot compile filter.")
+	}
+}
+
+// Produce a literal node from the current offset. This should only be called when scanFilterBeginLiteral is returned
+// as op code.
+func (c *filterCompiler) scanLiteral() (*core.Step, error) {
+	start := c.off - 1
+	end := c.scanWhile(scanFilterContinue)
+	switch c.op {
+	case scanFilterEndLiteral, scanFilterEnd:
+		return core.Steps.NewLiteral(string(c.data[start:end])), nil
+	default:
+		return nil, core.Errors.InvalidFilter("cannot compile filter.")
+	}
+}
+
+// Produce an operator node from the current offset. This should only be called when scanFilterBeginOp is returned
+// as op code.
+func (c *filterCompiler) scanOperator() (*core.Step, error) {
+	start := c.off - 1
+	end := c.scanWhile(scanFilterContinue)
+	switch c.op {
+	case scanFilterEndOp, scanFilterEnd:
+		return core.Steps.NewOperator(string(c.data[start:end])), nil
+	default:
+		return nil, core.Errors.InvalidFilter("cannot compile filter.")
+	}
+}
+
+// Produce an path step from the current offset. Note the returned step will be the unsegmented whole of the path
+// in the filter as the filterScanner does not break them down. The caller will need to call CompilePath to replace
+// the step with the compiled head.
+func (c *filterCompiler) scanPath() (*core.Step, error) {
+	start := c.off - 1
+	end := c.scanWhile(scanFilterContinue)
+	switch c.op {
+	case scanFilterEndPath, scanFilterEnd:
+		return core.Steps.NewPath(string(c.data[start:end])), nil
+	default:
+		return nil, core.Errors.InvalidFilter("cannot compile filter.")
+	}
+}
+
+// Produce a path or operator node from the current offset. This fits the case where we read 'n' at the start of the
+// predicate, we are not quite sure whether it is going to be 'not' and just another path with prefix 'n'. This should
+// only be called when scanFilterBeginAny is returned as op code.
+func (c *filterCompiler) scanOperatorOrPath() (*core.Step, error) {
+	start := c.off - 1
+	end := c.scanWhile(scanFilterContinue)
+	switch c.op {
+	case scanFilterEndPath:
+		return core.Steps.NewPath(string(c.data[start:end])), nil
+	case scanFilterEndOp:
+		return core.Steps.NewOperator(string(c.data[start:end])), nil
+	default:
+		return nil, core.Errors.InvalidFilter("cannot compile filter.")
+	}
+}
+
+// Continue to scan for next while the returned op code is equal to the given op code. This is used mainly to skip
+// uninteresting bytes and arrive at the next beginning or ending of something important.
+//
+// This method also respects the op code 'scanFilterInsertSpace'. This is a virtual "go-back" instruction to indicate
+// that we have arrived at something important, but the original op code to return will only implicitly indicate the
+// ending of what was started. Although the offset is correct, it would be easier to understand if the scanner can
+// explicitly tell us the end of what was started. The 'scanFilterInsertSpace' op code, as a result, instructs us to
+// send a space byte (i.e. ' ') to the scanner, in order to receive that explicit ending op code instruction.
+func (c *filterCompiler) scanWhile(op int) int {
+	for c.off < len(c.data) {
+		c.op = c.scan.step(c.scan, c.data[c.off])
+
+		// scanner instructs us to insert space before rescanning the last bit.
+		// hence we will not need to increment the offset here as it shall be
+		// scanned again
+		if c.op == scanFilterInsertSpace {
+			c.op = c.scan.step(c.scan, ' ')
+			return c.off
+		}
+
+		// increment the offset to be in sync with scanner
+		c.off++
+		if c.op != op {
+			return c.off - 1
+		}
+	}
+
+	return len(c.data) + 1
+}
+
+// priority and precedence definitions
+var (
+	// function to return the relative priority
+	opPriority = func(op string) int {
+		switch strings.ToLower(op) {
+		case core.And, core.Or, core.Not:
+			return 50
+		case core.Eq, core.Ne, core.Sw, core.Ew, core.Co, core.Pr, core.Gt, core.Ge, core.Lt, core.Le:
+			return 100
+		default:
+			panic("not an operator")
+		}
+	}
+	// function to return true if left associative, false if right associative
+	opLeftAssociative = func(op string) bool {
+		switch op {
+		case core.Not:
+			return false
+		case core.And, core.Or, core.Eq, core.Ne, core.Sw, core.Ew, core.Co, core.Pr, core.Gt, core.Ge, core.Lt, core.Le:
+			return true
+		default:
+			panic("not an operator")
+		}
+	}
+	// function to return operator cardinality
+	opCardinality = func(op string) int {
+		switch op {
+		case core.Not, core.Pr:
+			return 1
+		case core.And, core.Or, core.Eq, core.Ne, core.Sw, core.Ew, core.Co, core.Gt, core.Ge, core.Lt, core.Le:
+			return 2
+		default:
+			panic("not an operator")
+		}
+	}
+)
