@@ -44,6 +44,25 @@ func (s Step) IsParenthesis() bool {
 	return s.Typ == stepParenthesis
 }
 
+// Traverse the hybrid linked list / tree structure connected to the current step. cb is the callback function invoked
+// for each step; marker and done comprises the termination mechanism. When the current step finishes its traversal, it
+// compares itself against marker. If they are equal, invoke the done function to let the caller know we have returned
+// to the node that the Walk function is initially invoked on, hence the traversal has ended.
+func (s *Step) Walk(cb func(*Step), marker *Step, done func()) {
+	if s == nil {
+		return
+	}
+
+	cb(s)
+	s.Left.Walk(cb, marker, done)
+	s.Right.Walk(cb, marker, done)
+	s.Next.Walk(cb, marker, done)
+
+	if marker == s {
+		done()
+	}
+}
+
 // Strip quotes around the value. This method is supposed to be called when
 // the caller knows or assumes this step is a value step and contains a string
 // value.

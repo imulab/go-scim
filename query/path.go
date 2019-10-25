@@ -87,7 +87,7 @@ func (ps *pathScanner) stateBeginStep(scan *pathScanner, c byte) int {
 // Intermediate state in which we are in a step, but is trying to see if the current step is a reserved namespace.
 // If the current character is still a match in the dictionary trie, the state is maintained; otherwise, attempt
 // to downgrade the step state to an ordinary step state (stateInStep).
-func (ps *pathScanner) stateTryNamespaceStep(root *trie) func (scan *pathScanner, c byte) int {
+func (ps *pathScanner) stateTryNamespaceStep(root *trie) func(scan *pathScanner, c byte) int {
 	return func(scan *pathScanner, c byte) int {
 		match, ok := root.nextTrie(c)
 		if ok {
@@ -255,6 +255,85 @@ func (ps *pathScanner) error(c byte, context string) int {
 		fmt.Sprintf("invalid character %s around %d. %s ", quoteChar(c), ps.bytes, context),
 	))
 	return scanPathError
+}
+
+// Compiler that utilizes pathScanner to convert a string based path query to a linked list of steps, each representing
+// a unit in the path.
+type pathCompiler struct {
+	scan *pathScanner
+	// raw data of the path query
+	data []byte
+	// index for the next byte to be read
+	off int
+	// latest op code produced by the pathScanner
+	op int
+}
+
+// Returns true if there could be more meaningful information to parsed.
+func (c *pathCompiler) hasMore() bool {
+	return c.op != scanPathEnd && c.op != scanPathError
+}
+
+func (c *pathCompiler) next() (*core.Step, error) {
+	if c.op == scanPathError {
+		return nil, c.scan.err
+	}
+
+	if c.op == scanPathContinue {
+		_ = c.skipWhile(scanPathContinue)
+	}
+
+	switch c.op {
+	case scanPathEnd:
+		return nil, nil
+	case scanPathBeginStep:
+		return c.scanStep()
+	//case scanPathBeginFilter:
+	//	return s.scanFilter()
+	default:
+		return nil, core.Errors.InvalidPath("path could not be compiled.")
+	}
+}
+
+// Scan and make the path step after reading scanPathBeginStep op code.
+func (c *pathCompiler) scanStep() (*core.Step, error) {
+	// start offset is one previous of the internal offset state because this function is only
+	// invoked after seeing scanPathBeginStep, hence we are already one pass the actual start
+	// of the step
+	start := c.off - 1
+	end := c.skipWhile(scanPathContinue)
+
+	switch c.op {
+	case scanPathEndStep, scanPathEnd:
+		c.scanOne() // scan ahead to assist the next
+		return core.Steps.NewPath(string(c.data[start:end])), nil
+	case scanPathBeginFilter:
+		return core.Steps.NewPath(string(c.data[start:end])), nil
+	default:
+		return nil, core.Errors.InvalidPath("path could not be compiled.")
+	}
+}
+
+// Scan the next byte of the data
+func (c *pathCompiler) scanOne() {
+	c.op = c.scan.step(c.scan, c.data[c.off])
+	c.off++
+}
+
+// Return the offset of the first byte that produced a different op code. Note that given the nature of the scanning,
+// the internal offset state will have passed the returned offset, because scanOne method must increment the offset
+// after invoking the scanner's step function in order to be in sync with the scanner's state.
+func (c *pathCompiler) skipWhile(op int) int {
+	for c.off < len(c.data) {
+		c.scanOne()
+		if c.op != op {
+			return c.off - 1
+		}
+	}
+
+	// If we are having this given op code till the end, return an index greater
+	// than the length of the data to signal that.
+	return len(c.data) + 1
 }
 
 // Returns true if the byte can be the first alphabet of a SCIM attribute name.

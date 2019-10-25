@@ -1,9 +1,98 @@
 package query
 
 import (
+	"github.com/imulab/go-scim/core"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func TestPathCompiler(t *testing.T) {
+	const (
+		step = iota
+		operator
+		literal
+		bad
+	)
+	type expect struct {
+		value string
+		typ   int
+	}
+	selectType := func(s *core.Step) int {
+		if s.IsPath() {
+			return step
+		} else if s.IsOperator() {
+			return operator
+		} else if s.IsLiteral() {
+			return literal
+		} else {
+			return bad
+		}
+	}
+
+	RegisterPathNamespace("urn:ietf:params:scim:schemas:core:2.0:User")
+
+	tests := []struct {
+		name   string
+		path   string
+		assert func(t *testing.T, trail []expect, err error)
+	}{
+		{
+			name: "simple path",
+			path: "username",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 1)
+				assert.Equal(t, "username", trail[0].value)
+				assert.Equal(t, step, trail[0].typ)
+			},
+		},
+		{
+			name: "duplex path",
+			path: "meta.created",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 2)
+				assert.Equal(t, "meta", trail[0].value)
+				assert.Equal(t, "created", trail[1].value)
+				assert.Equal(t, step, trail[0].typ)
+				assert.Equal(t, step, trail[1].typ)
+			},
+		},
+		{
+			name: "path with urn namespace",
+			path: "urn:ietf:params:scim:schemas:core:2.0:User:emails.primary",
+			assert: func(t *testing.T, trail []expect, err error) {
+				assert.Nil(t, err)
+				assert.Len(t, trail, 3)
+				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User", trail[0].value)
+				assert.Equal(t, "emails", trail[1].value)
+				assert.Equal(t, "primary", trail[2].value)
+				assert.Equal(t, step, trail[0].typ)
+				assert.Equal(t, step, trail[1].typ)
+				assert.Equal(t, step, trail[2].typ)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			head, err := CompilePath(test.path)
+			if err != nil || head == nil {
+				test.assert(t, nil, err)
+			} else {
+				trail := make([]expect, 0)
+				head.Walk(func(step *core.Step) {
+					trail = append(trail, expect{
+						value: step.Token,
+						typ:   selectType(step),
+					})
+				}, head, func() {
+					test.assert(t, trail, err)
+				})
+			}
+		})
+	}
+}
 
 func TestPathScanner(t *testing.T) {
 	type signals struct {
