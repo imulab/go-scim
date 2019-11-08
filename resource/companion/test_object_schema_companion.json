@@ -1,0 +1,39 @@
+{
+  "schema": "urn:imulab:scim:TestObject",
+  "dbAlias": "testObject",
+  "metadata": [
+    {
+      "path": "name"
+    },
+    {
+      "path": "age"
+    },
+    {
+      "path": "score"
+    },
+    {
+      "path": "status"
+    },
+    {
+      "path": "certificate"
+    },
+    {
+      "path": "secret"
+    },
+    {
+      "path": "profile"
+    },
+    {
+      "path": "tags"
+    },
+    {
+      "path": "courses"
+    },
+    {
+      "path": "courses.name"
+    },
+    {
+      "path": "courses.core"
+    }
+  ]
+}

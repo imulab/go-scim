@@ -47,6 +47,10 @@ func (attr *Attribute) setDefaults() {
 	if attr.Metadata == nil {
 		attr.Metadata = new(Metadata)
 	}
+
+	for _, subAttr := range attr.SubAttributes {
+		subAttr.setDefaults()
+	}
 }
 
 // Returns true if the property that this attribute represents can be addressed
@@ -201,5 +205,5 @@ func (attr *Attribute) errNoTarget(step *Step) error {
 
 // Returns an invalidValue error about the attribute.
 func (attr *Attribute) errInvalidValue() error {
-	return Errors.invalidValue(fmt.Sprintf("value is invalid or incompatible for attribute %s", attr.DisplayName()))
+	return Errors.InvalidValue(fmt.Sprintf("value is invalid or incompatible for attribute %s", attr.DisplayName()))
 }

@@ -1,0 +1,59 @@
+{
+  "id": "urn:imulab:scim:TestObject",
+  "name": "TestObject",
+  "description": "Defined attributes for the test object schema",
+  "attributes": [
+    {
+      "name": "name",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "age",
+      "type": "integer"
+    },
+    {
+      "name": "score",
+      "type": "decimal"
+    },
+    {
+      "name": "status",
+      "type": "boolean"
+    },
+    {
+      "name": "certificate",
+      "type": "binary",
+      "returned": "request"
+    },
+    {
+      "name": "secret",
+      "type": "string",
+      "returned": "never"
+    },
+    {
+      "name": "profile",
+      "type": "reference",
+      "referenceTypes": ["external"]
+    },
+    {
+      "name": "tags",
+      "type": "string",
+      "multiValued": true
+    },
+    {
+      "name": "courses",
+      "type": "complex",
+      "multiValued": true,
+      "subAttributes": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "core",
+          "type": "boolean"
+        }
+      ]
+    }
+  ]
+}

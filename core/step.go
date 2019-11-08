@@ -100,7 +100,7 @@ func (s Step) compliantValue(attr *Attribute) (val interface{}, err error) {
 	}
 
 	if err != nil {
-		err = Errors.invalidValue(fmt.Sprintf("'%s' is not a valid value for %s.", s.Token, attr.Type))
+		err = Errors.InvalidValue(fmt.Sprintf("'%s' is not a valid value for %s.", s.Token, attr.Type))
 	}
 
 	return

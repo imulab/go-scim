@@ -1,0 +1,8 @@
+{
+  "id": "TestObject",
+  "name": "TestObject",
+  "description": "Test object resource type",
+  "endpoint": "N/A",
+  "schema": "urn:imulab:scim:TestObject",
+  "schemaExtensions": []
+}

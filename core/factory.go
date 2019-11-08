@@ -106,7 +106,7 @@ func (f propertyFactory) NewBooleanOf(attr *Attribute, value bool) *booleanPrope
 func (f propertyFactory) NewDateTimeOf(attr *Attribute, value string) *dateTimeProperty {
 	_, err := time.Parse(ISO8601, value)
 	if err != nil {
-		panic(Errors.invalidValue("invalid date time value"))
+		panic(Errors.InvalidValue("invalid date time value"))
 	}
 	return &dateTimeProperty{attr: attr, v: &value}
 }
@@ -114,7 +114,7 @@ func (f propertyFactory) NewDateTimeOf(attr *Attribute, value string) *dateTimeP
 func (f propertyFactory) NewBinaryOf(attr *Attribute, value string) *binaryProperty {
 	_, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
-		panic(Errors.invalidValue("invalid binary value"))
+		panic(Errors.InvalidValue("invalid binary value"))
 	}
 	return &binaryProperty{attr: attr, v: &value}
 }

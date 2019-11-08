@@ -113,7 +113,7 @@ func (f errorFactory) noTarget(message string) error {
 
 // A required value was missing, or the value specified was not compatible with the operation
 // or attribute type.
-func (f errorFactory) invalidValue(message string) error {
+func (f errorFactory) InvalidValue(message string) error {
 	return &ScimError{
 		Status:  400,
 		Type:    "invalidValue",
