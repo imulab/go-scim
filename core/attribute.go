@@ -70,6 +70,14 @@ func (attr *Attribute) DisplayName() string {
 	return name
 }
 
+// Returns true if this attribute's type is string based, namely string, reference, binary and dateTime
+func (attr *Attribute) IsStringBasedType() bool {
+	return attr.Type == TypeString ||
+		attr.Type == TypeReference ||
+		attr.Type == TypeBinary ||
+		attr.Type == TypeDateTime
+}
+
 // Return an attribute same to this attribute, but with multiValued set to false.
 // If this attribute is not multiValued, this is returned.
 func (attr *Attribute) ToSingleValued() *Attribute {

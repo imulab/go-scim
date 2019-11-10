@@ -33,7 +33,7 @@ func ParseResourceType(raw []byte) (rt *ResourceType, err error) {
 	rt = new(ResourceType)
 	err = json.Unmarshal(raw, &rt)
 	if err != nil {
-		err = Errors.invalidSyntax("invalid resource type JSON definition")
+		err = Errors.InvalidSyntax("invalid resource type JSON definition")
 		return
 	}
 

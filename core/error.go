@@ -83,7 +83,7 @@ func (f errorFactory) mutability(message string) error {
 }
 
 // The request body message structure was invalid or did not conform to the request schema.
-func (f errorFactory) invalidSyntax(message string) error {
+func (f errorFactory) InvalidSyntax(message string) error {
 	return &ScimError{
 		Status:  400,
 		Type:    "invalidSyntax",

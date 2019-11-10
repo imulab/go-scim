@@ -31,7 +31,7 @@ func ParseSchemaCompanion(raw []byte) (sc *SchemaCompanion, err error) {
 
 	err = json.Unmarshal(raw, &sc)
 	if err != nil {
-		err = Errors.invalidSyntax("invalid schema companion JSON definition")
+		err = Errors.InvalidSyntax("invalid schema companion JSON definition")
 		return
 	}
 

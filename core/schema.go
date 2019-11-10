@@ -21,7 +21,7 @@ func ParseSchema(raw []byte) (schema *Schema, err error) {
 
 	err = json.Unmarshal(raw, &schema)
 	if err != nil {
-		err = Errors.invalidSyntax("invalid schema JSON definition")
+		err = Errors.InvalidSyntax("invalid schema JSON definition")
 		return
 	}
 
