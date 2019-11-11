@@ -45,6 +45,7 @@ func ParseResourceType(raw []byte) (rt *ResourceType, err error) {
 // All attributes from schema extensions are nested under a complex attribute named with the schema extension's id.
 func (rt *ResourceType) DerivedAttributes() []*Attribute {
 	if len(rt.attrs) == 0 {
+		// todo load core attributes
 		rt.attrs = make([]*Attribute, 0)
 		rt.attrs = append(rt.attrs, rt.MustSchema().Attributes...)
 		for _, ext := range rt.SchemaExtensions {
