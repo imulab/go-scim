@@ -42,11 +42,11 @@ func ParseSchemaCompanion(raw []byte) (sc *SchemaCompanion, err error) {
 // validate the schema companion
 func (sc *SchemaCompanion) validate() error {
 	if len(sc.Schema) == 0 {
-		return Errors.internal("schema field is required for schema companion")
+		return Errors.Internal("schema field is required for schema companion")
 	}
 
 	if len(sc.Metadata) == 0 {
-		return Errors.internal("no metadata defined for schema companion")
+		return Errors.Internal("no metadata defined for schema companion")
 	}
 
 	for _, md := range sc.Metadata {
@@ -62,7 +62,7 @@ func (sc *SchemaCompanion) validate() error {
 func (sc *SchemaCompanion) MustLoadOntoSchema() {
 	schema := Schemas.Get(sc.Schema)
 	if schema == nil {
-		panic(Errors.internal(fmt.Sprintf("no such schema by id '%s'", sc.Schema)))
+		panic(Errors.Internal(fmt.Sprintf("no such schema by id '%s'", sc.Schema)))
 	}
 	schema.mustLoadCompanion(sc)
 }
@@ -109,7 +109,7 @@ type Metadata struct {
 // validate the metadata
 func (md *Metadata) validate() error {
 	if len(md.Path) == 0 {
-		return Errors.internal("path is required for metadata")
+		return Errors.Internal("path is required for metadata")
 	}
 
 	return nil

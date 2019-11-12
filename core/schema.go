@@ -50,7 +50,7 @@ func (sch *Schema) mustLoadCompanion(sc *SchemaCompanion) {
 	}
 
 	if len(dfs) != len(sc.Metadata) {
-		panic(Errors.internal(fmt.Sprintf(
+		panic(Errors.Internal(fmt.Sprintf(
 			"failed to load schema companion for '%s': metadata size different with attributes count", sch.Id,
 		)))
 	}
@@ -63,7 +63,7 @@ func (sch *Schema) mustLoadCompanion(sc *SchemaCompanion) {
 
 		metadata := sc.Metadata[i]
 		if strings.ToLower(path) != strings.ToLower(metadata.Path) {
-			panic(Errors.internal(fmt.Sprintf(
+			panic(Errors.Internal(fmt.Sprintf(
 				"failed to load schema companion for '%s': metadata path mismatch with attribute path", sch.Id,
 			)))
 		}

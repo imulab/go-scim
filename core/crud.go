@@ -468,7 +468,7 @@ func (c *complexProperty) selfDelete() error {
 	}
 
 	if !c.IsUnassigned() {
-		return Errors.internal(
+		return Errors.Internal(
 			fmt.Sprintf("invalid state: %s should be unassigned after deletion", c.attr.DisplayName()),
 		)
 	}

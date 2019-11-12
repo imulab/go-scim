@@ -2,20 +2,31 @@ package mongo
 
 import (
 	"github.com/imulab/go-scim/core"
+	"go.mongodb.org/mongo-driver/bson"
 	"math"
 	"strconv"
 	"time"
 )
 
-// Entry point to serialize the resource to BSON that can be saved in MongoDB.
-func Serialize(resource *core.Resource) ([]byte, error) {
+// Create an adapter to BSON that implements the bson.Marshaler interface so it can be directly
+// feed to MongoDB driver methods.
+func newBsonAdapter(resource *core.Resource) bson.Marshaler {
+	return &bsonAdapter{resource: resource}
+}
+
+// Adapter of resource to bson.Marshaler
+type bsonAdapter struct {
+	resource 	*core.Resource
+}
+
+func (d *bsonAdapter) MarshalBSON() ([]byte, error) {
 	visitor := &serializer{
 		buf:   make([]byte, 0),
 		stack: make([]*context, 0),
 	}
 	visitor.push(mObject)
 
-	err := resource.Visit(visitor)
+	err := d.resource.Visit(visitor)
 	if err != nil {
 		return nil, err
 	}

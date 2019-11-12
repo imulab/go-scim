@@ -82,8 +82,8 @@ func TestSerialize(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r := test.getResource()
-			b, err := Serialize(r)
+			d := newBsonAdapter(test.getResource())
+			b, err := d.MarshalBSON()
 			assert.Nil(t, err)
 
 			test.assert(t, bson.Raw(b))

@@ -31,7 +31,7 @@ func ErrAppendHint(err error, hint string) error {
 	if se, ok := err.(*ScimError); ok {
 		return se.Hint(hint)
 	} else {
-		return Errors.internal(err.Error()).(*ScimError).Hint(hint)
+		return Errors.Internal(err.Error()).(*ScimError).Hint(hint)
 	}
 }
 
@@ -132,7 +132,7 @@ func (f errorFactory) sensitive(message string) error {
 }
 
 // Server encountered internal error
-func (f errorFactory) internal(message string) error {
+func (f errorFactory) Internal(message string) error {
 	return &ScimError{
 		Status:  500,
 		Type:    "internal",

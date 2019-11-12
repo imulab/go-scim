@@ -70,6 +70,16 @@ func (attr *Attribute) DisplayName() string {
 	return name
 }
 
+// Returns a descriptive name of the attribute's type.
+func (attr *Attribute) DescribeType() string {
+	desc := ""
+	if attr.MultiValued {
+		desc = "multiValued "
+	}
+	desc += attr.Type
+	return desc
+}
+
 // Returns true if this attribute's type is string based, namely string, reference, binary and dateTime
 func (attr *Attribute) IsStringBasedType() bool {
 	return attr.Type == TypeString ||

@@ -5,6 +5,10 @@ type Resource struct {
 	base *complexProperty
 }
 
+func (r *Resource) Get(step *Step) (interface{}, error) {
+	return r.base.Get(step)
+}
+
 func (r *Resource) Replace(step *Step, value interface{}) error {
 	return r.base.Replace(step, value)
 }

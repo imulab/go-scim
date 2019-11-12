@@ -60,7 +60,7 @@ func (rt *ResourceType) DerivedAttributes() []*Attribute {
 func (rt *ResourceType) MustSchema() (schema *Schema) {
 	schema = Schemas.Get(rt.Schema)
 	if schema == nil {
-		panic(Errors.internal(fmt.Sprintf("no such schema by id '%s'", rt.Schema)))
+		panic(Errors.Internal(fmt.Sprintf("no such schema by id '%s'", rt.Schema)))
 	}
 	return
 }
@@ -70,7 +70,7 @@ func (rt *ResourceType) MustSchema() (schema *Schema) {
 func (ext *SchemaExtension) MustSchema() (schema *Schema) {
 	schema = Schemas.Get(ext.Schema)
 	if schema == nil {
-		panic(Errors.internal(fmt.Sprintf("no such schema by id '%s'", ext.Schema)))
+		panic(Errors.Internal(fmt.Sprintf("no such schema by id '%s'", ext.Schema)))
 	}
 	return
 }
