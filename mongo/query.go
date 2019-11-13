@@ -18,20 +18,20 @@ import (
 // By transforming the query to bson.M (the map based intermediate format), we gain additional readability which
 // is less achievable when directly appending BSON bytes to a buffer.
 
-// Compile and transform a SCIM filter string to a bson.D or bson.M that contains the original
+// Compile and transform a SCIM filter string to a bsonx.Val that contains the original
 // filter in MongoDB compatible format.
-func transformFilter(scimFilter string, resourceType *core.ResourceType) (interface{}, error) {
+func TransformFilter(scimFilter string, resourceType *core.ResourceType) (bsonx.Val, error) {
 	root, err := query.CompileFilter(scimFilter)
 	if err != nil {
-		return nil, err
+		return bsonx.Null(), err
 	}
-	return transformCompiledFilter(root, resourceType)
+	return TransformCompiledFilter(root, resourceType)
 }
 
-// Compile and transform a compiled SCIM filter to a bson.D or bson.M that contains the original
+// Compile and transform a compiled SCIM filter to bsonx.Val that contains the original
 // filter in MongoDB compatible format. This slight optimization allow the caller to pre-compile
 // frequently used queries and save the trip to the filter parser and compiler.
-func transformCompiledFilter(root *core.Step, resourceType *core.ResourceType) (interface{}, error) {
+func TransformCompiledFilter(root *core.Step, resourceType *core.ResourceType) (bsonx.Val, error) {
 	return (&transformer{resourceType: resourceType}).transform(root)
 }
 
@@ -39,9 +39,7 @@ type transformer struct {
 	resourceType *core.ResourceType
 }
 
-// Transform the filter which is represented by the root to bson.D or bson.M. Both bson.D and bson.M is
-// compatible with the MongoDB driver. General rule of thumb is that: when order matters, use bson.D; when
-// other does not matter or there's only a single element, use bson.M for clarity.
+// Transform the filter which is represented by the root to bsonx.Val.
 func (t *transformer) transform(root *core.Step) (bsonx.Val, error) {
 	var (
 		left, right bsonx.Val
@@ -298,7 +296,7 @@ func (t transformer) parseValue(raw string, attr *core.Attribute) (bsonx.Val, er
 		}
 		return bsonx.Boolean(b), nil
 	case core.TypeInteger:
-		i, err := strconv.ParseInt(raw, 64, 10)
+		i, err := strconv.ParseInt(raw, 10, 64)
 		if err != nil {
 			return bsonx.Null(), core.Errors.InvalidFilter(fmt.Sprintf("invalid value: expects '%s' to be an integer", raw))
 		}
