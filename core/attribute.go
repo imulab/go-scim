@@ -88,6 +88,48 @@ func (attr *Attribute) IsStringBasedType() bool {
 		attr.Type == TypeDateTime
 }
 
+// Returns nil if this attribute is compatible with the operation, otherwise a descriptive error
+func (attr *Attribute) CheckOpCompatibility(op string) error {
+	switch op {
+	case And, Or, Not:
+		return nil
+	case Eq:
+		if attr.Type == TypeComplex {
+			return fmt.Errorf("%s cannot be applied to complex properties", op)
+		}
+		return nil
+	case Ne:
+		if attr.MultiValued || attr.Type == TypeComplex {
+			return fmt.Errorf("%s cannot be applied to multiValued or complex properties", op)
+		}
+		return nil
+	case Sw, Ew, Co:
+		if attr.MultiValued {
+			return fmt.Errorf("%s cannot be applied to multiValued properties", op)
+		}
+		switch attr.Type {
+		case TypeString, TypeReference:
+			return nil
+		default:
+			return fmt.Errorf("%s can only be applied to string or reference properties", op)
+		}
+	case Gt, Ge, Lt, Le:
+		if attr.MultiValued {
+			return fmt.Errorf("%s cannot be applied to multiValued properties", op)
+		}
+		switch attr.Type {
+		case TypeInteger, TypeDecimal, TypeDateTime, TypeString:
+			return nil
+		default:
+			return fmt.Errorf("%s can only be applied to integer, decimal, dateTime and string properties", op)
+		}
+	case Pr:
+		return nil
+	default:
+		panic("invalid operator")
+	}
+}
+
 // Return an attribute same to this attribute, but with multiValued set to false.
 // If this attribute is not multiValued, this is returned.
 func (attr *Attribute) ToSingleValued() *Attribute {

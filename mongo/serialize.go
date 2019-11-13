@@ -248,22 +248,3 @@ func (s *serializer) pop() {
 func (s *serializer) current() *context {
 	return s.stack[len(s.stack)-1]
 }
-
-type context struct {
-	// mode (or context) of the current context
-	mode mode
-	// index keeps track of the number of element visited in
-	// a container (i.e. complex, multiValued). It could be used
-	// as a key for array elements.
-	index int
-	// keeps track of the byte index where the current container started
-	start int
-}
-
-type mode int
-
-const (
-	_ mode = iota
-	mObject
-	mArray
-)
