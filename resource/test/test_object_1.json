@@ -1,0 +1,7 @@
+{
+  "name": "testObject1",
+  "age": 18,
+  "score": 95.5,
+  "status": true,
+  "tags": ["testObject", "one"]
+}

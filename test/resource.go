@@ -2,6 +2,7 @@ package test
 
 import (
 	"github.com/imulab/go-scim/core"
+	"github.com/imulab/go-scim/json"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"testing"
@@ -48,4 +49,37 @@ func MustParseResourceType(t *testing.T, filePath string) *core.ResourceType {
 	require.Nil(t, err)
 
 	return resourceType
+}
+
+// Return a resource parser that makes it easy to parse a resource from JSON.
+func NewResourceParser(t *testing.T, schemaPath string, companionPath string, resourceTypePath string) *resourceParser {
+	p := &resourceParser{
+		schemaPath:       schemaPath,
+		companionPath:    companionPath,
+		resourceTypePath: resourceTypePath,
+	}
+	MustParseSchema(t, p.schemaPath, true)
+	MustParseSchemaCompanion(t, p.companionPath, true)
+	p.resourceType = MustParseResourceType(t, p.resourceTypePath)
+	return p
+}
+
+type resourceParser struct {
+	schemaPath       string
+	companionPath    string
+	resourceTypePath string
+	resourceType     *core.ResourceType
+}
+
+func (r resourceParser) MustLoadResource(t *testing.T, resourcePath string) *core.Resource {
+	resource := core.Resources.New(r.resourceType)
+
+	raw, err := ioutil.ReadFile(resourcePath)
+	require.Nil(t, err)
+
+	err = json.Deserialize(raw, resource)
+	require.Nil(t, err)
+
+	return resource
+
 }

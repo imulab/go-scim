@@ -43,8 +43,7 @@ type serializer struct {
 }
 
 func (s *serializer) ShouldVisit(property core.Property) bool {
-	// we want to serialize the complete model
-	return true
+	return !property.IsUnassigned()
 }
 
 func (s *serializer) Visit(property core.Property) error {
