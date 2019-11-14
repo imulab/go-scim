@@ -64,13 +64,12 @@ func (p *persistenceProvider) totalAll(ctx context.Context) (int64, error) {
 	)
 
 	wg.Add(len(p.collections))
-	defer close(resChan)
 
 	for i := range p.collections {
 		go func(ctx context.Context, index int, resChan chan result) {
 			defer wg.Done()
 
-			n, err := p.totalSingle(ctx, i)
+			n, err := p.totalSingle(ctx, index)
 			select {
 			case resChan <- result{n, err}:
 				return
@@ -81,6 +80,7 @@ func (p *persistenceProvider) totalAll(ctx context.Context) (int64, error) {
 	}
 
 	wg.Wait()
+	close(resChan)
 
 	for res := range resChan {
 		select {
