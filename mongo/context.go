@@ -1,7 +1,7 @@
 package mongo
 
-// Context preserves vital information within the traversal stack frame during BSON serialization
-type context struct {
+// Frame preserves vital information within the traversal stack frame during BSON serialization
+type frame struct {
 	// mode (or context) of the current context
 	mode mode
 	// index keeps track of the number of element visited in

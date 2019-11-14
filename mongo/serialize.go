@@ -22,7 +22,7 @@ type bsonAdapter struct {
 func (d *bsonAdapter) MarshalBSON() ([]byte, error) {
 	visitor := &serializer{
 		buf:   make([]byte, 0),
-		stack: make([]*context, 0),
+		stack: make([]*frame, 0),
 	}
 	visitor.push(mObject)
 
@@ -39,7 +39,7 @@ type serializer struct {
 	buf []byte
 	// Stack to keep track of traversal context.
 	// Context is pushed and popped only for container properties.
-	stack []*context
+	stack []*frame
 }
 
 func (s *serializer) ShouldVisit(property core.Property) bool {
@@ -207,7 +207,7 @@ func (s *serializer) addName(kind byte, attr *core.Attribute) {
 	s.addBytes(0)
 }
 
-// Reserve 4 bytes at current position to write the length of the data in the current context later.
+// Reserve 4 bytes at current position to write the length of the data in the current frame later.
 func (s *serializer) reserveInt32() (pos int) {
 	pos = len(s.buf)
 	s.addBytes(0, 0, 0, 0)
@@ -234,7 +234,7 @@ func (s *serializer) setInt32(pos int, v int32) {
 }
 
 func (s *serializer) push(m mode) {
-	s.stack = append(s.stack, &context{
+	s.stack = append(s.stack, &frame{
 		mode:  m,
 		index: 0,
 		start: 0,
@@ -245,6 +245,6 @@ func (s *serializer) pop() {
 	s.stack = s.stack[:len(s.stack)-1]
 }
 
-func (s *serializer) current() *context {
+func (s *serializer) current() *frame {
 	return s.stack[len(s.stack)-1]
 }
