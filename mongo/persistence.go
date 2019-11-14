@@ -10,9 +10,19 @@ import (
 )
 
 type persistenceProvider struct {
-	resourceType	*core.ResourceType
-	collections		[]*mongo.Collection
-	maxTimePercent	int
+	// List of resource type that this provider manages. The size of the list must match
+	// that of collections.
+	resourceTypes []*core.ResourceType
+	// MongoDB collection corresponding to the id of the resource type that it manages.
+	// The size of this map must match that of resourceTypes.
+	collections    map[string]*mongo.Collection
+	// An integer between 0 and 100 that represents the percentage of the context deadline
+	// that the operations in this provider should finish in. When setting to 100, we are
+	// using the full deadline specified by the context; when setting to a number less than
+	// 100, we are using a portion of the context deadline as our own deadline, effectively
+	// saving some time for other operations that might have been carried out under the same
+	// context. If the context does not specify a deadline, a default of 30 seconds is used.
+	maxTimePercent int
 }
 
 func (p *persistenceProvider) IsFilterSupported() bool {
@@ -27,20 +37,21 @@ func (p *persistenceProvider) IsSortSupported() bool {
 	return true
 }
 
-func (p *persistenceProvider) ResourceType() *core.ResourceType {
-	return p.resourceType
+func (p *persistenceProvider) IsResourceTypeSupported(resourceType *core.ResourceType) bool {
+	_, ok := p.collections[resourceType.Id]
+	return ok
 }
 
 func (p *persistenceProvider) Total(ctx context.Context) (int64, error) {
 	if len(p.collections) == 1 {
-		return p.totalSingle(ctx, 0)
+		return p.totalSingle(ctx, p.resourceTypes[0].Id)
 	}
 	return p.totalAll(ctx)
 }
 
-func (p *persistenceProvider) totalSingle(ctx context.Context, collectionIndex int) (int64, error) {
+func (p *persistenceProvider) totalSingle(ctx context.Context, resourceTypeId string) (int64, error) {
 	maxTime := p.getMaxTime(ctx)
-	n, err := p.collections[collectionIndex].EstimatedDocumentCount(ctx, &options.EstimatedDocumentCountOptions{
+	n, err := p.collections[resourceTypeId].EstimatedDocumentCount(ctx, &options.EstimatedDocumentCountOptions{
 		MaxTime: &maxTime,
 	})
 	if err != nil {
@@ -52,31 +63,31 @@ func (p *persistenceProvider) totalSingle(ctx context.Context, collectionIndex i
 func (p *persistenceProvider) totalAll(ctx context.Context) (int64, error) {
 	type (
 		result struct {
-			n int64
+			n   int64
 			err error
 		}
 	)
 
 	var (
-		total int64
-		wg sync.WaitGroup
+		total   int64
+		wg      sync.WaitGroup
 		resChan = make(chan result, len(p.collections))
 	)
 
 	wg.Add(len(p.collections))
 
-	for i := range p.collections {
-		go func(ctx context.Context, index int, resChan chan result) {
+	for k := range p.collections {
+		go func(ctx context.Context, resourceTypeId string, resChan chan result) {
 			defer wg.Done()
 
-			n, err := p.totalSingle(ctx, index)
+			n, err := p.totalSingle(ctx, resourceTypeId)
 			select {
 			case resChan <- result{n, err}:
 				return
 			default:
 				return
 			}
-		}(ctx, i, resChan)
+		}(ctx, k, resChan)
 	}
 
 	wg.Wait()
@@ -103,6 +114,9 @@ func (p *persistenceProvider) Count(ctx context.Context, scimFilter string) (int
 }
 
 func (p *persistenceProvider) InsertOne(ctx context.Context, resource *core.Resource) error {
+	if len(p.collections) > 1 {
+		panic("multi resource type")
+	}
 	panic("implement me")
 }
 

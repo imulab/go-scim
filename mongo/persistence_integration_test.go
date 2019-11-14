@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"github.com/imulab/go-scim/core"
 	"github.com/imulab/go-scim/test"
 	"github.com/ory/dockertest"
 	"github.com/stretchr/testify/assert"
@@ -124,7 +125,10 @@ func (s *PersistenceTestSuite) TestTotal() {
 				}
 
 				return &persistenceProvider{
-					collections:    []*mongo.Collection{collection},
+					resourceTypes: []*core.ResourceType{p.GetResourceType()},
+					collections: map[string]*mongo.Collection{
+						p.GetResourceType().Id: collection,
+					},
 					maxTimePercent: 80,
 				}
 			},
@@ -136,38 +140,56 @@ func (s *PersistenceTestSuite) TestTotal() {
 		{
 			name: "total from multiple collection",
 			setup: func(t *testing.T, client *mongo.Client) *persistenceProvider {
+				// prepare two collections
 				c1 := client.Database(mongoDatabaseName, options.Database()).
 					Collection(fmt.Sprintf("%s/%s", s.T().Name(), "2"), options.Collection())
 				c2 := client.Database(mongoDatabaseName, options.Database()).
 					Collection(fmt.Sprintf("%s/%s", s.T().Name(), "3"), options.Collection())
-				c3 := client.Database(mongoDatabaseName, options.Database()).
-					Collection(fmt.Sprintf("%s/%s", s.T().Name(), "4"), options.Collection())
 
-				p := test.NewResourceParser(t,
+				// prepare two resource types
+				p1 := test.NewResourceParser(t,
 					"../resource/schema/test_object_schema.json",
 					"../resource/companion/test_object_schema_companion.json",
 					"../resource/resource_type/test_object_resource_type.json")
+				p2 := test.NewResourceParser(t,
+					"../resource/schema/user_schema.json",
+					"../resource/companion/user_schema_companion.json",
+					"../resource/resource_type/user_resource_type.json")
+
+				// insert 2 resources into the first collection
 				for _, path := range []string{
 					"../resource/test/test_object_1.json",
 					"../resource/test/test_object_2.json",
 				} {
-					resource := p.MustLoadResource(t, path)
+					resource := p1.MustLoadResource(t, path)
 					_, err = c1.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
 					s.Require().Nil(err)
+				}
+
+				// insert 1 resource into the second collection
+				for _, path := range []string{
+					"../resource/test/test_user_1.json",
+				}{
+					resource := p2.MustLoadResource(t, path)
 					_, err = c2.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
-					s.Require().Nil(err)
-					_, err = c3.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
 					s.Require().Nil(err)
 				}
 
 				return &persistenceProvider{
-					collections:    []*mongo.Collection{c1, c2, c3},
+					resourceTypes: []*core.ResourceType{
+						p1.GetResourceType(),
+						p2.GetResourceType(),
+					},
+					collections: map[string]*mongo.Collection{
+						p1.GetResourceType().Id: c1,
+						p2.GetResourceType().Id: c2,
+					},
 					maxTimePercent: 80,
 				}
 			},
 			assert: func(t *testing.T, n int64, err error) {
 				assert.Nil(t, err)
-				assert.Equal(t, int64(6), n)
+				assert.Equal(t, int64(3), n)
 			},
 		},
 	}

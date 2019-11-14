@@ -81,5 +81,8 @@ func (r resourceParser) MustLoadResource(t *testing.T, resourcePath string) *cor
 	require.Nil(t, err)
 
 	return resource
+}
 
+func (r resourceParser) GetResourceType() *core.ResourceType {
+	return r.resourceType
 }

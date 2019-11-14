@@ -27,10 +27,8 @@ type PersistenceProvider interface {
 	// incapable of sorting, the sort will be carried out in process.
 	IsSortSupported() bool
 
-	// Returns the resource type that this provider serves. The resource type of the persistence provider must match,
-	// or partially match, those the endpoint serves. For instance, a PersistenceProvider serving the User resource
-	// should be loaded onto an Endpoint serving the User resource, or an Endpoint serving at the root of all resources.
-	ResourceType() *core.ResourceType
+	// Returns true if this provider supports the resource type.
+	IsResourceTypeSupported(resourceType *core.ResourceType) bool
 
 	// Returns the number of total resources managed by this provider. Caller may use this to estimate the amount
 	// of workload and decide whether to proceed with the request. Caution that this result does not necessarily reflect
