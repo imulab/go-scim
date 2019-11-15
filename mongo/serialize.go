@@ -24,7 +24,6 @@ func (d *bsonAdapter) MarshalBSON() ([]byte, error) {
 		buf:   make([]byte, 0),
 		stack: make([]*frame, 0),
 	}
-	visitor.push(mObject)
 
 	err := d.resource.Visit(visitor)
 	if err != nil {
@@ -43,7 +42,14 @@ type serializer struct {
 }
 
 func (s *serializer) ShouldVisit(property core.Property) bool {
-	return !property.IsUnassigned()
+	// In case of a top level unassigned complex property, which pushes the state mObject onto the frame,
+	// we cannot prevent the complex property itself from calling Visit/BeginComplex/EndComplex,
+	// because we still want it to be serialized as NULL. However, we wouldn't want to visit its sub properties,
+	// because we already know that are all unassigned.
+	if s.current().mode == mObject {
+		return !property.IsUnassigned()
+	}
+	return true
 }
 
 func (s *serializer) Visit(property core.Property) error {
@@ -77,23 +83,29 @@ func (s *serializer) Visit(property core.Property) error {
 }
 
 func (s *serializer) serializeComplexProperty(property core.Property) {
+	// We only serialize the name and the kind here, because sub properties, if any, will be visited later.
 	if property.IsUnassigned() {
 		s.addName(0x0A, property.Attribute())
 		return
 	}
 
 	s.addName(0x03, property.Attribute())
-	// do not add sub property values here because they will be visited later.
 }
 
 func (s *serializer) serializeMultiProperty(property core.Property) {
-	if property.IsUnassigned() {
-		s.addName(0x0A, property.Attribute())
-		return
-	}
-
+	// First off, we only serialize the name and the kind here, because elements, if any, will
+	// be visited later.
+	//
+	// Secondly, we always serialize the multiValued property as an BSON array even if it's empty.
+	// This is consistent with the concept of "unassigned" in the specification: an empty
+	// multiValued property is considered to be unassigned while all other nulls are considered
+	// unassigned.
+	//
+	// By doing this, we also avoid one other problem: if we serialize an unassigned multiValued
+	// property as NULL, we will create a problem where the visitor calls BeginMulti and EndMulti
+	// while attempting to traverse an empty array. BeginMulti would have to reserve an int32
+	// element length marker, which is not consistent to the NULL type.
 	s.addName(0x04, property.Attribute())
-	// do not add element values here because they will be visited later.
 }
 
 func (s *serializer) serializeStringProperty(property core.Property) {
@@ -161,25 +173,37 @@ func (s *serializer) addInt64(v int64) {
 		byte(u>>32), byte(u>>40), byte(u>>48), byte(u>>56))
 }
 
-func (s *serializer) BeginComplex() {
-	s.push(mObject)
-	s.current().start = s.reserveInt32()
+func (s *serializer) BeginComplex(complex core.Property) {
+	if len(s.stack) == 0 {
+		s.push(mTop)
+	} else {
+		s.push(mObject)
+	}
+
+	if !complex.IsUnassigned() {
+		s.current().start = s.reserveInt32()
+	}
 }
 
-func (s *serializer) EndComplex() {
-	s.addBytes(0)
-	start := s.current().start
-	s.setInt32(start, int32(len(s.buf)-start))
+func (s *serializer) EndComplex(complex core.Property) {
+	if !complex.IsUnassigned() {
+		s.addBytes(0)
+		start := s.current().start
+		s.setInt32(start, int32(len(s.buf)-start))
+	}
+
 	s.pop()
-	s.current().index++
+	if len(s.stack) > 0 {
+		s.current().index++
+	}
 }
 
-func (s *serializer) BeginMulti() {
+func (s *serializer) BeginMulti(multi core.Property) {
 	s.push(mArray)
 	s.current().start = s.reserveInt32()
 }
 
-func (s *serializer) EndMulti() {
+func (s *serializer) EndMulti(multi core.Property) {
 	s.addBytes(0)
 	start := s.current().start
 	s.setInt32(start, int32(len(s.buf)-start))
@@ -193,7 +217,7 @@ func (s *serializer) addName(kind byte, attr *core.Attribute) {
 		switch s.current().mode {
 		case mArray:
 			name = strconv.Itoa(s.current().index)
-		case mObject:
+		case mObject, mTop:
 			name = attr.Name
 			if attr.Metadata != nil && len(attr.Metadata.DbAlias) > 0 {
 				name = attr.Metadata.DbAlias

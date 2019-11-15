@@ -7,14 +7,22 @@ type Visitor interface {
 	// Visit the property, only when ShouldVisit returns true. If this method returns non-nil error,
 	// the rest of the traversal will be aborted.
 	Visit(property Property) error
-	// Invoked when the sub attributes of a complex attribute is about to be visited.
-	BeginComplex()
-	// Invoked when all sub attributes of a complex attribute has been visited.
-	EndComplex()
-	// Invoked when the elements of a multiValued attribute is about to be visited.
-	BeginMulti()
-	// Invoked when all elements of a multiValued attribute has been visited.
-	EndMulti()
+	// Invoked when the sub attributes of a complex attribute is about to be visited. The containing
+	// complex property, whose sub properties will be visited (or not visited, depending on the result of
+	// ShouldVisit), is supplied as an argument to provide context information.
+	BeginComplex(complex Property)
+	// Invoked when all sub attributes of a complex attribute has been visited. The containing complex
+	// property, whose sub properties have been visited, is supplied as an argument to provide context
+	// information. This is the same property supplied to BeginComplex.
+	EndComplex(complex Property)
+	// Invoked when the elements of a multiValued attribute is about to be visited. The containing multiValued
+	// property, whose elements will be visited (or not visited, depending on the result of ShouldVisit), is
+	// supplied as an argument to provide context information.
+	BeginMulti(multi Property)
+	// Invoked when all elements of a multiValued attribute has been visited. The containing multiValued property,
+	// whose elements have been visited, is supplied as an argument to provide context information. This is the
+	// same property supplied to BeginMulti.
+	EndMulti(multi Property)
 }
 
 // Universal interface for all properties to implement to reverse the control of the visitor.
@@ -58,7 +66,7 @@ func (c *complexProperty) VisitedBy(visitor Visitor) error {
 		return err
 	}
 
-	visitor.BeginComplex()
+	visitor.BeginComplex(c)
 	for _, subProp := range c.subProps {
 		if !visitor.ShouldVisit(subProp) {
 			continue
@@ -69,7 +77,7 @@ func (c *complexProperty) VisitedBy(visitor Visitor) error {
 			return err
 		}
 	}
-	visitor.EndComplex()
+	visitor.EndComplex(c)
 
 	return nil
 }
@@ -80,7 +88,7 @@ func (m *multiValuedProperty) VisitedBy(visitor Visitor) error {
 		return err
 	}
 
-	visitor.BeginMulti()
+	visitor.BeginMulti(m)
 	for _, elemProp := range m.props {
 		if !visitor.ShouldVisit(elemProp) {
 			continue
@@ -91,7 +99,7 @@ func (m *multiValuedProperty) VisitedBy(visitor Visitor) error {
 			return err
 		}
 	}
-	visitor.EndMulti()
+	visitor.EndMulti(m)
 
 	return nil
 }

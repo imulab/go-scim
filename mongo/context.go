@@ -18,4 +18,9 @@ const (
 	_ mode = iota
 	mObject
 	mArray
+	// mTop denotes the top level object. It is distinguish from mObject in that
+	// top level object is still fully serialized as object even when all its sub
+	// properties are unassigned, whereas mObject is serialized as NULL when it is
+	// considered unassigned (all sub properties are unassigned).
+	mTop
 )

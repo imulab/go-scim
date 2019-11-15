@@ -5,6 +5,10 @@ type Resource struct {
 	base *complexProperty
 }
 
+func (r *Resource) GetResourceType() *ResourceType {
+	return r.rt
+}
+
 func (r *Resource) Get(step *Step) (interface{}, error) {
 	return r.base.Get(step)
 }
@@ -16,7 +20,7 @@ func (r *Resource) Replace(step *Step, value interface{}) error {
 // Visit the properties contained in this resource in a DFS manner while considering the opinions
 // of the provided visitor.
 func (r *Resource) Visit(visitor Visitor) error {
-	visitor.BeginComplex()
+	visitor.BeginComplex(r.base)
 	for _, subProp := range r.base.subProps {
 		if !visitor.ShouldVisit(subProp) {
 			continue
@@ -27,7 +31,7 @@ func (r *Resource) Visit(visitor Visitor) error {
 			return err
 		}
 	}
-	visitor.EndComplex()
+	visitor.EndComplex(r.base)
 
 	return nil
 }

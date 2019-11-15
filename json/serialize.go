@@ -193,26 +193,26 @@ func (v *serializer) encodeFloat(property core.Property) error {
 	return nil
 }
 
-func (v *serializer) BeginComplex() {
+func (v *serializer) BeginComplex(_ core.Property) {
 	v.WriteByte('{')
 	v.pushContext(contextObject)
 	v.pushIndex()
 }
 
-func (v *serializer) EndComplex() {
+func (v *serializer) EndComplex(_ core.Property) {
 	v.WriteByte('}')
 	v.popContext()
 	v.popIndex()
 	v.incrementIndex()
 }
 
-func (v *serializer) BeginMulti() {
+func (v *serializer) BeginMulti(_ core.Property) {
 	v.WriteByte('[')
 	v.pushContext(contextArray)
 	v.pushIndex()
 }
 
-func (v *serializer) EndMulti() {
+func (v *serializer) EndMulti(_ core.Property) {
 	v.WriteByte(']')
 	v.popIndex()
 	v.popContext()

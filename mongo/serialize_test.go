@@ -2,38 +2,24 @@ package mongo
 
 import (
 	"github.com/imulab/go-scim/core"
+	"github.com/imulab/go-scim/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
-	"io/ioutil"
 	"testing"
 )
 
 func TestSerialize(t *testing.T) {
-	// prepare: schema
-	schemaRaw, err := ioutil.ReadFile("../resource/schema/test_object_schema.json")
-	require.Nil(t, err)
-	schema, err := core.ParseSchema(schemaRaw)
-	require.Nil(t, err)
-	core.Schemas.Add(schema)
-
-	// prepare: schema companion
-	schemaCompanionRaw, err := ioutil.ReadFile("../resource/companion/test_object_schema_companion.json")
-	require.Nil(t, err)
-	schemaCompanion, err := core.ParseSchemaCompanion(schemaCompanionRaw)
-	require.Nil(t, err)
-	schemaCompanion.MustLoadOntoSchema()
-
-	// prepare: resourceType
-	resourceTypeRaw, err := ioutil.ReadFile("../resource/resource_type/test_object_resource_type.json")
-	require.Nil(t, err)
-	resourceType, err := core.ParseResourceType(resourceTypeRaw)
-	require.Nil(t, err)
+	parser := test.NewResourceParser(t,
+		"../resource/schema/test_object_schema.json",
+		"../resource/companion/test_object_schema_companion.json",
+		"../resource/resource_type/test_object_resource_type.json",
+	)
+	resourceType := parser.GetResourceType()
 
 	tests := []struct {
 		name        string
 		getResource func() *core.Resource
-		assert      func(t *testing.T, raw bson.Raw)
 	}{
 		{
 			name: "default",
@@ -61,32 +47,54 @@ func TestSerialize(t *testing.T) {
 				require.Nil(t, err)
 				return r
 			},
-			assert: func(t *testing.T, raw bson.Raw) {
-				for _, key := range []string{
-					"name",
-					"age",
-					"score",
-					"status",
-					"certificate",
-					"secret",
-					"profile",
-					"tags",
-					"courses",
-				} {
-					_, err := raw.LookupErr(key)
-					assert.Nil(t, err)
-				}
+		},
+		{
+			name: "empty multiValued",
+			getResource: func() *core.Resource {
+				r := core.Resources.New(resourceType)
+				err := r.Replace(nil, map[string]interface{}{
+					"name":        "TestUser123",
+					"age":         int64(18),
+					"score":       95.5,
+					"status":      true,
+					"certificate": "aGVsbG8gd29ybGQK",
+					"secret":      "s3cret",
+					"profile":     "https://test.org/results/TestUser123",
+				})
+				require.Nil(t, err)
+				return r
+			},
+		},
+		{
+			name: "test object 1",
+			getResource: func() *core.Resource {
+				return parser.MustLoadResource(t, "../resource/test/test_object_1.json")
+			},
+		},
+		{
+			name: "test object 2",
+			getResource: func() *core.Resource {
+				return parser.MustLoadResource(t, "../resource/test/test_object_2.json")
+			},
+		},
+		{
+			name: "test user 1",
+			getResource: func() *core.Resource {
+				return test.NewResourceParser(t,
+					"../resource/schema/user_schema.json",
+					"../resource/companion/user_schema_companion.json",
+					"../resource/resource_type/user_resource_type.json",
+				).MustLoadResource(t, "../resource/test/test_user_1.json")
 			},
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			d := newBsonAdapter(test.getResource())
+	for _, each := range tests {
+		t.Run(each.name, func(t *testing.T) {
+			d := newBsonAdapter(each.getResource())
 			b, err := d.MarshalBSON()
 			assert.Nil(t, err)
-
-			test.assert(t, bson.Raw(b))
+			assert.Nil(t, bson.Raw(b).Validate())
 		})
 	}
 }

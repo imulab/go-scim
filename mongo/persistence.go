@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 	"github.com/imulab/go-scim/core"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -114,10 +115,18 @@ func (p *persistenceProvider) Count(ctx context.Context, scimFilter string) (int
 }
 
 func (p *persistenceProvider) InsertOne(ctx context.Context, resource *core.Resource) error {
-	if len(p.collections) > 1 {
-		panic("multi resource type")
+	resourceType := resource.GetResourceType()
+	if p.IsResourceTypeSupported(resourceType) {
+		return core.Errors.Internal(fmt.Sprintf("resource type '%s' is not supported by this persistence provider", resourceType.Id))
 	}
-	panic("implement me")
+
+	collection := p.collections[resourceType.Id]
+	_, err := collection.InsertOne(ctx, newBsonAdapter(resource), options.InsertOne())
+	if err != nil {
+		return core.Errors.Internal(fmt.Sprintf("failed to create resource: %s", err.Error()))
+	}
+
+	return nil
 }
 
 func (p *persistenceProvider) GetById(ctx context.Context, id string) (*core.Resource, error) {
