@@ -41,6 +41,7 @@ func TestSerialize(t *testing.T) {
 			getResource: func() *core.Resource {
 				r := core.Resources.New(resourceType)
 				err := r.Replace(nil, map[string]interface{}{
+					"schemas": []interface{}{"urn:imulab:scim:TestObject"},
 					"id": "f61820aa-1b37-41bb-a3d3-9ca2de83cb45",
 					"name": "TestUser123",
 					"age": int64(18),
@@ -67,6 +68,8 @@ func TestSerialize(t *testing.T) {
 				assert.Nil(t, err)
 				expects := `
 {
+   "schemas": ["urn:imulab:scim:TestObject"],
+   "id": "f61820aa-1b37-41bb-a3d3-9ca2de83cb45",
    "age":18,
    "score":95.5,
    "status":true,
@@ -95,6 +98,7 @@ func TestSerialize(t *testing.T) {
 			getResource: func() *core.Resource {
 				r := core.Resources.New(resourceType)
 				err := r.Replace(nil, map[string]interface{}{
+					"schemas": []interface{}{"urn:imulab:scim:TestObject"},
 					"id": "f61820aa-1b37-41bb-a3d3-9ca2de83cb45",
 					"name": "TestUser123",
 					"age": int64(18),
@@ -123,6 +127,8 @@ func TestSerialize(t *testing.T) {
 				assert.Nil(t, err)
 				expects := `
 {
+   "schemas": ["urn:imulab:scim:TestObject"],
+   "id": "f61820aa-1b37-41bb-a3d3-9ca2de83cb45",
    "score":95.5,
    "status":true,
    "profile":"https://test.org/results/TestUser123",

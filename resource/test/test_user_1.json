@@ -1,3 +1,5 @@
 {
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+  "id": "4656a6b7-38e8-451c-8ac5-f7fd7853cb02",
   "userName": "foobar"
 }

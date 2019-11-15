@@ -38,6 +38,8 @@ func TestDeserialize(t *testing.T) {
 			name: "default",
 			json: `
 {
+	"schemas": ["urn:imulab:scim:TestObject"],
+	"id": "5EE4A343-B8F8-4403-B87F-F44DB7133480",
 	"name" : "foobar",
 	"age": 18,
 	"score": 95.5,
@@ -61,7 +63,7 @@ func TestDeserialize(t *testing.T) {
 		},
 		{
 			name: "compact",
-			json: `{"name":"foobar","age":18,"score":95.5,"status":true,"tags":["foo","bar"],"courses":[{"name":"101","core":true},{"name":"102"}]}`,
+			json: `{"schemas":["urn:imulab:scim:TestObject"],"id":"5EE4A343-B8F8-4403-B87F-F44DB7133480","name":"foobar","age":18,"score":95.5,"status":true,"tags":["foo","bar"],"courses":[{"name":"101","core":true},{"name":"102"}]}`,
 			assert: func(t *testing.T, original, actual string, err error) {
 				assert.Nil(t, err)
 				assert.JSONEq(t, original, actual)
@@ -69,7 +71,7 @@ func TestDeserialize(t *testing.T) {
 		},
 		{
 			name: "empty",
-			json: `{}`,
+			json: `{"schemas":["urn:imulab:scim:TestObject"],"id":"5EE4A343-B8F8-4403-B87F-F44DB7133480"}`,
 			assert: func(t *testing.T, original, actual string, err error) {
 				assert.Nil(t, err)
 				assert.JSONEq(t, original, actual)
