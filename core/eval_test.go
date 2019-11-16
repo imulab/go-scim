@@ -7,24 +7,40 @@ import (
 
 func TestEvaluate(t *testing.T) {
 	tests := []struct {
-		name   string
-		prop   Evaluation
-		root   *Step
-		expect func(t *testing.T, r bool, err error)
+		name    string
+		getProp func() Evaluation
+		root    *Step
+		expect  func(t *testing.T, r bool, err error)
 	}{
 		{
 			name: "eq predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "userName", Type: TypeString},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "userName",
+							Path: "userName",
+						},
 					},
-				},
-				map[string]interface{}{
-					"userName": "foo",
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "userName",
+								Name: "userName",
+								Type: TypeString,
+							},
+						},
+					},
+					map[string]interface{}{
+						"userName": "foo",
+					},
+				)
+			},
 			root: &Step{
 				Token: Eq,
 				Typ:   stepRelationalOperator,
@@ -44,17 +60,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "ne predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "userName", Type: TypeString},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "userName",
+							Path: "userName",
+						},
 					},
-				},
-				map[string]interface{}{
-					"userName": "foo",
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "userName",
+								Name: "userName",
+								Type: TypeString,
+							},
+						},
+					},
+					map[string]interface{}{
+						"userName": "foo",
+					},
+				)
+			},
 			root: &Step{
 				Token: Ne,
 				Typ:   stepRelationalOperator,
@@ -74,17 +106,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "gt predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "age", Type: TypeInteger},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "age",
+							Path: "age",
+						},
 					},
-				},
-				map[string]interface{}{
-					"age": int64(10),
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "age",
+								Name: "age",
+								Type: TypeInteger,
+							},
+						},
+					},
+					map[string]interface{}{
+						"age": int64(10),
+					},
+				)
+			},
 			root: &Step{
 				Token: Gt,
 				Typ:   stepRelationalOperator,
@@ -104,17 +152,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "lt predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "created", Type: TypeDateTime},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "created",
+							Path: "created",
+						},
 					},
-				},
-				map[string]interface{}{
-					"created": "2019-10-10T10:10:10",
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "created",
+								Name: "created",
+								Type: TypeDateTime,
+							},
+						},
+					},
+					map[string]interface{}{
+						"created": "2019-10-10T10:10:10",
+					},
+				)
+			},
 			root: &Step{
 				Token: Lt,
 				Typ:   stepRelationalOperator,
@@ -134,17 +198,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "ge predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "age", Type: TypeInteger},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "age",
+							Path: "age",
+						},
 					},
-				},
-				map[string]interface{}{
-					"age": int64(10),
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "age",
+								Name: "age",
+								Type: TypeInteger,
+							},
+						},
+					},
+					map[string]interface{}{
+						"age": int64(10),
+					},
+				)
+			},
 			root: &Step{
 				Token: Ge,
 				Typ:   stepRelationalOperator,
@@ -164,17 +244,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "le predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "created", Type: TypeDateTime},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "created",
+							Path: "created",
+						},
 					},
-				},
-				map[string]interface{}{
-					"created": "2019-10-10T10:10:10",
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "created",
+								Name: "created",
+								Type: TypeDateTime,
+							},
+						},
+					},
+					map[string]interface{}{
+						"created": "2019-10-10T10:10:10",
+					},
+				)
+			},
 			root: &Step{
 				Token: Le,
 				Typ:   stepRelationalOperator,
@@ -194,17 +290,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "pr predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeString,
-					SubAttributes: []*Attribute{
-						{Name: "schemas", Type: TypeString},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "schemas",
+							Path: "schemas",
+						},
 					},
-				},
-				map[string]interface{}{
-					"schemas": []interface{}{},
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeString,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "schemas",
+								Name: "schemas",
+								Type: TypeString,
+							},
+						},
+					},
+					map[string]interface{}{
+						"schemas": []interface{}{},
+					},
+				)
+			},
 			root: &Step{
 				Token: Pr,
 				Typ:   stepRelationalOperator,
@@ -220,17 +332,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "sw predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "userName", Type: TypeString},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "userName",
+							Path: "userName",
+						},
 					},
-				},
-				map[string]interface{}{
-					"userName": "abc",
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "userName",
+								Name: "userName",
+								Type: TypeString,
+							},
+						},
+					},
+					map[string]interface{}{
+						"userName": "abc",
+					},
+				)
+			},
 			root: &Step{
 				Token: Sw,
 				Typ:   stepRelationalOperator,
@@ -250,17 +378,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "ew predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "userName", Type: TypeString},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "userName",
+							Path: "userName",
+						},
 					},
-				},
-				map[string]interface{}{
-					"userName": "abc",
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "userName",
+								Name: "userName",
+								Type: TypeString,
+							},
+						},
+					},
+					map[string]interface{}{
+						"userName": "abc",
+					},
+				)
+			},
 			root: &Step{
 				Token: Ew,
 				Typ:   stepRelationalOperator,
@@ -280,17 +424,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "co predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "userName", Type: TypeString},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "userName",
+							Path: "userName",
+						},
 					},
-				},
-				map[string]interface{}{
-					"userName": "abc",
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "userName",
+								Name: "userName",
+								Type: TypeString,
+							},
+						},
+					},
+					map[string]interface{}{
+						"userName": "abc",
+					},
+				)
+			},
 			root: &Step{
 				Token: Co,
 				Typ:   stepRelationalOperator,
@@ -310,19 +470,43 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "and predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "userName", Type: TypeString},
-						{Name: "age", Type: TypeInteger},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "userName",
+							Path: "userName",
+						},
+						{
+							Id:   "age",
+							Path: "age",
+						},
 					},
-				},
-				map[string]interface{}{
-					"userName": "foo",
-					"age":      int64(10),
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "userName",
+								Name: "userName",
+								Type: TypeString,
+							},
+							{
+								Id:   "age",
+								Name: "age",
+								Type: TypeInteger,
+							},
+						},
+					},
+					map[string]interface{}{
+						"userName": "foo",
+						"age":      int64(10),
+					},
+				)
+			},
 			root: &Step{
 				Token: And,
 				Typ:   stepLogicalOperator,
@@ -358,19 +542,43 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "or predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "userName", Type: TypeString},
-						{Name: "age", Type: TypeInteger},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "userName",
+							Path: "userName",
+						},
+						{
+							Id:   "age",
+							Path: "age",
+						},
 					},
-				},
-				map[string]interface{}{
-					"userName": "foo",
-					"age":      int64(10),
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "userName",
+								Name: "userName",
+								Type: TypeString,
+							},
+							{
+								Id:   "age",
+								Name: "age",
+								Type: TypeInteger,
+							},
+						},
+					},
+					map[string]interface{}{
+						"userName": "foo",
+						"age":      int64(10),
+					},
+				)
+			},
 			root: &Step{
 				Token: Or,
 				Typ:   stepLogicalOperator,
@@ -406,17 +614,33 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "not predicate",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "userName", Type: TypeString},
+			getProp: func() Evaluation {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
+						{
+							Id:   "userName",
+							Path: "userName",
+						},
 					},
-				},
-				map[string]interface{}{
-					"userName": "foo",
-				},
-			),
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Id:   "userName",
+								Name: "userName",
+								Type: TypeString,
+							},
+						},
+					},
+					map[string]interface{}{
+						"userName": "foo",
+					},
+				)
+			},
 			root: &Step{
 				Token: Not,
 				Typ:   stepLogicalOperator,
@@ -442,7 +666,7 @@ func TestEvaluate(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r, err := test.prop.Evaluate(test.root)
+			r, err := test.getProp().Evaluate(test.root)
 			test.expect(t, r, err)
 		})
 	}

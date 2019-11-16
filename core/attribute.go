@@ -1,56 +1,130 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
 
-// SCIM attribute contains metadata and rules for a field in SCIM resource.
-type Attribute struct {
-	Name            string       `json:"name"`
-	Description     string       `json:"description"`
-	Type            string       `json:"type"`
-	SubAttributes   []*Attribute `json:"subAttributes"`
-	CanonicalValues []string     `json:"canonicalValues"`
-	MultiValued     bool         `json:"multiValued"`
-	Required        bool         `json:"required"`
-	CaseExact       bool         `json:"caseExact"`
-	Mutability      string       `json:"mutability"`
-	Returned        string       `json:"returned"`
-	Uniqueness      string       `json:"uniqueness"`
-	ReferenceTypes  []string     `json:"referenceTypes"`
-	Metadata        *Metadata    `json:"-"`
+type (
+	// SCIM attribute contains metadata and rules for a field in SCIM resource.
+	Attribute struct {
+		Id              string       `json:"id"`
+		Name            string       `json:"name"`
+		Description     string       `json:"description"`
+		Type            Type         `json:"type"`
+		SubAttributes   []*Attribute `json:"subAttributes"`
+		CanonicalValues []string     `json:"canonicalValues"`
+		MultiValued     bool         `json:"multiValued"`
+		Required        bool         `json:"required"`
+		CaseExact       bool         `json:"caseExact"`
+		Mutability      Mutability   `json:"mutability"`
+		Returned        Returned     `json:"returned"`
+		Uniqueness      Uniqueness   `json:"uniqueness"`
+		ReferenceTypes  []string     `json:"referenceTypes"`
+	}
+
+	// An internal JSON representation of Attribute
+	tmpAttr struct {
+		Id              string     `json:"id"`
+		Name            string     `json:"name"`
+		Description     string     `json:"description"`
+		Type            string     `json:"type"`
+		SubAttributes   []*tmpAttr `json:"subAttributes"`
+		CanonicalValues []string   `json:"canonicalValues"`
+		MultiValued     bool       `json:"multiValued"`
+		Required        bool       `json:"required"`
+		CaseExact       bool       `json:"caseExact"`
+		Mutability      string     `json:"mutability"`
+		Returned        string     `json:"returned"`
+		Uniqueness      string     `json:"uniqueness"`
+		ReferenceTypes  []string   `json:"referenceTypes"`
+	}
+)
+
+// Convert the temporary attr representation to the official attribute
+func (attr *tmpAttr) convert() *Attribute {
+	converted := &Attribute{
+		Id:              attr.Id,
+		Name:            attr.Name,
+		Description:     attr.Description,
+		Type:            NewType(attr.Type),
+		CanonicalValues: attr.CanonicalValues,
+		MultiValued:     attr.MultiValued,
+		Required:        attr.Required,
+		CaseExact:       attr.CaseExact,
+		Mutability:      NewMutability(attr.Mutability),
+		Returned:        NewReturned(attr.Returned),
+		Uniqueness:      NewUniqueness(attr.Uniqueness),
+		ReferenceTypes:  attr.ReferenceTypes,
+	}
+
+	if len(attr.SubAttributes) > 0 {
+		converted.SubAttributes = make([]*Attribute, 0)
+		for _, subAttr := range attr.SubAttributes {
+			converted.SubAttributes = append(converted.SubAttributes, subAttr.convert())
+		}
+	}
+
+	return converted
 }
 
-// Set the default value in attributes.
-func (attr *Attribute) setDefaults() {
-	if attr == nil {
-		return
+// Implementation of json.Unmarshaler
+func (attr *Attribute) UnmarshalJSON(raw []byte) error {
+	tmp := new(tmpAttr)
+	err := json.Unmarshal(raw, tmp)
+	if err != nil {
+		return err
 	}
 
-	if len(attr.Type) == 0 {
-		attr.Type = TypeString
-	}
+	converted := tmp.convert()
 
-	if len(attr.Mutability) == 0 {
-		attr.Mutability = MutabilityReadWrite
-	}
+	attr.Id = converted.Id
+	attr.Name = converted.Name
+	attr.Description = converted.Description
+	attr.Type = converted.Type
+	attr.CanonicalValues = converted.CanonicalValues
+	attr.MultiValued = converted.MultiValued
+	attr.Required = converted.Required
+	attr.CaseExact = converted.CaseExact
+	attr.Mutability = converted.Mutability
+	attr.Returned = converted.Returned
+	attr.Uniqueness = converted.Uniqueness
+	attr.ReferenceTypes = converted.ReferenceTypes
+	attr.SubAttributes = converted.SubAttributes
 
-	if len(attr.Returned) == 0 {
-		attr.Returned = ReturnedDefault
-	}
+	return nil
+}
 
-	if len(attr.Uniqueness) == 0 {
-		attr.Uniqueness = UniquenessNone
-	}
-
-	if attr.Metadata == nil {
-		attr.Metadata = new(Metadata)
-	}
-
-	for _, subAttr := range attr.SubAttributes {
-		subAttr.setDefaults()
-	}
+// Implementation of json.Marshaler
+func (attr *Attribute) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Name            string       `json:"name"`
+		Description     string       `json:"description,omitempty"`
+		Type            string       `json:"type"`
+		SubAttributes   []*Attribute `json:"subAttributes,omitempty"`
+		CanonicalValues []string     `json:"canonicalValues,omitempty"`
+		MultiValued     bool         `json:"multiValued"`
+		Required        bool         `json:"required"`
+		CaseExact       bool         `json:"caseExact"`
+		Mutability      string       `json:"mutability"`
+		Returned        string       `json:"returned"`
+		Uniqueness      string       `json:"uniqueness"`
+		ReferenceTypes  []string     `json:"referenceTypes,omitempty"`
+	}{
+		Name:            attr.Name,
+		Description:     attr.Description,
+		Type:            attr.Type.String(),
+		SubAttributes:   attr.SubAttributes,
+		CanonicalValues: attr.CanonicalValues,
+		MultiValued:     attr.MultiValued,
+		Required:        attr.Required,
+		CaseExact:       attr.CaseExact,
+		Mutability:      attr.Mutability.String(),
+		Returned:        attr.Returned.String(),
+		Uniqueness:      attr.Uniqueness.String(),
+		ReferenceTypes:  attr.ReferenceTypes,
+	})
 }
 
 // Returns true if the property that this attribute represents can be addressed
@@ -63,21 +137,15 @@ func (attr *Attribute) GoesBy(name string) bool {
 // Returns a proper name for this attribute suitable for display purposes. Defaults
 // to the attribute's name, and will use the metadata's path value, if available.
 func (attr *Attribute) DisplayName() string {
-	name := attr.Name
-	if attr.Metadata != nil && len(attr.Metadata.Path) > 0 {
-		name = attr.Metadata.Path
-	}
-	return name
+	return attr.MustDefaultMetadata().Path
 }
 
 // Returns a descriptive name of the attribute's type.
 func (attr *Attribute) DescribeType() string {
-	desc := ""
 	if attr.MultiValued {
-		desc = "multiValued "
+		return "multiValued " + attr.Type.String()
 	}
-	desc += attr.Type
-	return desc
+	return attr.Type.String()
 }
 
 // Returns true if this attribute's type is string based, namely string, reference, binary and dateTime
@@ -142,6 +210,7 @@ func (attr *Attribute) ToSingleValued() *Attribute {
 	}
 
 	return &Attribute{
+		Id:              attr.Id,
 		Name:            attr.Name,
 		Description:     attr.Description,
 		Type:            attr.Type,
@@ -154,7 +223,6 @@ func (attr *Attribute) ToSingleValued() *Attribute {
 		Returned:        attr.Returned,
 		Uniqueness:      attr.Uniqueness,
 		ReferenceTypes:  attr.ReferenceTypes,
-		Metadata:        attr.Metadata,
 	}
 }
 
@@ -170,6 +238,7 @@ func (attr *Attribute) ToOptional() *Attribute {
 	}
 
 	return &Attribute{
+		Id:              attr.Id,
 		Name:            attr.Name,
 		Description:     attr.Description,
 		Type:            attr.Type,
@@ -182,7 +251,6 @@ func (attr *Attribute) ToOptional() *Attribute {
 		Returned:        attr.Returned,
 		Uniqueness:      attr.Uniqueness,
 		ReferenceTypes:  attr.ReferenceTypes,
-		Metadata:        attr.Metadata,
 	}
 }
 
@@ -196,7 +264,6 @@ func (attr *Attribute) Copy() *Attribute {
 		subAttributes   []*Attribute = nil
 		canonicalValues []string     = nil
 		referenceTypes  []string     = nil
-		metadata        *Metadata    = nil
 	)
 	{
 		if len(attr.SubAttributes) > 0 {
@@ -219,13 +286,10 @@ func (attr *Attribute) Copy() *Attribute {
 				referenceTypes = append(referenceTypes, ref)
 			}
 		}
-
-		if attr.Metadata != nil {
-			metadata = attr.Metadata.copy()
-		}
 	}
 
 	return &Attribute{
+		Id:              attr.Id,
 		Name:            attr.Name,
 		Description:     attr.Description,
 		Type:            attr.Type,
@@ -238,14 +302,18 @@ func (attr *Attribute) Copy() *Attribute {
 		Returned:        attr.Returned,
 		Uniqueness:      attr.Uniqueness,
 		ReferenceTypes:  referenceTypes,
-		Metadata:        metadata,
 	}
+}
+
+// Get the metadata corresponding to this attribute. The method assumes such metadata exists, otherwise would panic.
+func (attr *Attribute) MustDefaultMetadata() *DefaultMetadata {
+	return Meta.Get(attr.Id, DefaultMetadataId).(*DefaultMetadata)
 }
 
 // Return true if the attribute has a sub attribute of boolean type and is marked as exclusive
 func (attr *Attribute) HasExclusiveSubAttribute() bool {
 	for _, subAttr := range attr.SubAttributes {
-		if subAttr.Type == TypeBoolean && subAttr.Metadata != nil && subAttr.Metadata.IsExclusive {
+		if subAttr.Type == TypeBoolean && subAttr.MustDefaultMetadata().IsExclusive {
 			return true
 		}
 	}
@@ -255,15 +323,15 @@ func (attr *Attribute) HasExclusiveSubAttribute() bool {
 // Returns a noTarget error about the attribute, depending on the step's type.
 func (attr *Attribute) errNoTarget(step *Step) error {
 	if step.IsPath() {
-		return Errors.noTarget(fmt.Sprintf("%s does not have the specified sub attributes.", attr.DisplayName()))
+		return Errors.noTarget(fmt.Sprintf("'%s' does not have the specified sub attributes.", attr.DisplayName()))
 	} else if step.IsOperator() {
-		return Errors.noTarget(fmt.Sprintf("%s cannot be filtered.", attr.DisplayName()))
+		return Errors.noTarget(fmt.Sprintf("'%s' cannot be filtered.", attr.DisplayName()))
 	} else {
-		return Errors.noTarget(fmt.Sprintf("%s cannot be processed by given step", attr.DisplayName()))
+		return Errors.noTarget(fmt.Sprintf("'%s' cannot be processed by given step", attr.DisplayName()))
 	}
 }
 
 // Returns an invalidValue error about the attribute.
 func (attr *Attribute) errInvalidValue() error {
-	return Errors.InvalidValue(fmt.Sprintf("value is invalid or incompatible for attribute %s", attr.DisplayName()))
+	return Errors.InvalidValue(fmt.Sprintf("value is invalid or incompatible for attribute '%s'", attr.DisplayName()))
 }

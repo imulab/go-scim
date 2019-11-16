@@ -89,10 +89,6 @@ func (ext *SchemaExtension) AsAttributeContainer() *Attribute {
 		Mutability: MutabilityReadWrite,
 		Returned:   ReturnedDefault,
 		Uniqueness: UniquenessNone,
-		Metadata: &Metadata{
-			Path:    schema.Id,
-			DbAlias: schema.Companion.DbAlias,
-		},
 		SubAttributes: schema.Attributes,
 	}
 }

@@ -313,7 +313,7 @@ func (c *complexProperty) getSubProperty(name string) (Property, error) {
 func (c *complexProperty) getIdentityProps() []Property {
 	identityProps := make([]Property, 0, len(c.subProps))
 	for _, p := range c.subProps {
-		if p.Attribute() != nil && p.Attribute().Metadata != nil && p.Attribute().Metadata.IsIdentity {
+		if p.Attribute() != nil && p.Attribute().MustDefaultMetadata().IsIdentity {
 			identityProps = append(identityProps, p)
 		}
 	}
