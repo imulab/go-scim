@@ -146,3 +146,23 @@ func (r *metadataRepository) Get(attributeId, providerId string) Metadata {
 
 	return v1
 }
+
+// Load the metadata provider, save it into the repository, or panic.
+func (r *metadataRepository) MustLoad(filePath string, metadataProvider interface{}) MetadataProvider {
+	if _, ok := metadataProvider.(MetadataProvider); !ok {
+		panic("argument metadataProvider must be of type MetadataProvider")
+	}
+
+	raw, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(raw, metadataProvider)
+	if err != nil {
+		panic(err)
+	}
+
+	r.Add(metadataProvider.(MetadataProvider))
+	return metadataProvider.(MetadataProvider)
+}

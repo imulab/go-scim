@@ -9,10 +9,9 @@ import (
 func TestDeserialize(t *testing.T) {
 	var resourceType *core.ResourceType
 	{
-		loader := core.Loader{}
-		_ = loader.MustSchema("../resource/schema/test_object_schema.json")
-		_ = loader.MustMetadataProvider("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
-		resourceType = loader.MustResourceType("../resource/resource_type/test_object_resource_type.json")
+		_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
+		_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
 	}
 
 	tests := []struct{

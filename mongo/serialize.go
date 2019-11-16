@@ -219,8 +219,9 @@ func (s *serializer) addName(kind byte, attr *core.Attribute) {
 			name = strconv.Itoa(s.current().index)
 		case mObject, mTop:
 			name = attr.Name
-			if attr.Metadata != nil && len(attr.Metadata.DbAlias) > 0 {
-				name = attr.Metadata.DbAlias
+			metadata := core.Meta.Get(attr.Id, MongoMetadataId)
+			if metadata != nil && len(metadata.(*Metadata).DbAlias) > 0 {
+				name = metadata.(*Metadata).DbAlias
 			}
 		}
 	}

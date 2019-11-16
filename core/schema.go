@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"io/ioutil"
 )
 
 type (
@@ -104,6 +105,22 @@ func (r *schemaRepository) Add(schema *Schema) {
 // Get schema from repository by its id, or nil if it does not exist.
 func (r *schemaRepository) Get(schemaId string) *Schema {
 	return r.mem[schemaId]
+}
+
+// Load the schema from a file, or panic
+func (r *schemaRepository) MustLoad(filePath string) *Schema {
+	raw, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	schema, err := ParseSchema(raw)
+	if err != nil {
+		panic(err)
+	}
+
+	r.Add(schema)
+	return schema
 }
 
 // Parse a schema from JSON bytes.

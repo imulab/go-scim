@@ -336,8 +336,9 @@ path:
 					dbPath += "."
 				}
 				// dbAlias take precedence over attribute name
-				if subAttr.Metadata != nil && len(subAttr.Metadata.DbAlias) > 0 {
-					dbPath += subAttr.Metadata.DbAlias
+				metadata := core.Meta.Get(subAttr.Id, MongoMetadataId)
+				if metadata != nil && len(metadata.(*Metadata).DbAlias) > 0 {
+					dbPath += metadata.(*Metadata).DbAlias
 				} else {
 					dbPath += subAttr.Name
 				}

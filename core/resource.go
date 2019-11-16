@@ -27,7 +27,7 @@ func (r *Resource) skipResourceUrn(step *Step) *Step {
 	if strings.ToLower(r.rt.Id) == strings.ToLower(step.Token) {
 		return step.Next
 	}
-	
+
 	return step
 }
 
