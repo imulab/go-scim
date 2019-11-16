@@ -17,24 +17,32 @@ const (
 	TypeReference
 	TypeBinary
 	TypeComplex
+)
 
+const (
 	// SCIM mutability attribute defined in RFC7643
 	MutabilityReadWrite Mutability = iota
 	MutabilityReadOnly
 	MutabilityWriteOnly
 	MutabilityImmutable
+)
 
+const (
 	// SCIM returned attribute defined in RFC7643
 	ReturnedDefault Returned = iota
 	ReturnedAlways
 	ReturnedRequest
 	ReturnedNever
+)
 
+const (
 	// SCIM uniqueness attribute defined in RFC7643
 	UniquenessNone Uniqueness = iota
 	UniquenessServer
 	UniquenessGlobal
+)
 
+const (
 	// Datetime format
 	ISO8601 = "2006-01-02T15:04:05"
 

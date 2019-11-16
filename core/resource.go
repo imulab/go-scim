@@ -20,9 +20,14 @@ func (r *Resource) Replace(step *Step, value interface{}) error {
 }
 
 func (r *Resource) skipResourceUrn(step *Step) *Step {
+	if step == nil {
+		return nil
+	}
+
 	if strings.ToLower(r.rt.Id) == strings.ToLower(step.Token) {
 		return step.Next
 	}
+	
 	return step
 }
 

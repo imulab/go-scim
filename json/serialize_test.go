@@ -4,30 +4,17 @@ import (
 	"github.com/imulab/go-scim/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"testing"
 )
 
 func TestSerialize(t *testing.T) {
-	// prepare: schema
-	schemaRaw, err := ioutil.ReadFile("../resource/schema/test_object_schema.json")
-	require.Nil(t, err)
-	schema, err := core.ParseSchema(schemaRaw)
-	require.Nil(t, err)
-	core.Schemas.Add(schema)
-
-	// prepare: schema companion
-	schemaCompanionRaw, err := ioutil.ReadFile("../resource/companion/test_object_schema_companion.json")
-	require.Nil(t, err)
-	schemaCompanion, err := core.ParseSchemaCompanion(schemaCompanionRaw)
-	require.Nil(t, err)
-	schemaCompanion.MustLoadOntoSchema()
-
-	// prepare: resourceType
-	resourceTypeRaw, err := ioutil.ReadFile("../resource/resource_type/test_object_resource_type.json")
-	require.Nil(t, err)
-	resourceType, err := core.ParseResourceType(resourceTypeRaw)
-	require.Nil(t, err)
+	var resourceType *core.ResourceType
+	{
+		loader := core.Loader{}
+		_ = loader.MustSchema("../resource/schema/test_object_schema.json")
+		_ = loader.MustMetadataProvider("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = loader.MustResourceType("../resource/resource_type/test_object_resource_type.json")
+	}
 
 	tests := []struct{
 		name		string
