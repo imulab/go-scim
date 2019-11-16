@@ -16,7 +16,7 @@ type persistenceProvider struct {
 	resourceTypes []*core.ResourceType
 	// MongoDB collection corresponding to the id of the resource type that it manages.
 	// The size of this map must match that of resourceTypes.
-	collections    map[string]*mongo.Collection
+	collections map[string]*mongo.Collection
 	// An integer between 0 and 100 that represents the percentage of the context deadline
 	// that the operations in this provider should finish in. When setting to 100, we are
 	// using the full deadline specified by the context; when setting to a number less than

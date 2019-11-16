@@ -14,10 +14,10 @@ func TestDeserialize(t *testing.T) {
 		resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
 	}
 
-	tests := []struct{
-		name	string
-		json	string
-		assert	func(t *testing.T, original, actual string, err error)
+	tests := []struct {
+		name   string
+		json   string
+		assert func(t *testing.T, original, actual string, err error)
 	}{
 		{
 			name: "default",

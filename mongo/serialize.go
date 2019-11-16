@@ -16,7 +16,7 @@ func newBsonAdapter(resource *core.Resource) bson.Marshaler {
 
 // Adapter of resource to bson.Marshaler
 type bsonAdapter struct {
-	resource 	*core.Resource
+	resource *core.Resource
 }
 
 func (d *bsonAdapter) MarshalBSON() ([]byte, error) {

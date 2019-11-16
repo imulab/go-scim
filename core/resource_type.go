@@ -81,12 +81,12 @@ func (ext *SchemaExtension) MustSchema() (schema *Schema) {
 func (ext *SchemaExtension) AsAttributeContainer() *Attribute {
 	schema := ext.MustSchema()
 	return &Attribute{
-		Name:       schema.Id,
-		Type:       TypeComplex,
-		Required:   ext.Required,
-		Mutability: MutabilityReadWrite,
-		Returned:   ReturnedDefault,
-		Uniqueness: UniquenessNone,
+		Name:          schema.Id,
+		Type:          TypeComplex,
+		Required:      ext.Required,
+		Mutability:    MutabilityReadWrite,
+		Returned:      ReturnedDefault,
+		Uniqueness:    UniquenessNone,
 		SubAttributes: schema.Attributes,
 	}
 }

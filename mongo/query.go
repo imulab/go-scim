@@ -85,9 +85,9 @@ func (t *transformer) transform(root *core.Step) (bsonx.Val, error) {
 	}
 
 	var (
-		path	string
-		attr	*core.Attribute
-		value	bsonx.Val
+		path  string
+		attr  *core.Attribute
+		value bsonx.Val
 	)
 	{
 		path, attr, err = t.getFullMongoPathAndAttribute(root.Left)
@@ -359,16 +359,16 @@ path:
 }
 
 const (
-	mongoAnd = "$and"
-	mongoOr = "$or"
-	mongoNot = "$nor"
+	mongoAnd          = "$and"
+	mongoOr           = "$or"
+	mongoNot          = "$nor"
 	mongoElementMatch = "$elemMatch"
-	mongoEq = "$eq"
-	mongoNe = "$ne"
-	mongoGt = "$gt"
-	mongoGe = "$gte"
-	mongoLt = "$lt"
-	mongoLe = "$lte"
-	mongoExists = "$exists"
-	mongoSize = "$size"
+	mongoEq           = "$eq"
+	mongoNe           = "$ne"
+	mongoGt           = "$gt"
+	mongoGe           = "$gte"
+	mongoLt           = "$lt"
+	mongoLe           = "$lte"
+	mongoExists       = "$exists"
+	mongoSize         = "$size"
 )

@@ -150,8 +150,8 @@ func (s *PersistenceTestSuite) TestTotal() {
 			name: "total from multiple collection",
 			setup: func(t *testing.T, client *mongo.Client) *persistenceProvider {
 				var (
-					c1 	*mongo.Collection
-					c2 	*mongo.Collection
+					c1 *mongo.Collection
+					c2 *mongo.Collection
 
 					rt1 *core.ResourceType
 					rt2 *core.ResourceType
@@ -164,7 +164,6 @@ func (s *PersistenceTestSuite) TestTotal() {
 					c2 = client.
 						Database(mongoDatabaseName, options.Database()).
 						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "3"), options.Collection())
-
 
 					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
 					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))

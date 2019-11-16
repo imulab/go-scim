@@ -178,10 +178,9 @@ func (m *resourceUnmarshaler) unmarshalMultiValuedProperty(vr bsonrw.ValueReader
 func (m *resourceUnmarshaler) unmarshalCommonStringProperty(vr bsonrw.ValueReader) error {
 	// ensure property type
 	prop := m.navigator.Current()
-	if prop.Attribute().MultiValued || (
-		prop.Attribute().Type != core.TypeString &&
-			prop.Attribute().Type != core.TypeReference &&
-			prop.Attribute().Type != core.TypeBinary) {
+	if prop.Attribute().MultiValued || (prop.Attribute().Type != core.TypeString &&
+		prop.Attribute().Type != core.TypeReference &&
+		prop.Attribute().Type != core.TypeBinary) {
 		return m.errPropertyType("string|reference|binary", prop.Attribute().DescribeType())
 	}
 

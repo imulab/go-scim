@@ -47,9 +47,9 @@ var (
 				Uniqueness: UniquenessGlobal,
 			},
 			{
-				Id:         "externalId",
-				Name:       "externalId",
-				Type:       TypeString,
+				Id:   "externalId",
+				Name: "externalId",
+				Type: TypeString,
 			},
 			{
 				Id:         "meta",
@@ -65,26 +65,26 @@ var (
 						Mutability: MutabilityReadOnly,
 					},
 					{
-						Id: 		"meta.created",
+						Id:         "meta.created",
 						Name:       "created",
 						Type:       TypeDateTime,
 						Mutability: MutabilityReadOnly,
 					},
 					{
-						Id: 		"meta.lastModified",
+						Id:         "meta.lastModified",
 						Name:       "lastModified",
 						Type:       TypeDateTime,
 						Mutability: MutabilityReadOnly,
 					},
 					{
-						Id: 		"meta.location",
+						Id:         "meta.location",
 						Name:       "location",
 						Type:       TypeReference,
 						CaseExact:  true,
 						Mutability: MutabilityReadOnly,
 					},
 					{
-						Id: 		"meta.version",
+						Id:         "meta.version",
 						Name:       "version",
 						Type:       TypeString,
 						Mutability: MutabilityReadOnly,

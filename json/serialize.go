@@ -9,7 +9,7 @@ import (
 )
 
 // Entry point to serialize resources to JSON.
-func Serialize(resource *core.Resource, includedAttributes []string, excludedAttributes []string, ) ([]byte, error) {
+func Serialize(resource *core.Resource, includedAttributes []string, excludedAttributes []string) ([]byte, error) {
 	s := new(serializer)
 	s.includedAttributes = includedAttributes
 	s.excludedAttributes = excludedAttributes

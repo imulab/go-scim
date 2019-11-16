@@ -1,9 +1,9 @@
 package core
 
 type (
-	Type int
+	Type       int
 	Mutability int
-	Returned int
+	Returned   int
 	Uniqueness int
 )
 
