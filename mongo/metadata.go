@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	MongoMetadataId = "urn:imulab:metadata:scim:mongo"
+	MetadataId = "urn:imulab:metadata:scim:mongo"
 )
 
 type (

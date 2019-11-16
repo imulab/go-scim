@@ -72,7 +72,7 @@ func (m *resourceUnmarshaler) unmarshalComplexProperty(vr bsonrw.ValueReader, is
 			subProp, err = m.navigator.Focus(name)
 			if err != nil {
 				for _, subAttr := range prop.Attribute().SubAttributes {
-					metadata := core.Meta.Get(subAttr.Id, MongoMetadataId)
+					metadata := core.Meta.Get(subAttr.Id, MetadataId)
 					if metadata == nil {
 						continue
 					}
