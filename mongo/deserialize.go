@@ -38,7 +38,7 @@ func (m *resourceUnmarshaler) unmarshalComplexProperty(vr bsonrw.ValueReader, is
 	// ensure property type
 	prop := m.navigator.Current()
 	if prop.Attribute().MultiValued || prop.Attribute().Type != core.TypeComplex {
-		return m.errPropertyType(core.TypeComplex, prop.Attribute().DescribeType())
+		return m.errPropertyType(core.TypeComplex.String(), prop.Attribute().DescribeType())
 	}
 
 	// ensure value type is document
@@ -72,11 +72,12 @@ func (m *resourceUnmarshaler) unmarshalComplexProperty(vr bsonrw.ValueReader, is
 			subProp, err = m.navigator.Focus(name)
 			if err != nil {
 				for _, subAttr := range prop.Attribute().SubAttributes {
-					if subAttr.Metadata == nil {
+					metadata := core.Meta.Get(subAttr.Id, MongoMetadataId)
+					if metadata == nil {
 						continue
 					}
 
-					if subAttr.Metadata.DbAlias == name {
+					if metadata.(*Metadata).DbAlias == name {
 						subProp, err = m.navigator.Focus(subAttr.Name)
 						break
 					}
@@ -177,10 +178,9 @@ func (m *resourceUnmarshaler) unmarshalMultiValuedProperty(vr bsonrw.ValueReader
 func (m *resourceUnmarshaler) unmarshalCommonStringProperty(vr bsonrw.ValueReader) error {
 	// ensure property type
 	prop := m.navigator.Current()
-	if prop.Attribute().MultiValued || (
-		prop.Attribute().Type != core.TypeString &&
-			prop.Attribute().Type != core.TypeReference &&
-			prop.Attribute().Type != core.TypeBinary) {
+	if prop.Attribute().MultiValued || (prop.Attribute().Type != core.TypeString &&
+		prop.Attribute().Type != core.TypeReference &&
+		prop.Attribute().Type != core.TypeBinary) {
 		return m.errPropertyType("string|reference|binary", prop.Attribute().DescribeType())
 	}
 
@@ -206,7 +206,7 @@ func (m *resourceUnmarshaler) unmarshalDateTimeProperty(vr bsonrw.ValueReader) e
 	// ensure property type
 	prop := m.navigator.Current()
 	if prop.Attribute().MultiValued || prop.Attribute().Type != core.TypeDateTime {
-		return m.errPropertyType(core.TypeDateTime, prop.Attribute().DescribeType())
+		return m.errPropertyType(core.TypeDateTime.String(), prop.Attribute().DescribeType())
 	}
 
 	// ensure value type is dateTime
@@ -232,7 +232,7 @@ func (m *resourceUnmarshaler) unmarshalIntegerProperty(vr bsonrw.ValueReader) er
 	// ensure property type
 	prop := m.navigator.Current()
 	if prop.Attribute().MultiValued || prop.Attribute().Type != core.TypeInteger {
-		return m.errPropertyType(core.TypeInteger, prop.Attribute().DescribeType())
+		return m.errPropertyType(core.TypeInteger.String(), prop.Attribute().DescribeType())
 	}
 
 	// ensure value type is int64
@@ -257,7 +257,7 @@ func (m *resourceUnmarshaler) unmarshalDecimalProperty(vr bsonrw.ValueReader) er
 	// ensure property type
 	prop := m.navigator.Current()
 	if prop.Attribute().MultiValued || prop.Attribute().Type != core.TypeDecimal {
-		return m.errPropertyType(core.TypeDecimal, prop.Attribute().DescribeType())
+		return m.errPropertyType(core.TypeDecimal.String(), prop.Attribute().DescribeType())
 	}
 
 	// ensure value type is double
@@ -282,7 +282,7 @@ func (m *resourceUnmarshaler) unmarshalBooleanProperty(vr bsonrw.ValueReader) er
 	// ensure property type
 	prop := m.navigator.Current()
 	if prop.Attribute().MultiValued || prop.Attribute().Type != core.TypeBoolean {
-		return m.errPropertyType(core.TypeBoolean, prop.Attribute().DescribeType())
+		return m.errPropertyType(core.TypeBoolean.String(), prop.Attribute().DescribeType())
 	}
 
 	// ensure value type is boolean

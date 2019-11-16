@@ -3,57 +3,75 @@
   "dbAlias": "coreUser",
   "metadata": [
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
       "path": "userName"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "name"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "name.formatted"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "name.familyName"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "name.givenName"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "name.middleName"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "name.honorificPrefix"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "name.honorificSuffix"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "displayName"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "nickName"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "profileUrl"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "title"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "userType"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "preferredLanguage"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "locale"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "timezone"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "active"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:",
       "path": "password",
       "annotations": ["@password"]
     },

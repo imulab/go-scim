@@ -7,21 +7,23 @@ import (
 
 func TestCrudGet(t *testing.T) {
 	tests := []struct {
-		name   string
-		prop   Crud
-		step   *Step
-		expect func(t *testing.T, v interface{}, err error)
+		name    string
+		getProp func() Crud
+		step    *Step
+		expect  func(t *testing.T, v interface{}, err error)
 	}{
 		{
 			name: "get simple value from complex property",
-			prop: Properties.NewComplexOf(
-				&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
-					{Name: "userName", Type: TypeString},
-				}},
-				map[string]interface{}{
-					"username": "foo",
-				},
-			),
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
+						{Name: "userName", Type: TypeString},
+					}},
+					map[string]interface{}{
+						"username": "foo",
+					},
+				)
+			},
 			step: Steps.NewPath("userName"),
 			expect: func(t *testing.T, v interface{}, err error) {
 				assert.Nil(t, err)
@@ -30,25 +32,27 @@ func TestCrudGet(t *testing.T) {
 		},
 		{
 			name: "get simple value from complex property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{
-							Name: "name",
-							Type: TypeComplex,
-							SubAttributes: []*Attribute{
-								{Name: "firstName", Type: TypeString},
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name: "name",
+								Type: TypeComplex,
+								SubAttributes: []*Attribute{
+									{Name: "firstName", Type: TypeString},
+								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"name": map[string]interface{}{
-						"firstName": "foo",
+					map[string]interface{}{
+						"name": map[string]interface{}{
+							"firstName": "foo",
+						},
 					},
-				},
-			),
+				)
+			},
 			step: Steps.NewPathChain("name", "firstName"),
 			expect: func(t *testing.T, v interface{}, err error) {
 				assert.Nil(t, err)
@@ -57,27 +61,29 @@ func TestCrudGet(t *testing.T) {
 		},
 		{
 			name: "get sub property value from multiValued complex property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{Name: "value", Type: TypeString},
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{Name: "value", Type: TypeString},
+								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{"value": "foo@bar.com"},
-						map[string]interface{}{"value": "bar@foo.com"},
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{"value": "foo@bar.com"},
+							map[string]interface{}{"value": "bar@foo.com"},
+						},
 					},
-				},
-			),
+				)
+			},
 			step: Steps.NewPathChain("emails", "value"),
 			expect: func(t *testing.T, v interface{}, err error) {
 				assert.Nil(t, err)
@@ -88,27 +94,29 @@ func TestCrudGet(t *testing.T) {
 		},
 		{
 			name: "get filtered complex property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{Name: "value", Type: TypeString},
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{Name: "value", Type: TypeString},
+								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{"value": "foo@bar.com"},
-						map[string]interface{}{"value": "bar@foo.com"},
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{"value": "foo@bar.com"},
+							map[string]interface{}{"value": "bar@foo.com"},
+						},
 					},
-				},
-			),
+				)
+			},
 			// emails[value eq "foo@bar.com"]
 			step: &Step{
 				Token: "emails",
@@ -134,27 +142,29 @@ func TestCrudGet(t *testing.T) {
 		},
 		{
 			name: "get sub property from filtered complex property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{Name: "value", Type: TypeString},
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{Name: "value", Type: TypeString},
+								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{"value": "foo@bar.com"},
-						map[string]interface{}{"value": "bar@foo.com"},
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{"value": "foo@bar.com"},
+							map[string]interface{}{"value": "bar@foo.com"},
+						},
 					},
-				},
-			),
+				)
+			},
 			// emails[value eq "foo@bar.com"].value
 			step: &Step{
 				Token: "emails",
@@ -186,7 +196,7 @@ func TestCrudGet(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			v, err := test.prop.Get(test.step)
+			v, err := test.getProp().Get(test.step)
 			test.expect(t, v, err)
 		})
 	}
@@ -194,18 +204,20 @@ func TestCrudGet(t *testing.T) {
 
 func TestCrudAdd(t *testing.T) {
 	tests := []struct {
-		name   string
-		prop   Crud
-		step   *Step
-		value  interface{}
-		expect func(t *testing.T, prop Crud, err error)
+		name    string
+		getProp func() Crud
+		step    *Step
+		value   interface{}
+		expect  func(t *testing.T, prop Crud, err error)
 	}{
 		{
 			name: "add value to unassigned simple property",
-			prop: Properties.NewComplex(
-				&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
-					{Name: "userName", Type: TypeString},
-				}}),
+			getProp: func() Crud {
+				return Properties.NewComplex(
+					&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
+						{Name: "userName", Type: TypeString},
+					}})
+			},
 			step:  Steps.NewPath("userName"),
 			value: "foo",
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -216,14 +228,16 @@ func TestCrudAdd(t *testing.T) {
 		},
 		{
 			name: "add value to assigned simple property",
-			prop: Properties.NewComplexOf(
-				&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
-					{Name: "userName", Type: TypeString},
-				}},
-				map[string]interface{}{
-					"username": "foo",
-				},
-			),
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
+						{Name: "userName", Type: TypeString},
+					}},
+					map[string]interface{}{
+						"username": "foo",
+					},
+				)
+			},
 			step:  Steps.NewPath("userName"),
 			value: "bar",
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -234,25 +248,27 @@ func TestCrudAdd(t *testing.T) {
 		},
 		{
 			name: "add value to nested simple property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{
-							Name: "name",
-							Type: TypeComplex,
-							SubAttributes: []*Attribute{
-								{Name: "firstName", Type: TypeString},
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name: "name",
+								Type: TypeComplex,
+								SubAttributes: []*Attribute{
+									{Name: "firstName", Type: TypeString},
+								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"name": map[string]interface{}{
-						"firstName": "foo",
+					map[string]interface{}{
+						"name": map[string]interface{}{
+							"firstName": "foo",
+						},
 					},
-				},
-			),
+				)
+			},
 			step:  Steps.NewPathChain("name", "firstName"),
 			value: "bar",
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -263,17 +279,19 @@ func TestCrudAdd(t *testing.T) {
 		},
 		{
 			name: "add value to multiValued property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{Name: "tags", Type: TypeString, MultiValued: true},
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{Name: "tags", Type: TypeString, MultiValued: true},
+						},
 					},
-				},
-				map[string]interface{}{
-					"tags": []interface{}{"one", "two"},
-				},
-			),
+					map[string]interface{}{
+						"tags": []interface{}{"one", "two"},
+					},
+				)
+			},
 			step:  Steps.NewPath("tags"),
 			value: "three",
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -287,41 +305,58 @@ func TestCrudAdd(t *testing.T) {
 		},
 		{
 			name: "add value to a multiValued complex property (and switch exclusive)",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
+			getProp: func() Crud {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
 						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{
-									Name:     "value",
-									Type:     TypeString,
-									Metadata: &Metadata{IsIdentity: true},
-								},
-								{
-									Name:     "primary",
-									Type:     TypeBoolean,
-									Metadata: &Metadata{IsIdentity: true, IsExclusive: true},
+							Id:         "emails.value",
+							IsIdentity: true,
+						},
+						{
+							Id:          "emails.primary",
+							IsIdentity:  true,
+							IsExclusive: true,
+						},
+					},
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{
+										Id:   "emails.value",
+										Name: "value",
+										Type: TypeString,
+									},
+									{
+										Id:   "emails.primary",
+										Name: "primary",
+										Type: TypeBoolean,
+									},
 								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "foo@bar.com",
-							"primary": true,
-						},
-						map[string]interface{}{
-							"value": "foo2@bar.com",
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{
+								"value":   "foo@bar.com",
+								"primary": true,
+							},
+							map[string]interface{}{
+								"value": "foo2@bar.com",
+							},
 						},
 					},
-				},
-			),
+				)
+			},
 			step: Steps.NewPath("emails"),
 			value: map[string]interface{}{
 				"value":   "foo3@bar.com",
@@ -364,41 +399,58 @@ func TestCrudAdd(t *testing.T) {
 		},
 		{
 			name: "add value to a sub property of a multiValued complex property (and switch exclusive)",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
+			getProp: func() Crud {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
 						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{
-									Name:     "value",
-									Type:     TypeString,
-									Metadata: &Metadata{IsIdentity: true},
-								},
-								{
-									Name:     "primary",
-									Type:     TypeBoolean,
-									Metadata: &Metadata{IsIdentity: true, IsExclusive: true},
+							Id:         "emails.value",
+							IsIdentity: true,
+						},
+						{
+							Id:          "emails.primary",
+							IsIdentity:  true,
+							IsExclusive: true,
+						},
+					},
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{
+										Id:   "emails.value",
+										Name: "value",
+										Type: TypeString,
+									},
+									{
+										Id:   "emails.primary",
+										Name: "primary",
+										Type: TypeBoolean,
+									},
 								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "foo@bar.com",
-							"primary": true,
-						},
-						map[string]interface{}{
-							"value": "foo2@bar.com",
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{
+								"value":   "foo@bar.com",
+								"primary": true,
+							},
+							map[string]interface{}{
+								"value": "foo2@bar.com",
+							},
 						},
 					},
-				},
-			),
+				)
+			},
 			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
@@ -458,26 +510,29 @@ func TestCrudAdd(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.prop.Add(test.step, test.value)
-			test.expect(t, test.prop, err)
+			prop := test.getProp()
+			err := prop.Add(test.step, test.value)
+			test.expect(t, prop, err)
 		})
 	}
 }
 
 func TestCrudReplace(t *testing.T) {
 	tests := []struct {
-		name   string
-		prop   Crud
-		step   *Step
-		value  interface{}
-		expect func(t *testing.T, prop Crud, err error)
+		name    string
+		getProp func() Crud
+		step    *Step
+		value   interface{}
+		expect  func(t *testing.T, prop Crud, err error)
 	}{
 		{
 			name: "replace value of unassigned simple property",
-			prop: Properties.NewComplex(
-				&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
-					{Name: "userName", Type: TypeString},
-				}}),
+			getProp: func() Crud {
+				return Properties.NewComplex(
+					&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
+						{Name: "userName", Type: TypeString},
+					}})
+			},
 			step:  Steps.NewPath("userName"),
 			value: "foo",
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -488,14 +543,16 @@ func TestCrudReplace(t *testing.T) {
 		},
 		{
 			name: "replace value of assigned simple property",
-			prop: Properties.NewComplexOf(
-				&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
-					{Name: "userName", Type: TypeString},
-				}},
-				map[string]interface{}{
-					"username": "foo",
-				},
-			),
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
+						{Name: "userName", Type: TypeString},
+					}},
+					map[string]interface{}{
+						"username": "foo",
+					},
+				)
+			},
 			step:  Steps.NewPath("userName"),
 			value: "bar",
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -506,25 +563,27 @@ func TestCrudReplace(t *testing.T) {
 		},
 		{
 			name: "replace value of nested simple property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{
-							Name: "name",
-							Type: TypeComplex,
-							SubAttributes: []*Attribute{
-								{Name: "firstName", Type: TypeString},
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name: "name",
+								Type: TypeComplex,
+								SubAttributes: []*Attribute{
+									{Name: "firstName", Type: TypeString},
+								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"name": map[string]interface{}{
-						"firstName": "foo",
+					map[string]interface{}{
+						"name": map[string]interface{}{
+							"firstName": "foo",
+						},
 					},
-				},
-			),
+				)
+			},
 			step:  Steps.NewPathChain("name", "firstName"),
 			value: "bar",
 			expect: func(t *testing.T, prop Crud, err error) {
@@ -535,41 +594,58 @@ func TestCrudReplace(t *testing.T) {
 		},
 		{
 			name: "replace element of a multiValued complex property (and switch exclusive)",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
+			getProp: func() Crud {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
 						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{
-									Name:     "value",
-									Type:     TypeString,
-									Metadata: &Metadata{IsIdentity: true},
-								},
-								{
-									Name:     "primary",
-									Type:     TypeBoolean,
-									Metadata: &Metadata{IsIdentity: true, IsExclusive: true},
+							Id:         "emails.value",
+							IsIdentity: true,
+						},
+						{
+							Id:          "emails.primary",
+							IsIdentity:  true,
+							IsExclusive: true,
+						},
+					},
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{
+										Id:   "emails.value",
+										Name: "value",
+										Type: TypeString,
+									},
+									{
+										Id:   "emails.primary",
+										Name: "primary",
+										Type: TypeBoolean,
+									},
 								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "foo@bar.com",
-							"primary": true,
-						},
-						map[string]interface{}{
-							"value": "foo2@bar.com",
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{
+								"value":   "foo@bar.com",
+								"primary": true,
+							},
+							map[string]interface{}{
+								"value": "foo2@bar.com",
+							},
 						},
 					},
-				},
-			),
+				)
+			},
 			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
@@ -626,41 +702,58 @@ func TestCrudReplace(t *testing.T) {
 		},
 		{
 			name: "replace sub property of an element in a multiValued complex property (and switch exclusive)",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
+			getProp: func() Crud {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
 						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{
-									Name:     "value",
-									Type:     TypeString,
-									Metadata: &Metadata{IsIdentity: true},
-								},
-								{
-									Name:     "primary",
-									Type:     TypeBoolean,
-									Metadata: &Metadata{IsIdentity: true, IsExclusive: true},
+							Id:         "emails.value",
+							IsIdentity: true,
+						},
+						{
+							Id:          "emails.primary",
+							IsIdentity:  true,
+							IsExclusive: true,
+						},
+					},
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{
+										Id:   "emails.value",
+										Name: "value",
+										Type: TypeString,
+									},
+									{
+										Id:   "emails.primary",
+										Name: "primary",
+										Type: TypeBoolean,
+									},
 								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "foo@bar.com",
-							"primary": true,
-						},
-						map[string]interface{}{
-							"value": "foo2@bar.com",
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{
+								"value":   "foo@bar.com",
+								"primary": true,
+							},
+							map[string]interface{}{
+								"value": "foo2@bar.com",
+							},
 						},
 					},
-				},
-			),
+				)
+			},
 			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
@@ -720,29 +813,32 @@ func TestCrudReplace(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.prop.Replace(test.step, test.value)
-			test.expect(t, test.prop, err)
+			prop := test.getProp()
+			err := prop.Replace(test.step, test.value)
+			test.expect(t, prop, err)
 		})
 	}
 }
 
 func TestCrudDelete(t *testing.T) {
 	tests := []struct {
-		name   string
-		prop   Crud
-		step   *Step
-		expect func(t *testing.T, prop Crud, err error)
+		name    string
+		getProp func() Crud
+		step    *Step
+		expect  func(t *testing.T, prop Crud, err error)
 	}{
 		{
 			name: "delete value from assigned simple property",
-			prop: Properties.NewComplexOf(
-				&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
-					{Name: "userName", Type: TypeString},
-				}},
-				map[string]interface{}{
-					"username": "foo",
-				},
-			),
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{Type: TypeComplex, SubAttributes: []*Attribute{
+						{Name: "userName", Type: TypeString},
+					}},
+					map[string]interface{}{
+						"username": "foo",
+					},
+				)
+			},
 			step: Steps.NewPath("userName"),
 			expect: func(t *testing.T, prop Crud, err error) {
 				assert.Nil(t, err)
@@ -753,25 +849,27 @@ func TestCrudDelete(t *testing.T) {
 		},
 		{
 			name: "delete value from nested simple property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
-						{
-							Name: "name",
-							Type: TypeComplex,
-							SubAttributes: []*Attribute{
-								{Name: "firstName", Type: TypeString},
+			getProp: func() Crud {
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name: "name",
+								Type: TypeComplex,
+								SubAttributes: []*Attribute{
+									{Name: "firstName", Type: TypeString},
+								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"name": map[string]interface{}{
-						"firstName": "foo",
+					map[string]interface{}{
+						"name": map[string]interface{}{
+							"firstName": "foo",
+						},
 					},
-				},
-			),
+				)
+			},
 			step: Steps.NewPathChain("name", "firstName"),
 			expect: func(t *testing.T, prop Crud, err error) {
 				assert.Nil(t, err)
@@ -782,41 +880,58 @@ func TestCrudDelete(t *testing.T) {
 		},
 		{
 			name: "delete element from a multiValued complex property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
+			getProp: func() Crud {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
 						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{
-									Name:     "value",
-									Type:     TypeString,
-									Metadata: &Metadata{IsIdentity: true},
-								},
-								{
-									Name:     "primary",
-									Type:     TypeBoolean,
-									Metadata: &Metadata{IsIdentity: true, IsExclusive: true},
+							Id:         "emails.value",
+							IsIdentity: true,
+						},
+						{
+							Id:          "emails.primary",
+							IsIdentity:  true,
+							IsExclusive: true,
+						},
+					},
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{
+										Id:   "emails.value",
+										Name: "value",
+										Type: TypeString,
+									},
+									{
+										Id:   "emails.primary",
+										Name: "primary",
+										Type: TypeBoolean,
+									},
 								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "foo@bar.com",
-							"primary": true,
-						},
-						map[string]interface{}{
-							"value": "foo2@bar.com",
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{
+								"value":   "foo@bar.com",
+								"primary": true,
+							},
+							map[string]interface{}{
+								"value": "foo2@bar.com",
+							},
 						},
 					},
-				},
-			),
+				)
+			},
 			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
@@ -842,41 +957,58 @@ func TestCrudDelete(t *testing.T) {
 		},
 		{
 			name: "delete sub property of an element in a multiValued complex property",
-			prop: Properties.NewComplexOf(
-				&Attribute{
-					Type: TypeComplex,
-					SubAttributes: []*Attribute{
+			getProp: func() Crud {
+				Meta.Add(&DefaultMetadataProvider{
+					Id: DefaultMetadataId,
+					MetadataList: []*DefaultMetadata{
 						{
-							Name:        "emails",
-							Type:        TypeComplex,
-							MultiValued: true,
-							SubAttributes: []*Attribute{
-								{
-									Name:     "value",
-									Type:     TypeString,
-									Metadata: &Metadata{IsIdentity: true},
-								},
-								{
-									Name:     "primary",
-									Type:     TypeBoolean,
-									Metadata: &Metadata{IsIdentity: true, IsExclusive: true},
+							Id:         "emails.value",
+							IsIdentity: true,
+						},
+						{
+							Id:          "emails.primary",
+							IsIdentity:  true,
+							IsExclusive: true,
+						},
+					},
+				})
+
+				return Properties.NewComplexOf(
+					&Attribute{
+						Type: TypeComplex,
+						SubAttributes: []*Attribute{
+							{
+								Name:        "emails",
+								Type:        TypeComplex,
+								MultiValued: true,
+								SubAttributes: []*Attribute{
+									{
+										Id:   "emails.value",
+										Name: "value",
+										Type: TypeString,
+									},
+									{
+										Id:   "emails.primary",
+										Name: "primary",
+										Type: TypeBoolean,
+									},
 								},
 							},
 						},
 					},
-				},
-				map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "foo@bar.com",
-							"primary": true,
-						},
-						map[string]interface{}{
-							"value": "foo2@bar.com",
+					map[string]interface{}{
+						"emails": []interface{}{
+							map[string]interface{}{
+								"value":   "foo@bar.com",
+								"primary": true,
+							},
+							map[string]interface{}{
+								"value": "foo2@bar.com",
+							},
 						},
 					},
-				},
-			),
+				)
+			},
 			step: &Step{
 				Token: "emails",
 				Typ:   stepPath,
@@ -935,8 +1067,9 @@ func TestCrudDelete(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.prop.Delete(test.step)
-			test.expect(t, test.prop, err)
+			prop := test.getProp()
+			err := prop.Delete(test.step)
+			test.expect(t, prop, err)
 		})
 	}
 }

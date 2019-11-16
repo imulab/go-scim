@@ -1,0 +1,337 @@
+{
+  "id": "urn:imulab:metadata:scim:default",
+  "metadata": [
+    {
+      "id": "schemas",
+      "path": "schemas"
+    },
+    {
+      "id": "id",
+      "path": "id"
+    },
+    {
+      "id": "externalId",
+      "path": "externalId"
+    },
+    {
+      "id": "meta",
+      "path": "meta"
+    },
+    {
+      "id": "meta.resourceType",
+      "path": "meta.resourceType"
+    },
+    {
+      "id": "meta.created",
+      "path": "meta.created"
+    },
+    {
+      "id": "meta.lastModified",
+      "path": "meta.lastModified"
+    },
+    {
+      "id": "meta.location",
+      "path": "meta.location"
+    },
+    {
+      "id": "meta.version",
+      "path": "meta.version"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
+      "path": "userName"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:name",
+      "path": "name"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.formatted",
+      "path": "name.formatted"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.familyName",
+      "path": "name.familyName"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.givenName",
+      "path": "name.givenName"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.middleName",
+      "path": "name.middleName"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.honorificPrefix",
+      "path": "name.honorificPrefix"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.honorificSuffix",
+      "path": "name.honorificSuffix"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:displayName",
+      "path": "displayName"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:nickName",
+      "path": "nickName"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:profileUrl",
+      "path": "profileUrl"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:title",
+      "path": "title"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:userType",
+      "path": "userType"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:preferredLanguage",
+      "path": "preferredLanguage"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:locale",
+      "path": "locale"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:timezone",
+      "path": "timezone"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:active",
+      "path": "active"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:password",
+      "path": "password"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails",
+      "path": "emails"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.value",
+      "path": "emails.value",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.type",
+      "path": "emails.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.primary",
+      "path": "emails.primary",
+      "is_exclusive": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.display",
+      "path": "emails.display"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers",
+      "path": "phoneNumbers"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.value",
+      "path": "phoneNumbers.value",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.type",
+      "path": "phoneNumbers.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.primary",
+      "path": "phoneNumbers.primary",
+      "is_exclusive": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.display",
+      "path": "phoneNumbers.display"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims",
+      "path": "ims"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.value",
+      "path": "ims.value",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.type",
+      "path": "ims.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.primary",
+      "path": "ims.primary",
+      "is_exclusive": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.display",
+      "path": "ims.display"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos",
+      "path": "photos"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.value",
+      "path": "photos.value",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.type",
+      "path": "photos.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.primary",
+      "path": "photos.primary",
+      "is_exclusive": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses",
+      "path": "addresses"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.formatted",
+      "path": "addresses.formatted",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.streetAddress",
+      "path": "addresses.streetAddress",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.locality",
+      "path": "addresses.locality",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.region",
+      "path": "addresses.region",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.postalCode",
+      "path": "addresses.postalCode",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.country",
+      "path": "addresses.country",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.type",
+      "path": "addresses.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.primary",
+      "path": "addresses.primary",
+      "is_exclusive": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups",
+      "path": "groups"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.value",
+      "path": "groups.value",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.$ref",
+      "path": "groups.$ref",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.type",
+      "path": "groups.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.display",
+      "path": "groups.display"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements",
+      "path": "entitlements"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.value",
+      "path": "entitlements.value",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.type",
+      "path": "entitlements.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.primary",
+      "path": "entitlements.primary",
+      "is_exclusive": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.display",
+      "path": "entitlements.display"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles",
+      "path": "roles"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.value",
+      "path": "roles.value",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.type",
+      "path": "roles.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.primary",
+      "path": "roles.primary",
+      "is_exclusive": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.display",
+      "path": "roles.display"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates",
+      "path": "x509Certificates"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.value",
+      "path": "x509Certificates.value",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.type",
+      "path": "x509Certificates.type",
+      "is_identity": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.primary",
+      "path": "x509Certificates.primary",
+      "is_exclusive": true
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.display",
+      "path": "x509Certificates.display"
+    }
+  ]
+}

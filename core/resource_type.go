@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 )
 
 type (
@@ -25,21 +26,18 @@ type (
 		Schema   string `json:"schema"`
 		Required bool   `json:"required"`
 	}
+
+	// An in memory repository to cache all resource types. It is not thread safe and is
+	// intended to used as read-only after initial setup.
+	resourceTypeRepository struct {
+		mem map[string]*ResourceType
+	}
 )
 
-// Parse resource type from JSON. This method will attempt to derive attributes from schemas in this resource type.
-// Hence, it relies on the relevant schemas being parsed and saved in repository already.
-func ParseResourceType(raw []byte) (rt *ResourceType, err error) {
-	rt = new(ResourceType)
-	err = json.Unmarshal(raw, &rt)
-	if err != nil {
-		err = Errors.InvalidSyntax("invalid resource type JSON definition")
-		return
-	}
-
-	_ = rt.DerivedAttributes()
-	return
-}
+var (
+	// Entry point to access resource type repository
+	ResourceTypes = &resourceTypeRepository{mem: make(map[string]*ResourceType)}
+)
 
 // Get all attributes available in this resource type. The attributes from the base schema are simply included.
 // All attributes from schema extensions are nested under a complex attribute named with the schema extension's id.
@@ -83,16 +81,53 @@ func (ext *SchemaExtension) MustSchema() (schema *Schema) {
 func (ext *SchemaExtension) AsAttributeContainer() *Attribute {
 	schema := ext.MustSchema()
 	return &Attribute{
-		Name:       schema.Id,
-		Type:       TypeComplex,
-		Required:   ext.Required,
-		Mutability: MutabilityReadWrite,
-		Returned:   ReturnedDefault,
-		Uniqueness: UniquenessNone,
-		Metadata: &Metadata{
-			Path:    schema.Id,
-			DbAlias: schema.Companion.DbAlias,
-		},
+		Name:          schema.Id,
+		Type:          TypeComplex,
+		Required:      ext.Required,
+		Mutability:    MutabilityReadWrite,
+		Returned:      ReturnedDefault,
+		Uniqueness:    UniquenessNone,
 		SubAttributes: schema.Attributes,
 	}
+}
+
+// Load a resource type from file, or panic.
+func (r *resourceTypeRepository) MustLoad(filePath string) *ResourceType {
+	raw, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	resourceType, err := ParseResourceType(raw)
+	if err != nil {
+		panic(err)
+	}
+
+	return resourceType
+}
+
+// Add a resource type to repository.
+func (r *resourceTypeRepository) Add(resourceType *ResourceType) {
+	if resourceType != nil && len(resourceType.Id) > 0 {
+		r.mem[resourceType.Id] = resourceType
+	}
+}
+
+// Get resource type from repository by its id, or nil if it does not exist.
+func (r *resourceTypeRepository) Get(resourceTypeId string) *ResourceType {
+	return r.mem[resourceTypeId]
+}
+
+// Parse resource type from JSON. This method will attempt to derive attributes from schemas in this resource type.
+// Hence, it relies on the relevant schemas being parsed and saved in repository already.
+func ParseResourceType(raw []byte) (rt *ResourceType, err error) {
+	rt = new(ResourceType)
+	err = json.Unmarshal(raw, &rt)
+	if err != nil {
+		err = Errors.InvalidSyntax("invalid resource type JSON definition")
+		return
+	}
+
+	_ = rt.DerivedAttributes()
+	return
 }

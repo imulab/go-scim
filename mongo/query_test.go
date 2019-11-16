@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"github.com/imulab/go-scim/test"
+	"github.com/imulab/go-scim/core"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/x/bsonx"
 	"testing"
@@ -10,9 +10,12 @@ import (
 // This test case does not verify much aside from that it doesn't produce error. This is as much as the unit test can
 // reliably assert. The effect of the query shall be tested with integration test.
 func TestTransformFilter(t *testing.T) {
-	_ = test.MustParseSchema(t, "../resource/schema/test_object_schema.json", true)
-	_ = test.MustParseSchemaCompanion(t, "../resource/companion/test_object_schema_companion.json", true)
-	resourceType := test.MustParseResourceType(t, "../resource/resource_type/test_object_resource_type.json")
+	var resourceType *core.ResourceType
+	{
+		_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
+		_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
+	}
 
 	tests := []struct {
 		name   string

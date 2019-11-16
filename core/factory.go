@@ -28,7 +28,6 @@ func (f resourceFactory) New(rt *ResourceType) *Resource {
 			Mutability:    MutabilityReadWrite,
 			Returned:      ReturnedDefault,
 			Uniqueness:    UniquenessNone,
-			Metadata:      &Metadata{},
 		}),
 	}
 }

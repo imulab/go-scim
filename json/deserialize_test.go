@@ -3,36 +3,21 @@ package json
 import (
 	"github.com/imulab/go-scim/core"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"testing"
 )
 
 func TestDeserialize(t *testing.T) {
-	// prepare: schema
-	schemaRaw, err := ioutil.ReadFile("../resource/schema/test_object_schema.json")
-	require.Nil(t, err)
-	schema, err := core.ParseSchema(schemaRaw)
-	require.Nil(t, err)
-	core.Schemas.Add(schema)
+	var resourceType *core.ResourceType
+	{
+		_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
+		_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
+	}
 
-	// prepare: schema companion
-	schemaCompanionRaw, err := ioutil.ReadFile("../resource/companion/test_object_schema_companion.json")
-	require.Nil(t, err)
-	schemaCompanion, err := core.ParseSchemaCompanion(schemaCompanionRaw)
-	require.Nil(t, err)
-	schemaCompanion.MustLoadOntoSchema()
-
-	// prepare: resourceType
-	resourceTypeRaw, err := ioutil.ReadFile("../resource/resource_type/test_object_resource_type.json")
-	require.Nil(t, err)
-	resourceType, err := core.ParseResourceType(resourceTypeRaw)
-	require.Nil(t, err)
-
-	tests := []struct{
-		name	string
-		json	string
-		assert	func(t *testing.T, original, actual string, err error)
+	tests := []struct {
+		name   string
+		json   string
+		assert func(t *testing.T, original, actual string, err error)
 	}{
 		{
 			name: "default",
