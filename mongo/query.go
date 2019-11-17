@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/imulab/go-scim/core"
 	"github.com/imulab/go-scim/query"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/x/bsonx"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,7 +22,7 @@ import (
 
 // Compile and transform a SCIM filter string to a bsonx.Val that contains the original
 // filter in MongoDB compatible format.
-func TransformFilter(scimFilter string, resourceType *core.ResourceType) (bsonx.Val, error) {
+func TransformFilter(scimFilter string, resourceType *core.ResourceType) (interface{}, error) {
 	root, err := query.CompileFilter(scimFilter)
 	if err != nil {
 		return bsonx.Null(), err
@@ -31,7 +33,7 @@ func TransformFilter(scimFilter string, resourceType *core.ResourceType) (bsonx.
 // Compile and transform a compiled SCIM filter to bsonx.Val that contains the original
 // filter in MongoDB compatible format. This slight optimization allow the caller to pre-compile
 // frequently used queries and save the trip to the filter parser and compiler.
-func TransformCompiledFilter(root *core.Step, resourceType *core.ResourceType) (bsonx.Val, error) {
+func TransformCompiledFilter(root *core.Step, resourceType *core.ResourceType) (interface{}, error) {
 	return (&transformer{resourceType: resourceType}).transform(root)
 }
 
@@ -40,9 +42,9 @@ type transformer struct {
 }
 
 // Transform the filter which is represented by the root to bsonx.Val.
-func (t *transformer) transform(root *core.Step) (bsonx.Val, error) {
+func (t *transformer) transform(root *core.Step) (interface{}, error) {
 	var (
-		left, right bsonx.Val
+		left, right interface{}
 		err         error
 	)
 
@@ -51,37 +53,37 @@ func (t *transformer) transform(root *core.Step) (bsonx.Val, error) {
 	case core.And:
 		left, err = t.transform(root.Left)
 		if err != nil {
-			return bsonx.Null(), err
+			return nil, err
 		}
 		right, err = t.transform(root.Right)
 		if err != nil {
-			return bsonx.Null(), err
+			return nil, err
 		}
-		return bsonx.Document(bsonx.MDoc{
-			mongoAnd: bsonx.Array(bsonx.Arr{left, right}),
-		}), nil
+		return bson.M{
+			mongoAnd: bson.A{left, right},
+		}, nil
 
 	case core.Or:
 		left, err = t.transform(root.Left)
 		if err != nil {
-			return bsonx.Null(), err
+			return nil, err
 		}
 		right, err = t.transform(root.Right)
 		if err != nil {
-			return bsonx.Null(), err
+			return nil, err
 		}
-		return bsonx.Document(bsonx.MDoc{
-			mongoOr: bsonx.Array(bsonx.Arr{left, right}),
-		}), nil
+		return bson.M{
+			mongoOr: bson.A{left, right},
+		}, nil
 
 	case core.Not:
 		left, err = t.transform(root.Left)
 		if err != nil {
-			return bsonx.Null(), err
+			return nil, err
 		}
-		return bsonx.Document(bsonx.MDoc{
-			mongoNot: bsonx.Array(bsonx.Arr{left}),
-		}), nil
+		return bson.M{
+			mongoNot: bson.A{left},
+		}, nil
 	}
 
 	var (
@@ -92,17 +94,19 @@ func (t *transformer) transform(root *core.Step) (bsonx.Val, error) {
 	{
 		path, attr, err = t.getFullMongoPathAndAttribute(root.Left)
 		if err != nil {
-			return bsonx.Null(), err
+			return nil, err
 		}
 
 		err = attr.CheckOpCompatibility(root.Token)
 		if err != nil {
-			return bsonx.Null(), core.Errors.InvalidFilter(err.Error())
+			return nil, core.Errors.InvalidFilter(err.Error())
 		}
 
-		value, err = t.parseValue(root.Right.Token, attr.ToSingleValued())
-		if err != nil {
-			return bsonx.Null(), err
+		if root.Right != nil {
+			value, err = t.parseValue(root.Right.Token, attr.ToSingleValued())
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -112,36 +116,36 @@ func (t *transformer) transform(root *core.Step) (bsonx.Val, error) {
 			// Here, we are only allowing multiValued element match on eq operators, as the semantics of multiValued
 			// match on other operators are not clear in the specification.
 			if attr.Type != core.TypeString || attr.CaseExact {
-				return bsonx.Document(bsonx.MDoc{
-					path: bsonx.Document(bsonx.MDoc{
-						mongoElementMatch: bsonx.Document(bsonx.MDoc{
+				return bson.M{
+					path: bson.M{
+						mongoElementMatch: bson.M{
 							mongoEq: value,
-						}),
-					}),
-				}), nil
+						},
+					},
+				}, nil
 			} else {
-				return bsonx.Document(bsonx.MDoc{
-					path: bsonx.Document(bsonx.MDoc{
-						mongoElementMatch: bsonx.Array(bsonx.Arr{
-							bsonx.Regex(fmt.Sprintf("^%s$", root.Right.Token), "i"),
-						}),
-					}),
-				}), nil
+				return bson.M{
+					path: bson.M{
+						mongoElementMatch: bson.A{
+							bsonx.Regex(fmt.Sprintf("^%s$", stripQuotes(root.Right.Token)), "i"),
+						},
+					},
+				}, nil
 			}
 		} else {
 			// caseExact option is only effective on string type:
 			// - numeric and boolean type has no concept of case
 			// - other string based types such as reference, binary, dateTime is not case sensitive
 			if attr.Type != core.TypeString || attr.CaseExact {
-				return bsonx.Document(bsonx.MDoc{
-					path: bsonx.Document(bsonx.MDoc{
+				return bson.M{
+					path: bson.M{
 						mongoEq: value,
-					}),
-				}), nil
+					},
+				}, nil
 			} else {
-				return bsonx.Document(bsonx.MDoc{
-					path: bsonx.Regex(fmt.Sprintf("^%s$", root.Right.Token), "i"),
-				}), nil
+				return bson.M{
+					path: bsonx.Regex(fmt.Sprintf("^%s$", stripQuotes(root.Right.Token)), "i"),
+				}, nil
 			}
 		}
 
@@ -150,104 +154,114 @@ func (t *transformer) transform(root *core.Step) (bsonx.Val, error) {
 		// - numeric and boolean type has no concept of case
 		// - other string based types such as reference, binary, dateTime is not case sensitive
 		if attr.Type != core.TypeString || attr.CaseExact {
-			return bsonx.Document(bsonx.MDoc{
-				path: bsonx.Document(bsonx.MDoc{
+			return bson.M{
+				path: bson.M{
 					mongoNe: value,
-				}),
-			}), nil
+				},
+			}, nil
 		} else {
-			return bsonx.Document(bsonx.MDoc{
-				mongoNot: bsonx.Array(bsonx.Arr{
-					bsonx.Document(bsonx.MDoc{
-						path: bsonx.Regex(fmt.Sprintf("^%s$", root.Right.Token), "i"),
-					}),
-				}),
-			}), nil
+			return bson.M{
+				mongoNot: bson.A{
+					bson.M{
+						path: bsonx.Regex(fmt.Sprintf("^%s$", stripQuotes(root.Right.Token)), "i"),
+					},
+				},
+			}, nil
 		}
 
 	case core.Sw:
 		if attr.CaseExact {
-			return bsonx.Document(bsonx.MDoc{
-				path: bsonx.Regex(fmt.Sprintf("^%s", root.Right.Token), ""),
-			}), nil
+			return bson.M{
+				path: bsonx.Regex(fmt.Sprintf("^%s", stripQuotes(root.Right.Token)), ""),
+			}, nil
 		} else {
-			return bsonx.Document(bsonx.MDoc{
-				path: bsonx.Regex(fmt.Sprintf("^%s", root.Right.Token), "i"),
-			}), nil
+			return bson.M{
+				path: bsonx.Regex(fmt.Sprintf("^%s", stripQuotes(root.Right.Token)), "i"),
+			}, nil
 		}
 
 	case core.Ew:
 		if attr.CaseExact {
-			return bsonx.Document(bsonx.MDoc{
-				path: bsonx.Regex(fmt.Sprintf("%s$", root.Right.Token), ""),
-			}), nil
+			return bson.M{
+				path: bsonx.Regex(fmt.Sprintf("%s$", stripQuotes(root.Right.Token)), ""),
+			}, nil
 		} else {
-			return bsonx.Document(bsonx.MDoc{
-				path: bsonx.Regex(fmt.Sprintf("%s$", root.Right.Token), "i"),
-			}), nil
+			return bson.M{
+				path: bsonx.Regex(fmt.Sprintf("%s$", stripQuotes(root.Right.Token)), "i"),
+			}, nil
 		}
 
 	case core.Co:
 		if attr.CaseExact {
-			return bsonx.Document(bsonx.MDoc{
-				path: bsonx.Regex(root.Right.Token, ""),
-			}), nil
+			return bson.M{
+				path: bsonx.Regex(stripQuotes(root.Right.Token), ""),
+			}, nil
 		} else {
-			return bsonx.Document(bsonx.MDoc{
-				path: bsonx.Regex(root.Right.Token, "i"),
-			}), nil
+			return bson.M{
+				path: bsonx.Regex(stripQuotes(root.Right.Token), "i"),
+			}, nil
 		}
 
 	case core.Gt:
-		return bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{mongoGt: value}),
-		}), nil
+		return bson.M{
+			path: bson.M{
+				mongoGt: value,
+			},
+		}, nil
 
 	case core.Ge:
-		return bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{mongoGe: value}),
-		}), nil
+		return bson.M{
+			path: bson.M{
+				mongoGe: value,
+			},
+		}, nil
 
 	case core.Lt:
-		return bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{mongoLt: value}),
-		}), nil
+		return bson.M{
+			path: bson.M{
+				mongoLt: value,
+			},
+		}, nil
 
 	case core.Le:
-		return bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{mongoLe: value}),
-		}), nil
+		return bson.M{
+			path: bson.M{
+				mongoLe: value,
+			},
+		}, nil
 
 	case core.Pr:
-		existsCriteria := bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{
+		existsCriteria := bson.M{
+			path: bson.M{
 				mongoExists: bsonx.Boolean(true),
-			}),
-		})
-		nullCriteria := bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{
+			},
+		}
+		nullCriteria := bson.M{
+			path: bson.M{
 				mongoNe: bsonx.Null(),
-			}),
-		})
-		emptyStringCriteria := bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{
+			},
+		}
+		emptyStringCriteria := bson.M{
+			path: bson.M{
 				mongoNe: bsonx.String(""),
-			}),
-		})
-		emptyArrayCriteria := bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{
-				mongoNot: bsonx.Array(bsonx.Arr{
-					bsonx.Document(bsonx.MDoc{mongoSize: bsonx.Int32(0)}),
-				}),
-			}),
-		})
-		emptyObjectCriteria := bsonx.Document(bsonx.MDoc{
-			path: bsonx.Document(bsonx.MDoc{
-				mongoNe: bsonx.Document(bsonx.MDoc{}),
-			}),
-		})
+			},
+		}
+		emptyArrayCriteria := bson.M{
+			path: bson.M{
+				mongoNot: bson.A{
+					bson.M{
+						mongoSize: 0,
+					},
+				},
+			},
+		}
+		emptyObjectCriteria := bson.M{
+			path: bson.M{
+				mongoNe: bson.M{},
+			},
+		}
 
-		criterion := make([]bsonx.Val, 0)
+		criterion := make([]interface{}, 0)
 		criterion = append(criterion, existsCriteria, nullCriteria)
 		if attr.MultiValued {
 			criterion = append(criterion, emptyArrayCriteria)
@@ -259,9 +273,9 @@ func (t *transformer) transform(root *core.Step) (bsonx.Val, error) {
 				criterion = append(criterion, emptyObjectCriteria)
 			}
 		}
-		return bsonx.Document(bsonx.MDoc{
-			mongoAnd: bsonx.Array(bsonx.Arr(criterion)),
-		}), nil
+		return bson.M{
+			mongoAnd: bson.A(criterion),
+		}, nil
 	}
 
 	panic("invalid operator")
@@ -282,9 +296,9 @@ func (t transformer) parseValue(raw string, attr *core.Attribute) (bsonx.Val, er
 
 	switch attr.Type {
 	case core.TypeString, core.TypeReference, core.TypeBinary:
-		return bsonx.String(raw), nil
+		return bsonx.String(stripQuotes(raw)), nil
 	case core.TypeDateTime:
-		t, err := time.Parse(core.ISO8601, raw)
+		t, err := time.Parse(core.ISO8601, stripQuotes(raw))
 		if err != nil {
 			return bsonx.Null(), core.Errors.InvalidFilter(fmt.Sprintf("invalid value: expects '%s' to be a dateTime", raw))
 		}
@@ -356,6 +370,13 @@ path:
 	}
 
 	return
+}
+
+func stripQuotes(s string) string {
+	if strings.HasPrefix(s, "\"") && strings.HasSuffix(s, "\"") {
+		return string(s[1 : len(s)-1])
+	}
+	return s
 }
 
 const (

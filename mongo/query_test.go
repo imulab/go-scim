@@ -3,7 +3,6 @@ package mongo
 import (
 	"github.com/imulab/go-scim/core"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/x/bsonx"
 	"testing"
 )
 
@@ -20,26 +19,33 @@ func TestTransformFilter(t *testing.T) {
 	tests := []struct {
 		name   string
 		filter string
-		assert func(t *testing.T, val bsonx.Val, err error)
+		assert func(t *testing.T, val interface{}, err error)
 	}{
 		{
 			name:   "composite filter",
 			filter: "name eq \"david\" and age gt 17",
-			assert: func(t *testing.T, val bsonx.Val, err error) {
+			assert: func(t *testing.T, val interface{}, err error) {
 				assert.Nil(t, err)
 			},
 		},
 		{
 			name:   "multiValue equality",
 			filter: "tags eq \"foo\"",
-			assert: func(t *testing.T, val bsonx.Val, err error) {
+			assert: func(t *testing.T, val interface{}, err error) {
 				assert.Nil(t, err)
 			},
 		},
 		{
 			name:   "duplex path filter",
 			filter: "courses.name sw \"10\"",
-			assert: func(t *testing.T, val bsonx.Val, err error) {
+			assert: func(t *testing.T, val interface{}, err error) {
+				assert.Nil(t, err)
+			},
+		},
+		{
+			name:   "single cardinality filter",
+			filter: "id pr",
+			assert: func(t *testing.T, val interface{}, err error) {
 				assert.Nil(t, err)
 			},
 		},

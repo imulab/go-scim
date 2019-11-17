@@ -304,6 +304,18 @@ func TestFilterScanner(t *testing.T) {
 				{scanFilterError, 4},
 			},
 		},
+		{
+			name:   "single cardinality",
+			filter: "id pr",
+			expect: []signals{
+				{scanFilterBeginPath, 1},
+				{scanFilterContinue, 1},
+				{scanFilterEndPath, 1},
+				{scanFilterBeginOp, 1},
+				{scanFilterContinue, 1},
+				{scanFilterEndOp, 1},
+			},
+		},
 	}
 
 	for _, test := range tests {

@@ -528,7 +528,7 @@ func (fs *filterScanner) stateOpP(scan *filterScanner, c byte) int {
 // Intermediate state in operator where last two characters were 'p' and 'r' (case insensitive). The current character
 // must end the predicate.
 func (fs *filterScanner) stateOpPr(scan *filterScanner, c byte) int {
-	if c == ' ' {
+	if c == ' ' || c == 0 {
 		scan.step = fs.stateEndPredicate
 		return scanFilterEndOp
 	}

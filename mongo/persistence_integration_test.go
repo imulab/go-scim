@@ -218,6 +218,131 @@ func (s *PersistenceTestSuite) TestTotal() {
 	}
 }
 
+func (s *PersistenceTestSuite) TestCount() {
+	client, err := s.newClient()
+	s.Require().Nil(err)
+
+	tests := []struct {
+		name       string
+		scimFilter string
+		setup      func(t *testing.T, client *mongo.Client) *persistenceProvider
+		assert     func(t *testing.T, n int64, err error)
+	}{
+		{
+			name:       "count from a single collection",
+			scimFilter: "name eq \"testObject1\"",
+			setup: func(t *testing.T, client *mongo.Client) *persistenceProvider {
+				var (
+					collection   *mongo.Collection
+					resourceType *core.ResourceType
+				)
+				{
+					collection = client.
+						Database(mongoDatabaseName, options.Database()).
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "4"), options.Collection())
+
+					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
+					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
+					resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
+				}
+
+				for _, path := range []string{
+					"../resource/test/test_object_1.json",
+					"../resource/test/test_object_2.json",
+				} {
+					resource := test.MustResource(path, resourceType)
+					_, err = collection.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
+					s.Require().Nil(err)
+				}
+
+				return &persistenceProvider{
+					resourceTypes: []*core.ResourceType{
+						resourceType,
+					},
+					collections: map[string]*mongo.Collection{
+						resourceType.Id: collection,
+					},
+					maxTimePercent: 80,
+				}
+			},
+			assert: func(t *testing.T, n int64, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, int64(1), n)
+			},
+		},
+		{
+			name:       "count from multiple collection",
+			scimFilter: "id pr",
+			setup: func(t *testing.T, client *mongo.Client) *persistenceProvider {
+				var (
+					c1 *mongo.Collection
+					c2 *mongo.Collection
+
+					rt1 *core.ResourceType
+					rt2 *core.ResourceType
+				)
+				{
+					// prepare two collections
+					c1 = client.
+						Database(mongoDatabaseName, options.Database()).
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "5"), options.Collection())
+					c2 = client.
+						Database(mongoDatabaseName, options.Database()).
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "6"), options.Collection())
+
+					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
+					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
+					rt1 = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
+
+					_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
+					_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
+					rt2 = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
+				}
+
+				// insert 2 resources into the first collection
+				for _, path := range []string{
+					"../resource/test/test_object_1.json",
+					"../resource/test/test_object_2.json",
+				} {
+					resource := test.MustResource(path, rt1)
+					_, err = c1.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
+					s.Require().Nil(err)
+				}
+
+				// insert 1 resource into the second collection
+				for _, path := range []string{
+					"../resource/test/test_user_1.json",
+				} {
+					resource := test.MustResource(path, rt2)
+					_, err = c2.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
+					s.Require().Nil(err)
+				}
+
+				return &persistenceProvider{
+					resourceTypes: []*core.ResourceType{rt1, rt2},
+					collections: map[string]*mongo.Collection{
+						rt1.Id: c1,
+						rt2.Id: c2,
+					},
+					maxTimePercent: 80,
+				}
+			},
+			assert: func(t *testing.T, n int64, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, int64(3), n)
+			},
+		},
+	}
+
+	for _, each := range tests {
+		s.T().Run(each.name, func(t *testing.T) {
+			provider := each.setup(t, client)
+			n, err := provider.Count(context.Background(), each.scimFilter)
+			each.assert(t, n, err)
+		})
+	}
+}
+
 func (s *PersistenceTestSuite) TearDownSuite() {
 	if s.pool != nil && s.mongoDb != nil {
 		s.Require().Nil(s.pool.Purge(s.mongoDb))

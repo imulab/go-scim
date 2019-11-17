@@ -131,6 +131,15 @@ func (f errorFactory) sensitive(message string) error {
 	}
 }
 
+// The request resource is not found in the data store.
+func (f errorFactory) NotFound(format string, args ...interface{}) error {
+	return &ScimError{
+		Status:  404,
+		Type:    "notFound",
+		Message: fmt.Sprintf(format, args...),
+	}
+}
+
 // Server encountered internal error
 func (f errorFactory) Internal(message string) error {
 	return &ScimError{
