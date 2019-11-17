@@ -103,6 +103,7 @@ func (r *resourceTypeRepository) MustLoad(filePath string) *ResourceType {
 		panic(err)
 	}
 
+	r.Add(resourceType)
 	return resourceType
 }
 

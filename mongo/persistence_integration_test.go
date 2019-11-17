@@ -28,12 +28,14 @@ var (
 	debugTest         = test.EnvExists("TEST_DEBUG")
 )
 
-type PersistenceTestSuite struct {
-	suite.Suite
-	pool      *dockertest.Pool
-	mongoDb   *dockertest.Resource
-	newClient func() (*mongo.Client, error)
-}
+type (
+	PersistenceTestSuite struct {
+		suite.Suite
+		pool      *dockertest.Pool
+		mongoDb   *dockertest.Resource
+		newClient func() (*mongo.Client, error)
+	}
+)
 
 func (s *PersistenceTestSuite) SetupSuite() {
 	var err error
@@ -115,7 +117,7 @@ func (s *PersistenceTestSuite) TestTotal() {
 				{
 					collection = client.
 						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "1"), options.Collection())
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "10"), options.Collection())
 
 					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
 					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
@@ -160,10 +162,10 @@ func (s *PersistenceTestSuite) TestTotal() {
 					// prepare two collections
 					c1 = client.
 						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "2"), options.Collection())
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "20"), options.Collection())
 					c2 = client.
 						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "3"), options.Collection())
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "30"), options.Collection())
 
 					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
 					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
@@ -239,7 +241,7 @@ func (s *PersistenceTestSuite) TestCount() {
 				{
 					collection = client.
 						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "4"), options.Collection())
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "40"), options.Collection())
 
 					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
 					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
@@ -285,10 +287,10 @@ func (s *PersistenceTestSuite) TestCount() {
 					// prepare two collections
 					c1 = client.
 						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "5"), options.Collection())
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "50"), options.Collection())
 					c2 = client.
 						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "6"), options.Collection())
+						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "60"), options.Collection())
 
 					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
 					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
@@ -339,6 +341,57 @@ func (s *PersistenceTestSuite) TestCount() {
 			provider := each.setup(t, client)
 			n, err := provider.Count(context.Background(), each.scimFilter)
 			each.assert(t, n, err)
+		})
+	}
+}
+
+func (s *PersistenceTestSuite) TestInsertOne() {
+	client, err := s.newClient()
+	s.Require().Nil(err)
+
+	tests := []struct {
+		name        string
+		getProvider func(t *testing.T, client *mongo.Client) *persistenceProvider
+		getResource func(t *testing.T) *core.Resource
+	}{
+		{
+			name: "insert user",
+			getProvider: func(t *testing.T, client *mongo.Client) *persistenceProvider {
+				var (
+					collection   *mongo.Collection
+					resourceType *core.ResourceType
+				)
+
+				collection = client.
+					Database(mongoDatabaseName, options.Database()).
+					Collection(fmt.Sprintf("%s/%s", s.T().Name(), "70"), options.Collection())
+				_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
+				_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
+				resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
+
+				return &persistenceProvider{
+					resourceTypes: []*core.ResourceType{resourceType},
+					collections: map[string]*mongo.Collection{
+						resourceType.Id: collection,
+					},
+					maxTimePercent: 80,
+				}
+			},
+			getResource: func(t *testing.T) *core.Resource {
+				return test.MustResource(
+					"../resource/test/test_user_1.json",
+					core.ResourceTypes.Get("User"),
+				)
+			},
+		},
+	}
+
+	for _, each := range tests {
+		s.T().Run(each.name, func(t *testing.T) {
+			provider := each.getProvider(t, client)
+			resource := each.getResource(t)
+			err := provider.InsertOne(context.Background(), resource)
+			assert.Nil(t, err)
 		})
 	}
 }

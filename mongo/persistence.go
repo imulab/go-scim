@@ -150,7 +150,7 @@ func (p *persistenceProvider) countAllCollection(ctx context.Context, scimFilter
 
 func (p *persistenceProvider) InsertOne(ctx context.Context, resource *core.Resource) error {
 	resourceType := resource.GetResourceType()
-	if p.IsResourceTypeSupported(resourceType) {
+	if !p.IsResourceTypeSupported(resourceType) {
 		return core.Errors.Internal(fmt.Sprintf("resource type '%s' is not supported by this persistence provider", resourceType.Id))
 	}
 
