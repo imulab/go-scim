@@ -3,335 +3,416 @@
   "metadata": [
     {
       "id": "schemas",
-      "path": "schemas"
+      "path": "schemas",
+      "visit_order": 0
     },
     {
       "id": "id",
-      "path": "id"
+      "path": "id",
+      "annotations": ["@uuid"],
+      "visit_order": 1
     },
     {
       "id": "externalId",
-      "path": "externalId"
+      "path": "externalId",
+      "visit_order": 2
     },
     {
       "id": "meta",
-      "path": "meta"
+      "path": "meta",
+      "visit_order": 3
     },
     {
       "id": "meta.resourceType",
-      "path": "meta.resourceType"
+      "path": "meta.resourceType",
+      "annotations": ["@meta.resourceType"],
+      "visit_order": 0
     },
     {
       "id": "meta.created",
-      "path": "meta.created"
+      "path": "meta.created",
+      "annotations": ["@meta.created"],
+      "visit_order": 1
     },
     {
       "id": "meta.lastModified",
-      "path": "meta.lastModified"
+      "path": "meta.lastModified",
+      "annotations": ["@meta.lastModified"],
+      "visit_order": 2
     },
     {
       "id": "meta.location",
-      "path": "meta.location"
+      "path": "meta.location",
+      "annotations": ["@meta.location"],
+      "visit_order": 3
     },
     {
       "id": "meta.version",
-      "path": "meta.version"
+      "path": "meta.version",
+      "annotations": ["@meta.version"],
+      "visit_order": 4
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
-      "path": "userName"
+      "path": "userName",
+      "visit_order": 100
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:name",
-      "path": "name"
+      "path": "name",
+      "visit_order": 101
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.formatted",
-      "path": "name.formatted"
+      "path": "name.formatted",
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.familyName",
-      "path": "name.familyName"
+      "path": "name.familyName",
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.givenName",
-      "path": "name.givenName"
+      "path": "name.givenName",
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.middleName",
-      "path": "name.middleName"
+      "path": "name.middleName",
+      "visit_order": 3
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.honorificPrefix",
-      "path": "name.honorificPrefix"
+      "path": "name.honorificPrefix",
+      "visit_order": 4
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.honorificSuffix",
-      "path": "name.honorificSuffix"
+      "path": "name.honorificSuffix",
+      "visit_order": 5
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:displayName",
-      "path": "displayName"
+      "path": "displayName",
+      "visit_order": 102
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:nickName",
-      "path": "nickName"
+      "path": "nickName",
+      "visit_order": 103
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:profileUrl",
-      "path": "profileUrl"
+      "path": "profileUrl",
+      "visit_order": 104
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:title",
-      "path": "title"
+      "path": "title",
+      "visit_order": 105
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:userType",
-      "path": "userType"
+      "path": "userType",
+      "visit_order": 106
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:preferredLanguage",
-      "path": "preferredLanguage"
+      "path": "preferredLanguage",
+      "visit_order": 107
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:locale",
-      "path": "locale"
+      "path": "locale",
+      "visit_order": 108
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:timezone",
-      "path": "timezone"
+      "path": "timezone",
+      "visit_order": 109
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:active",
-      "path": "active"
+      "path": "active",
+      "visit_order": 110
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:password",
-      "path": "password"
+      "path": "password",
+      "visit_order": 111
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails",
-      "path": "emails"
+      "path": "emails",
+      "visit_order": 112
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.value",
       "path": "emails.value",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.type",
       "path": "emails.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.primary",
       "path": "emails.primary",
-      "is_exclusive": true
+      "is_exclusive": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.display",
-      "path": "emails.display"
+      "path": "emails.display",
+      "visit_order": 3
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers",
-      "path": "phoneNumbers"
+      "path": "phoneNumbers",
+      "visit_order": 113
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.value",
       "path": "phoneNumbers.value",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.type",
       "path": "phoneNumbers.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.primary",
       "path": "phoneNumbers.primary",
-      "is_exclusive": true
+      "is_exclusive": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.display",
-      "path": "phoneNumbers.display"
+      "path": "phoneNumbers.display",
+      "visit_order": 3
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims",
-      "path": "ims"
+      "path": "ims",
+      "visit_order": 114
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.value",
       "path": "ims.value",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.type",
       "path": "ims.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.primary",
       "path": "ims.primary",
-      "is_exclusive": true
+      "is_exclusive": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.display",
-      "path": "ims.display"
+      "path": "ims.display",
+      "visit_order": 3
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos",
-      "path": "photos"
+      "path": "photos",
+      "visit_order": 115
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.value",
       "path": "photos.value",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.type",
       "path": "photos.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.primary",
       "path": "photos.primary",
-      "is_exclusive": true
+      "is_exclusive": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses",
-      "path": "addresses"
+      "path": "addresses",
+      "visit_order": 116
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.formatted",
       "path": "addresses.formatted",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.streetAddress",
       "path": "addresses.streetAddress",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.locality",
       "path": "addresses.locality",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.region",
       "path": "addresses.region",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 3
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.postalCode",
       "path": "addresses.postalCode",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 4
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.country",
       "path": "addresses.country",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 5
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.type",
       "path": "addresses.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 6
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.primary",
       "path": "addresses.primary",
-      "is_exclusive": true
+      "is_exclusive": true,
+      "visit_order": 7
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups",
-      "path": "groups"
+      "path": "groups",
+      "visit_order": 117
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.value",
       "path": "groups.value",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.$ref",
       "path": "groups.$ref",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.type",
       "path": "groups.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.display",
-      "path": "groups.display"
+      "path": "groups.display",
+      "visit_order": 3
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements",
-      "path": "entitlements"
+      "path": "entitlements",
+      "visit_order": 118
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.value",
       "path": "entitlements.value",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.type",
       "path": "entitlements.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.primary",
       "path": "entitlements.primary",
-      "is_exclusive": true
+      "is_exclusive": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.display",
-      "path": "entitlements.display"
+      "path": "entitlements.display",
+      "visit_order": 3
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles",
-      "path": "roles"
+      "path": "roles",
+      "visit_order": 119
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.value",
       "path": "roles.value",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.type",
       "path": "roles.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.primary",
       "path": "roles.primary",
-      "is_exclusive": true
+      "is_exclusive": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.display",
-      "path": "roles.display"
+      "path": "roles.display",
+      "visit_order": 3
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates",
-      "path": "x509Certificates"
+      "path": "x509Certificates",
+      "visit_order": 120
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.value",
       "path": "x509Certificates.value",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.type",
       "path": "x509Certificates.type",
-      "is_identity": true
+      "is_identity": true,
+      "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.primary",
       "path": "x509Certificates.primary",
-      "is_exclusive": true
+      "is_exclusive": true,
+      "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.display",
-      "path": "x509Certificates.display"
+      "path": "x509Certificates.display",
+      "visit_order": 3
     }
   ]
 }

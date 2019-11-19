@@ -59,6 +59,17 @@ type (
 		// true exclusive property is added, the existing true exclusive property
 		// is turned off (set to false).
 		IsExclusive bool `json:"is_exclusive"`
+
+		// An integer indicating the order of the traversal when the property having
+		// this attribute is visited. The order is only effective when traversing sub
+		// properties in the context of a complex property. The order is in ascending
+		// order, smaller order will be visited first.
+		VisitOrder int `json:"visit_order"`
+
+		// List of strings that mark the attribute for special processing. These
+		// annotations are meaningless in the context of this package, but may be
+		// picked up by other packages.
+		Annotations []string `json:"annotations"`
 	}
 
 	// Default metadata provider

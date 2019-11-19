@@ -141,10 +141,10 @@ func (f errorFactory) NotFound(format string, args ...interface{}) error {
 }
 
 // Server encountered internal error
-func (f errorFactory) Internal(message string) error {
+func (f errorFactory) Internal(format string, args ...interface{}) error {
 	return &ScimError{
 		Status:  500,
 		Type:    "internal",
-		Message: message,
+		Message: fmt.Sprintf(format, args...),
 	}
 }
