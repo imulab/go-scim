@@ -27,7 +27,7 @@ func (f *requiredFilter) Filter(ctx context.Context, resource *core.Resource, pr
 	return core.Errors.InvalidValue("'%s' is required, but is unassigned", property.Attribute().DisplayName())
 }
 
-// Create a new required filter
-func NewRequired() PropertyFilter {
-	return &requiredFilter{}
-}
+//// Create a new required filter
+//func NewRequired() PropertyFilter {
+//	return &requiredFilter{}
+//}

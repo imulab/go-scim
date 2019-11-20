@@ -254,6 +254,16 @@ func (attr *Attribute) ToOptional() *Attribute {
 	}
 }
 
+// Return true if two attribute are the same.
+func (attr *Attribute) Equals(another *Attribute) bool {
+	if attr.Id != another.Id {
+		// Definitely not the same if ids differ.
+		return false
+	}
+	// Check if one of them is derived from multiValued
+	return attr.MultiValued == another.MultiValued
+}
+
 // Make a deep copy of the attribute.
 func (attr *Attribute) Copy() *Attribute {
 	if attr == nil {

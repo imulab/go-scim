@@ -15,13 +15,13 @@ type (
 		// Returns an integer based order value, so that different filters working on the same attribute can be sorted
 		// and called in sequence. The filter can choose to return the same order value or different order value for
 		// different attributes.
-		//
 		// As a general rule of thumb, in the many stages the filters may be conceptually divide into, stage 1 filters
 		// start with index 100; stage 2 filters start with index 200; and so on...
 		Order(attribute *core.Attribute) int
-		// Process the given property, with access to the owning resource and the reference resource. The reference
-		// resource is optional, and when present, will present a view of the data in the persistence state.
-		Filter(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource) error
+		// Process the given property, with access to the owning resource.
+		Filter(ctx context.Context, resource *core.Resource, property core.Property) error
+		// Process the given property, with access to the owning and reference resource, and property.
+		FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error
 	}
 )
 

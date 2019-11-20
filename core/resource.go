@@ -35,7 +35,7 @@ func (r *Resource) skipResourceUrn(step *Step) *Step {
 // of the provided visitor.
 func (r *Resource) Visit(visitor Visitor) error {
 	visitor.BeginComplex(r.base)
-	for _, subProp := range r.base.subProps {
+	for _, subProp := range r.base.orderedSubProperties() {
 		if !visitor.ShouldVisit(subProp) {
 			continue
 		}

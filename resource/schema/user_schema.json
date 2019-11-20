@@ -4,59 +4,72 @@
   "description": "Defined attributes for the user schema",
   "attributes": [
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
       "name": "userName",
       "type": "string",
       "required": true,
       "uniqueness": "server"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:name",
       "name": "name",
       "type": "complex",
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.formatted",
           "name": "formatted",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.familyName",
           "name": "familyName",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.givenName",
           "name": "givenName",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.middleName",
           "name": "middleName",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.honorificPrefix",
           "name": "honorificPrefix",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.honorificSuffix",
           "name": "honorificSuffix",
           "type": "string"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:displayName",
       "name": "displayName",
       "type": "string"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:nickName",
       "name": "nickName",
       "type": "string"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:profileUrl",
       "name": "profileUrl",
       "type": "reference",
       "referenceTypes": ["external"]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:title",
       "name": "title",
       "type": "string"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:userType",
       "name": "userType",
       "type": "string",
       "canonicalValues": [
@@ -70,6 +83,7 @@
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:preferredLanguage",
       "name": "preferredLanguage",
       "type": "string",
       "canonicalValues": [
@@ -79,6 +93,7 @@
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:locale",
       "name": "locale",
       "type": "string",
       "canonicalValues": [
@@ -89,6 +104,7 @@
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:timezone",
       "name": "timezone",
       "type": "string",
       "canonicalValues": [
@@ -99,27 +115,32 @@
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:active",
       "name": "active",
       "type": "boolean",
       "required": true
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:password",
       "name": "password",
       "type": "string",
       "mutability": "writeOnly",
       "returned": "never"
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails",
       "name": "emails",
       "type": "complex",
       "multiValued": true,
       "required": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.value",
           "name": "value",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.type",
           "name": "type",
           "type": "string",
           "canonicalValues": [
@@ -129,25 +150,30 @@
           ]
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.primary",
           "name": "primary",
           "type": "boolean"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.display",
           "name": "display",
           "type": "string"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers",
       "name": "phoneNumbers",
       "type": "complex",
       "multiValued": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.value",
           "name": "value",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.type",
           "name": "type",
           "type": "string",
           "canonicalValues": [
@@ -160,50 +186,60 @@
           ]
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.primary",
           "name": "primary",
           "type": "boolean"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.display",
           "name": "display",
           "type": "string"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims",
       "name": "ims",
       "type": "complex",
       "multiValued": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.value",
           "name": "value",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.type",
           "name": "type",
           "type": "string",
           "canonicalValues": ["skype", "qq", "wechat", "weibo", "other"]
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.primary",
           "name": "primary",
           "type": "boolean"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.display",
           "name": "display",
           "type": "string"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos",
       "name": "photos",
       "type": "complex",
       "multiValued": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.value",
           "name": "value",
           "type": "reference",
           "referenceTypes": ["external"]
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.type",
           "name": "type",
           "type": "string",
           "canonicalValues": [
@@ -212,142 +248,172 @@
           ]
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.primary",
           "name": "primary",
           "type": "boolean"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses",
       "name": "addresses",
       "type": "complex",
       "multiValued": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.formatted",
           "name": "formatted",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.streetAddress",
           "name": "streetAddress",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.locality",
           "name": "locality",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.region",
           "name": "region",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.postalCode",
           "name": "postalCode",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.country",
           "name": "country",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.type",
           "name": "type",
           "type": "string",
           "canonicalValues": ["work", "home", "id", "driver", "other"]
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.primary",
           "name": "primary",
           "type": "boolean"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups",
       "name": "groups",
       "type": "complex",
       "multiValued": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.value",
           "name": "value",
           "type": "string",
           "mutability": "readOnly"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.$ref",
           "name": "$ref",
           "type": "reference",
           "mutability": "readOnly"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.type",
           "name": "type",
           "type": "string",
           "mutability": "readOnly",
           "canonicalValues": ["direct", "indirect"]
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.display",
           "name": "display",
           "type": "string"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements",
       "name": "entitlements",
       "type": "complex",
       "multiValued": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.value",
           "name": "value",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.type",
           "name": "type",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.primary",
           "name": "primary",
           "type": "boolean"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.display",
           "name": "display",
           "type": "string"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles",
       "name": "roles",
       "type": "complex",
       "multiValued": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.value",
           "name": "value",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.type",
           "name": "type",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.primary",
           "name": "primary",
           "type": "boolean"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.display",
           "name": "display",
           "type": "string"
         }
       ]
     },
     {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates",
       "name": "x509Certificates",
       "type": "complex",
       "multiValued": true,
       "subAttributes": [
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.value",
           "name": "value",
           "type": "binary"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.type",
           "name": "type",
           "type": "string"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.primary",
           "name": "primary",
           "type": "boolean"
         },
         {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.display",
           "name": "display",
           "type": "string"
         }

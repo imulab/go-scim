@@ -68,6 +68,8 @@ func (f *mutabilityFilter) filterImmutable(ctx context.Context, resource *core.R
 	}
 
 	// When there's reference, replace any existing value with value's from reference
+	// todo
+	return nil
 }
 
 func (f *mutabilityFilter) wrapError(err error, attribute *core.Attribute) error {

@@ -1,10 +1,5 @@
 package core
 
-import (
-	"math"
-	"sort"
-)
-
 type (
 	// Interface to implement if the caller wish to visit the property.
 	Visitor interface {
@@ -36,11 +31,6 @@ type (
 		Property
 		// Invoke the visitor on this property.
 		VisitedBy(visitor Visitor) error
-	}
-
-	orderedProps struct {
-		props	[]Property
-		order	[]int
 	}
 )
 
@@ -80,25 +70,7 @@ func (c *complexProperty) VisitedBy(visitor Visitor) error {
 
 	visitor.BeginComplex(c)
 
-	// sort the sub properties
-	ordered := &orderedProps{
-		props: make([]Property, 0, len(c.subProps)),
-		order: make([]int, 0, len(c.subProps)),
-	}
-	for _, subProp := range c.subProps {
-		ordered.props = append(ordered.props, subProp)
-
-		metadata := Meta.Get(subProp.Attribute().Id, DefaultMetadataId)
-		if metadata == nil {
-			ordered.order = append(ordered.order, math.MaxInt16)
-		} else {
-			ordered.order = append(ordered.order, metadata.(*DefaultMetadata).VisitOrder)
-		}
-	}
-	sort.Sort(ordered)
-
-	// iterate
-	for _, subProp := range ordered.props {
+	for _, subProp := range c.orderedSubProperties() {
 		if !visitor.ShouldVisit(subProp) {
 			continue
 		}
@@ -134,19 +106,6 @@ func (m *multiValuedProperty) VisitedBy(visitor Visitor) error {
 	visitor.EndMulti(m)
 
 	return nil
-}
-
-func (p *orderedProps) Len() int {
-	return len(p.props)
-}
-
-func (p *orderedProps) Less(i, j int) bool {
-	return p.order[i] < p.order[j]
-}
-
-func (p *orderedProps) Swap(i, j int) {
-	p.props[i], p.props[j] = p.props[j], p.props[i]
-	p.order[i], p.order[j] = p.order[j], p.order[i]
 }
 
 // implementation checks

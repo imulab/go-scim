@@ -103,11 +103,11 @@ func (f errorFactory) InvalidPath(message string) error {
 // The specified "path" did not yield an attribute or attribute value that could be
 // operated on. This occurs when the specified "path" value contains a filter that yields
 // no match.
-func (f errorFactory) noTarget(message string) error {
+func (f errorFactory) noTarget(format string, args ...interface{}) error {
 	return &ScimError{
 		Status:  400,
 		Type:    "noTarget",
-		Message: message,
+		Message: fmt.Sprintf(format, args...),
 	}
 }
 

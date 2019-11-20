@@ -144,24 +144,24 @@ func (f *metaVersionFilter) Filter(ctx context.Context, resource *core.Resource,
 
 // --- factories ---
 
-func NewMetaResourceTypeFilter() PropertyFilter {
-	return &metaResourceTypeFilter{}
-}
-
-func NewMetaCreatedFilter() PropertyFilter {
-	return &metaCreatedFilter{}
-}
-
-func NewMetaLastModifiedFilter() PropertyFilter  {
-	return &metaLastModifiedFilter{}
-}
-
-func NewMetaLocationFilter(resourceTypeIdToFormat map[string]string) PropertyFilter {
-	return &metaLocationFilter{
-		locationFormats: resourceTypeIdToFormat,
-	}
-}
-
-func NewMetaVersionFilter() PropertyFilter {
-	return &metaVersionFilter{}
-}
+//func NewMetaResourceTypeFilter() PropertyFilter {
+//	return &metaResourceTypeFilter{}
+//}
+//
+//func NewMetaCreatedFilter() PropertyFilter {
+//	return &metaCreatedFilter{}
+//}
+//
+//func NewMetaLastModifiedFilter() PropertyFilter  {
+//	return &metaLastModifiedFilter{}
+//}
+//
+//func NewMetaLocationFilter(resourceTypeIdToFormat map[string]string) PropertyFilter {
+//	return &metaLocationFilter{
+//		locationFormats: resourceTypeIdToFormat,
+//	}
+//}
+//
+//func NewMetaVersionFilter() PropertyFilter {
+//	return &metaVersionFilter{}
+//}

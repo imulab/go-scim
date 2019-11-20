@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"math"
+	"sort"
 	"strings"
 )
 
@@ -273,6 +275,27 @@ func (c *complexProperty) Children() []Property {
 	return subProps
 }
 
+func (c *complexProperty) orderedSubProperties() []Property {
+	ordered := &orderedProps{
+		props: make([]Property, 0, len(c.subProps)),
+		order: make([]int, 0, len(c.subProps)),
+	}
+
+	for _, subProp := range c.subProps {
+		ordered.props = append(ordered.props, subProp)
+		metadata := Meta.Get(subProp.Attribute().Id, DefaultMetadataId)
+		if metadata == nil {
+			ordered.order = append(ordered.order, math.MaxInt16)
+		} else {
+			ordered.order = append(ordered.order, metadata.(*DefaultMetadata).VisitOrder)
+		}
+	}
+
+	sort.Sort(ordered)
+
+	return ordered.props
+}
+
 // If all sub properties are unassigned, this complex property is unassigned.
 func (c *complexProperty) IsUnassigned() bool {
 	for _, p := range c.subProps {
@@ -377,3 +400,22 @@ var (
 	_ Property = (*complexProperty)(nil)
 	_ Property = (*multiValuedProperty)(nil)
 )
+
+type orderedProps struct {
+	props []Property
+	order []int
+}
+
+func (p *orderedProps) Len() int {
+	return len(p.props)
+}
+
+func (p *orderedProps) Less(i, j int) bool {
+	return p.order[i] < p.order[j]
+}
+
+func (p *orderedProps) Swap(i, j int) {
+	p.props[i], p.props[j] = p.props[j], p.props[i]
+	p.order[i], p.order[j] = p.order[j], p.order[i]
+}
+

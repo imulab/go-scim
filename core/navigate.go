@@ -49,6 +49,8 @@ func (n *defaultNavigator) Focus(selector interface{}) (Property, error) {
 		return n.focusSub(selector.(string))
 	case int:
 		return n.focusElement(selector.(int))
+	case func(property Property) bool:
+		return n.focusCriteria(selector.(func(property Property) bool))
 	default:
 		panic("invalid argument: expects string or int")
 	}
@@ -76,15 +78,23 @@ func (n *defaultNavigator) focusElement(selector int) (Property, error) {
 	current := n.Current()
 
 	if !current.Attribute().MultiValued || len(current.(*multiValuedProperty).props) <= selector {
-		return nil, Errors.noTarget(
-			fmt.Sprintf("item of index '%d' does not exist under '%s'", selector, current.Attribute().DisplayName()),
-		)
+		return nil, Errors.noTarget("item of index '%d' does not exist under '%s'", selector, current.Attribute().DisplayName())
 	}
 
 	elemProp := current.(*multiValuedProperty).props[selector]
 	n.stack = append(n.stack, elemProp)
 
 	return elemProp, nil
+}
+
+func (n *defaultNavigator) focusCriteria(criteria func(property Property) bool) (Property, error) {
+	for _, child := range n.Current().Children() {
+		if criteria(child) {
+			n.stack = append(n.stack, child)
+			return child, nil
+		}
+	}
+	return nil, Errors.noTarget("failed to navigate to next property: none met criteria")
 }
 
 func (n *defaultNavigator) Current() Property {

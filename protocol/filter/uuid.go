@@ -27,7 +27,7 @@ func (f *uuidFilter) Filter(ctx context.Context, _ *core.Resource, property core
 	return property.(core.Crud).Replace(nil, strings.ToLower(uuid.NewV4().String()))
 }
 
-// Create a new UUID filter
-func NewUUIDFilter() PropertyFilter {
-	return &uuidFilter{}
-}
+//// Create a new UUID filter
+//func NewUUIDFilter() PropertyFilter {
+//	return &uuidFilter{}
+//}
