@@ -8,8 +8,7 @@ import (
 )
 
 // A property filter that generates and assigns a new uuid V4 as value to the property, if the property
-// is marked with annotation '@uuid'. The generation only happens when Filter is called. When FilterWithRef
-// is called, the filter does nothing.
+// is marked with annotation '@uuid'. The generation only happens when there's no reference resource.
 type uuidFilter struct {}
 
 func (f *uuidFilter) Supports(attribute *core.Attribute) bool {
@@ -21,12 +20,11 @@ func (f *uuidFilter) Order(attribute *core.Attribute) int {
 	return 200
 }
 
-func (f *uuidFilter) Filter(ctx context.Context, _ *core.Resource, property core.Property) error {
+func (f *uuidFilter) Filter(ctx context.Context, _ *core.Resource, property core.Property, ref *core.Resource) error {
+	if ref != nil {
+		return nil
+	}
 	return property.(core.Crud).Replace(nil, strings.ToLower(uuid.NewV4().String()))
-}
-
-func (f *uuidFilter) FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, _ *core.Resource, _ core.Property) error {
-	return nil
 }
 
 // Create a new UUID filter
