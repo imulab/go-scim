@@ -19,15 +19,9 @@ type (
 		// As a general rule of thumb, in the many stages the filters may be conceptually divide into, stage 1 filters
 		// start with index 100; stage 2 filters start with index 200; and so on...
 		Order(attribute *core.Attribute) int
-		// Process the given property, and return error if any. The owning resource is also passed in as reference.
-		// This is a brother method of FilterWithRef.
-		Filter(ctx context.Context, resource *core.Resource, property core.Property) error
-		// Process the given property, with reference to the same property from another resource, and return error if any.
-		// This is the brother method of Filter and will be called a reference is available. Such is common in scenario
-		// like resource update, which a resource from persistence is usually queried to compare with the user provided
-		// value. If no such reference is available, ref will be called with nil and implementation may delete such case
-		// to method Filter.
-		FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, refResource *core.Resource, ref core.Property) error
+		// Process the given property, with access to the owning resource and the reference resource. The reference
+		// resource is optional, and when present, will present a view of the data in the persistence state.
+		Filter(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource) error
 	}
 )
 
@@ -95,7 +89,7 @@ func BuildIndex(resourceTypes []*core.ResourceType, filters []PropertyFilter) ma
 	return result
 }
 
-// Return true if the attribute's metadata contains the queried annotation
+// Return true if the attribute's metadata contains the queried annotation. The annotation is case sensitive.
 func ContainsAnnotation(attr *core.Attribute, annotation string) bool {
 	metadata := core.Meta.Get(attr.Id, core.DefaultMetadataId)
 	if metadata == nil {
@@ -104,7 +98,7 @@ func ContainsAnnotation(attr *core.Attribute, annotation string) bool {
 
 	annotations := metadata.(*core.DefaultMetadata).Annotations
 	for _, each := range annotations {
-		if each == "@meta.resourceType" {
+		if each == annotation {
 			return true
 		}
 	}
