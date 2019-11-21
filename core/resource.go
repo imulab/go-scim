@@ -7,6 +7,21 @@ type Resource struct {
 	base *complexProperty
 }
 
+// Convenience method to get the id property value from the resource
+func (r *Resource) GetID() (string, error) {
+	v, err := r.base.Get(Steps.NewPath("id"))
+	if err != nil {
+		return "", err
+	}
+
+	id, ok := v.(string)
+	if !ok {
+		return "", Errors.InvalidValue("id has wrong type")
+	}
+
+	return id, nil
+}
+
 func (r *Resource) GetResourceType() *ResourceType {
 	return r.rt
 }
@@ -17,6 +32,10 @@ func (r *Resource) Get(step *Step) (interface{}, error) {
 
 func (r *Resource) Replace(step *Step, value interface{}) error {
 	return r.base.Replace(r.skipResourceUrn(step), value)
+}
+
+func (r *Resource) Evaluate(queryRoot *Step) (bool, error) {
+	return r.base.Evaluate(queryRoot)
 }
 
 func (r *Resource) skipResourceUrn(step *Step) *Step {
