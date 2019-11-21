@@ -1,4 +1,4 @@
-package filter
+package protocol
 
 import (
 	"context"
@@ -22,15 +22,15 @@ func TestFilterVisitorSync(t *testing.T) {
 		resourceType *core.ResourceType
 	)
 	{
-		_ = core.Schemas.MustLoad("../../resource/schema/user_schema.json")
-		_ = core.Meta.MustLoad("../../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
-		resourceType = core.ResourceTypes.MustLoad("../../resource/resource_type/user_resource_type.json")
+		_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
+		_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
 	}
 
-	resource := test.MustResource("../../resource/test/test_user_full.json", resourceType)
-	ref := test.MustResource("../../resource/test/test_user_full.json", resourceType)
+	resource := test.MustResource("../resource/test/test_user_full.json", resourceType)
+	ref := test.MustResource("../resource/test/test_user_full.json", resourceType)
 
-	executor := NewExecutor([]*core.ResourceType{
+	executor := NewFilterFunc([]*core.ResourceType{
 		resourceType,
 	}, []PropertyFilter{
 		&testSyncFilter{t: t},

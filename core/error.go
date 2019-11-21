@@ -64,21 +64,21 @@ func (f errorFactory) tooMany(message string) error {
 }
 
 // One or more of the attribute values are already in use or are reserved.
-func (f errorFactory) uniqueness(message string) error {
+func (f errorFactory) Uniqueness(format string, args ...interface{}) error {
 	return &ScimError{
 		Status:  400,
 		Type:    "uniqueness",
-		Message: message,
+		Message: fmt.Sprintf(format, args...),
 	}
 }
 
 // The attempted modification is not compatible with the target attribute's mutability
 // or current state (e.g., modification of an "immutable" attribute with an existing value).
-func (f errorFactory) mutability(message string) error {
+func (f errorFactory) Mutability(format string, args ...interface{}) error {
 	return &ScimError{
 		Status:  400,
 		Type:    "mutability",
-		Message: message,
+		Message: fmt.Sprintf(format, args...),
 	}
 }
 

@@ -1,4 +1,4 @@
-package filter
+package protocol
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 type (
 	// Function signature that runs the given resource through all necessary filters, with the help of a reference
 	// resource, and return any error
-	Executor func(ctx context.Context, resource *core.Resource, ref *core.Resource) error
+	FilterFunc func(ctx context.Context, resource *core.Resource, ref *core.Resource) error
 
 	// Implementation of core.Visitor that visits all properties within a resource, trying to invoke all property
 	// filters assigned to it. This visitor can also be equipped with a reference navigator, which navigates through
@@ -47,7 +47,7 @@ type (
 )
 
 // Construct and return a filter executor with reference to run during the filter stage.
-func NewExecutor(resourceTypes []*core.ResourceType, filters []PropertyFilter) Executor {
+func NewFilterFunc(resourceTypes []*core.ResourceType, filters []PropertyFilter) FilterFunc {
 	index := BuildIndex(resourceTypes, filters)
 	return func(ctx context.Context, resource *core.Resource, ref *core.Resource) error {
 		if ref == nil {
@@ -100,13 +100,13 @@ func (v *filterVisitor) Visit(property core.Property) error {
 		return nil
 	}
 
-	var (
-		ref core.Property
-	)
-	if !v.currentFrame().inSync {
-		ref = nil
-	} else {
-		ref = v.getReferenceFromNav(property)
+	var ref core.Property
+	{
+		if !v.currentFrame().inSync {
+			ref = nil
+		} else {
+			ref = v.getReferenceFromNav(property)
+		}
 	}
 	for _, filter := range filters {
 		err := filter.FilterWithRef(ctx, v.resource, property, v.ref, ref)
@@ -114,6 +114,7 @@ func (v *filterVisitor) Visit(property core.Property) error {
 			return err
 		}
 	}
+
 	return nil
 }
 

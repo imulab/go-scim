@@ -9,6 +9,7 @@ import (
 type CreateEndpoint struct {
 	HttpProvider        HttpProvider
 	ResourceType        *core.ResourceType
+	FilterFunc          FilterFunc
 	PersistenceProvider PersistenceProvider
 }
 
@@ -33,8 +34,10 @@ func (h *CreateEndpoint) serveHttpE(rw http.ResponseWriter, r *http.Request) (er
 		}
 	}
 
-	// todo navigator + visitor for map[string][]PropertyFilter
-	// todo pre persistence hooks: i.e. annotation processing (includes validation, value transformation, value generation), validation
+	err = h.FilterFunc(r.Context(), resource, nil)
+	if err != nil {
+		return err
+	}
 
 	err = h.PersistenceProvider.InsertOne(r.Context(), resource)
 	if err != nil {
@@ -50,7 +53,8 @@ func (h *CreateEndpoint) serveHttpE(rw http.ResponseWriter, r *http.Request) (er
 }
 
 func (h *CreateEndpoint) checkRequest(r *http.Request) error {
-
+	// todo
+	return nil
 }
 
 // Parse the HTTP body as a resource guided by the resource type of this endpoint.
