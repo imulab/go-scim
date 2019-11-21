@@ -417,11 +417,11 @@ func (f *uniquenessFilter) Order(attribute *core.Attribute) int {
 }
 
 func (f *uniquenessFilter) Filter(ctx context.Context, resource *core.Resource, property core.Property) error {
-	panic("implement me")
+	return f.unique(ctx, resource, property)
 }
 
 func (f *uniquenessFilter) FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error {
-	panic("implement me")
+	return f.unique(ctx, resource, property)
 }
 
 func (f *uniquenessFilter) unique(ctx context.Context, resource *core.Resource, property core.Property) error {
@@ -437,14 +437,17 @@ func (f *uniquenessFilter) unique(ctx context.Context, resource *core.Resource, 
 
 	var provider PersistenceProvider
 	{
-		for _, provider = range f.providers {
-			if provider.IsResourceTypeSupported(resource.GetResourceType()) && provider.IsFilterSupported() {
+		for _, each := range f.providers {
+			if each.IsResourceTypeSupported(resource.GetResourceType()) && each.IsFilterSupported() {
+				provider = each
 				break
 			}
 		}
 		// no provider configured to check uniqueness
 		// silently exit
-		return nil
+		if provider == nil {
+			return nil
+		}
 	}
 
 	var (
@@ -454,26 +457,30 @@ func (f *uniquenessFilter) unique(ctx context.Context, resource *core.Resource, 
 	)
 	{
 		path = core.Meta.Get(property.Attribute().Id, core.DefaultMetadataId).(*core.DefaultMetadata).Path
-
-		if v, err := resource.Get(core.Steps.NewPath("id")); err != nil {
-			return core.Errors.Internal("failed to obtain id")
-		} else if v == nil || len(v.(string)) == 0 {
-			return core.Errors.Internal("invalid resource id")
+		if path == "id" {
+			// special case: because we will use id in other queries
+			scimFilter = fmt.Sprintf("id eq \"%s\"", property.Raw())
 		} else {
-			id = v.(string)
-		}
+			if v, err := resource.Get(core.Steps.NewPath("id")); err != nil {
+				return core.Errors.Internal("failed to obtain id")
+			} else if v == nil || len(v.(string)) == 0 {
+				return core.Errors.Internal("invalid resource id")
+			} else {
+				id = v.(string)
+			}
 
-		switch property.Attribute().Type {
-		case core.TypeString, core.TypeReference, core.TypeBinary, core.TypeDateTime:
-			scimFilter = fmt.Sprintf("(id ne \"%s\") and (%s eq \"%s\")", id, path, property.Raw())
-		case core.TypeInteger:
-			scimFilter = fmt.Sprintf("(id ne \"%s\") and (%s eq %d)", id, path, property.Raw())
-		case core.TypeDecimal:
-			scimFilter = fmt.Sprintf("(id ne \"%s\") and (%s eq %f)", id, path, property.Raw())
-		case core.TypeBoolean:
-			scimFilter = fmt.Sprintf("(id ne \"%s\") and (%s eq %t)", id, path, property.Raw())
-		default:
-			panic("invalid attribute")
+			switch property.Attribute().Type {
+			case core.TypeString, core.TypeReference, core.TypeBinary, core.TypeDateTime:
+				scimFilter = fmt.Sprintf("(id ne \"%s\") and (%s eq \"%s\")", id, path, property.Raw())
+			case core.TypeInteger:
+				scimFilter = fmt.Sprintf("(id ne \"%s\") and (%s eq %d)", id, path, property.Raw())
+			case core.TypeDecimal:
+				scimFilter = fmt.Sprintf("(id ne \"%s\") and (%s eq %f)", id, path, property.Raw())
+			case core.TypeBoolean:
+				scimFilter = fmt.Sprintf("(id ne \"%s\") and (%s eq %t)", id, path, property.Raw())
+			default:
+				panic("invalid attribute")
+			}
 		}
 	}
 

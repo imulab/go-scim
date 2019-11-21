@@ -53,7 +53,17 @@ func (h *CreateEndpoint) serveHttpE(rw http.ResponseWriter, r *http.Request) (er
 }
 
 func (h *CreateEndpoint) checkRequest(r *http.Request) error {
-	// todo
+	if h.HttpProvider.Method(r) != http.MethodPost {
+		return core.Errors.InvalidRequest("resource creation request should be submitted via HTTP POST method")
+	}
+
+	if contentType := h.HttpProvider.Header(r, HeaderContentType); len(contentType) > 0 {
+		if contentType != ContentTypeApplicationJson && contentType != ContentTypeApplicationJsonScim {
+			return core.Errors.InvalidRequest("invalid %s header: accepts %s or %s",
+				HeaderContentType, ContentTypeApplicationJsonScim, ContentTypeApplicationJson)
+		}
+	}
+
 	return nil
 }
 
@@ -81,7 +91,7 @@ func (h *CreateEndpoint) renderSuccess(rw http.ResponseWriter, resource *core.Re
 	}
 
 	err = h.HttpProvider.Render(rw, http.StatusCreated, map[string]string{
-		"Content-Type": "application/json",
+		HeaderContentType: ContentTypeApplicationJsonScim,
 	}, raw)
 	if err != nil {
 		// suppress the error and try render the status code directly

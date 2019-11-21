@@ -43,12 +43,21 @@ var (
 // namespace for all error factory methods.
 type errorFactory struct{}
 
+// The request itself is invalid.
+func (f errorFactory) InvalidRequest(format string, args ...interface{}) error {
+	return &ScimError{
+		Status:  400,
+		Type:    "invalidRequest",
+		Message: fmt.Sprintf(format, args...),
+	}
+}
+
 // The specified filter syntax was invalid, or the specified attribute and
 // filter comparison combination is not supported.
 func (f errorFactory) InvalidFilter(message string) error {
 	return &ScimError{
 		Status:  400,
-		Type:    "InvalidFilter",
+		Type:    "invalidFilter",
 		Message: message,
 	}
 }
