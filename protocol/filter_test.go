@@ -630,7 +630,7 @@ func TestNewMetaResourceTypeFilter(t *testing.T) {
 	}
 }
 
-func TestNewUUIDFilter(t *testing.T) {
+func TestNewIDFilter(t *testing.T) {
 	var (
 		resourceType *core.ResourceType
 	)
@@ -703,7 +703,7 @@ func TestNewUUIDFilter(t *testing.T) {
 	for _, each := range tests {
 		t.Run(each.name, func(t *testing.T) {
 			var (
-				filter      = NewUUIDFilter()
+				filter      = NewIDFilter()
 				resource    = each.getResource(t)
 				property    = each.getProperty(t, resource)
 				ref         = each.getRef(t)

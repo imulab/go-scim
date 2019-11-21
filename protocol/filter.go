@@ -92,11 +92,11 @@ func ContainsAnnotation(attr *core.Attribute, annotation string) bool {
 	return false
 }
 
-// Create a new UUID filter. The filter is responsible of processing field marked with '@uuid'. It is intended to generate
-// a new UUID for the resource to serve as its id, hence the annotation is usually marked on the id field. The filter
-// replaces the id field value with a new UUID when Filter is called; it does nothing when FilterWithRef is called.
-func NewUUIDFilter() PropertyFilter {
-	return &uuidFilter{}
+// Create a new ID filter. The filter is responsible of processing field id. It is intended to generate a new UUID
+// for the resource to serve as its id, hence the annotation is usually marked on the id field. The filter replaces
+// the id field value with a new UUID when Filter is called; it does nothing when FilterWithRef is called.
+func NewIDFilter() PropertyFilter {
+	return &idFilter{}
 }
 
 // Create a meta resource type filter. The filter is responsible of assigning resource's resource type to the field
@@ -177,7 +177,7 @@ type (
 		FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error
 	}
 
-	uuidFilter struct{}
+	idFilter struct{}
 	metaResourceTypeFilter struct{}
 	metaCreatedFilter struct{}
 	metaLastModifiedFilter struct{}
@@ -192,21 +192,21 @@ type (
 	}
 )
 
-// --- uuidFilter ---
+// --- idFilter ---
 
-func (f *uuidFilter) Supports(attribute *core.Attribute) bool {
-	return ContainsAnnotation(attribute, "@uuid")
+func (f *idFilter) Supports(attribute *core.Attribute) bool {
+	return attribute.Id == "id"
 }
 
-func (f *uuidFilter) Order(attribute *core.Attribute) int {
+func (f *idFilter) Order(attribute *core.Attribute) int {
 	return 200
 }
 
-func (f *uuidFilter) Filter(ctx context.Context, resource *core.Resource, property core.Property) error {
+func (f *idFilter) Filter(ctx context.Context, resource *core.Resource, property core.Property) error {
 	return property.(core.Crud).Replace(nil, strings.ToLower(uuid.NewV4().String()))
 }
 
-func (f *uuidFilter) FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error {
+func (f *idFilter) FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error {
 	return nil
 }
 
@@ -332,20 +332,16 @@ func (f *metaVersionFilter) assignNewVersion(resource *core.Resource, property c
 // --- mutabilityFilter ---
 
 func (f *mutabilityFilter) Supports(attribute *core.Attribute) bool {
-	switch attribute.Mutability {
-	case core.MutabilityReadOnly:
+	if ContainsAnnotation(attribute, "@mutability:skip") {
 		// Because this filter copies reference property values to resource property when mutability is readOnly,
 		// the property handled by this filter may have already been handled before by the same filter running against
 		// a container attribute. For example, the 'meta' attribute is normally readOnly, one does not wish to double
 		// process all its sub attributes when the 'meta' attribute has already been copied. Hence, we suggest to
-		// mark any readOnly sub properties whose container property is also readOnly with '@skipReadOnly'. This way,
+		// mark any readOnly sub properties whose container property is also readOnly with '@mutability:skip'. This way,
 		// we avoid the double processing.
-		return !ContainsAnnotation(attribute, "@skipReadOnly")
-	case core.MutabilityImmutable:
-		return true
-	default:
 		return false
 	}
+	return attribute.Mutability == core.MutabilityReadOnly || attribute.Mutability == core.MutabilityImmutable
 }
 
 func (f *mutabilityFilter) Order(attribute *core.Attribute) int {

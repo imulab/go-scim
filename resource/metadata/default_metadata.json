@@ -9,7 +9,6 @@
     {
       "id": "id",
       "path": "id",
-      "annotations": ["@uuid"],
       "visit_order": 1
     },
     {
@@ -25,31 +24,31 @@
     {
       "id": "meta.resourceType",
       "path": "meta.resourceType",
-      "annotations": ["@meta.resourceType", "@skipReadOnly"],
+      "annotations": ["@mutability:skip"],
       "visit_order": 0
     },
     {
       "id": "meta.created",
       "path": "meta.created",
-      "annotations": ["@meta.created"],
+      "annotations": ["@mutability:skip"],
       "visit_order": 1
     },
     {
       "id": "meta.lastModified",
       "path": "meta.lastModified",
-      "annotations": ["@meta.lastModified", "@skipReadOnly"],
+      "annotations": ["@mutability:skip"],
       "visit_order": 2
     },
     {
       "id": "meta.location",
       "path": "meta.location",
-      "annotations": ["@meta.location"],
+      "annotations": ["@mutability:skip"],
       "visit_order": 3
     },
     {
       "id": "meta.version",
       "path": "meta.version",
-      "annotations": ["@meta.version", "@skipReadOnly"],
+      "annotations": ["@mutability:skip"],
       "visit_order": 4
     },
     {
