@@ -308,6 +308,7 @@
       "name": "groups",
       "type": "complex",
       "multiValued": true,
+      "mutability": "readOnly",
       "subAttributes": [
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.value",
@@ -331,7 +332,8 @@
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.display",
           "name": "display",
-          "type": "string"
+          "type": "string",
+          "mutability": "readOnly"
         }
       ]
     },

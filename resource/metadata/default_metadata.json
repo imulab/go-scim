@@ -311,23 +311,25 @@
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.value",
       "path": "groups.value",
       "is_identity": true,
+      "annotations": ["@mutability:skip"],
       "visit_order": 0
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.$ref",
       "path": "groups.$ref",
-      "is_identity": true,
+      "annotations": ["@mutability:skip"],
       "visit_order": 1
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.type",
       "path": "groups.type",
-      "is_identity": true,
+      "annotations": ["@mutability:skip"],
       "visit_order": 2
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.display",
       "path": "groups.display",
+      "annotations": ["@mutability:skip"],
       "visit_order": 3
     },
     {
@@ -413,6 +415,32 @@
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.display",
       "path": "x509Certificates.display",
       "visit_order": 3
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:Group:displayName",
+      "path": "displayName",
+      "visit_order": 100
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:Group:members",
+      "path": "members",
+      "visit_order": 101
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:Group:members.value",
+      "path": "members.value",
+      "is_identity": true,
+      "visit_order": 0
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:Group:members.$ref",
+      "path": "members.$ref",
+      "visit_order": 1
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:Group:members.type",
+      "path": "members.type",
+      "visit_order": 2
     }
   ]
 }

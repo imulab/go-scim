@@ -3,6 +3,7 @@ package protocol
 import (
 	"github.com/imulab/go-scim/core"
 	"github.com/imulab/go-scim/json"
+	"github.com/imulab/go-scim/persistence"
 	"net/http"
 )
 
@@ -10,7 +11,7 @@ type CreateEndpoint struct {
 	HttpProvider        HttpProvider
 	ResourceType        *core.ResourceType
 	FilterFunc          FilterFunc
-	PersistenceProvider PersistenceProvider
+	PersistenceProvider persistence.Provider
 }
 
 func (h *CreateEndpoint) ServeHTTP(rw http.ResponseWriter, r *http.Request) {

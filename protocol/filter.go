@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/imulab/go-scim/core"
+	"github.com/imulab/go-scim/persistence"
 	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
@@ -153,7 +154,7 @@ func NewRequiredFilter() PropertyFilter {
 
 // Create an uniqueness filter. This filter is responsible for checking properties whose attribute's uniqueness constraint
 // has value 'server'. It will make sure, for the given value, no other resource in the database has that value.
-func NewUniquenessFilter(providers []PersistenceProvider) PropertyFilter {
+func NewUniquenessFilter(providers []persistence.Provider) PropertyFilter {
 	return &uniquenessFilter{
 		providers: providers,
 	}
@@ -166,6 +167,14 @@ func NewBCryptFilter(cost int) PropertyFilter {
 	return &bcryptFilter{
 		cost: cost,
 	}
+}
+
+// Create a canonical value filter. This filter is responsible for ensuring the provided values are among the defined
+// canonicalValues in the attribute. The filter only works on string type where canonicalValues attribute is not empty.
+// In addition, the filter does nothing if the property is unassigned, or if the attribute has been marked by the
+// annotation '@canonical:skip'.
+func NewCanonicalFilter() PropertyFilter {
+	return &canonicalFilter{}
 }
 
 // A property filter is the main processing stage that the resource go through after being parsed and before being
@@ -198,10 +207,16 @@ type (
 	mutabilityFilter  struct{}
 	requiredFilter    struct{}
 	uniquenessFilter  struct {
-		providers []PersistenceProvider
+		providers []persistence.Provider
 	}
 	bcryptFilter struct {
 		cost int
+	}
+	canonicalFilter struct {}
+	referenceTypeFilter struct {
+		// A map from resource type's name to the persistence provider capable
+		// of handling of the resource type
+		providers 	map[string]persistence.Provider
 	}
 )
 
@@ -444,7 +459,7 @@ func (f *uniquenessFilter) unique(ctx context.Context, resource *core.Resource, 
 		return nil
 	}
 
-	var provider PersistenceProvider
+	var provider persistence.Provider
 	{
 		for _, each := range f.providers {
 			if each.IsResourceTypeSupported(resource.GetResourceType()) && each.IsFilterSupported() {
@@ -541,4 +556,58 @@ func (f *bcryptFilter) bcrypt(property core.Property) error {
 	}
 
 	return property.(core.Crud).Replace(nil, string(hashed))
+}
+
+// --- canonicalFilter ---
+
+func (f *canonicalFilter) Supports(attribute *core.Attribute) bool {
+	return !attribute.MultiValued &&
+		attribute.Type == core.TypeString &&
+		len(attribute.CanonicalValues) > 0 &&
+		!ContainsAnnotation(attribute, "@canonical:skip")
+}
+
+func (f *canonicalFilter) Order(attribute *core.Attribute) int {
+	return 600
+}
+
+func (f *canonicalFilter) Filter(ctx context.Context, resource *core.Resource, property core.Property) error {
+	return f.canonical(property)
+}
+
+func (f *canonicalFilter) FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error {
+	return f.canonical(property)
+}
+
+func (f *canonicalFilter) canonical(property core.Property) error {
+	if property.IsUnassigned() {
+		return nil
+	}
+
+	var attribute = property.Attribute()
+	for _, canonicalValue := range attribute.CanonicalValues {
+		if property.(core.EqualAware).IsEqualTo(canonicalValue) {
+			return nil
+		}
+	}
+
+	return core.Errors.InvalidValue("'%s' does not satisfy canonical values constraint", attribute.DisplayName())
+}
+
+// --- referenceTypeFilter ---
+
+func (f *referenceTypeFilter) Supports(attribute *core.Attribute) bool {
+	panic("implement me")
+}
+
+func (f *referenceTypeFilter) Order(attribute *core.Attribute) int {
+	panic("implement me")
+}
+
+func (f *referenceTypeFilter) Filter(ctx context.Context, resource *core.Resource, property core.Property) error {
+	panic("implement me")
+}
+
+func (f *referenceTypeFilter) FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error {
+	panic("implement me")
 }

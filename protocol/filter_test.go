@@ -3,6 +3,7 @@ package protocol
 import (
 	"context"
 	"github.com/imulab/go-scim/core"
+	"github.com/imulab/go-scim/persistence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -73,14 +74,14 @@ func TestNewUniquenessFilter(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		prepare     func(t *testing.T, p PersistenceProvider)
+		prepare     func(t *testing.T, p persistence.Provider)
 		getResource func(t *testing.T) *core.Resource
 		getProperty func(t *testing.T, resource *core.Resource) core.Property
 		assert      func(t *testing.T, resource *core.Resource, property core.Property, err error)
 	}{
 		{
 			name: "unique value will pass",
-			prepare: func(t *testing.T, p PersistenceProvider) {
+			prepare: func(t *testing.T, p persistence.Provider) {
 				return
 			},
 			getResource: func(t *testing.T) *core.Resource {
@@ -104,7 +105,7 @@ func TestNewUniquenessFilter(t *testing.T) {
 		},
 		{
 			name: "non-unique value will fail",
-			prepare: func(t *testing.T, p PersistenceProvider) {
+			prepare: func(t *testing.T, p persistence.Provider) {
 				resource := core.Resources.New(resourceType)
 				err := resource.Replace(core.Steps.NewPath("id"), "802ed529-1d9d-4855-82b2-11e9bbcb65d8")
 				require.Nil(t, err)
@@ -138,8 +139,8 @@ func TestNewUniquenessFilter(t *testing.T) {
 	for _, each := range tests {
 		t.Run(each.name, func(t *testing.T) {
 			var (
-				provider = NewMemoryPersistenceProvider()
-				filter   = NewUniquenessFilter([]PersistenceProvider{provider})
+				provider = persistence.NewMemoryProvider()
+				filter   = NewUniquenessFilter([]persistence.Provider{provider})
 				resource = each.getResource(t)
 				property = each.getProperty(t, resource)
 				err      error
