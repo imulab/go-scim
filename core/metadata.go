@@ -141,6 +141,26 @@ func (r *metadataRepository) Add(provider MetadataProvider) {
 	}
 }
 
+// Save a single piece of metadata to the repository. This method is intended to provide convenience to tests so
+// it does not have to reinvent the whole metadata provider.
+func (r *metadataRepository) AddSingle(providerId string, metadata Metadata) {
+	keyProvider := strings.ToLower(providerId)
+	if len(keyProvider) == 0 {
+		panic("zero length provider id in metadata")
+	}
+
+	keyAttr := strings.ToLower(metadata.AttributeId())
+	if len(keyAttr) == 0 {
+		panic("zero length attribute id in metadata")
+	}
+
+	if _, ok := r.data[keyAttr]; !ok {
+		r.data[keyAttr] = make(map[string]Metadata)
+	}
+
+	r.data[keyAttr][keyProvider] = metadata
+}
+
 // Get the metadata corresponding to the attribute and provider. If no metadata, returns nil. The method does not return
 // ok or error information in order to maintain a single result API to improve code readability. It is expected in most
 // cases that the caller knows what it is doing and the metadata actually exists.
