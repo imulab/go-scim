@@ -65,6 +65,12 @@ type (
 	}
 )
 
+func NewMemoryPersistenceProvider() PersistenceProvider {
+	p := new(MemoryPersistenceProvider)
+	p.database = make(map[string]map[string]*core.Resource)
+	return p
+}
+
 func (p *MemoryPersistenceProvider) IsFilterSupported() bool {
 	return true
 }

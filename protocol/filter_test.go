@@ -8,6 +8,98 @@ import (
 	"testing"
 )
 
+func TestNewUniquenessFilter(t *testing.T) {
+	var (
+		resourceType *core.ResourceType
+	)
+	{
+		_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
+		_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
+	}
+
+	tests := []struct {
+		name        string
+		prepare     func(t *testing.T, p PersistenceProvider)
+		getResource func(t *testing.T) *core.Resource
+		getProperty func(t *testing.T, resource *core.Resource) core.Property
+		assert      func(t *testing.T, resource *core.Resource, property core.Property, err error)
+	}{
+		{
+			name: "unique value will pass",
+			prepare: func(t *testing.T, p PersistenceProvider) {
+				return
+			},
+			getResource: func(t *testing.T) *core.Resource {
+				resource := core.Resources.New(resourceType)
+				err := resource.Replace(core.Steps.NewPath("id"), "802ed529-1d9d-4855-82b2-11e9bbcb65d8")
+				require.Nil(t, err)
+				err = resource.Replace(core.Steps.NewPath("userName"), "foobar")
+				require.Nil(t, err)
+				return resource
+			},
+			getProperty: func(t *testing.T, resource *core.Resource) core.Property {
+				require.NotNil(t, resource)
+				userNameProp, err := core.NewNavigator(resource).Focus("userName")
+				require.Nil(t, err)
+				require.Equal(t, core.UniquenessServer, userNameProp.Attribute().Uniqueness)
+				return userNameProp
+			},
+			assert: func(t *testing.T, resource *core.Resource, property core.Property, err error) {
+				assert.Nil(t, err)
+			},
+		},
+		{
+			name: "non-unique value will fail",
+			prepare: func(t *testing.T, p PersistenceProvider) {
+				resource := core.Resources.New(resourceType)
+				err := resource.Replace(core.Steps.NewPath("id"), "802ed529-1d9d-4855-82b2-11e9bbcb65d8")
+				require.Nil(t, err)
+				err = resource.Replace(core.Steps.NewPath("userName"), "foobar")
+				require.Nil(t, err)
+				err = p.InsertOne(context.Background(), resource)
+				require.Nil(t, err)
+				return
+			},
+			getResource: func(t *testing.T) *core.Resource {
+				resource := core.Resources.New(resourceType)
+				err := resource.Replace(core.Steps.NewPath("id"), "5cab2734-0198-462c-8444-78982083deea")
+				require.Nil(t, err)
+				err = resource.Replace(core.Steps.NewPath("userName"), "foobar")
+				require.Nil(t, err)
+				return resource
+			},
+			getProperty: func(t *testing.T, resource *core.Resource) core.Property {
+				require.NotNil(t, resource)
+				userNameProp, err := core.NewNavigator(resource).Focus("userName")
+				require.Nil(t, err)
+				require.Equal(t, core.UniquenessServer, userNameProp.Attribute().Uniqueness)
+				return userNameProp
+			},
+			assert: func(t *testing.T, resource *core.Resource, property core.Property, err error) {
+				assert.NotNil(t, err)
+			},
+		},
+	}
+
+	for _, each := range tests {
+		t.Run(each.name, func(t *testing.T) {
+			var (
+				provider = NewMemoryPersistenceProvider()
+				filter   = NewUniquenessFilter([]PersistenceProvider{provider})
+				resource = each.getResource(t)
+				property = each.getProperty(t, resource)
+				err      error
+			)
+			each.prepare(t, provider)
+			assert.True(t, filter.Supports(property.Attribute()))
+			// A bit white box hack: Filter and FilterWithRef executes the same logic
+			err = filter.Filter(context.Background(), resource, property)
+			each.assert(t, resource, property, err)
+		})
+	}
+}
+
 func TestNewMutabilityFilter(t *testing.T) {
 	var (
 		resourceType *core.ResourceType
@@ -123,12 +215,12 @@ func TestNewMutabilityFilter(t *testing.T) {
 			},
 			getProperty: func(t *testing.T, resource *core.Resource) core.Property {
 				core.Meta.AddSingle(core.DefaultMetadataId, &core.DefaultMetadata{
-					Id:          "4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
-					Path:        "foobar",
+					Id:   "4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
+					Path: "foobar",
 				})
 				return core.Properties.NewStringOf(&core.Attribute{
-					Id: 		"4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
-					Name: 		"foobar",
+					Id:         "4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
+					Name:       "foobar",
 					Type:       core.TypeString,
 					Mutability: core.MutabilityImmutable,
 				}, "foobar")
@@ -139,8 +231,8 @@ func TestNewMutabilityFilter(t *testing.T) {
 			},
 			getRefProperty: func(t *testing.T, ref *core.Resource) core.Property {
 				return core.Properties.NewStringOf(&core.Attribute{
-					Id: 		"4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
-					Name: 		"foobar",
+					Id:         "4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
+					Name:       "foobar",
 					Type:       core.TypeString,
 					Mutability: core.MutabilityImmutable,
 				}, "original")
