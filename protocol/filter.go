@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/imulab/go-scim/core"
 	"github.com/satori/go.uuid"
+	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"strings"
 	"time"
@@ -158,6 +159,15 @@ func NewUniquenessFilter(providers []PersistenceProvider) PropertyFilter {
 	}
 }
 
+// Create a bcrypt filter. This filter is responsible for transforming singleValued string properties whose attribute
+// is marked with annotation '@bcrypt'. It hashes the non-unassigned value of the property and replaces the original
+// value.
+func NewBCryptFilter(cost int) PropertyFilter {
+	return &bcryptFilter{
+		cost: cost,
+	}
+}
+
 // A property filter is the main processing stage that the resource go through after being parsed and before being
 // sent to a persistence provider. The implementations can carry out works like annotation processing, validation,
 // value generation, etc.
@@ -177,18 +187,21 @@ type (
 		FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error
 	}
 
-	idFilter struct{}
+	idFilter               struct{}
 	metaResourceTypeFilter struct{}
-	metaCreatedFilter struct{}
+	metaCreatedFilter      struct{}
 	metaLastModifiedFilter struct{}
-	metaLocationFilter struct {
+	metaLocationFilter     struct {
 		locationFormats map[string]string
 	}
 	metaVersionFilter struct{}
-	mutabilityFilter struct{}
-	requiredFilter struct{}
-	uniquenessFilter struct {
+	mutabilityFilter  struct{}
+	requiredFilter    struct{}
+	uniquenessFilter  struct {
 		providers []PersistenceProvider
+	}
+	bcryptFilter struct {
+		cost int
 	}
 )
 
@@ -494,4 +507,38 @@ func (f *uniquenessFilter) unique(ctx context.Context, resource *core.Resource, 
 	}
 
 	return nil
+}
+
+// --- bcryptFilter ---
+
+func (f *bcryptFilter) Supports(attribute *core.Attribute) bool {
+	return ContainsAnnotation(attribute, "@bcrypt")
+}
+
+func (f *bcryptFilter) Order(attribute *core.Attribute) int {
+	return 200
+}
+
+func (f *bcryptFilter) Filter(ctx context.Context, resource *core.Resource, property core.Property) error {
+	return f.bcrypt(property)
+}
+
+func (f *bcryptFilter) FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error {
+	return f.bcrypt(property)
+}
+
+func (f *bcryptFilter) bcrypt(property core.Property) error {
+	if property.Attribute().MultiValued || property.Attribute().Type != core.TypeString {
+		return nil
+	} else if property.IsUnassigned() {
+		return nil
+	}
+
+	original := property.Raw().(string)
+	hashed, err := bcrypt.GenerateFromPassword([]byte(original), f.cost)
+	if err != nil {
+		return core.Errors.Internal("failed to process field with annotation @bcrypt: '%s'", property.Attribute().DisplayName())
+	}
+
+	return property.(core.Crud).Replace(nil, string(hashed))
 }

@@ -8,6 +8,59 @@ import (
 	"testing"
 )
 
+func TestNewBCryptFilter(t *testing.T) {
+	var (
+		resourceType *core.ResourceType
+	)
+	{
+		_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
+		_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
+	}
+
+	tests := []struct {
+		name        string
+		getResource func(t *testing.T) *core.Resource
+		getProperty func(t *testing.T, resource *core.Resource) core.Property
+		assert      func(t *testing.T, resource *core.Resource, property core.Property, err error)
+	}{
+		{
+			name: "password will be hashed",
+			getResource: func(t *testing.T) *core.Resource {
+				resource := core.Resources.New(resourceType)
+				err := resource.Replace(core.Steps.NewPath("password"), "s3cret")
+				require.Nil(t, err)
+				return resource
+			},
+			getProperty: func(t *testing.T, resource *core.Resource) core.Property {
+				require.NotNil(t, resource)
+				passwordProp, err := core.NewNavigator(resource).Focus("password")
+				require.Nil(t, err)
+				return passwordProp
+			},
+			assert: func(t *testing.T, resource *core.Resource, property core.Property, err error) {
+				assert.Nil(t, err)
+				assert.NotEqual(t, "s3cret", property.Raw())
+			},
+		},
+	}
+
+	for _, each := range tests {
+		t.Run(each.name, func(t *testing.T) {
+			var (
+				filter   = NewBCryptFilter(10)
+				resource = each.getResource(t)
+				property = each.getProperty(t, resource)
+				err      error
+			)
+			assert.True(t, filter.Supports(property.Attribute()))
+			// A bit white box hack: Filter and FilterWithRef executes the same logic
+			err = filter.Filter(context.Background(), resource, property)
+			each.assert(t, resource, property, err)
+		})
+	}
+}
+
 func TestNewUniquenessFilter(t *testing.T) {
 	var (
 		resourceType *core.ResourceType

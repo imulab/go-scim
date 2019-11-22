@@ -139,6 +139,7 @@
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:password",
       "path": "password",
+      "annotations": ["@bcrypt"],
       "visit_order": 111
     },
     {
