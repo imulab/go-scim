@@ -2,7 +2,8 @@ package stage
 
 import (
 	"context"
-	"crypto/sha256"
+	"crypto/sha1"
+	"encoding/binary"
 	"fmt"
 	"github.com/imulab/go-scim/core"
 	"math/rand"
@@ -159,9 +160,9 @@ func (f *metaLocationFilter) FilterOnUpdate(ctx context.Context,
 	return nil
 }
 
-// Create a meta version filter. The filter is responsible of assigning a new version based on an sha256 hash of the
-// resource's id, current time and a random number in range of [0, 10000). Naturally, id must have been generated.
-// The version assignment happens on both Filter and FilterWithRef call.
+// Create a meta version filter. The filter is responsible of assigning a new version based on an sha1 hash of the
+// resource's id and a random uint64 number. Id must have been generated before this filter. The version assignment
+// happens on both Filter and FilterWithRef call.
 func NewMetaVersionFilter() PropertyFilter {
 	return &metaVersionFilter{}
 }
@@ -191,8 +192,14 @@ func (f *metaVersionFilter) assignNewVersion(resource *core.Resource, property c
 		return core.Errors.Internal("failed to obtain resource id")
 	}
 
-	sha := sha256.New()
-	sum := sha.Sum([]byte(fmt.Sprintf("%s:%d:%d", id, time.Now().Unix(), rand.Intn(10000))))
+	ts := rand.Uint64()
+	tsBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(tsBuf, ts)
+
+	sha := sha1.New()
+	sha.Write([]byte(id))
+	sha.Write(tsBuf)
+	sum := sha.Sum(nil)
 
 	return property.(core.Crud).Replace(nil, fmt.Sprintf("W/\"%x\"", sum))
 }
