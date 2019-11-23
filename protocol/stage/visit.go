@@ -27,10 +27,10 @@ type (
 		// container to search for the corresponding reference property to the visited property, if the current stack
 		// frame indicates the two containers are in sync.
 		refNav core.Navigator
-		// Map of attribute ids to all property filters handling the attribute. The filters for an attribute
+		// All property filters handling the attribute. The filters for an attribute
 		// will be invoked in order when the property with that attribute is visited, along with the reference
 		// property, if necessary. Any error from the filter will results in the visitor's premature exit.
-		filters map[string][]PropertyFilter
+		filters []PropertyFilter
 		// stack frames
 		stack []*frame
 	}
@@ -48,13 +48,27 @@ type (
 
 // Construct and return a filter executor with reference to run during the filter stage.
 func NewFilterStage(resourceTypes []*core.ResourceType, filters []PropertyFilter) FilterStage {
-	index := buildIndex(resourceTypes, filters)
+	// First, we sort the filters. We use the O(N^2) insertion sort for its simplicity. Performance
+	// is of second concern because there's usually not that many filters.
+	orders := make([]int, len(filters), len(filters))
+	for i, filter := range filters {
+		orders[i] = filter.Order()
+	}
+	for i := 1; i < len(orders); i++ {
+		for j := i; j > 0; j-- {
+			if orders[j-1] > orders[j] {
+				orders[j-1], orders[j] = orders[j], orders[j-1]
+				filters[j-1], filters[j] = filters[j], filters[j-1]
+			}
+		}
+	}
+
 	return func(ctx context.Context, resource *core.Resource, ref *core.Resource) error {
 		if ref == nil {
 			return resource.Visit(&filterVisitor{
 				context:  ctx,
 				resource: resource,
-				filters:  index,
+				filters:  filters,
 				stack:    make([]*frame, 0),
 			})
 		} else {
@@ -63,7 +77,7 @@ func NewFilterStage(resourceTypes []*core.ResourceType, filters []PropertyFilter
 				resource: resource,
 				ref:      ref,
 				refNav:   core.NewNavigator(ref),
-				filters:  index,
+				filters:  filters,
 				stack:    make([]*frame, 0),
 			})
 		}
@@ -75,11 +89,6 @@ func (v *filterVisitor) ShouldVisit(property core.Property) bool {
 }
 
 func (v *filterVisitor) Visit(property core.Property) error {
-	filters, ok := v.filters[property.Attribute().Id]
-	if !ok || len(filters) == 0 {
-		return nil
-	}
-
 	var ctx context.Context
 	{
 		if v.context != nil {
@@ -91,10 +100,12 @@ func (v *filterVisitor) Visit(property core.Property) error {
 
 	// Short circuit: no reference case, just invoke all filters in sequence.
 	if v.ref == nil {
-		for _, filter := range filters {
-			err := filter.FilterOnCreate(ctx, v.resource, property)
-			if err != nil {
-				return err
+		for _, filter := range v.filters {
+			if filter.Supports(property.Attribute()) {
+				err := filter.FilterOnCreate(ctx, v.resource, property)
+				if err != nil {
+					return err
+				}
 			}
 		}
 		return nil
@@ -108,10 +119,12 @@ func (v *filterVisitor) Visit(property core.Property) error {
 			ref = v.getReferenceFromNav(property)
 		}
 	}
-	for _, filter := range filters {
-		err := filter.FilterOnUpdate(ctx, v.resource, property, v.ref, ref)
-		if err != nil {
-			return err
+	for _, filter := range v.filters {
+		if filter.Supports(property.Attribute()) {
+			err := filter.FilterOnUpdate(ctx, v.resource, property, v.ref, ref)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -143,18 +156,18 @@ func (v *filterVisitor) getReferenceFromNav(property core.Property) core.Propert
 }
 
 func (v *filterVisitor) BeginComplex(complex core.Property) {
-	v.push(complex)
-
 	// Short circuit: no reference to worry about
 	if v.refNav == nil {
+		v.push(complex)
 		return
 	}
 
-	// Short circuit: the only frame is the one we just pushed => meaning we are on the top level.
+	// Short circuit: We are on the top level.
 	// At the very start, BeginComplex is invoked on the base complex property by the visitor.
 	// And reference navigator, if exists, is already focused on the base property. Hence, we
 	// immediately assumes they are in sync.
-	if len(v.stack) == 1 {
+	if len(v.stack) == 0 {
+		v.push(complex)
 		v.currentFrame().inSync = true
 		v.currentFrame().exitFunc = func() {
 			v.refNav.Release()
@@ -164,6 +177,7 @@ func (v *filterVisitor) BeginComplex(complex core.Property) {
 
 	// Another short circuit: no need to sync up if the current frame is not in sync
 	if !v.currentFrame().inSync {
+		v.push(complex)
 		return
 	}
 
@@ -172,6 +186,7 @@ func (v *filterVisitor) BeginComplex(complex core.Property) {
 		selector interface{}
 		attr = v.currentFrame().container.Attribute()
 	)
+	v.push(complex)
 	switch {
 	case attr.MultiValued:
 		// complex as an element of a multiValued container => find the match

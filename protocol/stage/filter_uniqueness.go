@@ -27,8 +27,8 @@ func (f *uniquenessFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Uniqueness == core.UniquenessServer
 }
 
-func (f *uniquenessFilter) Order(attribute *core.Attribute) int {
-	return 600
+func (f *uniquenessFilter) Order() int {
+	return 203
 }
 
 func (f *uniquenessFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

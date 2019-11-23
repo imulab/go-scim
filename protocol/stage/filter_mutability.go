@@ -38,8 +38,8 @@ func (f *mutabilityFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Mutability == core.MutabilityReadOnly || attribute.Mutability == core.MutabilityImmutable
 }
 
-func (f *mutabilityFilter) Order(attribute *core.Attribute) int {
-	return 100
+func (f *mutabilityFilter) Order() int {
+	return 200
 }
 
 func (f *mutabilityFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

@@ -8,6 +8,7 @@ import (
 
 const (
 	annotationBcrypt = "@bcrypt"
+	orderBcrypt = 350
 )
 
 // Create a bcrypt filter. This filter is responsible for transforming singleValued string properties whose attribute
@@ -34,8 +35,8 @@ func (f *bcryptFilter) Supports(attribute *core.Attribute) bool {
 		containsAnnotation(attribute, annotationBcrypt)
 }
 
-func (f *bcryptFilter) Order(attribute *core.Attribute) int {
-	return 200
+func (f *bcryptFilter) Order() int {
+	return orderBcrypt
 }
 
 func (f *bcryptFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

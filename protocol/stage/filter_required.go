@@ -21,8 +21,8 @@ func (f *requiredFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Required
 }
 
-func (f *requiredFilter) Order(attribute *core.Attribute) int {
-	return 500
+func (f *requiredFilter) Order() int {
+	return 201
 }
 
 func (f *requiredFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

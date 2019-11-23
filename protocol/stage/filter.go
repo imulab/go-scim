@@ -11,10 +11,8 @@ import (
 type PropertyFilter interface {
 	// Returns true if this filter supports processing the given attribute.
 	Supports(attribute *core.Attribute) bool
-	// Returns an integer based order value, so that different filters working on the same attribute can be sorted
-	// and called in sequence. The filter can choose to return the same order value or different order value for
-	// different attributes.
-	Order(attribute *core.Attribute) int
+	// Returns an integer based order value, so that filters can be sorted to be visited sequentially.
+	Order() int
 	// Process the given property during resource creation, with access to the owning resource.
 	FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error
 	// Process the given property during resource update, with access to the owning and reference resource, and property.
@@ -82,7 +80,7 @@ func buildIndex(resourceTypes []*core.ResourceType, filters []PropertyFilter) ma
 				// but simple insertion sort here.
 				orders := make([]int, len(filters), len(filters))
 				for i, filter := range filters {
-					orders[i] = filter.Order(attribute)
+					orders[i] = filter.Order()
 				}
 				for i := 1; i < len(orders); i++ {
 					for j := i; j > 0; j-- {

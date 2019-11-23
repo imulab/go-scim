@@ -30,8 +30,8 @@ func (f *canonicalValueFilter) Supports(attribute *core.Attribute) bool {
 		!containsAnnotation(attribute, annotationSkipCanonical)
 }
 
-func (f *canonicalValueFilter) Order(attribute *core.Attribute) int {
-	return 600
+func (f *canonicalValueFilter) Order() int {
+	return 202
 }
 
 func (f *canonicalValueFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

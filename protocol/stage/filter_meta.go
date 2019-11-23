@@ -16,6 +16,12 @@ const (
 	pathMetaLastModified = "meta.lastModified"
 	pathMetaLocation     = "meta.location"
 	pathMetaVersion      = "meta.version"
+
+	orderMetaResourceType = 301
+	orderMetaCreated      = 302
+	orderMetaLastModified = 303
+	orderMetaLocation     = 304
+	orderMetaVersion      = 305
 )
 
 var (
@@ -48,8 +54,8 @@ func (f *metaResourceTypeFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Id == pathMetaResourceType
 }
 
-func (f *metaResourceTypeFilter) Order(attribute *core.Attribute) int {
-	return 200
+func (f *metaResourceTypeFilter) Order() int {
+	return orderMetaResourceType
 }
 
 func (f *metaResourceTypeFilter) FilterOnCreate(ctx context.Context,
@@ -73,8 +79,8 @@ func (f *metaCreatedFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Id == pathMetaCreated
 }
 
-func (f *metaCreatedFilter) Order(attribute *core.Attribute) int {
-	return 200
+func (f *metaCreatedFilter) Order() int {
+	return orderMetaCreated
 }
 
 func (f *metaCreatedFilter) FilterOnCreate(ctx context.Context,
@@ -98,8 +104,8 @@ func (f *metaLastModifiedFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Id == pathMetaLastModified
 }
 
-func (f *metaLastModifiedFilter) Order(attribute *core.Attribute) int {
-	return 200
+func (f *metaLastModifiedFilter) Order() int {
+	return orderMetaLastModified
 }
 
 func (f *metaLastModifiedFilter) FilterOnCreate(ctx context.Context,
@@ -126,8 +132,8 @@ func (f *metaLocationFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Id == pathMetaLocation
 }
 
-func (f *metaLocationFilter) Order(attribute *core.Attribute) int {
-	return 200
+func (f *metaLocationFilter) Order() int {
+	return orderMetaLocation
 }
 
 func (f *metaLocationFilter) FilterOnCreate(ctx context.Context,
@@ -164,8 +170,8 @@ func (f *metaVersionFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Id == pathMetaVersion
 }
 
-func (f *metaVersionFilter) Order(attribute *core.Attribute) int {
-	return 200
+func (f *metaVersionFilter) Order() int {
+	return orderMetaVersion
 }
 
 func (f *metaVersionFilter) FilterOnCreate(ctx context.Context,
