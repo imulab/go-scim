@@ -134,79 +134,14 @@ func (s *PersistenceTestSuite) TestTotal() {
 				}
 
 				return &persistenceProvider{
-					resourceTypes: []*core.ResourceType{
-						resourceType,
-					},
-					collections: map[string]*mongo.Collection{
-						resourceType.Id: collection,
-					},
+					resourceType:   resourceType,
+					collection:     collection,
 					maxTimePercent: 80,
 				}
 			},
 			assert: func(t *testing.T, n int64, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, int64(2), n)
-			},
-		},
-		{
-			name: "total from multiple collection",
-			setup: func(t *testing.T, client *mongo.Client) *persistenceProvider {
-				var (
-					c1 *mongo.Collection
-					c2 *mongo.Collection
-
-					rt1 *core.ResourceType
-					rt2 *core.ResourceType
-				)
-				{
-					// prepare two collections
-					c1 = client.
-						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "20"), options.Collection())
-					c2 = client.
-						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "30"), options.Collection())
-
-					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
-					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
-					rt1 = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
-
-					_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
-					_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
-					rt2 = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
-				}
-
-				// insert 2 resources into the first collection
-				for _, path := range []string{
-					"../resource/test/test_object_1.json",
-					"../resource/test/test_object_2.json",
-				} {
-					resource := test.MustResource(path, rt1)
-					_, err = c1.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
-					s.Require().Nil(err)
-				}
-
-				// insert 1 resource into the second collection
-				for _, path := range []string{
-					"../resource/test/test_user_1.json",
-				} {
-					resource := test.MustResource(path, rt2)
-					_, err = c2.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
-					s.Require().Nil(err)
-				}
-
-				return &persistenceProvider{
-					resourceTypes: []*core.ResourceType{rt1, rt2},
-					collections: map[string]*mongo.Collection{
-						rt1.Id: c1,
-						rt2.Id: c2,
-					},
-					maxTimePercent: 80,
-				}
-			},
-			assert: func(t *testing.T, n int64, err error) {
-				assert.Nil(t, err)
-				assert.Equal(t, int64(3), n)
 			},
 		},
 	}
@@ -258,80 +193,14 @@ func (s *PersistenceTestSuite) TestCount() {
 				}
 
 				return &persistenceProvider{
-					resourceTypes: []*core.ResourceType{
-						resourceType,
-					},
-					collections: map[string]*mongo.Collection{
-						resourceType.Id: collection,
-					},
+					resourceType:   resourceType,
+					collection:     collection,
 					maxTimePercent: 80,
 				}
 			},
 			assert: func(t *testing.T, n int64, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, int64(1), n)
-			},
-		},
-		{
-			name:       "count from multiple collection",
-			scimFilter: "id pr",
-			setup: func(t *testing.T, client *mongo.Client) *persistenceProvider {
-				var (
-					c1 *mongo.Collection
-					c2 *mongo.Collection
-
-					rt1 *core.ResourceType
-					rt2 *core.ResourceType
-				)
-				{
-					// prepare two collections
-					c1 = client.
-						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "50"), options.Collection())
-					c2 = client.
-						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "60"), options.Collection())
-
-					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
-					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
-					rt1 = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
-
-					_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
-					_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
-					rt2 = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
-				}
-
-				// insert 2 resources into the first collection
-				for _, path := range []string{
-					"../resource/test/test_object_1.json",
-					"../resource/test/test_object_2.json",
-				} {
-					resource := test.MustResource(path, rt1)
-					_, err = c1.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
-					s.Require().Nil(err)
-				}
-
-				// insert 1 resource into the second collection
-				for _, path := range []string{
-					"../resource/test/test_user_1.json",
-				} {
-					resource := test.MustResource(path, rt2)
-					_, err = c2.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
-					s.Require().Nil(err)
-				}
-
-				return &persistenceProvider{
-					resourceTypes: []*core.ResourceType{rt1, rt2},
-					collections: map[string]*mongo.Collection{
-						rt1.Id: c1,
-						rt2.Id: c2,
-					},
-					maxTimePercent: 80,
-				}
-			},
-			assert: func(t *testing.T, n int64, err error) {
-				assert.Nil(t, err)
-				assert.Equal(t, int64(3), n)
 			},
 		},
 	}
@@ -370,10 +239,8 @@ func (s *PersistenceTestSuite) TestInsertOne() {
 				resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
 
 				return &persistenceProvider{
-					resourceTypes: []*core.ResourceType{resourceType},
-					collections: map[string]*mongo.Collection{
-						resourceType.Id: collection,
-					},
+					resourceType:   resourceType,
+					collection:     collection,
 					maxTimePercent: 80,
 				}
 			},
@@ -434,74 +301,8 @@ func (s *PersistenceTestSuite) TestGetById() {
 				}
 
 				return &persistenceProvider{
-					resourceTypes: []*core.ResourceType{
-						resourceType,
-					},
-					collections: map[string]*mongo.Collection{
-						resourceType.Id: collection,
-					},
-					maxTimePercent: 80,
-				}
-			},
-			assert: func(t *testing.T, r *core.Resource, err error) {
-				assert.Nil(t, err)
-				assert.NotNil(t, r)
-			},
-		},
-		{
-			name: "get from multiple collection",
-			id:   "4656a6b7-38e8-451c-8ac5-f7fd7853cb02",
-			setup: func(t *testing.T, client *mongo.Client) *persistenceProvider {
-				var (
-					c1 *mongo.Collection
-					c2 *mongo.Collection
-
-					rt1 *core.ResourceType
-					rt2 *core.ResourceType
-				)
-				{
-					// prepare two collections
-					c1 = client.
-						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "50"), options.Collection())
-					c2 = client.
-						Database(mongoDatabaseName, options.Database()).
-						Collection(fmt.Sprintf("%s/%s", s.T().Name(), "60"), options.Collection())
-
-					_ = core.Schemas.MustLoad("../resource/schema/test_object_schema.json")
-					_ = core.Meta.MustLoad("../resource/metadata/test_metadata.json", new(core.DefaultMetadataProvider))
-					rt1 = core.ResourceTypes.MustLoad("../resource/resource_type/test_object_resource_type.json")
-
-					_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
-					_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
-					rt2 = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
-				}
-
-				// insert 2 resources into the first collection
-				for _, path := range []string{
-					"../resource/test/test_object_1.json",
-					"../resource/test/test_object_2.json",
-				} {
-					resource := test.MustResource(path, rt1)
-					_, err = c1.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
-					s.Require().Nil(err)
-				}
-
-				// insert 1 resource into the second collection
-				for _, path := range []string{
-					"../resource/test/test_user_1.json",
-				} {
-					resource := test.MustResource(path, rt2)
-					_, err = c2.InsertOne(context.Background(), newBsonAdapter(resource), options.InsertOne())
-					s.Require().Nil(err)
-				}
-
-				return &persistenceProvider{
-					resourceTypes: []*core.ResourceType{rt1, rt2},
-					collections: map[string]*mongo.Collection{
-						rt1.Id: c1,
-						rt2.Id: c2,
-					},
+					resourceType:   resourceType,
+					collection:     collection,
 					maxTimePercent: 80,
 				}
 			},

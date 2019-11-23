@@ -8,9 +8,10 @@ import (
 )
 
 // Create a new in memory persistence provider
-func NewMemoryProvider() Provider {
+func NewMemoryProvider(resourceType *core.ResourceType) Provider {
 	p := new(memoryProvider)
-	p.database = make(map[string]map[string]*core.Resource)
+	p.resourceType = resourceType
+	p.database = make(map[string]*core.Resource)
 	return p
 }
 
@@ -18,35 +19,37 @@ func NewMemoryProvider() Provider {
 // production use.
 type memoryProvider struct {
 	sync.RWMutex
-	// Resources are indexed by first their resource type id, and then their id.
-	database map[string]map[string]*core.Resource
+	resourceType *core.ResourceType
+	// Resources are indexed by id
+	database map[string]*core.Resource
 }
 
-func (p *memoryProvider) IsFilterSupported() bool {
+func (p *memoryProvider) SupportsFilter() bool {
 	return true
 }
 
-func (p *memoryProvider) IsPaginationSupported() bool {
+func (p *memoryProvider) SupportsPagination() bool {
 	return false
 }
 
-func (p *memoryProvider) IsSortSupported() bool {
+func (p *memoryProvider) SupportsSort() bool {
 	return false
 }
 
-func (p *memoryProvider) IsResourceTypeSupported(resourceType *core.ResourceType) bool {
-	_, ok := p.database[resourceType.Id]
-	return ok
+func (p *memoryProvider) ResourceType() *core.ResourceType {
+	return p.resourceType
 }
 
-func (p *memoryProvider) Total(ctx context.Context) (n int64, err error) {
-	for _, resources := range p.database {
-		n += int64(len(resources))
-	}
-	return
+func (p *memoryProvider) Total(ctx context.Context) (int64, error) {
+	p.RLock()
+	defer p.RUnlock()
+	return int64(len(p.database)), nil
 }
 
 func (p *memoryProvider) Count(ctx context.Context, scimFilter string) (n int64, err error) {
+	p.RLock()
+	defer p.RUnlock()
+
 	var root *core.Step
 	{
 		root, err = query.CompileFilter(scimFilter)
@@ -55,13 +58,11 @@ func (p *memoryProvider) Count(ctx context.Context, scimFilter string) (n int64,
 		}
 	}
 
-	for _, resources := range p.database {
-		for _, resource := range resources {
-			if ok, err := resource.Evaluate(root); err != nil {
-				return 0, err
-			} else if ok {
-				n += 1
-			}
+	for _, resource := range p.database {
+		if ok, err := resource.Evaluate(root); err != nil {
+			return 0, err
+		} else if ok {
+			n += 1
 		}
 	}
 
@@ -69,30 +70,27 @@ func (p *memoryProvider) Count(ctx context.Context, scimFilter string) (n int64,
 }
 
 func (p *memoryProvider) InsertOne(ctx context.Context, resource *core.Resource) error {
+	p.Lock()
+	defer p.Unlock()
+
 	id, err := resource.GetID()
 	if err != nil {
 		return err
 	}
-
-	var m map[string]*core.Resource
-	m = p.database[resource.GetResourceType().Id]
-	if m == nil {
-		m = make(map[string]*core.Resource)
-	}
-	m[id] = resource
-	p.database[resource.GetResourceType().Id] = m
+	p.database[id] = resource
 
 	return nil
 }
 
 func (p *memoryProvider) GetById(ctx context.Context, id string) (*core.Resource, error) {
-	for _, resources := range p.database {
-		resource, ok := resources[id]
-		if ok {
-			return resource, nil
-		}
+	p.RLock()
+	defer p.RUnlock()
+
+	resource, ok := p.database[id]
+	if !ok {
+		return nil, core.Errors.NotFound("resource by id %s is not found", id)
 	}
-	return nil, core.Errors.NotFound("resource by id %s is not found", id)
+	return resource, nil
 }
 
 // implementation check

@@ -23,7 +23,7 @@ func TestCreateEndpoint(t *testing.T) {
 
 		resourceType := core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
 		httpProvider := NewDefaultHttpProvider()
-		persistenceProvider := persistence.NewMemoryProvider()
+		persistenceProvider := persistence.NewMemoryProvider(resourceType)
 		filterStage := stage.NewFilterStage([]*core.ResourceType{
 			resourceType,
 		}, []stage.PropertyFilter{

@@ -53,7 +53,7 @@ func (f *uniquenessFilter) unique(ctx context.Context, resource *core.Resource, 
 	var provider persistence.Provider
 	{
 		for _, each := range f.providers {
-			if each.IsResourceTypeSupported(resource.GetResourceType()) && each.IsFilterSupported() {
+			if each.SupportsFilter() && each.ResourceType().Id == resource.GetResourceType().Id {
 				provider = each
 				break
 			}

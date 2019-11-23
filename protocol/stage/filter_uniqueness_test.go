@@ -86,7 +86,7 @@ func TestNewUniquenessFilter(t *testing.T) {
 	for _, each := range tests {
 		t.Run(each.name, func(t *testing.T) {
 			var (
-				provider = persistence.NewMemoryProvider()
+				provider = persistence.NewMemoryProvider(resourceType)
 				filter   = NewUniquenessFilter([]persistence.Provider{provider})
 				resource = each.getResource(t)
 				property = each.getProperty(t, resource)

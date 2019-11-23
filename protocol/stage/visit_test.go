@@ -72,7 +72,7 @@ func TestFilterIntegration(t *testing.T) {
 
 	for _, each := range tests {
 		t.Run(each.name, func(t *testing.T) {
-			provider := persistence.NewMemoryProvider()
+			provider := persistence.NewMemoryProvider(resourceType)
 			each.prepare(t, provider)
 
 			stage := NewFilterStage([]*core.ResourceType{
@@ -107,7 +107,7 @@ func BenchmarkFilterIntegration(b *testing.B) {
 		resourceType = core.ResourceTypes.MustLoad("../../resource/resource_type/user_resource_type.json")
 	}
 
-	provider := persistence.NewMemoryProvider()
+	provider := persistence.NewMemoryProvider(resourceType)
 
 	stage := NewFilterStage([]*core.ResourceType{
 		resourceType,

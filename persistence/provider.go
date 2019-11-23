@@ -13,22 +13,22 @@ type Provider interface {
 	// results; for providers incapable of performing filter, the filtering operation will be attempted
 	// to be done in process. Note that the service may refuse to process a large number of results and
 	// return a 'tooMany' error instead.
-	IsFilterSupported() bool
+	SupportsFilter() bool
 
 	// Returns true if this provider is capable of performing pagination. For providers capable of performing
 	// pagination, the pagination will be done at the provider, and is expected to return only results within
 	// the page; for providers incapable of performing pagination, the service will attempt to perform pagination
 	// in process. However, the service may refuse to process a large number of results and return 'tooMany' error
 	// instead.
-	IsPaginationSupported() bool
+	SupportsPagination() bool
 
 	// Returns true if this provider is capable of return sorted results. For providers capable of sorting, the sort
 	// will be done at the provider, and it is expected for the provider to return sorted results; for providers
 	// incapable of sorting, the sort will be carried out in process.
-	IsSortSupported() bool
+	SupportsSort() bool
 
-	// Returns true if this provider supports the resource type.
-	IsResourceTypeSupported(resourceType *core.ResourceType) bool
+	// Returns the resource type supported by this provider.
+	ResourceType() *core.ResourceType
 
 	// Returns the number of total resources managed by this provider. Caller may use this to estimate the amount
 	// of workload and decide whether to proceed with the request. Caution that this result does not necessarily reflect
@@ -38,7 +38,7 @@ type Provider interface {
 	// Returns the number of managed resources that satisfies the given SCIM filter. Caller may use this to estimate
 	// the amount of workload and decide whether to proceed with the request. Caution that this result does not necessarily
 	// reflect the actual status of the underlying data store, due to concurrency. If the provider does not support
-	// filter (as in IsFilterSupported() == false), it can default to return the result of Total().
+	// filter (as in SupportsFilter() == false), it can default to return the result of Total().
 	Count(ctx context.Context, scimFilter string) (int64, error)
 
 	// Insert a single resource into the underling data store and returns any error. The data store is discouraged to
