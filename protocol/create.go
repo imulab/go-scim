@@ -4,13 +4,14 @@ import (
 	"github.com/imulab/go-scim/core"
 	"github.com/imulab/go-scim/json"
 	"github.com/imulab/go-scim/persistence"
+	"github.com/imulab/go-scim/protocol/stage"
 	"net/http"
 )
 
 type CreateEndpoint struct {
 	HttpProvider        HttpProvider
 	ResourceType        *core.ResourceType
-	FilterFunc          FilterFunc
+	FilterStage         stage.FilterStage
 	PersistenceProvider persistence.Provider
 }
 
@@ -35,7 +36,7 @@ func (h *CreateEndpoint) serveHttpE(rw http.ResponseWriter, r *http.Request) (er
 		}
 	}
 
-	err = h.FilterFunc(r.Context(), resource, nil)
+	err = h.FilterStage(r.Context(), resource, nil)
 	if err != nil {
 		return err
 	}

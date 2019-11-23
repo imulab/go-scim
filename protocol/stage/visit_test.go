@@ -1,4 +1,4 @@
-package protocol
+package stage
 
 import (
 	"context"
@@ -22,15 +22,15 @@ func TestFilterVisitorSync(t *testing.T) {
 		resourceType *core.ResourceType
 	)
 	{
-		_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")
-		_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
-		resourceType = core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
+		_ = core.Schemas.MustLoad("../../resource/schema/user_schema.json")
+		_ = core.Meta.MustLoad("../../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = core.ResourceTypes.MustLoad("../../resource/resource_type/user_resource_type.json")
 	}
 
-	resource := test.MustResource("../resource/test/test_user_full.json", resourceType)
-	ref := test.MustResource("../resource/test/test_user_full.json", resourceType)
+	resource := test.MustResource("../../resource/test/test_user_full.json", resourceType)
+	ref := test.MustResource("../../resource/test/test_user_full.json", resourceType)
 
-	executor := NewFilterFunc([]*core.ResourceType{
+	executor := NewFilterStage([]*core.ResourceType{
 		resourceType,
 	}, []PropertyFilter{
 		&testSyncFilter{t: t},
@@ -48,11 +48,11 @@ func (f *testSyncFilter) Order(attribute *core.Attribute) int {
 	return 0
 }
 
-func (f *testSyncFilter) Filter(ctx context.Context, resource *core.Resource, property core.Property) error {
+func (f *testSyncFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {
 	return nil
 }
 
-func (f *testSyncFilter) FilterWithRef(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error {
+func (f *testSyncFilter) FilterOnUpdate(ctx context.Context, resource *core.Resource, property core.Property, ref *core.Resource, refProp core.Property) error {
 	assert.True(f.t, property.Attribute().Equals(refProp.Attribute()))
 	return nil
 }

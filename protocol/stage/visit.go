@@ -1,4 +1,4 @@
-package protocol
+package stage
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 type (
 	// Function signature that runs the given resource through all necessary filters, with the help of a reference
 	// resource, and return any error
-	FilterFunc func(ctx context.Context, resource *core.Resource, ref *core.Resource) error
+	FilterStage func(ctx context.Context, resource *core.Resource, ref *core.Resource) error
 
 	// Implementation of core.Visitor that visits all properties within a resource, trying to invoke all property
 	// filters assigned to it. This visitor can also be equipped with a reference navigator, which navigates through
@@ -47,8 +47,8 @@ type (
 )
 
 // Construct and return a filter executor with reference to run during the filter stage.
-func NewFilterFunc(resourceTypes []*core.ResourceType, filters []PropertyFilter) FilterFunc {
-	index := BuildIndex(resourceTypes, filters)
+func NewFilterStage(resourceTypes []*core.ResourceType, filters []PropertyFilter) FilterStage {
+	index := buildIndex(resourceTypes, filters)
 	return func(ctx context.Context, resource *core.Resource, ref *core.Resource) error {
 		if ref == nil {
 			return resource.Visit(&filterVisitor{
@@ -92,7 +92,7 @@ func (v *filterVisitor) Visit(property core.Property) error {
 	// Short circuit: no reference case, just invoke all filters in sequence.
 	if v.ref == nil {
 		for _, filter := range filters {
-			err := filter.Filter(ctx, v.resource, property)
+			err := filter.FilterOnCreate(ctx, v.resource, property)
 			if err != nil {
 				return err
 			}
@@ -109,7 +109,7 @@ func (v *filterVisitor) Visit(property core.Property) error {
 		}
 	}
 	for _, filter := range filters {
-		err := filter.FilterWithRef(ctx, v.resource, property, v.ref, ref)
+		err := filter.FilterOnUpdate(ctx, v.resource, property, v.ref, ref)
 		if err != nil {
 			return err
 		}
