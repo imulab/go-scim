@@ -11,8 +11,11 @@ import (
 type CreateEndpoint struct {
 	HttpProvider        HttpProvider
 	ResourceType        *core.ResourceType
+	PostParseHook       stage.PostParseHook
 	FilterStage         stage.FilterStage
+	PrePersistHook      stage.PrePersistHook
 	PersistenceProvider persistence.Provider
+	PostPersistHook		stage.PostPersistHook
 }
 
 func (h *CreateEndpoint) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -36,14 +39,26 @@ func (h *CreateEndpoint) serveHttpE(rw http.ResponseWriter, r *http.Request) (er
 		}
 	}
 
+	if h.PostParseHook != nil {
+		h.PostParseHook.ResourceHasBeenParsed(r.Context(), resource)
+	}
+
 	err = h.FilterStage(r.Context(), resource, nil)
 	if err != nil {
 		return err
 	}
 
+	if h.PrePersistHook != nil {
+		h.PrePersistHook.ResourceWillBePersisted(r.Context(), resource)
+	}
+
 	err = h.PersistenceProvider.InsertOne(r.Context(), resource)
 	if err != nil {
 		return err
+	}
+
+	if h.PostPersistHook != nil {
+		h.PostPersistHook.ResourceHasBeenPersisted(r.Context(), resource)
 	}
 
 	err = h.renderSuccess(rw, resource)
