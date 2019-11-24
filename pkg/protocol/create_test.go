@@ -22,7 +22,7 @@ func TestCreateEndpoint(t *testing.T) {
 		_ = core.Meta.MustLoad("../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
 
 		resourceType := core.ResourceTypes.MustLoad("../resource/resource_type/user_resource_type.json")
-		httpProvider := NewDefaultHttpProvider()
+		httpProvider := NewDefaultHttpProvider(nil)
 		persistenceProvider := persistence.NewMemoryProvider(resourceType)
 		filterStage := stage.NewFilterStage([]*core.ResourceType{
 			resourceType,
