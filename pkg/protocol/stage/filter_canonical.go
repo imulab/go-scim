@@ -5,23 +5,23 @@ import (
 	"github.com/imulab/go-scim/pkg/core"
 )
 
-const (
-	annotationSkipCanonical = "@canonical:skip"
-)
+const annotationSkipCanonical = "@canonical:skip"
 
 // Create a canonical value filter. This filter is responsible for ensuring the provided values are among the defined
 // canonicalValues in the attribute. The filter only works on string type where canonicalValues attribute is not empty.
 // In addition, the filter does nothing if the property is unassigned, or if the attribute has been marked by the
 // annotation '@canonical:skip'.
-func NewCanonicalValueFilter() PropertyFilter {
-	return &canonicalValueFilter{}
+func NewCanonicalValueFilter(order int) PropertyFilter {
+	return &canonicalValueFilter{
+		order: order,
+	}
 }
 
-var (
-	_ PropertyFilter = (*canonicalValueFilter)(nil)
-)
+var _ PropertyFilter = (*canonicalValueFilter)(nil)
 
-type canonicalValueFilter struct {}
+type canonicalValueFilter struct {
+	order int
+}
 
 func (f *canonicalValueFilter) Supports(attribute *core.Attribute) bool {
 	return !attribute.MultiValued &&

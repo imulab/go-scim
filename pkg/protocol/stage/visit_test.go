@@ -78,17 +78,19 @@ func TestFilterIntegration(t *testing.T) {
 			stage := NewFilterStage([]*core.ResourceType{
 				resourceType,
 			}, []PropertyFilter{
-				NewIDFilter(),
-				NewMetaResourceTypeFilter(),
-				NewMetaCreatedFilter(),
-				NewMetaLastModifiedFilter(),
-				NewMetaLocationFilter(map[string]string{resourceType.Id: "https://test.org/%s"}),
-				NewMetaVersionFilter(),
-				NewMutabilityFilter(),
-				NewRequiredFilter(),
-				NewCanonicalValueFilter(),
-				NewUniquenessFilter([]persistence.Provider{provider}),
-				NewBCryptFilter(10),
+				NewReadOnlyFilter(1000),
+				NewSchemaFilter(1010),
+				NewIDFilter(1020),
+				NewMetaResourceTypeFilter(1030),
+				NewMetaCreatedFilter(1031),
+				NewMetaLastModifiedFilter(1032),
+				NewMetaLocationFilter(map[string]string{resourceType.Id: "https://test.org/%s"}, 1033),
+				NewMetaVersionFilter(1034),
+				NewBCryptFilter(10, 1040),
+				NewMutabilityFilter(2000),
+				NewRequiredFilter(2010),
+				NewCanonicalValueFilter(2020),
+				NewUniquenessFilter([]persistence.Provider{provider}, 2030),
 			})
 
 			resource := each.getResource(t)
@@ -112,17 +114,19 @@ func BenchmarkFilterIntegration(b *testing.B) {
 	stage := NewFilterStage([]*core.ResourceType{
 		resourceType,
 	}, []PropertyFilter{
-		NewIDFilter(),
-		NewMetaResourceTypeFilter(),
-		NewMetaCreatedFilter(),
-		NewMetaLastModifiedFilter(),
-		NewMetaLocationFilter(map[string]string{resourceType.Id: "https://test.org/%s"}),
-		NewMetaVersionFilter(),
-		NewMutabilityFilter(),
-		NewRequiredFilter(),
-		NewCanonicalValueFilter(),
-		NewUniquenessFilter([]persistence.Provider{provider}),
-		NewBCryptFilter(10),
+		NewReadOnlyFilter(1000),
+		NewSchemaFilter(1010),
+		NewIDFilter(1020),
+		NewMetaResourceTypeFilter(1030),
+		NewMetaCreatedFilter(1031),
+		NewMetaLastModifiedFilter(1032),
+		NewMetaLocationFilter(map[string]string{resourceType.Id: "https://test.org/%s"}, 1033),
+		NewMetaVersionFilter(1034),
+		NewBCryptFilter(10, 1040),
+		NewMutabilityFilter(2000),
+		NewRequiredFilter(2010),
+		NewCanonicalValueFilter(2020),
+		NewUniquenessFilter([]persistence.Provider{provider}, 2030),
 	})
 
 	resource := test.MustResource("../../resource/test/test_valid_user_create_payload.json", resourceType)

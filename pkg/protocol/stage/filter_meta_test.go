@@ -115,7 +115,7 @@ func (s *MetaFiltersTestSuite) TestMetaResourceTypeFilter() {
 	for _, each := range tests {
 		s.T().Run(each.name, func(t *testing.T) {
 			var (
-				filter      = NewMetaResourceTypeFilter()
+				filter      = NewMetaResourceTypeFilter(0)
 				resource    = each.getResource(t)
 				property    = each.getProperty(t, resource)
 				ref         = each.getRef(t)
@@ -227,7 +227,7 @@ func (s *MetaFiltersTestSuite) TestMetaCreatedFilter() {
 	for _, each := range tests {
 		s.T().Run(each.name, func(t *testing.T) {
 			var (
-				filter      = NewMetaCreatedFilter()
+				filter      = NewMetaCreatedFilter(0)
 				resource    = each.getResource(t)
 				property    = each.getProperty(t, resource)
 				ref         = each.getRef(t)
@@ -340,7 +340,7 @@ func (s *MetaFiltersTestSuite) TestMetaLastModifiedFilter() {
 	for _, each := range tests {
 		s.T().Run(each.name, func(t *testing.T) {
 			var (
-				filter      = NewMetaLastModifiedFilter()
+				filter      = NewMetaLastModifiedFilter(0)
 				resource    = each.getResource(t)
 				property    = each.getProperty(t, resource)
 				ref         = each.getRef(t)
@@ -462,7 +462,7 @@ func (s *MetaFiltersTestSuite) TestMetaLocationFilter() {
 	for _, each := range tests {
 		s.T().Run(each.name, func(t *testing.T) {
 			var (
-				filter      = NewMetaLocationFilter(each.locationFormat)
+				filter      = NewMetaLocationFilter(each.locationFormat, 0)
 				resource    = each.getResource(t)
 				property    = each.getProperty(t, resource)
 				ref         = each.getRef(t)
@@ -580,7 +580,7 @@ func (s *MetaFiltersTestSuite) TestMetaVersionFilter() {
 	for _, each := range tests {
 		s.T().Run(each.name, func(t *testing.T) {
 			var (
-				filter      = NewMetaVersionFilter()
+				filter      = NewMetaVersionFilter(0)
 				resource    = each.getResource(t)
 				property    = each.getProperty(t, resource)
 				ref         = each.getRef(t)

@@ -13,13 +13,13 @@ const annotationSkipMutability = "@mutability:skip"
 // a reference property; on the other hand, property values with an immutable attribute is ignored in absence of a reference
 // property, while in the presence of a reference property, they are matched with the reference property value to ensure
 // values have not changed.
-func NewMutabilityFilter() PropertyFilter {
-	return &mutabilityFilter{}
+func NewMutabilityFilter(order int) PropertyFilter {
+	return &mutabilityFilter{order: order}
 }
 
 var _ PropertyFilter = (*mutabilityFilter)(nil)
 
-type mutabilityFilter struct {}
+type mutabilityFilter struct {order int}
 
 func (f *mutabilityFilter) Supports(attribute *core.Attribute) bool {
 	// We do not have to worry about read only attributes because server is allowed
@@ -30,7 +30,7 @@ func (f *mutabilityFilter) Supports(attribute *core.Attribute) bool {
 }
 
 func (f *mutabilityFilter) Order() int {
-	return 200
+	return f.order
 }
 
 func (f *mutabilityFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

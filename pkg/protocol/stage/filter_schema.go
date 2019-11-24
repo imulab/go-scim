@@ -7,20 +7,20 @@ import (
 
 // Return a new schema filter. The filter is responsible of handling the schema attribute. The ids of the main schema
 // and the required schema extension must exist in the schema property.
-func NewSchemaFilter() PropertyFilter {
-	return &schemaFilter{}
+func NewSchemaFilter(order int) PropertyFilter {
+	return &schemaFilter{order: order}
 }
 
 var _ PropertyFilter = (*schemaFilter)(nil)
 
-type schemaFilter struct {}
+type schemaFilter struct {order int}
 
 func (f *schemaFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Id == "schemas" && attribute.MultiValued
 }
 
 func (f *schemaFilter) Order() int {
-	return 100
+	return f.order
 }
 
 func (f *schemaFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

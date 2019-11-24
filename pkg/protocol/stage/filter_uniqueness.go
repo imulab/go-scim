@@ -9,18 +9,18 @@ import (
 
 // Create an uniqueness filter. This filter is responsible for checking properties whose attribute's uniqueness constraint
 // has value 'server'. It will make sure, for the given value, no other resource in the database has that value.
-func NewUniquenessFilter(providers []persistence.Provider) PropertyFilter {
+func NewUniquenessFilter(providers []persistence.Provider, order int) PropertyFilter {
 	return &uniquenessFilter{
 		providers: providers,
+		order:     order,
 	}
 }
 
-var (
-	_ PropertyFilter = (*uniquenessFilter)(nil)
-)
+var _ PropertyFilter = (*uniquenessFilter)(nil)
 
 type uniquenessFilter struct {
 	providers []persistence.Provider
+	order     int
 }
 
 func (f *uniquenessFilter) Supports(attribute *core.Attribute) bool {
@@ -28,7 +28,7 @@ func (f *uniquenessFilter) Supports(attribute *core.Attribute) bool {
 }
 
 func (f *uniquenessFilter) Order() int {
-	return 203
+	return f.order
 }
 
 func (f *uniquenessFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

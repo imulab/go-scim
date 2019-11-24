@@ -7,22 +7,20 @@ import (
 
 // Create an required filter. The filter is responsible for checking any attribute whose required is set true that they
 // are not unassigned.
-func NewRequiredFilter() PropertyFilter {
-	return &requiredFilter{}
+func NewRequiredFilter(order int) PropertyFilter {
+	return &requiredFilter{order: order}
 }
 
-var (
-	_ PropertyFilter = (*requiredFilter)(nil)
-)
+var _ PropertyFilter = (*requiredFilter)(nil)
 
-type requiredFilter struct {}
+type requiredFilter struct {order int}
 
 func (f *requiredFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Required
 }
 
 func (f *requiredFilter) Order() int {
-	return 201
+	return f.order
 }
 
 func (f *requiredFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

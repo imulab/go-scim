@@ -27,17 +27,19 @@ func TestCreateEndpoint(t *testing.T) {
 		filterStage := stage.NewFilterStage([]*core.ResourceType{
 			resourceType,
 		}, []stage.PropertyFilter{
-			stage.NewIDFilter(),
-			stage.NewMetaResourceTypeFilter(),
-			stage.NewMetaCreatedFilter(),
-			stage.NewMetaLastModifiedFilter(),
-			stage.NewMetaLocationFilter(map[string]string{resourceType.Id: "https://test.org/%s"}),
-			stage.NewMetaVersionFilter(),
-			stage.NewMutabilityFilter(),
-			stage.NewRequiredFilter(),
-			stage.NewCanonicalValueFilter(),
-			stage.NewUniquenessFilter([]persistence.Provider{persistenceProvider}),
-			stage.NewBCryptFilter(10),
+			stage.NewReadOnlyFilter(1000),
+			stage.NewSchemaFilter(1010),
+			stage.NewIDFilter(1020),
+			stage.NewMetaResourceTypeFilter(1030),
+			stage.NewMetaCreatedFilter(1031),
+			stage.NewMetaLastModifiedFilter(1032),
+			stage.NewMetaLocationFilter(map[string]string{resourceType.Id: "https://test.org/%s"}, 1033),
+			stage.NewMetaVersionFilter(1034),
+			stage.NewBCryptFilter(10, 1040),
+			stage.NewMutabilityFilter(2000),
+			stage.NewRequiredFilter(2010),
+			stage.NewCanonicalValueFilter(2020),
+			stage.NewUniquenessFilter([]persistence.Provider{persistenceProvider}, 2030),
 		})
 
 		endpoint = &CreateEndpoint{

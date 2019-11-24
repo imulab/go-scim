@@ -6,27 +6,24 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const (
-	annotationBcrypt = "@bcrypt"
-	orderBcrypt = 350
-)
+const annotationBcrypt = "@bcrypt"
 
 // Create a bcrypt filter. This filter is responsible for transforming singleValued string properties whose attribute
 // is marked with annotation '@bcrypt'. The standard behaviour is hashing the non-unassigned value of the property and
 // replaces the original value. However, when FilterWithUpdate is called, the standard behaviour will be skipped if
 // the reference matches the property, indicating the value has not changed.
-func NewBCryptFilter(cost int) PropertyFilter {
+func NewBCryptFilter(cost int, order int) PropertyFilter {
 	return &bcryptFilter{
-		cost: cost,
+		cost:  cost,
+		order: order,
 	}
 }
 
-var (
-	_ PropertyFilter = (*bcryptFilter)(nil)
-)
+var _ PropertyFilter = (*bcryptFilter)(nil)
 
 type bcryptFilter struct {
-	cost int
+	cost  int
+	order int
 }
 
 func (f *bcryptFilter) Supports(attribute *core.Attribute) bool {
@@ -36,7 +33,7 @@ func (f *bcryptFilter) Supports(attribute *core.Attribute) bool {
 }
 
 func (f *bcryptFilter) Order() int {
-	return orderBcrypt
+	return f.order
 }
 
 func (f *bcryptFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {

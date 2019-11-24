@@ -17,12 +17,6 @@ const (
 	pathMetaLastModified = "meta.lastModified"
 	pathMetaLocation     = "meta.location"
 	pathMetaVersion      = "meta.version"
-
-	orderMetaResourceType = 301
-	orderMetaCreated      = 302
-	orderMetaLastModified = 303
-	orderMetaLocation     = 304
-	orderMetaVersion      = 305
 )
 
 var (
@@ -34,21 +28,21 @@ var (
 )
 
 type (
-	metaResourceTypeFilter struct{}
-	metaCreatedFilter      struct{}
-	metaLastModifiedFilter struct{}
-	metaVersionFilter      struct{}
+	metaResourceTypeFilter struct{ order int }
+	metaCreatedFilter      struct{ order int }
+	metaLastModifiedFilter struct{ order int }
+	metaVersionFilter      struct{ order int }
 	metaLocationFilter     struct {
-		// Map of resource type's id to url template format
-		locationFormats map[string]string
+		order           int
+		locationFormats map[string]string // Map of resource type's id to url template format
 	}
 )
 
 // Create a meta resource type filter. The filter is responsible of assigning resource's resource type to the field
 // 'meta.resourceType'. The filter only assigns the resource type when Filter is called. The filter is a no-op when
 // FilterWithRef is called.
-func NewMetaResourceTypeFilter() PropertyFilter {
-	return &metaResourceTypeFilter{}
+func NewMetaResourceTypeFilter(order int) PropertyFilter {
+	return &metaResourceTypeFilter{order: order}
 }
 
 func (f *metaResourceTypeFilter) Supports(attribute *core.Attribute) bool {
@@ -56,7 +50,7 @@ func (f *metaResourceTypeFilter) Supports(attribute *core.Attribute) bool {
 }
 
 func (f *metaResourceTypeFilter) Order() int {
-	return orderMetaResourceType
+	return f.order
 }
 
 func (f *metaResourceTypeFilter) FilterOnCreate(ctx context.Context,
@@ -72,8 +66,8 @@ func (f *metaResourceTypeFilter) FilterOnUpdate(ctx context.Context,
 
 // Create a meta created filter. The filter is responsible of assigning the current time to the field 'meta.created'
 // when Filter is called. The filter is a no-op when FilterWithRef is called.
-func NewMetaCreatedFilter() PropertyFilter {
-	return &metaCreatedFilter{}
+func NewMetaCreatedFilter(order int) PropertyFilter {
+	return &metaCreatedFilter{order: order}
 }
 
 func (f *metaCreatedFilter) Supports(attribute *core.Attribute) bool {
@@ -81,7 +75,7 @@ func (f *metaCreatedFilter) Supports(attribute *core.Attribute) bool {
 }
 
 func (f *metaCreatedFilter) Order() int {
-	return orderMetaCreated
+	return f.order
 }
 
 func (f *metaCreatedFilter) FilterOnCreate(ctx context.Context,
@@ -97,8 +91,8 @@ func (f *metaCreatedFilter) FilterOnUpdate(ctx context.Context,
 
 // Create a meta lastModified filter. The filter is responsible of assigning the current time to the field 'meta.lastModified'
 // when either Filter or FilterWithRef is called.
-func NewMetaLastModifiedFilter() PropertyFilter {
-	return &metaLastModifiedFilter{}
+func NewMetaLastModifiedFilter(order int) PropertyFilter {
+	return &metaLastModifiedFilter{order: order}
 }
 
 func (f *metaLastModifiedFilter) Supports(attribute *core.Attribute) bool {
@@ -106,7 +100,7 @@ func (f *metaLastModifiedFilter) Supports(attribute *core.Attribute) bool {
 }
 
 func (f *metaLastModifiedFilter) Order() int {
-	return orderMetaLastModified
+	return f.order
 }
 
 func (f *metaLastModifiedFilter) FilterOnCreate(ctx context.Context,
@@ -123,9 +117,10 @@ func (f *metaLastModifiedFilter) FilterOnUpdate(ctx context.Context,
 // Create a meta location filter. The filter is responsible of generating the resource location url and assign it to field
 // 'meta.location'. Id must have been generated and bulkId is not accepted. Generation only happens when Filter is called;
 // when FilterWithRef is called, this is a no-op.
-func NewMetaLocationFilter(locationFormats map[string]string) PropertyFilter {
+func NewMetaLocationFilter(locationFormats map[string]string, order int) PropertyFilter {
 	return &metaLocationFilter{
 		locationFormats: locationFormats,
+		order:           order,
 	}
 }
 
@@ -134,7 +129,7 @@ func (f *metaLocationFilter) Supports(attribute *core.Attribute) bool {
 }
 
 func (f *metaLocationFilter) Order() int {
-	return orderMetaLocation
+	return f.order
 }
 
 func (f *metaLocationFilter) FilterOnCreate(ctx context.Context,
@@ -163,8 +158,8 @@ func (f *metaLocationFilter) FilterOnUpdate(ctx context.Context,
 // Create a meta version filter. The filter is responsible of assigning a new version based on an sha1 hash of the
 // resource's id and a random uint64 number. Id must have been generated before this filter. The version assignment
 // happens on both Filter and FilterWithRef call.
-func NewMetaVersionFilter() PropertyFilter {
-	return &metaVersionFilter{}
+func NewMetaVersionFilter(order int) PropertyFilter {
+	return &metaVersionFilter{order: order}
 }
 
 func (f *metaVersionFilter) Supports(attribute *core.Attribute) bool {
@@ -172,7 +167,7 @@ func (f *metaVersionFilter) Supports(attribute *core.Attribute) bool {
 }
 
 func (f *metaVersionFilter) Order() int {
-	return orderMetaVersion
+	return f.order
 }
 
 func (f *metaVersionFilter) FilterOnCreate(ctx context.Context,

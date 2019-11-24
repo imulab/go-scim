@@ -79,7 +79,7 @@ func TestNewSchemaFilter(t *testing.T) {
 	for _, each := range tests {
 		t.Run(each.name, func(t *testing.T) {
 			var (
-				filter      = NewSchemaFilter()
+				filter      = NewSchemaFilter(0)
 				resource    = each.getResource(t)
 				property    = each.getProperty(t, resource)
 				ref         = each.getRef(t)

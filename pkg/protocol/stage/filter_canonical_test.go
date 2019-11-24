@@ -65,7 +65,7 @@ func TestNewCanonicalValueFilter(t *testing.T) {
 	for _, each := range tests {
 		t.Run(each.name, func(t *testing.T) {
 			var (
-				filter   = NewCanonicalValueFilter()
+				filter   = NewCanonicalValueFilter(0)
 				resource = each.getResource(t)
 				property = each.getProperty(t, resource)
 				err      error

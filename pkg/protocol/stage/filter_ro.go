@@ -18,20 +18,20 @@ const (
 //
 // It is sensible to skip this filter on the complex property and let the sub properties do the work, provided they are all
 // read only.
-func NewReadOnlyFilter() PropertyFilter {
-	return &readOnlyFilter{}
+func NewReadOnlyFilter(order int) PropertyFilter {
+	return &readOnlyFilter{order: order}
 }
 
 var _ PropertyFilter = (*readOnlyFilter)(nil)
 
-type readOnlyFilter struct{}
+type readOnlyFilter struct{order int}
 
 func (f *readOnlyFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Mutability == core.MutabilityReadOnly
 }
 
 func (f *readOnlyFilter) Order() int {
-	return 100
+	return f.order
 }
 
 func (f *readOnlyFilter) FilterOnCreate(ctx context.Context, resource *core.Resource, property core.Property) error {
