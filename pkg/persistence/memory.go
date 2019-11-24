@@ -82,6 +82,23 @@ func (p *memoryProvider) InsertOne(ctx context.Context, resource *core.Resource)
 	return nil
 }
 
+func (p *memoryProvider) ReplaceOne(ctx context.Context, replacement *core.Resource) error {
+	p.Lock()
+	defer p.Unlock()
+
+	id, err := replacement.GetID()
+	if err != nil {
+		return err
+	}
+
+	if _, ok := p.database[id]; !ok {
+		return core.Errors.NotFound("cannot replace resource with id '%s': does not exist", id)
+	}
+	p.database[id] = replacement
+
+	return nil
+}
+
 func (p *memoryProvider) GetById(ctx context.Context, id string) (*core.Resource, error) {
 	p.RLock()
 	defer p.RUnlock()

@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/imulab/go-scim/pkg/core"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -68,9 +69,8 @@ func (p *persistenceProvider) Count(ctx context.Context, scimFilter string) (int
 }
 
 func (p *persistenceProvider) InsertOne(ctx context.Context, resource *core.Resource) error {
-	resourceType := resource.GetResourceType()
-	if resource.GetResourceType().Id != p.resourceType.Id {
-		return core.Errors.Internal(fmt.Sprintf("resource type '%s' is not supported by this persistence provider", resourceType.Id))
+	if err := p.ensureResourceTypeMatch(resource); err != nil {
+		return err
 	}
 
 	_, err := p.collection.InsertOne(ctx, newBsonAdapter(resource), options.InsertOne())
@@ -81,11 +81,43 @@ func (p *persistenceProvider) InsertOne(ctx context.Context, resource *core.Reso
 	return nil
 }
 
+func (p *persistenceProvider) ReplaceOne(ctx context.Context, replacement *core.Resource) error {
+	if err := p.ensureResourceTypeMatch(replacement); err != nil {
+		return err
+	}
+
+	id, err := replacement.GetID()
+	if err != nil {
+		return err
+	}
+
+	ur, err := p.collection.ReplaceOne(ctx, p.byIdFilter(id), newBsonAdapter(replacement), options.Replace())
+	if err != nil {
+		return p.errDatabase(err)
+	}
+
+	if ur.MatchedCount == 0 {
+		return p.errNotFoundById(id)
+	} else if ur.ModifiedCount == 0 {
+		return p.errDatabase(errors.New("no resource was modified"))
+	}
+
+	return nil
+}
+
+func (p *persistenceProvider) ensureResourceTypeMatch(resource *core.Resource) error {
+	resourceType := resource.GetResourceType()
+	if resource.GetResourceType().Id == p.resourceType.Id {
+		return nil
+	}
+	return core.Errors.Internal("resource type '%s' is not supported by this persistence provider", resourceType.Id)
+}
+
 func (p *persistenceProvider) GetById(ctx context.Context, id string) (*core.Resource, error) {
 	sr := p.collection.FindOne(ctx, p.byIdFilter(id), options.FindOne())
 	if err := sr.Err(); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, core.Errors.NotFound("%s by id '%s' is not found", p.resourceType.Name, id)
+			return nil, p.errNotFoundById(id)
 		}
 		return nil, p.errDatabase(err)
 	}
@@ -128,4 +160,8 @@ func (p *persistenceProvider) getMaxTime(ctx context.Context) (maxTime time.Dura
 
 func (p *persistenceProvider) errDatabase(err error) error {
 	return core.Errors.Internal("database error: " + err.Error())
+}
+
+func (p *persistenceProvider) errNotFoundById(id string) error {
+	return core.Errors.NotFound("%s by id '%s' is not found", p.resourceType.Name, id)
 }

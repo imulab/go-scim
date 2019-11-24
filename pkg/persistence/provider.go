@@ -46,6 +46,9 @@ type Provider interface {
 	// such alterations are usually done by the service provider, not the persistence provider.
 	InsertOne(ctx context.Context, resource *core.Resource) error
 
+	// Replace a single resource by its id and returns any error.
+	ReplaceOne(ctx context.Context, replacement *core.Resource) error
+
 	// Retrieve a resource by its id from the provider. The id refers to the SCIM resource id as is defined with the core
 	// schema. If error is non-nil, resource is nil.
 	GetById(ctx context.Context, id string) (*core.Resource, error)
