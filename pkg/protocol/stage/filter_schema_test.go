@@ -4,10 +4,18 @@ import (
 	"context"
 	"github.com/imulab/go-scim/pkg/core"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-func TestNewMutabilityFilter(t *testing.T) {
+func TestNewSchemaFilter(t *testing.T) {
+	var resourceType *core.ResourceType
+	{
+		_ = core.Schemas.MustLoad("../../resource/schema/user_schema.json")
+		_ = core.Meta.MustLoad("../../resource/metadata/default_metadata.json", new(core.DefaultMetadataProvider))
+		resourceType = core.ResourceTypes.MustLoad("../../resource/resource_type/user_resource_type.json")
+	}
+
 	tests := []struct {
 		name           string
 		getResource    func(t *testing.T) *core.Resource
@@ -17,18 +25,19 @@ func TestNewMutabilityFilter(t *testing.T) {
 		assert         func(t *testing.T, resource *core.Resource, property core.Property, err error)
 	}{
 		{
-			name: "immutable property without reference is ignored",
+			name: 		"resource with required schema is passed",
 			getResource: func(t *testing.T) *core.Resource {
-				// Here we cheat the white box a bit by not providing a resource because no
-				// schema with immutable attribute is readily available. But because resource
-				// is not used anyways, we will be fine.
-				return nil
+				resource := core.Resources.New(resourceType)
+				err := resource.Add(core.Steps.NewPath("schemas"), "urn:ietf:params:scim:schemas:core:2.0:User")
+				require.Nil(t, err)
+				return resource
 			},
 			getProperty: func(t *testing.T, resource *core.Resource) core.Property {
-				return core.Properties.NewStringOf(&core.Attribute{
-					Type:       core.TypeString,
-					Mutability: core.MutabilityImmutable,
-				}, "foobar")
+				require.NotNil(t, resource)
+				nav := core.NewNavigator(resource)
+				schemasProp, err := nav.Focus("schemas")
+				require.Nil(t, err)
+				return schemasProp
 			},
 			getRef: func(t *testing.T) *core.Resource {
 				return nil
@@ -38,40 +47,28 @@ func TestNewMutabilityFilter(t *testing.T) {
 			},
 			assert: func(t *testing.T, resource *core.Resource, property core.Property, err error) {
 				assert.Nil(t, err)
-				assert.Equal(t, "foobar", property.Raw())
 			},
 		},
 		{
-			name: "immutable property with reference is compared against",
+			name: 		"resource without required schema is rejected",
 			getResource: func(t *testing.T) *core.Resource {
-				// Here we cheat the white box a bit by not providing a resource because no
-				// schema with immutable attribute is readily available. But because resource
-				// is not used anyways, we will be fine.
-				return nil
+				resource := core.Resources.New(resourceType)
+				err := resource.Add(core.Steps.NewPath("schemas"), "foobar")
+				require.Nil(t, err)
+				return resource
 			},
 			getProperty: func(t *testing.T, resource *core.Resource) core.Property {
-				core.Meta.AddSingle(core.DefaultMetadataId, &core.DefaultMetadata{
-					Id:   "4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
-					Path: "foobar",
-				})
-				return core.Properties.NewStringOf(&core.Attribute{
-					Id:         "4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
-					Name:       "foobar",
-					Type:       core.TypeString,
-					Mutability: core.MutabilityImmutable,
-				}, "foobar")
+				require.NotNil(t, resource)
+				nav := core.NewNavigator(resource)
+				schemasProp, err := nav.Focus("schemas")
+				require.Nil(t, err)
+				return schemasProp
 			},
 			getRef: func(t *testing.T) *core.Resource {
-				// Same cheat as above, but provide a non-nil resource to enter FilterWithRef
-				return &core.Resource{}
+				return nil
 			},
 			getRefProperty: func(t *testing.T, ref *core.Resource) core.Property {
-				return core.Properties.NewStringOf(&core.Attribute{
-					Id:         "4052e48c-e77f-4893-8f48-e2e6ecc47fb2",
-					Name:       "foobar",
-					Type:       core.TypeString,
-					Mutability: core.MutabilityImmutable,
-				}, "original")
+				return nil
 			},
 			assert: func(t *testing.T, resource *core.Resource, property core.Property, err error) {
 				assert.NotNil(t, err)
@@ -82,7 +79,7 @@ func TestNewMutabilityFilter(t *testing.T) {
 	for _, each := range tests {
 		t.Run(each.name, func(t *testing.T) {
 			var (
-				filter      = NewMutabilityFilter()
+				filter      = NewSchemaFilter()
 				resource    = each.getResource(t)
 				property    = each.getProperty(t, resource)
 				ref         = each.getRef(t)

@@ -30,6 +30,10 @@ func (r *Resource) Get(step *Step) (interface{}, error) {
 	return r.base.Get(r.skipResourceUrn(step))
 }
 
+func (r *Resource) Add(step *Step, value interface{}) error {
+	return r.base.Add(r.skipResourceUrn(step), value)
+}
+
 func (r *Resource) Replace(step *Step, value interface{}) error {
 	return r.base.Replace(r.skipResourceUrn(step), value)
 }
