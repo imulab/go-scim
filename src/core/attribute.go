@@ -13,7 +13,7 @@ var (
 // The attribute model that is used through out SCIM to
 // determine data type and constraint.
 type Attribute struct {
-	id              string
+	// attributes defined in SCIM
 	name            string
 	description     string
 	typ             Type
@@ -26,6 +26,26 @@ type Attribute struct {
 	returned        Returned
 	uniqueness      Uniqueness
 	referenceTypes  []string
+
+	// metadata of attribute id. an attribute id is the id of the schema to which
+	// this attribute belongs to, appended by the full path of this attribute.
+	// i.e. schemas, meta.version, urn:ietf:params:scim:schemas:core:2.0:Group:displayName
+	id string
+	// metadata for the relative index of this attribute
+	// within its parent container
+	index int
+	// metadata for the full path of this attribute (without urn prefix)
+	path string
+	// metadata to indicate whether this attribute is the primary attribute.
+	// primary attributes are boolean attribute within a multiValued complex
+	// container. there can only be one true value among all elements.
+	primary bool
+	// metadata to indicate whether this attribute is the identity attribute.
+	// identity attributes participates in equality comparison for its
+	// complex container.
+	identity bool
+	// metadata of the list of annotations on this attribute.
+	annotations []string
 }
 
 // Return the ID of the attribute.
@@ -137,6 +157,40 @@ func (attr *Attribute) ForEachSubAttribute(callback func(subAttribute *Attribute
 	}
 }
 
+// Return the metadata about the relative index of this attribute among its parent container.
+// This index is used to sort the attribute in order to maintain a stable and ideal iteration order.
+func (attr *Attribute) Index() int {
+	return attr.index
+}
+
+// Return the full path of this attribute.
+func (attr *Attribute) Path() string {
+	return attr.path
+}
+
+// Return true if this attribute is a primary attribute.
+func (attr *Attribute) IsPrimary() bool {
+	return attr.primary
+}
+
+// Return true if this attribute is an identity attribute.
+func (attr *Attribute) IsIdentity() bool {
+	return attr.identity
+}
+
+// Return the number of total annotations on this attribute.
+func (attr *Attribute) CountAnnotations() int {
+	return len(attr.annotations)
+}
+
+// Iterate through all annotations on this attribute and invoke callback function on each.
+// This method maintains SOLID principal. The callback function SHALL NOT block.
+func (attr *Attribute) ForEachAnnotation(callback func(annotation string)) {
+	for _, annotation := range attr.annotations {
+		callback(annotation)
+	}
+}
+
 // Return an exact shallow copy of the attribute, but with the multiValued field set to false, thus
 // effectively converting any multiValued attribute to singular attribute.
 func (attr *Attribute) AsSingleValued() *Attribute {
@@ -216,7 +270,12 @@ type (
 		Mutability      string                  `json:"mutability"`
 		Returned        string                  `json:"returned"`
 		Uniqueness      string                  `json:"uniqueness"`
-		ReferenceTypes  []string                `json:"referenceTypes,omitempty"`
+		ReferenceTypes  []string                `json:"referenceTypes"`
+		Index           int                     `json:"_index"`
+		Path            string                  `json:"_path"`
+		Primary         bool                    `json:"_primary"`
+		Identity        bool                    `json:"_identity"`
+		Annotations     []string                `json:"_annotations"`
 	}
 )
 
@@ -250,6 +309,11 @@ func (u *attributeUnmarshaler) fill(attr *Attribute) {
 	attr.returned = MustParseReturned(u.Returned)
 	attr.uniqueness = MustParseUniqueness(u.Uniqueness)
 	attr.referenceTypes = u.ReferenceTypes
+	attr.index = u.Index
+	attr.path = u.Path
+	attr.primary = u.Primary
+	attr.identity = u.Identity
+	attr.annotations = u.Annotations
 
 	if len(u.SubAttributes) > 0 {
 		attr.subAttributes = make([]*Attribute, len(u.SubAttributes), len(u.SubAttributes))
