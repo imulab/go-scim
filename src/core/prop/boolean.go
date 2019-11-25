@@ -1,6 +1,7 @@
 package prop
 
 import (
+	"fmt"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/errors"
 )
@@ -147,6 +148,10 @@ func (p *booleanProperty) Delete() (bool, error) {
 }
 
 func (p *booleanProperty) Compact() {}
+
+func (p *booleanProperty) String() string {
+	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())
+}
 
 func (p *booleanProperty) errIncompatibleValue(value interface{}) error {
 	return errors.InvalidValue("%v is incompatible with attribute '%s'", value, p.attr.Path())

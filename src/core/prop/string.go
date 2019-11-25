@@ -139,7 +139,7 @@ func (p *stringProperty) LessThan(value interface{}) (bool, error) {
 }
 
 func (p *stringProperty) Present() bool {
-	return p.value != nil
+	return p.value != nil && len(*(p.value)) > 0
 }
 
 func (p *stringProperty) DFS(callback func(property core.Property)) {

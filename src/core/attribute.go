@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/imulab/go-scim/pkg/core"
 )
 
 var (
@@ -226,6 +227,26 @@ func (attr *Attribute) MustValidate() {
 	}
 	if len(attr.path) == 0 {
 		panic("attribute path is required")
+	}
+
+	if !attr.multiValued {
+		switch attr.typ {
+		case core.TypeReference:
+			if !attr.caseExact {
+				panic("reference attribute must be case exact")
+			}
+		case core.TypeDateTime:
+			if !attr.caseExact {
+				panic("dateTime attribute must be case exact")
+			}
+		case core.TypeBinary:
+			if !attr.caseExact {
+				panic("binary attribute must be case exact")
+			}
+			if attr.uniqueness != UniquenessNone {
+				panic("binary attribute must not have uniqueness")
+			}
+		}
 	}
 }
 
