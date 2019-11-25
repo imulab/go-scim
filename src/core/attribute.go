@@ -1,26 +1,32 @@
 package core
 
-import "fmt"
-
-type (
-	// The attribute model that is used through out SCIM to
-	// determine data type and constraint.
-	Attribute struct {
-		id              string
-		name            string
-		description     string
-		typ             Type
-		subAttributes   []*Attribute
-		canonicalValues []string
-		multiValued     bool
-		required        bool
-		caseExact       bool
-		mutability      Mutability
-		returned        Returned
-		uniqueness      Uniqueness
-		referenceTypes  []string
-	}
+import (
+	"encoding/json"
+	"fmt"
 )
+
+var (
+	_ json.Marshaler   = (*Attribute)(nil)
+	_ json.Unmarshaler = (*Attribute)(nil)
+)
+
+// The attribute model that is used through out SCIM to
+// determine data type and constraint.
+type Attribute struct {
+	id              string
+	name            string
+	description     string
+	typ             Type
+	subAttributes   []*Attribute
+	canonicalValues []string
+	multiValued     bool
+	required        bool
+	caseExact       bool
+	mutability      Mutability
+	returned        Returned
+	uniqueness      Uniqueness
+	referenceTypes  []string
+}
 
 // Return the ID of the attribute.
 // The ID can be used to universally identify an attribute.
@@ -159,4 +165,23 @@ func (attr *Attribute) String() string {
 	} else {
 		return fmt.Sprintf("%s (%s)", attr.id, attr.typ.String())
 	}
+}
+
+func (attr *Attribute) MarshalJSON() ([]byte, error) {
+	tmp := new(attributeMarshaler)
+	tmp.extract(attr)
+	return json.Marshal(tmp)
+}
+
+func (attr *Attribute) UnmarshalJSON(raw []byte) error {
+	var tmp *attributeUnmarshaler
+	{
+		tmp = new(attributeUnmarshaler)
+		err := json.Unmarshal(raw, tmp)
+		if err != nil {
+			return err
+		}
+	}
+	tmp.fill(attr)
+	return nil
 }
