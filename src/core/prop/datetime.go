@@ -25,7 +25,7 @@ func NewDateTime(attr *core.Attribute) core.Property {
 // The property will be marked dirty at the start.
 func NewDateTimeOf(attr *core.Attribute, value string) core.Property {
 	p := NewDateTime(attr)
-	err := p.Replace(value)
+	_, err := p.Replace(value)
 	if err != nil {
 		panic(err)
 	}
@@ -135,33 +135,40 @@ func (p *dateTimeProperty) DFS(callback func(property core.Property)) {
 	callback(p)
 }
 
-func (p *dateTimeProperty) Add(value interface{}) error {
+func (p *dateTimeProperty) Add(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *dateTimeProperty) Replace(value interface{}) error {
+func (p *dateTimeProperty) Replace(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()
 	}
 
 	if s, ok := value.(string); !ok {
-		return p.errIncompatibleValue(value)
+		return false, p.errIncompatibleValue(value)
 	} else if t, err := p.fromISO8601(s); err != nil {
-		return err
+		return false, err
 	} else {
-		p.value = &t
-		p.dirty = true
-		return nil
+		if !(*(p.value)).Equal(t) {
+			p.value = &t
+			p.dirty = true
+			return true, nil
+		} else {
+			return false, nil
+		}
 	}
 }
 
-func (p *dateTimeProperty) Delete() error {
-	p.value = nil
-	p.dirty = true
-	return nil
+func (p *dateTimeProperty) Delete() (bool, error) {
+	present := p.Present()
+	if present {
+		p.value = nil
+		p.dirty = true
+	}
+	return present, nil
 }
 
 func (p *dateTimeProperty) Compact() {}

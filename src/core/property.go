@@ -63,12 +63,15 @@ type Property interface {
 	// Perform a depth-first-search on the property and invoke the callback function on each visited
 	// property from the search. The callback function SHALL NOT block.
 	DFS(callback func(property Property))
-	// Add a value to the property. Operation shall render the property dirty.
-	Add(value interface{}) error
-	// Replace value of this property. Operation shall render the property dirty.
-	Replace(value interface{}) error
-	// Delete value from this property. Operation shall render the property dirty.
-	Delete() error
+	// Add a value to the property. Operation shall render the property dirty. If property's value does
+	// not change after the operation, false will be returned. If value is compatible, err will be returned.
+	Add(value interface{}) (bool, error)
+	// Replace value of this property. Operation shall render the property dirty. If property's value does
+	//	// not change after the operation, false will be returned. If value is compatible, err will be returned.
+	Replace(value interface{}) (bool, error)
+	// Delete value from this property. Operation shall render the property dirty. If property's value does
+	//	// not change after the operation, false will be returned.
+	Delete() (bool, error)
 	// Consolidate and remove any unwanted child properties
 	Compact()
 }

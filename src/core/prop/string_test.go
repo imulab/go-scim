@@ -754,7 +754,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			prop := test.prop
-			err := prop.Add(test.v)
+			_, err := prop.Add(test.v)
 			test.expect(t, prop.Raw(), err)
 		})
 	}
@@ -813,7 +813,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			prop := test.prop
-			err := prop.Replace(test.v)
+			_, err := prop.Replace(test.v)
 			test.expect(t, prop.Raw(), err)
 		})
 	}
@@ -856,7 +856,7 @@ func (s *StringPropertyTestSuite) TestDelete() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			prop := test.prop
-			err := prop.Delete()
+			_, err := prop.Delete()
 			test.expect(t, prop.Raw(), err)
 		})
 	}

@@ -140,31 +140,37 @@ func (p *stringProperty) DFS(callback func(property core.Property)) {
 	callback(p)
 }
 
-func (p *stringProperty) Add(value interface{}) error {
+func (p *stringProperty) Add(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *stringProperty) Replace(value interface{}) error {
+func (p *stringProperty) Replace(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()
 	}
 
 	if s, ok := value.(string); !ok {
-		return p.errIncompatibleValue(value)
+		return false, p.errIncompatibleValue(value)
 	} else {
-		p.value = &s
-		p.dirty = true
-		return nil
+		equal, _ := p.EqualsTo(s)
+		if !equal {
+			p.value = &s
+			p.dirty = true
+		}
+		return !equal, nil
 	}
 }
 
-func (p *stringProperty) Delete() error {
-	p.value = nil
-	p.dirty = true
-	return nil
+func (p *stringProperty) Delete() (bool, error) {
+	present := p.Present()
+	if present {
+		p.value = nil
+		p.dirty = true
+	}
+	return present, nil
 }
 
 func (p *stringProperty) Compact() {}
