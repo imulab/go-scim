@@ -1,6 +1,7 @@
 package prop
 
 import (
+	"fmt"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/errors"
 	"strings"
@@ -167,6 +168,10 @@ func (p *stringProperty) Delete() error {
 }
 
 func (p *stringProperty) Compact() {}
+
+func (p *stringProperty) String() string {
+	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())
+}
 
 // Return a case appropriate version of the given value, based on attribute's caseExact setting.
 func (p *stringProperty) formatCase(value string) string {
