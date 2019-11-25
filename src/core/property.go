@@ -26,7 +26,7 @@ type Property interface {
 	CountChildren() int
 	// Iterate through all children properties and invoke the callback function sequentially.
 	// The callback method SHALL NOT block the executing Goroutine.
-	ForEachChild(callback func(child Property))
+	ForEachChild(callback func(index int, child Property))
 	// Return true if the two properties match each other. Properties match if and only if
 	// their attributes match and their values are comparable according to the attribute.
 	// For complex properties, two complex properties match if and only if all their sub properties

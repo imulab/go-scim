@@ -57,7 +57,7 @@ func (p *binaryProperty) CountChildren() int {
 	return 0
 }
 
-func (p *binaryProperty) ForEachChild(callback func(child core.Property)) {}
+func (p *binaryProperty) ForEachChild(callback func(index int, child core.Property)) {}
 
 func (p *binaryProperty) Matches(another core.Property) bool {
 	if !p.attr.Equals(another.Attribute()) {

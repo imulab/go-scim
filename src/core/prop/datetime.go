@@ -57,7 +57,7 @@ func (p *dateTimeProperty) CountChildren() int {
 	return 0
 }
 
-func (p *dateTimeProperty) ForEachChild(callback func(child core.Property)) {}
+func (p *dateTimeProperty) ForEachChild(callback func(index int, child core.Property)) {}
 
 func (p *dateTimeProperty) Matches(another core.Property) bool {
 	if !p.attr.Equals(another.Attribute()) {

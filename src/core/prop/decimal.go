@@ -58,7 +58,7 @@ func (p *decimalProperty) CountChildren() int {
 	return 0
 }
 
-func (p *decimalProperty) ForEachChild(callback func(child core.Property)) {}
+func (p *decimalProperty) ForEachChild(callback func(index int, child core.Property)) {}
 
 func (p *decimalProperty) Matches(another core.Property) bool {
 	if !p.attr.Equals(another.Attribute()) {

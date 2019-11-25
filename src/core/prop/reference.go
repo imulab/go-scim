@@ -59,7 +59,7 @@ func (p *referenceProperty) CountChildren() int {
 	return 0
 }
 
-func (p *referenceProperty) ForEachChild(callback func(child core.Property)) {}
+func (p *referenceProperty) ForEachChild(callback func(index int, child core.Property)) {}
 
 func (p *referenceProperty) Matches(another core.Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
