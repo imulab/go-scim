@@ -195,7 +195,6 @@ func (attr *Attribute) ForEachAnnotation(callback func(annotation string)) {
 // effectively converting any multiValued attribute to singular attribute.
 func (attr *Attribute) AsSingleValued() *Attribute {
 	return &Attribute{
-		id:              attr.id,
 		name:            attr.name,
 		description:     attr.description,
 		typ:             attr.typ,
@@ -208,7 +207,33 @@ func (attr *Attribute) AsSingleValued() *Attribute {
 		returned:        attr.returned,
 		uniqueness:      attr.uniqueness,
 		referenceTypes:  attr.referenceTypes,
+		id:              attr.id,
+		index:           attr.index,
+		path:            attr.path,
+		primary:         attr.primary,
+		identity:        attr.identity,
+		annotations:     attr.annotations,
 	}
+}
+
+// Validate the attribute and panic if the required fields are not present.
+func (attr *Attribute) MustValidate() {
+	if len(attr.id) == 0 {
+		panic("attribute id is required")
+	}
+	if len(attr.name) == 0 {
+		panic("attribute name is required")
+	}
+	if len(attr.path) == 0 {
+		panic("attribute path is required")
+	}
+}
+
+// Returns true if the two attributes are equal. This method checks pointer equality first.
+// If does not match, goes on to check whether id and multiValued matches: these two properties
+// can effectively dictate if two attributes refer to the same one.
+func (attr *Attribute) Equals(other *Attribute) bool {
+	return (attr == other) || (attr.id == other.id && attr.multiValued == other.multiValued)
 }
 
 // Return a string representation of the attribute. This method is intended to assist
