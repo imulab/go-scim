@@ -31,7 +31,8 @@ type Property interface {
 	// their attributes match and their values are comparable according to the attribute.
 	// For complex properties, two complex properties match if and only if all their sub properties
 	// match. For multiValued properties, match only happens when they have the same number of
-	// element properties and the element properties all match correspondingly.
+	// element properties and the element properties all match correspondingly. Two unassigned
+	// properties with the same attribute matches each other.
 	Matches(another Property) bool
 	// Return true if the property's value is equal to the given value. If the given value
 	// is nil, always return false. This method corresponds to the 'eq' filter operator.

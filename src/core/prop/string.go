@@ -65,6 +65,12 @@ func (p *stringProperty) Matches(another core.Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
+
+	if unassigned, _ := p.IsUnassigned(); unassigned {
+		alsoUnassigned, _ := another.IsUnassigned()
+		return alsoUnassigned
+	}
+
 	ok, err := p.EqualsTo(another.Raw())
 	return ok && err == nil
 }
