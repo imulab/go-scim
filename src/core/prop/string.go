@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/errors"
+	"hash/fnv"
 	"strings"
 )
 
@@ -23,21 +24,20 @@ func NewString(attr *core.Attribute) core.Property {
 // Create a new string property with given value. The method will panic if
 // given attribute is not singular string type. The property will be
 // marked dirty at the start.
-func NewStringOf(attr *core.Attribute, value string) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeString {
-		panic("invalid attribute for string property")
+func NewStringOf(attr *core.Attribute, value interface{}) core.Property {
+	p := NewString(attr)
+	_, err := p.Replace(value)
+	if err != nil {
+		panic(err)
 	}
-	return &stringProperty{
-		attr:  attr,
-		value: &value,
-		dirty: true,
-	}
+	return p
 }
 
 type stringProperty struct {
 	attr  *core.Attribute
 	value *string
 	dirty bool
+	hash  uint64
 }
 
 func (p *stringProperty) Attribute() *core.Attribute {
@@ -71,8 +71,11 @@ func (p *stringProperty) Matches(another core.Property) bool {
 		return alsoUnassigned
 	}
 
-	ok, err := p.EqualsTo(another.Raw())
-	return ok && err == nil
+	return p.Hash() == another.Hash()
+}
+
+func (p *stringProperty) Hash() uint64 {
+	return p.hash
 }
 
 func (p *stringProperty) EqualsTo(value interface{}) (bool, error) {
@@ -165,6 +168,7 @@ func (p *stringProperty) Replace(value interface{}) (bool, error) {
 		if !equal {
 			p.value = &s
 			p.dirty = true
+			p.computeHash()
 		}
 		return !equal, nil
 	}
@@ -172,10 +176,9 @@ func (p *stringProperty) Replace(value interface{}) (bool, error) {
 
 func (p *stringProperty) Delete() (bool, error) {
 	present := p.Present()
-	if present {
-		p.value = nil
-		p.dirty = true
-	}
+	p.value = nil
+	p.dirty = true
+	p.computeHash()
 	return present, nil
 }
 
@@ -183,6 +186,20 @@ func (p *stringProperty) Compact() {}
 
 func (p *stringProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())
+}
+
+// Calculate the hash value of the property value
+func (p *stringProperty) computeHash() {
+	if p == nil {
+		p.hash = 0
+	} else {
+		h := fnv.New64a()
+		_, err := h.Write([]byte(*(p.value)))
+		if err != nil {
+			panic("error computing hash")
+		}
+		p.hash = h.Sum64()
+	}
 }
 
 // Return a case appropriate version of the given value, based on attribute's caseExact setting.

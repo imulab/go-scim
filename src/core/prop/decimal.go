@@ -22,15 +22,13 @@ func NewDecimal(attr *core.Attribute) core.Property {
 // Create a new decimal property with given value. The method will panic if
 // given attribute is not singular decimal type. The property will be
 // marked dirty at the start.
-func NewDecimalOf(attr *core.Attribute, value float64) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeDecimal {
-		panic("invalid attribute for decimal property")
+func NewDecimalOf(attr *core.Attribute, value interface{}) core.Property {
+	p := NewDecimal(attr)
+	_, err := p.Replace(value)
+	if err != nil {
+		panic(err)
 	}
-	return &decimalProperty{
-		attr:  attr,
-		value: &value,
-		dirty: true,
-	}
+	return p
 }
 
 type decimalProperty struct {
@@ -70,8 +68,17 @@ func (p *decimalProperty) Matches(another core.Property) bool {
 		return alsoUnassigned
 	}
 
-	ok, err := p.EqualsTo(another.Raw())
-	return ok && err == nil
+	return p.Hash() == another.Hash()
+}
+
+func (p *decimalProperty) Hash() uint64 {
+	if p == nil {
+		// This is a hash collision with the actual zero. But we are fine
+		// as we will check unassigned first before comparing hashes.
+		return uint64(int64(0))
+	} else {
+		return uint64(*(p.value))
+	}
 }
 
 func (p *decimalProperty) EqualsTo(value interface{}) (bool, error) {
@@ -159,10 +166,8 @@ func (p *decimalProperty) Replace(value interface{}) (bool, error) {
 
 func (p *decimalProperty) Delete() (bool, error) {
 	present := p.Present()
-	if present {
-		p.value = nil
-		p.dirty = true
-	}
+	p.value = nil
+	p.dirty = true
 	return present, nil
 }
 

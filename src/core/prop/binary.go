@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/errors"
+	"hash/fnv"
 )
 
 // Create a new unassigned binary property. The method will panic if
@@ -23,7 +24,7 @@ func NewBinary(attr *core.Attribute) core.Property {
 // Create a new binary property with given base64 encoded value. The method will panic if
 // given attribute is not singular binary type. The property will be
 // marked dirty at the start.
-func NewBinaryOf(attr *core.Attribute, value string) core.Property {
+func NewBinaryOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewBinary(attr)
 	_, err := p.Replace(value)
 	if err != nil {
@@ -36,6 +37,7 @@ type binaryProperty struct {
 	attr  *core.Attribute
 	value []byte
 	dirty bool
+	hash  uint64
 }
 
 func (p *binaryProperty) Attribute() *core.Attribute {
@@ -69,8 +71,11 @@ func (p *binaryProperty) Matches(another core.Property) bool {
 		return alsoUnassigned
 	}
 
-	ok, err := p.EqualsTo(another.Raw())
-	return ok && err == nil
+	return p.Hash() == another.Hash()
+}
+
+func (p *binaryProperty) Hash() uint64 {
+	return p.hash
 }
 
 func (p *binaryProperty) EqualsTo(value interface{}) (bool, error) {
@@ -122,19 +127,6 @@ func (p *binaryProperty) Add(value interface{}) (bool, error) {
 	return p.Replace(value)
 }
 
-func (p *binaryProperty) compareByteArray(b1 []byte, b2 []byte) bool {
-	if len(b1) != len(b2) {
-		return false
-	} else {
-		for i := range b1 {
-			if b1[i] != b2[i] {
-				return false
-			}
-		}
-		return true
-	}
-}
-
 func (p *binaryProperty) Replace(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()
@@ -149,6 +141,7 @@ func (p *binaryProperty) Replace(value interface{}) (bool, error) {
 		if !equal {
 			copy(p.value, b64)
 			p.dirty = true
+			p.computeHash()
 		}
 		return !equal, nil
 	}
@@ -156,10 +149,9 @@ func (p *binaryProperty) Replace(value interface{}) (bool, error) {
 
 func (p *binaryProperty) Delete() (bool, error) {
 	present := p.Present()
-	if present {
-		p.value = nil
-		p.dirty = true
-	}
+	p.value = nil
+	p.dirty = true
+	p.computeHash()
 	return present, nil
 }
 
@@ -167,6 +159,28 @@ func (p *binaryProperty) Compact() {}
 
 func (p *binaryProperty) String() string {
 	return fmt.Sprintf("[%s] len=%d", p.attr.String(), len(p.value))
+}
+
+func (p *binaryProperty) computeHash() {
+	h := fnv.New64a()
+	_, err := h.Write(p.value)
+	if err != nil {
+		panic("error computing hash")
+	}
+	p.hash = h.Sum64()
+}
+
+func (p *binaryProperty) compareByteArray(b1 []byte, b2 []byte) bool {
+	if len(b1) != len(b2) {
+		return false
+	} else {
+		for i := range b1 {
+			if b1[i] != b2[i] {
+				return false
+			}
+		}
+		return true
+	}
 }
 
 func (p *binaryProperty) errIncompatibleValue(value interface{}) error {

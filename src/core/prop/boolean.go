@@ -22,15 +22,13 @@ func NewBoolean(attr *core.Attribute) core.Property {
 // Create a new boolean property with given value. The method will panic if
 // given attribute is not singular boolean type. The property will be
 // marked dirty at the start.
-func NewBooleanOf(attr *core.Attribute, value bool) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeBoolean {
-		panic("invalid attribute for boolean property")
+func NewBooleanOf(attr *core.Attribute, value interface{}) core.Property {
+	p := NewBoolean(attr)
+	_, err := p.Replace(value)
+	if err != nil {
+		panic(err)
 	}
-	return &booleanProperty{
-		attr:  attr,
-		value: &value,
-		dirty: true,
-	}
+	return p
 }
 
 type booleanProperty struct {
@@ -70,8 +68,19 @@ func (p *booleanProperty) Matches(another core.Property) bool {
 		return alsoUnassigned
 	}
 
-	ok, err := p.EqualsTo(another.Raw())
-	return ok && err == nil
+	return p.Hash() == another.Hash()
+}
+
+func (p *booleanProperty) Hash() uint64 {
+	if p.value == nil {
+		return uint64(0)
+	} else {
+		if *(p.value) {
+			return uint64(1)
+		} else {
+			return uint64(2)
+		}
+	}
 }
 
 func (p *booleanProperty) EqualsTo(value interface{}) (bool, error) {
@@ -140,10 +149,8 @@ func (p *booleanProperty) Replace(value interface{}) (bool, error) {
 
 func (p *booleanProperty) Delete() (bool, error) {
 	present := p.Present()
-	if present {
-		p.value = nil
-		p.dirty = true
-	}
+	p.value = nil
+	p.dirty = true
 	return present, nil
 }
 

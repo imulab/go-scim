@@ -23,7 +23,7 @@ func NewDateTime(attr *core.Attribute) core.Property {
 // Create a new string property with given value. The method will panic if
 // given attribute is not singular dateTime type or the value is not of ISO8601 format.
 // The property will be marked dirty at the start.
-func NewDateTimeOf(attr *core.Attribute, value string) core.Property {
+func NewDateTimeOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewDateTime(attr)
 	_, err := p.Replace(value)
 	if err != nil {
@@ -69,8 +69,15 @@ func (p *dateTimeProperty) Matches(another core.Property) bool {
 		return alsoUnassigned
 	}
 
-	ok, err := p.EqualsTo(another.Raw())
-	return ok && err == nil
+	return p.Hash() == another.Hash()
+}
+
+func (p *dateTimeProperty) Hash() uint64 {
+	if p == nil {
+		return uint64(int64(0))
+	} else {
+		return uint64((*(p.value)).Unix())
+	}
 }
 
 func (p *dateTimeProperty) EqualsTo(value interface{}) (bool, error) {
@@ -170,10 +177,8 @@ func (p *dateTimeProperty) Replace(value interface{}) (bool, error) {
 
 func (p *dateTimeProperty) Delete() (bool, error) {
 	present := p.Present()
-	if present {
-		p.value = nil
-		p.dirty = true
-	}
+	p.value = nil
+	p.dirty = true
 	return present, nil
 }
 

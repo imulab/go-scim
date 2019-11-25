@@ -34,6 +34,10 @@ type Property interface {
 	// element properties and the element properties all match correspondingly. Two unassigned
 	// properties with the same attribute matches each other.
 	Matches(another Property) bool
+	// Returns the hash of this property's value. This will be helpful in comparing two properties.
+	// Unassigned values shall return a hash of 0 (zero). Although this will create a potential hash
+	// collision, we avoid this problem by checking the unassigned case first before comparing hashes.
+	Hash() uint64
 	// Return true if the property's value is equal to the given value. If the given value
 	// is nil, always return false. This method corresponds to the 'eq' filter operator.
 	// If implementation cannot apply the 'eq' operator, return an error.

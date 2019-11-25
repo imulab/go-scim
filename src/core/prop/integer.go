@@ -22,15 +22,13 @@ func NewInteger(attr *core.Attribute) core.Property {
 // Create a new integer property with given value. The method will panic if
 // given attribute is not singular integer type. The property will be
 // marked dirty at the start.
-func NewIntegerOf(attr *core.Attribute, value int64) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeInteger {
-		panic("invalid attribute for integer property")
+func NewIntegerOf(attr *core.Attribute, value interface{}) core.Property {
+	p := NewInteger(attr)
+	_, err := p.Replace(value)
+	if err != nil {
+		panic(err)
 	}
-	return &integerProperty{
-		attr:  attr,
-		value: &value,
-		dirty: true,
-	}
+	return p
 }
 
 type integerProperty struct {
@@ -70,8 +68,18 @@ func (p *integerProperty) Matches(another core.Property) bool {
 		return alsoUnassigned
 	}
 
-	ok, err := p.EqualsTo(another.Raw())
-	return ok && err == nil
+	return p.Hash() == another.Hash()
+}
+
+func (p *integerProperty) Hash() uint64 {
+	if p.value == nil {
+		// This will be hash collision, but we are fine since
+		// we will check the unassigned case first before comparing
+		// value hashes
+		return uint64(int64(0))
+	} else {
+		return uint64(*(p.value))
+	}
 }
 
 func (p *integerProperty) EqualsTo(value interface{}) (bool, error) {
@@ -159,10 +167,8 @@ func (p *integerProperty) Replace(value interface{}) (bool, error) {
 
 func (p *integerProperty) Delete() (bool, error) {
 	present := p.Present()
-	if present {
-		p.value = nil
-		p.dirty = true
-	}
+	p.value = nil
+	p.dirty = true
 	return present, nil
 }
 

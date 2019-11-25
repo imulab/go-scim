@@ -179,6 +179,16 @@ func (attr *Attribute) IsIdentity() bool {
 	return attr.identity
 }
 
+// Return true if one or more of this attribute's sub attributes is marked as identity
+func (attr *Attribute) HasIdentitySubAttributes() bool {
+	for _, subAttr := range attr.subAttributes {
+		if subAttr.IsIdentity() {
+			return true
+		}
+	}
+	return false
+}
+
 // Return the number of total annotations on this attribute.
 func (attr *Attribute) CountAnnotations() int {
 	return len(attr.annotations)

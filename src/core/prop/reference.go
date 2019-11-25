@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/errors"
+	"hash/fnv"
 	"strings"
 )
 
@@ -23,21 +24,20 @@ func NewReference(attr *core.Attribute) core.Property {
 // Create a new reference property with given value. The method will panic if
 // given attribute is not singular reference type. The property will be
 // marked dirty at the start.
-func NewReferenceOf(attr *core.Attribute, value string) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeReference {
-		panic("invalid attribute for reference property")
+func NewReferenceOf(attr *core.Attribute, value interface{}) core.Property {
+	p := NewReference(attr)
+	_, err := p.Replace(value)
+	if err != nil {
+		panic(err)
 	}
-	return &referenceProperty{
-		attr:  attr,
-		value: &value,
-		dirty: true,
-	}
+	return p
 }
 
 type referenceProperty struct {
 	attr  *core.Attribute
 	value *string
 	dirty bool
+	hash  uint64
 }
 
 func (p *referenceProperty) Attribute() *core.Attribute {
@@ -71,8 +71,11 @@ func (p *referenceProperty) Matches(another core.Property) bool {
 		return alsoUnassigned
 	}
 
-	ok, err := p.EqualsTo(another.Raw())
-	return ok && err == nil
+	return p.Hash() == another.Hash()
+}
+
+func (p *referenceProperty) Hash() uint64 {
+	return p.hash
 }
 
 func (p *referenceProperty) EqualsTo(value interface{}) (bool, error) {
@@ -143,6 +146,7 @@ func (p *referenceProperty) Replace(value interface{}) (bool, error) {
 		if !equal {
 			p.value = &s
 			p.dirty = true
+			p.computeHash()
 		}
 		return !equal, nil
 	}
@@ -150,10 +154,9 @@ func (p *referenceProperty) Replace(value interface{}) (bool, error) {
 
 func (p *referenceProperty) Delete() (bool, error) {
 	present := p.Present()
-	if present {
-		p.value = nil
-		p.dirty = true
-	}
+	p.value = nil
+	p.dirty = true
+	p.computeHash()
 	return present, nil
 }
 
@@ -161,6 +164,19 @@ func (p *referenceProperty) Compact() {}
 
 func (p *referenceProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())
+}
+
+func (p *referenceProperty) computeHash() {
+	if p.value == nil {
+		p.hash = 0
+	} else {
+		h := fnv.New64a()
+		_, err := h.Write([]byte(*(p.value)))
+		if err != nil {
+			panic("error computing hash")
+		}
+		p.hash = h.Sum64()
+	}
 }
 
 func (p *referenceProperty) errIncompatibleValue(value interface{}) error {

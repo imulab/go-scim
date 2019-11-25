@@ -1,8 +1,10 @@
 package prop
 
 import (
+	"encoding/binary"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/errors"
+	"hash/fnv"
 	"strings"
 )
 
@@ -66,13 +68,11 @@ func NewComplex(attr *core.Attribute) core.Property {
 // Create a new complex property with given value. The method will panic if
 // given attribute is not singular complex type. The property will be
 // marked dirty at the start unless value is empty
-func NewComplexOf(attr *core.Attribute, value map[string]interface{}) core.Property {
+func NewComplexOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewComplex(attr)
-	if len(value) > 0 {
-		_, err := p.Replace(value)
-		if err != nil {
-			panic(err)
-		}
+	_, err := p.Replace(value)
+	if err != nil {
+		panic(err)
 	}
 	return p
 }
@@ -81,6 +81,9 @@ type complexProperty struct {
 	attr      *core.Attribute
 	subProps  []core.Property // array of sub properties to maintain determinate iteration order
 	nameIndex map[string]int  // attribute's name (to lower case) to index in subProps to allow fast access
+	dirty     bool
+	hash      uint64
+	// todo add dirty sign
 }
 
 func (p *complexProperty) Attribute() *core.Attribute {
@@ -125,30 +128,11 @@ func (p *complexProperty) Matches(another core.Property) bool {
 		return false
 	}
 
-	q := another.(*complexProperty)
+	return p.Hash() == another.Hash()
+}
 
-	// Attempt linear match before resorting to O(N^2) slow match
-	for i := range p.subProps {
-		if !p.subProps[i].Matches(q.subProps[i]) {
-			goto SlowMatch
-		}
-	}
-	return true
-
-SlowMatch:
-	for i := range p.subProps {
-		match := false
-		for j := range q.subProps {
-			if p.subProps[i].Matches(q.subProps[j]) {
-				match = true
-				break
-			}
-		}
-		if !match {
-			return false
-		}
-	}
-	return true
+func (p *complexProperty) Hash() uint64 {
+	return p.hash
 }
 
 func (p *complexProperty) EqualsTo(value interface{}) (bool, error) {
@@ -213,6 +197,9 @@ func (p *complexProperty) Add(value interface{}) (bool, error) {
 			changed = changed || ok
 		}
 
+		p.dirty = true
+		p.computeHash()
+
 		return changed, nil
 	}
 }
@@ -226,7 +213,6 @@ func (p *complexProperty) Replace(value interface{}) (bool, error) {
 		return false, p.errIncompatibleValue(value)
 	} else {
 		changed := false
-
 		for k, v := range m {
 			i, ok := p.nameIndex[k]
 			if !ok {
@@ -238,6 +224,9 @@ func (p *complexProperty) Replace(value interface{}) (bool, error) {
 			}
 			changed = changed || ok
 		}
+
+		p.dirty = true
+		p.computeHash()
 
 		return changed, nil
 	}
@@ -252,10 +241,45 @@ func (p *complexProperty) Delete() (bool, error) {
 		}
 		changed = changed || ok
 	}
+
+	p.dirty = true
+	p.computeHash()
+
 	return changed, nil
 }
 
 func (p *complexProperty) Compact() {}
+
+func (p *complexProperty) computeHash() {
+	h := fnv.New64a()
+
+	hasIdentity := p.attr.HasIdentitySubAttributes()
+	p.ForEachChild(func(_ int, child core.Property) {
+		// Include fields in the computation if
+		// - no sub attributes are marked as identity
+		// - this sub attribute is marked identity
+		if hasIdentity && !child.Attribute().IsIdentity() {
+			return
+		}
+
+		_, err := h.Write([]byte(child.Attribute().Name()))
+		if err != nil {
+			panic("error computing hash")
+		}
+
+		// Skip the value hash if it is unassigned
+		unassigned, _ := child.IsUnassigned()
+		if !unassigned {
+			b := make([]byte, 8)
+			binary.LittleEndian.PutUint64(b, child.Hash())
+			_, err := h.Write(b)
+			if err != nil {
+				panic("error computing hash")
+			}
+		}
+	})
+	p.hash = h.Sum64()
+}
 
 func (p *complexProperty) errIncompatibleValue(value interface{}) error {
 	return errors.InvalidValue("value of type %T is incompatible with attribute '%s'", value, p.attr.Path())
