@@ -679,7 +679,7 @@ func (s *StringPropertyTestSuite) TestPresent() {
 			},
 		},
 		{
-			name: "unassigned value is not present",
+			name: "assigned value is present",
 			prop: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
@@ -985,7 +985,6 @@ func (s *StringPropertyTestSuite) TestModCount() {
 `), "imulab")
 				require.Equal(t, 1, prop.ModCount())
 
-				// delete already deleted
 				_, err := prop.Replace("imulab")
 				require.Nil(t, err)
 				return prop
