@@ -64,8 +64,9 @@ func (p *multiValuedProperty) IsUnassigned() bool {
 func (p *multiValuedProperty) ModCount() int {
 	// Watch out for double counting
 	n := 0
-	p.ForEachChild(func(_ int, child core.Property) {
+	_ = p.ForEachChild(func(_ int, child core.Property) error {
 		n += child.ModCount()
+		return nil
 	})
 	return n
 }
@@ -122,13 +123,6 @@ func (p *multiValuedProperty) LessThan(value interface{}) (bool, error) {
 
 func (p *multiValuedProperty) Present() bool {
 	return len(p.elements) > 0
-}
-
-func (p *multiValuedProperty) DFS(callback func(property core.Property)) {
-	callback(p)
-	p.ForEachChild(func(_ int, child core.Property) {
-		callback(child)
-	})
 }
 
 func (p *multiValuedProperty) Add(value interface{}) (bool, error) {
@@ -239,10 +233,13 @@ func (p *multiValuedProperty) ChildAtIndex(index interface{}) core.Property {
 	return p.elements[i]
 }
 
-func (p *multiValuedProperty) ForEachChild(callback func(index int, child core.Property)) {
+func (p *multiValuedProperty) ForEachChild(callback func(index int, child core.Property) error) error {
 	for i, elem := range p.elements {
-		callback(i, elem)
+		if err := callback(i, elem); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (p *multiValuedProperty) Compact() {
@@ -303,9 +300,9 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 
 func (p *multiValuedProperty) computeHash() {
 	hashes := make([]uint64, 0)
-	p.ForEachChild(func(index int, child core.Property) {
+	_ = p.ForEachChild(func(index int, child core.Property) error {
 		if child.IsUnassigned() {
-			return
+			return nil
 		}
 
 		// SCIM array does not have orders. We keep the hash array
@@ -319,7 +316,9 @@ func (p *multiValuedProperty) computeHash() {
 				hashes[i-1], hashes[i] = hashes[i], hashes[i-1]
 			}
 		}
+		return nil
 	})
+
 
 	h := fnv.New64a()
 	for _, hash := range hashes {

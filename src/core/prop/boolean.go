@@ -121,10 +121,6 @@ func (p *booleanProperty) Present() bool {
 	return p.value != nil
 }
 
-func (p *booleanProperty) DFS(callback func(property core.Property)) {
-	callback(p)
-}
-
 func (p *booleanProperty) Add(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()

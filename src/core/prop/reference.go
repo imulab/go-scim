@@ -125,10 +125,6 @@ func (p *referenceProperty) Present() bool {
 	return p.value != nil && len(*(p.value)) > 0
 }
 
-func (p *referenceProperty) DFS(callback func(property core.Property)) {
-	callback(p)
-}
-
 func (p *referenceProperty) Add(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()

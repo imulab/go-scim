@@ -146,10 +146,6 @@ func (p *dateTimeProperty) Present() bool {
 	return p.value != nil
 }
 
-func (p *dateTimeProperty) DFS(callback func(property core.Property)) {
-	callback(p)
-}
-
 func (p *dateTimeProperty) Add(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()

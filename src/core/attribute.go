@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 )
 
 var (
@@ -257,6 +258,26 @@ func (attr *Attribute) MustValidate() {
 			}
 		}
 	}
+}
+
+// Sort the sub attributes recursively based on the index metadata.
+func (attr *Attribute) Sort() {
+	attr.ForEachSubAttribute(func(subAttribute *Attribute) {
+		subAttribute.Sort()
+	})
+	sort.Sort(attr)
+}
+
+func (attr *Attribute) Len() int {
+	return len(attr.subAttributes)
+}
+
+func (attr *Attribute) Less(i, j int) bool {
+	return attr.subAttributes[i].index < attr.subAttributes[j].index
+}
+
+func (attr *Attribute) Swap(i, j int) {
+	attr.subAttributes[i], attr.subAttributes[j] = attr.subAttributes[j], attr.subAttributes[i]
 }
 
 // Returns true if the two attributes are equal. This method checks pointer equality first.

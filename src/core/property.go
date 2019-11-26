@@ -56,9 +56,6 @@ type Property interface {
 	// Return true if the property's value is present. Presence is defined to be non-nil and non-empty.
 	// This method corresponds to the 'pr' operator and shall be implemented by all implementations.
 	Present() bool
-	// Perform a depth-first-search on the property and invoke the callback function on each visited
-	// property from the search. The callback function SHALL NOT block.
-	DFS(callback func(property Property))
 	// Add a value to the property. If the value already exists, no change will be made. Otherwise, the value will
 	// be added to the underlying data structure and mod count increased by one. For simple properties, calling this
 	// method equates to calling Replace.
@@ -82,7 +79,7 @@ type Container interface {
 	CountChildren() int
 	// Iterate through all children properties and invoke the callback function sequentially.
 	// The callback method SHALL NOT block the executing Goroutine.
-	ForEachChild(callback func(index int, child Property))
+	ForEachChild(callback func(index int, child Property) error) error
 	// Return the child property addressable by the index, or nil.
 	ChildAtIndex(index interface{}) Property
 	// Add a prototype of the child property to the container,

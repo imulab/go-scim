@@ -118,10 +118,6 @@ func (p *binaryProperty) Present() bool {
 	return len(p.value) > 0
 }
 
-func (p *binaryProperty) DFS(callback func(property core.Property)) {
-	callback(p)
-}
-
 func (p *binaryProperty) Add(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()

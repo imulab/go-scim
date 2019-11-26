@@ -139,10 +139,6 @@ func (p *integerProperty) Present() bool {
 	return p.value != nil
 }
 
-func (p *integerProperty) DFS(callback func(property core.Property)) {
-	callback(p)
-}
-
 func (p *integerProperty) Add(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()

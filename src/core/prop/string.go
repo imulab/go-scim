@@ -149,10 +149,6 @@ func (p *stringProperty) Present() bool {
 	return p.value != nil && len(*(p.value)) > 0
 }
 
-func (p *stringProperty) DFS(callback func(property core.Property)) {
-	callback(p)
-}
-
 func (p *stringProperty) Add(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()

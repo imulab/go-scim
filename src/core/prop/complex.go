@@ -95,8 +95,9 @@ func (p *complexProperty) Attribute() *core.Attribute {
 // Caution: slow operation
 func (p *complexProperty) Raw() interface{} {
 	values := make(map[string]interface{})
-	p.ForEachChild(func(_ int, child core.Property) {
+	_ = p.ForEachChild(func(_ int, child core.Property) error {
 		values[child.Attribute().Name()] = child.Raw()
+		return nil
 	})
 	return values
 }
@@ -113,8 +114,9 @@ func (p *complexProperty) IsUnassigned() bool {
 func (p *complexProperty) ModCount() int {
 	// Watch out for double counting
 	n := 0
-	p.ForEachChild(func(_ int, child core.Property) {
+	_ = p.ForEachChild(func(_ int, child core.Property) error {
 		n += child.ModCount()
+		return nil
 	})
 	return n
 }
@@ -167,13 +169,6 @@ func (p *complexProperty) Present() bool {
 		}
 	}
 	return false
-}
-
-func (p *complexProperty) DFS(callback func(property core.Property)) {
-	callback(p)
-	p.ForEachChild(func(_ int, child core.Property) {
-		callback(child)
-	})
 }
 
 func (p *complexProperty) Add(value interface{}) (bool, error) {
@@ -243,10 +238,13 @@ func (p *complexProperty) CountChildren() int {
 	return len(p.subProps)
 }
 
-func (p *complexProperty) ForEachChild(callback func(index int, child core.Property)) {
+func (p *complexProperty) ForEachChild(callback func(index int, child core.Property) error) error {
 	for i, prop := range p.subProps {
-		callback(i, prop)
+		if err := callback(i, prop); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (p *complexProperty) NewChild() int {
@@ -273,17 +271,17 @@ func (p *complexProperty) computeHash() {
 	h := fnv.New64a()
 
 	hasIdentity := p.attr.HasIdentitySubAttributes()
-	p.ForEachChild(func(_ int, child core.Property) {
+	err := p.ForEachChild(func(_ int, child core.Property) error {
 		// Include fields in the computation if
 		// - no sub attributes are marked as identity
 		// - this sub attribute is marked identity
 		if hasIdentity && !child.Attribute().IsIdentity() {
-			return
+			return nil
 		}
 
 		_, err := h.Write([]byte(child.Attribute().Name()))
 		if err != nil {
-			panic("error computing hash")
+			return err
 		}
 
 		// Skip the value hash if it is unassigned
@@ -292,10 +290,16 @@ func (p *complexProperty) computeHash() {
 			binary.LittleEndian.PutUint64(b, child.Hash())
 			_, err := h.Write(b)
 			if err != nil {
-				panic("error computing hash")
+				return err
 			}
 		}
+
+		return nil
 	})
+	if err != nil {
+		panic("error computing hash")
+	}
+
 	p.hash = h.Sum64()
 }
 
