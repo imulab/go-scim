@@ -18,13 +18,6 @@ type Property interface {
 	// Delete as these methods may not modify the underlying data if the change proposed has no effect on
 	// it.
 	ModCount() int
-	// Return the number of children properties. Simple typed properties always return 0.
-	// Complex and multiValued properties return the number of sub properties and the number
-	// of element properties respectively.
-	CountChildren() int
-	// Iterate through all children properties and invoke the callback function sequentially.
-	// The callback method SHALL NOT block the executing Goroutine.
-	ForEachChild(callback func(index int, child Property))
 	// Return true if the two properties match each other. Properties match if and only if
 	// their attributes match and their values are comparable according to the attribute.
 	// For complex properties, two complex properties match if and only if all their sub properties
@@ -79,6 +72,22 @@ type Property interface {
 	// count. This behaviour is designed to distinguish between a system generated unassigned property and user declared
 	// unassigned property.
 	Delete() (bool, error)
+}
+
+// Interface for SCIM properties that serve as a container to other properties. For instance, complex and multiValued
+// properties. These properties have additional features to manipulate their contained/children properties.
+type Container interface {
+	Property
+	// Return the number of children properties.
+	CountChildren() int
+	// Iterate through all children properties and invoke the callback function sequentially.
+	// The callback method SHALL NOT block the executing Goroutine.
+	ForEachChild(callback func(index int, child Property))
+	// Return the child property addressable by the index, or nil.
+	ChildAtIndex(index interface{}) Property
+	// Add a prototype of the child property to the container,
+	// and return the index. Return -1 to indicate no child was created.
+	NewChild() int
 	// Consolidate and remove any unwanted child properties
 	Compact()
 }

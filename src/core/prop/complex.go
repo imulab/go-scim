@@ -76,6 +76,11 @@ func NewComplexOf(attr *core.Attribute, value interface{}) core.Property {
 	return p
 }
 
+var (
+	_ core.Property  = (*complexProperty)(nil)
+	_ core.Container = (*complexProperty)(nil)
+)
+
 type complexProperty struct {
 	attr      *core.Attribute
 	subProps  []core.Property // array of sub properties to maintain determinate iteration order
@@ -114,23 +119,13 @@ func (p *complexProperty) ModCount() int {
 	return n
 }
 
-func (p *complexProperty) CountChildren() int {
-	return len(p.subProps)
-}
-
-func (p *complexProperty) ForEachChild(callback func(index int, child core.Property)) {
-	for i, prop := range p.subProps {
-		callback(i, prop)
-	}
-}
-
 func (p *complexProperty) Matches(another core.Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
 
 	// Usually this won't happen, but still check it to be sure.
-	if p.CountChildren() != another.CountChildren() {
+	if p.CountChildren() != another.(core.Container).CountChildren() {
 		return false
 	}
 
@@ -242,6 +237,34 @@ func (p *complexProperty) Delete() (bool, error) {
 	}
 	p.computeHash()
 	return present, nil
+}
+
+func (p *complexProperty) CountChildren() int {
+	return len(p.subProps)
+}
+
+func (p *complexProperty) ForEachChild(callback func(index int, child core.Property)) {
+	for i, prop := range p.subProps {
+		callback(i, prop)
+	}
+}
+
+func (p *complexProperty) NewChild() int {
+	return -1
+}
+
+func (p *complexProperty) ChildAtIndex(index interface{}) core.Property {
+	name, ok := index.(string)
+	if !ok {
+		return nil
+	}
+
+	i, ok := p.nameIndex[strings.ToLower(name)]
+	if !ok {
+		return nil
+	}
+
+	return p.subProps[i]
 }
 
 func (p *complexProperty) Compact() {}

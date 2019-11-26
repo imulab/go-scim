@@ -31,6 +31,11 @@ func NewMultiOf(attr *core.Attribute, value interface{}) core.Property {
 	return p
 }
 
+var (
+	_ core.Property  = (*multiValuedProperty)(nil)
+	_ core.Container = (*multiValuedProperty)(nil)
+)
+
 type multiValuedProperty struct {
 	attr     *core.Attribute
 	elements []core.Property
@@ -63,16 +68,6 @@ func (p *multiValuedProperty) ModCount() int {
 		n += child.ModCount()
 	})
 	return n
-}
-
-func (p *multiValuedProperty) CountChildren() int {
-	return len(p.elements)
-}
-
-func (p *multiValuedProperty) ForEachChild(callback func(index int, child core.Property)) {
-	for i, elem := range p.elements {
-		callback(i, elem)
-	}
 }
 
 func (p *multiValuedProperty) Matches(another core.Property) bool {
@@ -219,6 +214,37 @@ func (p *multiValuedProperty) Delete() (bool, error) {
 	return present, nil
 }
 
+func (p *multiValuedProperty) NewChild() int {
+	_, err := p.newElementProperty(nil)
+	if err != nil {
+		return -1
+	}
+	return len(p.elements) - 1
+}
+
+func (p *multiValuedProperty) CountChildren() int {
+	return len(p.elements)
+}
+
+func (p *multiValuedProperty) ChildAtIndex(index interface{}) core.Property {
+	i, ok := index.(int)
+	if !ok {
+		return nil
+	}
+
+	if i >= len(p.elements) {
+		return nil
+	}
+
+	return p.elements[i]
+}
+
+func (p *multiValuedProperty) ForEachChild(callback func(index int, child core.Property)) {
+	for i, elem := range p.elements {
+		callback(i, elem)
+	}
+}
+
 func (p *multiValuedProperty) Compact() {
 	if len(p.elements) == 0 {
 		return
@@ -249,23 +275,27 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 	attr := p.Attribute().AsSingleValued()
 	switch attr.Type() {
 	case core.TypeString:
-		prop = NewStringOf(attr, singleValue)
+		prop = NewString(attr)
 	case core.TypeInteger:
-		prop = NewIntegerOf(attr, singleValue)
+		prop = NewInteger(attr)
 	case core.TypeDecimal:
-		prop = NewDecimalOf(attr, singleValue)
+		prop = NewDecimal(attr)
 	case core.TypeBoolean:
-		prop = NewBooleanOf(attr, singleValue)
+		prop = NewBoolean(attr)
 	case core.TypeReference:
-		prop = NewReferenceOf(attr, singleValue)
+		prop = NewReference(attr)
 	case core.TypeBinary:
-		prop = NewBinaryOf(attr, singleValue)
+		prop = NewBinary(attr)
 	case core.TypeDateTime:
-		prop = NewDateTimeOf(attr, singleValue)
+		prop = NewDateTime(attr)
 	case core.TypeComplex:
-		prop = NewComplexOf(attr, singleValue)
+		prop = NewComplex(attr)
 	default:
 		panic("invalid type")
+	}
+
+	if singleValue != nil {
+		_, err = prop.Replace(singleValue)
 	}
 
 	return
@@ -284,7 +314,7 @@ func (p *multiValuedProperty) computeHash() {
 		// the same, as they compute the same hash. We use insertion
 		// sort here as we don't expect a large number of elements.
 		hashes = append(hashes, child.Hash())
-		for i := len(hashes)-1; i > 0; i-- {
+		for i := len(hashes) - 1; i > 0; i-- {
 			if hashes[i-1] > hashes[i] {
 				hashes[i-1], hashes[i] = hashes[i], hashes[i-1]
 			}

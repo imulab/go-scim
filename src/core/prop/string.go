@@ -32,6 +32,8 @@ func NewStringOf(attr *core.Attribute, value interface{}) core.Property {
 	return p
 }
 
+var _ core.Property = (*stringProperty)(nil)
+
 type stringProperty struct {
 	attr  *core.Attribute
 	value *string
