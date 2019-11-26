@@ -15,7 +15,6 @@ func NewInteger(attr *core.Attribute) core.Property {
 	return &integerProperty{
 		attr:  attr,
 		value: nil,
-		dirty: false,
 	}
 }
 
@@ -34,7 +33,7 @@ func NewIntegerOf(attr *core.Attribute, value interface{}) core.Property {
 type integerProperty struct {
 	attr  *core.Attribute
 	value *int64
-	dirty bool
+	mod   int
 }
 
 func (p *integerProperty) Attribute() *core.Attribute {
@@ -48,8 +47,12 @@ func (p *integerProperty) Raw() interface{} {
 	return *(p.value)
 }
 
-func (p *integerProperty) IsUnassigned() (unassigned bool, dirty bool) {
-	return p.value == nil, p.dirty
+func (p *integerProperty) IsUnassigned() bool {
+	return p.value == nil
+}
+
+func (p *integerProperty) ModCount() int {
+	return p.mod
 }
 
 func (p *integerProperty) CountChildren() int {
@@ -63,9 +66,8 @@ func (p *integerProperty) Matches(another core.Property) bool {
 		return false
 	}
 
-	if unassigned, _ := p.IsUnassigned(); unassigned {
-		alsoUnassigned, _ := another.IsUnassigned()
-		return alsoUnassigned
+	if p.IsUnassigned() {
+		return another.IsUnassigned()
 	}
 
 	return p.Hash() == another.Hash()
@@ -159,7 +161,7 @@ func (p *integerProperty) Replace(value interface{}) (bool, error) {
 		equal, _ := p.EqualsTo(i64)
 		if !equal {
 			p.value = &i64
-			p.dirty = true
+			p.mod++
 		}
 		return !equal, nil
 	}
@@ -168,7 +170,9 @@ func (p *integerProperty) Replace(value interface{}) (bool, error) {
 func (p *integerProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
-	p.dirty = true
+	if p.mod == 0 || present {
+		p.mod++
+	}
 	return present, nil
 }
 

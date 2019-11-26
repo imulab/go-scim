@@ -15,7 +15,6 @@ func NewBoolean(attr *core.Attribute) core.Property {
 	return &booleanProperty{
 		attr:  attr,
 		value: nil,
-		dirty: false,
 	}
 }
 
@@ -34,7 +33,7 @@ func NewBooleanOf(attr *core.Attribute, value interface{}) core.Property {
 type booleanProperty struct {
 	attr  *core.Attribute
 	value *bool
-	dirty bool
+	mod   int
 }
 
 func (p *booleanProperty) Attribute() *core.Attribute {
@@ -48,8 +47,12 @@ func (p *booleanProperty) Raw() interface{} {
 	return *(p.value)
 }
 
-func (p *booleanProperty) IsUnassigned() (unassigned bool, dirty bool) {
-	return p.value == nil, p.dirty
+func (p *booleanProperty) IsUnassigned() bool {
+	return p.value == nil
+}
+
+func (p *booleanProperty) ModCount() int {
+	return p.mod
 }
 
 func (p *booleanProperty) CountChildren() int {
@@ -63,9 +66,8 @@ func (p *booleanProperty) Matches(another core.Property) bool {
 		return false
 	}
 
-	if unassigned, _ := p.IsUnassigned(); unassigned {
-		alsoUnassigned, _ := another.IsUnassigned()
-		return alsoUnassigned
+	if p.IsUnassigned() {
+		return another.IsUnassigned()
 	}
 
 	return p.Hash() == another.Hash()
@@ -141,7 +143,7 @@ func (p *booleanProperty) Replace(value interface{}) (bool, error) {
 		equal, _ := p.EqualsTo(b)
 		if !equal {
 			p.value = &b
-			p.dirty = true
+			p.mod++
 		}
 		return !equal, nil
 	}
@@ -150,7 +152,9 @@ func (p *booleanProperty) Replace(value interface{}) (bool, error) {
 func (p *booleanProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
-	p.dirty = true
+	if p.mod == 0 || present {
+		p.mod++
+	}
 	return present, nil
 }
 

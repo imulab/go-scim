@@ -17,7 +17,6 @@ func NewReference(attr *core.Attribute) core.Property {
 	return &referenceProperty{
 		attr:  attr,
 		value: nil,
-		dirty: false,
 	}
 }
 
@@ -36,7 +35,7 @@ func NewReferenceOf(attr *core.Attribute, value interface{}) core.Property {
 type referenceProperty struct {
 	attr  *core.Attribute
 	value *string
-	dirty bool
+	mod   int
 	hash  uint64
 }
 
@@ -51,8 +50,12 @@ func (p *referenceProperty) Raw() interface{} {
 	return *(p.value)
 }
 
-func (p *referenceProperty) IsUnassigned() (unassigned bool, dirty bool) {
-	return p.value == nil, p.dirty
+func (p *referenceProperty) IsUnassigned() bool {
+	return p.value == nil
+}
+
+func (p *referenceProperty) ModCount() int {
+	return p.mod
 }
 
 func (p *referenceProperty) CountChildren() int {
@@ -66,9 +69,8 @@ func (p *referenceProperty) Matches(another core.Property) bool {
 		return false
 	}
 
-	if unassigned, _ := p.IsUnassigned(); unassigned {
-		alsoUnassigned, _ := another.IsUnassigned()
-		return alsoUnassigned
+	if p.IsUnassigned() {
+		return another.IsUnassigned()
 	}
 
 	return p.Hash() == another.Hash()
@@ -145,7 +147,7 @@ func (p *referenceProperty) Replace(value interface{}) (bool, error) {
 		equal, _ := p.EqualsTo(s)
 		if !equal {
 			p.value = &s
-			p.dirty = true
+			p.mod++
 			p.computeHash()
 		}
 		return !equal, nil
@@ -155,8 +157,10 @@ func (p *referenceProperty) Replace(value interface{}) (bool, error) {
 func (p *referenceProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
-	p.dirty = true
 	p.computeHash()
+	if p.mod == 0 || present {
+		p.mod++
+	}
 	return present, nil
 }
 

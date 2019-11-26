@@ -17,7 +17,6 @@ func NewString(attr *core.Attribute) core.Property {
 	return &stringProperty{
 		attr:  attr,
 		value: nil,
-		dirty: false,
 	}
 }
 
@@ -36,7 +35,7 @@ func NewStringOf(attr *core.Attribute, value interface{}) core.Property {
 type stringProperty struct {
 	attr  *core.Attribute
 	value *string
-	dirty bool
+	mod   int
 	hash  uint64
 }
 
@@ -51,8 +50,12 @@ func (p *stringProperty) Raw() interface{} {
 	return *(p.value)
 }
 
-func (p *stringProperty) IsUnassigned() (unassigned bool, dirty bool) {
-	return p.value == nil, p.dirty
+func (p *stringProperty) IsUnassigned() bool {
+	return p.value == nil
+}
+
+func (p *stringProperty) ModCount() int {
+	return p.mod
 }
 
 func (p *stringProperty) CountChildren() int {
@@ -66,9 +69,8 @@ func (p *stringProperty) Matches(another core.Property) bool {
 		return false
 	}
 
-	if unassigned, _ := p.IsUnassigned(); unassigned {
-		alsoUnassigned, _ := another.IsUnassigned()
-		return alsoUnassigned
+	if p.IsUnassigned() {
+		return another.IsUnassigned()
 	}
 
 	return p.Hash() == another.Hash()
@@ -167,8 +169,8 @@ func (p *stringProperty) Replace(value interface{}) (bool, error) {
 		equal, _ := p.EqualsTo(s)
 		if !equal {
 			p.value = &s
-			p.dirty = true
 			p.computeHash()
+			p.mod++
 		}
 		return !equal, nil
 	}
@@ -177,8 +179,10 @@ func (p *stringProperty) Replace(value interface{}) (bool, error) {
 func (p *stringProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
-	p.dirty = true
 	p.computeHash()
+	if p.mod == 0 || present {
+		p.mod++
+	}
 	return present, nil
 }
 

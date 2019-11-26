@@ -8,18 +8,16 @@ type Property interface {
 	// Return the property's value in Golang's native type, or nil.
 	// Implementations shall document the type returned here.
 	Raw() interface{}
-	// Return true if this property is unassigned, and true if the unassigned state
-	// is considered dirty.
+	// Return true if this property is unassigned.
 	// Unassigned is defined to be nil for singular simple typed properties; empty for multiValued
 	// properties; and complex properties are unassigned if and only if all its
 	// containing sub properties are unassigned.
-	// Dirtiness is defined to have been explicitly nullified by the user, as opposed to naturally
-	// unassigned when the property is constructed from its attribute. When the property is freshly
-	// constructed, it is not dirty. If the property remain untouched throughout its life time, it will
-	// remain unassigned and not dirty. If the property is explicitly unassigned through Add, Replace and
-	// Delete operations, it shall be considered dirty. Dirty unassigned behaves differently when it comes
-	// to default value assignments.
-	IsUnassigned() (unassigned bool, dirty bool)
+	IsUnassigned() bool
+	// Returns the number of times this property has been modified. In principal, the mod count increases
+	// every time a change is made to the property. Note that this does not equate calling Add, Replace or
+	// Delete as these methods may not modify the underlying data if the change proposed has no effect on
+	// it.
+	ModCount() int
 	// Return the number of children properties. Simple typed properties always return 0.
 	// Complex and multiValued properties return the number of sub properties and the number
 	// of element properties respectively.
@@ -68,14 +66,18 @@ type Property interface {
 	// Perform a depth-first-search on the property and invoke the callback function on each visited
 	// property from the search. The callback function SHALL NOT block.
 	DFS(callback func(property Property))
-	// Add a value to the property. Operation shall render the property dirty. If property's value does
-	// not change after the operation, false will be returned. If value is compatible, err will be returned.
+	// Add a value to the property. If the value already exists, no change will be made. Otherwise, the value will
+	// be added to the underlying data structure and mod count increased by one. For simple properties, calling this
+	// method equates to calling Replace.
 	Add(value interface{}) (bool, error)
-	// Replace value of this property. Operation shall render the property dirty. If property's value does
-	//	// not change after the operation, false will be returned. If value is compatible, err will be returned.
+	// Replace value of this property. If the value equals to the current value, no change will be made. Otherwise,
+	// the underlying value will be replaced and mod count increased by one. Providing a nil value equates to
+	// calling Delete.
 	Replace(value interface{}) (bool, error)
-	// Delete value from this property. Operation shall render the property dirty. If property's value does
-	//	// not change after the operation, false will be returned.
+	// Delete value from this property. If the property is already unassigned, deleting it again has no effect and
+	// does not increase mod count. However, as a special case, when mod count is 0, deleting it will increase mod
+	// count. This behaviour is designed to distinguish between a system generated unassigned property and user declared
+	// unassigned property.
 	Delete() (bool, error)
 	// Consolidate and remove any unwanted child properties
 	Compact()

@@ -22,7 +22,7 @@ func NewComplex(attr *core.Attribute) core.Property {
 	{
 		attr.ForEachSubAttribute(func(subAttribute *core.Attribute) {
 			if subAttribute.MultiValued() {
-				// todo
+				subProps = append(subProps, NewMulti(subAttribute))
 			} else {
 				switch subAttribute.Type() {
 				case core.TypeString:
@@ -56,9 +56,8 @@ func NewComplex(attr *core.Attribute) core.Property {
 			subProps:  subProps,
 			nameIndex: nameIndex,
 		}
-		unassigned, dirty := p.IsUnassigned()
-		if !unassigned || dirty {
-			panic("new complex property is supposed to be unassigned and non-dirty")
+		if !p.IsUnassigned() || p.ModCount() != 0 {
+			panic("new complex property is supposed to be unassigned and un-modded")
 		}
 	}
 
@@ -70,7 +69,7 @@ func NewComplex(attr *core.Attribute) core.Property {
 // marked dirty at the start unless value is empty
 func NewComplexOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewComplex(attr)
-	_, err := p.Replace(value)
+	_, err := p.Add(value)
 	if err != nil {
 		panic(err)
 	}
@@ -81,9 +80,7 @@ type complexProperty struct {
 	attr      *core.Attribute
 	subProps  []core.Property // array of sub properties to maintain determinate iteration order
 	nameIndex map[string]int  // attribute's name (to lower case) to index in subProps to allow fast access
-	dirty     bool
 	hash      uint64
-	// todo add dirty sign
 }
 
 func (p *complexProperty) Attribute() *core.Attribute {
@@ -99,13 +96,22 @@ func (p *complexProperty) Raw() interface{} {
 	return values
 }
 
-func (p *complexProperty) IsUnassigned() (unassigned bool, dirty bool) {
+func (p *complexProperty) IsUnassigned() bool {
 	for _, prop := range p.subProps {
-		pUnassigned, pDirty := prop.IsUnassigned()
-		unassigned = unassigned && pUnassigned
-		dirty = dirty || pDirty
+		if !prop.IsUnassigned() {
+			return false
+		}
 	}
-	return
+	return true
+}
+
+func (p *complexProperty) ModCount() int {
+	// Watch out for double counting
+	n := 0
+	p.ForEachChild(func(_ int, child core.Property) {
+		n += child.ModCount()
+	})
+	return n
 }
 
 func (p *complexProperty) CountChildren() int {
@@ -184,7 +190,6 @@ func (p *complexProperty) Add(value interface{}) (bool, error) {
 		return false, p.errIncompatibleValue(value)
 	} else {
 		changed := false
-
 		for k, v := range m {
 			i, ok := p.nameIndex[strings.ToLower(k)]
 			if !ok {
@@ -196,56 +201,47 @@ func (p *complexProperty) Add(value interface{}) (bool, error) {
 			}
 			changed = changed || ok
 		}
-
-		p.dirty = true
 		p.computeHash()
-
 		return changed, nil
 	}
 }
 
-func (p *complexProperty) Replace(value interface{}) (bool, error) {
+func (p *complexProperty) Replace(value interface{}) (changed bool, err error) {
 	if value == nil {
 		return false, nil
 	}
 
-	if m, ok := value.(map[string]interface{}); !ok {
-		return false, p.errIncompatibleValue(value)
-	} else {
-		changed := false
-		for k, v := range m {
-			i, ok := p.nameIndex[k]
-			if !ok {
-				continue
-			}
-			ok, err := p.subProps[i].Replace(v)
-			if err != nil {
-				return false, err
-			}
-			changed = changed || ok
+	defer func() {
+		if r := recover(); r != nil {
+			err = p.errIncompatibleValue(value)
 		}
+	}()
 
-		p.dirty = true
-		p.computeHash()
-
-		return changed, nil
+	wip := NewComplexOf(p.attr, value)
+	if p.Matches(wip) {
+		changed = false
+		return
 	}
+
+	changed = true
+	p.subProps = wip.(*complexProperty).subProps
+	p.nameIndex = wip.(*complexProperty).nameIndex
+	p.hash = wip.(*complexProperty).hash
+	wip = nil
+
+	return
 }
 
 func (p *complexProperty) Delete() (bool, error) {
-	changed := false
+	present := p.Present()
 	for i := range p.subProps {
-		ok, err := p.subProps[i].Delete()
+		_, err := p.subProps[i].Delete()
 		if err != nil {
 			return false, err
 		}
-		changed = changed || ok
 	}
-
-	p.dirty = true
 	p.computeHash()
-
-	return changed, nil
+	return present, nil
 }
 
 func (p *complexProperty) Compact() {}
@@ -268,8 +264,7 @@ func (p *complexProperty) computeHash() {
 		}
 
 		// Skip the value hash if it is unassigned
-		unassigned, _ := child.IsUnassigned()
-		if !unassigned {
+		if !child.IsUnassigned() {
 			b := make([]byte, 8)
 			binary.LittleEndian.PutUint64(b, child.Hash())
 			_, err := h.Write(b)

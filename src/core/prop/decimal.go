@@ -15,7 +15,6 @@ func NewDecimal(attr *core.Attribute) core.Property {
 	return &decimalProperty{
 		attr:  attr,
 		value: nil,
-		dirty: false,
 	}
 }
 
@@ -34,7 +33,7 @@ func NewDecimalOf(attr *core.Attribute, value interface{}) core.Property {
 type decimalProperty struct {
 	attr  *core.Attribute
 	value *float64
-	dirty bool
+	mod   int
 }
 
 func (p *decimalProperty) Attribute() *core.Attribute {
@@ -48,8 +47,12 @@ func (p *decimalProperty) Raw() interface{} {
 	return *(p.value)
 }
 
-func (p *decimalProperty) IsUnassigned() (unassigned bool, dirty bool) {
-	return p.value == nil, p.dirty
+func (p *decimalProperty) IsUnassigned() bool {
+	return p.value == nil
+}
+
+func (p *decimalProperty) ModCount() int {
+	return p.mod
 }
 
 func (p *decimalProperty) CountChildren() int {
@@ -63,9 +66,8 @@ func (p *decimalProperty) Matches(another core.Property) bool {
 		return false
 	}
 
-	if unassigned, _ := p.IsUnassigned(); unassigned {
-		alsoUnassigned, _ := another.IsUnassigned()
-		return alsoUnassigned
+	if p.IsUnassigned() {
+		return another.IsUnassigned()
 	}
 
 	return p.Hash() == another.Hash()
@@ -158,7 +160,7 @@ func (p *decimalProperty) Replace(value interface{}) (bool, error) {
 		equal, _ := p.EqualsTo(f64)
 		if !equal {
 			p.value = &f64
-			p.dirty = true
+			p.mod++
 		}
 		return !equal, nil
 	}
@@ -167,7 +169,9 @@ func (p *decimalProperty) Replace(value interface{}) (bool, error) {
 func (p *decimalProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
-	p.dirty = true
+	if p.mod == 0 || present {
+		p.mod++
+	}
 	return present, nil
 }
 

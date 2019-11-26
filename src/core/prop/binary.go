@@ -17,7 +17,6 @@ func NewBinary(attr *core.Attribute) core.Property {
 	return &binaryProperty{
 		attr:  attr,
 		value: nil,
-		dirty: false,
 	}
 }
 
@@ -36,7 +35,7 @@ func NewBinaryOf(attr *core.Attribute, value interface{}) core.Property {
 type binaryProperty struct {
 	attr  *core.Attribute
 	value []byte
-	dirty bool
+	mod   int
 	hash  uint64
 }
 
@@ -51,8 +50,12 @@ func (p *binaryProperty) Raw() interface{} {
 	return base64.RawStdEncoding.EncodeToString(p.value)
 }
 
-func (p *binaryProperty) IsUnassigned() (unassigned bool, dirty bool) {
-	return len(p.value) == 0, p.dirty
+func (p *binaryProperty) IsUnassigned() bool {
+	return len(p.value) == 0
+}
+
+func (p *binaryProperty) ModCount() int {
+	return p.mod
 }
 
 func (p *binaryProperty) CountChildren() int {
@@ -66,9 +69,8 @@ func (p *binaryProperty) Matches(another core.Property) bool {
 		return false
 	}
 
-	if unassigned, _ := p.IsUnassigned(); unassigned {
-		alsoUnassigned, _ := another.IsUnassigned()
-		return alsoUnassigned
+	if p.IsUnassigned() {
+		return another.IsUnassigned()
 	}
 
 	return p.Hash() == another.Hash()
@@ -140,8 +142,8 @@ func (p *binaryProperty) Replace(value interface{}) (bool, error) {
 		equal := p.compareByteArray(p.value, b64)
 		if !equal {
 			copy(p.value, b64)
-			p.dirty = true
 			p.computeHash()
+			p.mod++
 		}
 		return !equal, nil
 	}
@@ -150,8 +152,10 @@ func (p *binaryProperty) Replace(value interface{}) (bool, error) {
 func (p *binaryProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
-	p.dirty = true
 	p.computeHash()
+	if p.mod == 0 || present {
+		p.mod++
+	}
 	return present, nil
 }
 

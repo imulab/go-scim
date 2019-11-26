@@ -16,7 +16,6 @@ func NewMulti(attr *core.Attribute) core.Property {
 	return &multiValuedProperty{
 		attr:     attr,
 		elements: make([]core.Property, 0),
-		dirty:    false,
 	}
 }
 
@@ -35,7 +34,6 @@ func NewMultiOf(attr *core.Attribute, value interface{}) core.Property {
 type multiValuedProperty struct {
 	attr     *core.Attribute
 	elements []core.Property
-	dirty    bool
 	hash     uint64
 }
 
@@ -54,8 +52,17 @@ func (p *multiValuedProperty) Raw() interface{} {
 	return values
 }
 
-func (p *multiValuedProperty) IsUnassigned() (unassigned bool, dirty bool) {
-	return len(p.elements) == 0, p.dirty
+func (p *multiValuedProperty) IsUnassigned() bool {
+	return len(p.elements) == 0
+}
+
+func (p *multiValuedProperty) ModCount() int {
+	// Watch out for double counting
+	n := 0
+	p.ForEachChild(func(_ int, child core.Property) {
+		n += child.ModCount()
+	})
+	return n
 }
 
 func (p *multiValuedProperty) CountChildren() int {
@@ -178,7 +185,6 @@ func (p *multiValuedProperty) Add(value interface{}) (bool, error) {
 		}
 		if !match {
 			p.elements = append(p.elements, eachToAdd)
-			p.dirty = true
 		}
 	}
 	p.computeHash()
@@ -195,10 +201,12 @@ func (p *multiValuedProperty) Replace(value interface{}) (changed bool, err erro
 
 	wip := NewMultiOf(p.attr, value)
 	changed = p.Hash() != wip.Hash()
+	if !changed {
+		return
+	}
 
 	p.elements = wip.(*multiValuedProperty).elements
 	p.hash = wip.(*multiValuedProperty).hash
-	p.dirty = wip.(*multiValuedProperty).dirty
 	wip = nil
 
 	return
@@ -207,7 +215,6 @@ func (p *multiValuedProperty) Replace(value interface{}) (changed bool, err erro
 func (p *multiValuedProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.elements = p.elements[:0]
-	p.dirty = true
 	p.computeHash()
 	return present, nil
 }
@@ -219,7 +226,7 @@ func (p *multiValuedProperty) Compact() {
 
 	var i int
 	for i = len(p.elements) - 1; i >= 0; i-- {
-		if u, _ := p.elements[i].IsUnassigned(); u {
+		if p.elements[i].IsUnassigned() {
 			if i == len(p.elements)-1 {
 				p.elements = p.elements[:i]
 			} else if i == 0 {
@@ -267,7 +274,7 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 func (p *multiValuedProperty) computeHash() {
 	hashes := make([]uint64, 0)
 	p.ForEachChild(func(index int, child core.Property) {
-		if unassigned, _ := child.IsUnassigned(); unassigned {
+		if child.IsUnassigned() {
 			return
 		}
 

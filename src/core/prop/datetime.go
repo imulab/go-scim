@@ -16,7 +16,6 @@ func NewDateTime(attr *core.Attribute) core.Property {
 	return &dateTimeProperty{
 		attr:  attr,
 		value: nil,
-		dirty: false,
 	}
 }
 
@@ -35,7 +34,7 @@ func NewDateTimeOf(attr *core.Attribute, value interface{}) core.Property {
 type dateTimeProperty struct {
 	attr	*core.Attribute
 	value	*time.Time
-	dirty	bool
+	mod		int
 }
 
 func (p *dateTimeProperty) Attribute() *core.Attribute {
@@ -49,8 +48,12 @@ func (p *dateTimeProperty) Raw() interface{} {
 	return p.mustToISO8601()
 }
 
-func (p *dateTimeProperty) IsUnassigned() (unassigned bool, dirty bool) {
-	return p.value == nil, p.dirty
+func (p *dateTimeProperty) IsUnassigned() bool {
+	return p.value == nil
+}
+
+func (p *dateTimeProperty) ModCount() int {
+	return p.mod
 }
 
 func (p *dateTimeProperty) CountChildren() int {
@@ -64,9 +67,8 @@ func (p *dateTimeProperty) Matches(another core.Property) bool {
 		return false
 	}
 
-	if unassigned, _ := p.IsUnassigned(); unassigned {
-		alsoUnassigned, _ := another.IsUnassigned()
-		return alsoUnassigned
+	if p.IsUnassigned() {
+		return another.IsUnassigned()
 	}
 
 	return p.Hash() == another.Hash()
@@ -167,7 +169,7 @@ func (p *dateTimeProperty) Replace(value interface{}) (bool, error) {
 	} else {
 		if !(*(p.value)).Equal(t) {
 			p.value = &t
-			p.dirty = true
+			p.mod++
 			return true, nil
 		} else {
 			return false, nil
@@ -178,7 +180,9 @@ func (p *dateTimeProperty) Replace(value interface{}) (bool, error) {
 func (p *dateTimeProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
-	p.dirty = true
+	if p.mod == 0 || present {
+		p.mod++
+	}
 	return present, nil
 }
 
