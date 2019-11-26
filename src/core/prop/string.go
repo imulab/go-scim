@@ -190,11 +190,11 @@ func (p *stringProperty) String() string {
 
 // Calculate the hash value of the property value
 func (p *stringProperty) computeHash() {
-	if p == nil {
+	if p.value == nil {
 		p.hash = 0
 	} else {
 		h := fnv.New64a()
-		_, err := h.Write([]byte(*(p.value)))
+		_, err := h.Write([]byte(p.formatCase(*(p.value))))
 		if err != nil {
 			panic("error computing hash")
 		}

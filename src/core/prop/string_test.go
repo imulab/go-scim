@@ -85,7 +85,8 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 	"type": "string"
 }
 `))
-				s.Require().Nil(prop.Delete())
+				_, err := prop.Delete()
+				s.Require().Nil(err)
 				return prop
 			},
 			expect: func(t *testing.T, unassigned bool, dirty bool) {
@@ -663,14 +664,14 @@ func (s *StringPropertyTestSuite) TestLessThan() {
 }
 
 func (s *StringPropertyTestSuite) TestPresent() {
-	tests := []struct{
-		name		string
-		prop		core.Property
-		expect		func(t *testing.T, present bool)
+	tests := []struct {
+		name   string
+		prop   core.Property
+		expect func(t *testing.T, present bool)
 	}{
 		{
-			name: 	"unassigned value is not present",
-			prop: 	NewString(s.mustAttribute(`
+			name: "unassigned value is not present",
+			prop: NewString(s.mustAttribute(`
 {
 	"name": "userName",
 	"type": "string"
@@ -681,8 +682,8 @@ func (s *StringPropertyTestSuite) TestPresent() {
 			},
 		},
 		{
-			name: 	"unassigned value is not present",
-			prop: 	NewStringOf(s.mustAttribute(`
+			name: "unassigned value is not present",
+			prop: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
 	"type": "string"
@@ -702,14 +703,14 @@ func (s *StringPropertyTestSuite) TestPresent() {
 }
 
 func (s *StringPropertyTestSuite) TestAdd() {
-	tests := []struct{
-		name		string
-		prop		core.Property
-		v			interface{}
-		expect 		func(t *testing.T, raw interface{}, err error)
+	tests := []struct {
+		name   string
+		prop   core.Property
+		v      interface{}
+		expect func(t *testing.T, raw interface{}, err error)
 	}{
 		{
-			name: 	"add to unassigned",
+			name: "add to unassigned",
 			prop: NewString(s.mustAttribute(`
 {
 	"name": "userName",
@@ -723,7 +724,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 			},
 		},
 		{
-			name: 	"add to assigned replaces the value",
+			name: "add to assigned replaces the value",
 			prop: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
@@ -737,7 +738,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 			},
 		},
 		{
-			name: 	"add incompatible returns error",
+			name: "add incompatible returns error",
 			prop: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
@@ -761,14 +762,14 @@ func (s *StringPropertyTestSuite) TestAdd() {
 }
 
 func (s *StringPropertyTestSuite) TestReplace() {
-	tests := []struct{
-		name		string
-		prop		core.Property
-		v			interface{}
-		expect 		func(t *testing.T, raw interface{}, err error)
+	tests := []struct {
+		name   string
+		prop   core.Property
+		v      interface{}
+		expect func(t *testing.T, raw interface{}, err error)
 	}{
 		{
-			name: 	"replace unassigned",
+			name: "replace unassigned",
 			prop: NewString(s.mustAttribute(`
 {
 	"name": "userName",
@@ -782,7 +783,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 			},
 		},
 		{
-			name: 	"replace assigned",
+			name: "replace assigned",
 			prop: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
@@ -796,7 +797,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 			},
 		},
 		{
-			name: 	"replace incompatible returns error",
+			name: "replace incompatible returns error",
 			prop: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
@@ -820,13 +821,13 @@ func (s *StringPropertyTestSuite) TestReplace() {
 }
 
 func (s *StringPropertyTestSuite) TestDelete() {
-	tests := []struct{
-		name		string
-		prop		core.Property
-		expect 		func(t *testing.T, raw interface{}, err error)
+	tests := []struct {
+		name   string
+		prop   core.Property
+		expect func(t *testing.T, raw interface{}, err error)
 	}{
 		{
-			name: 	"delete unassigned",
+			name: "delete unassigned",
 			prop: NewString(s.mustAttribute(`
 {
 	"name": "userName",
@@ -839,7 +840,7 @@ func (s *StringPropertyTestSuite) TestDelete() {
 			},
 		},
 		{
-			name: 	"delete assigned",
+			name: "delete assigned",
 			prop: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
@@ -858,6 +859,80 @@ func (s *StringPropertyTestSuite) TestDelete() {
 			prop := test.prop
 			_, err := prop.Delete()
 			test.expect(t, prop.Raw(), err)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestHash() {
+	tests := []struct {
+		name   string
+		p1     core.Property
+		p2     core.Property
+		expect func(t *testing.T, h1 uint64, h2 uint64)
+	}{
+		{
+			name: "same string property have same hash",
+			p1: NewStringOf(s.mustAttribute(`
+{
+	"name": "userName",
+	"type": "string",
+	"caseExact": true
+}
+`), "foobar"),
+			p2: NewStringOf(s.mustAttribute(`
+{
+	"name": "userName",
+	"type": "string",
+	"caseExact": true
+}
+`), "foobar"),
+			expect: func(t *testing.T, h1 uint64, h2 uint64) {
+				assert.True(t, h1 == h2)
+			},
+		},
+		{
+			name: "same string (case non-exact) property have same hash",
+			p1: NewStringOf(s.mustAttribute(`
+{
+	"name": "userName",
+	"type": "string"
+}
+`), "foobar"),
+			p2: NewStringOf(s.mustAttribute(`
+{
+	"name": "userName",
+	"type": "string"
+}
+`), "foobar"),
+			expect: func(t *testing.T, h1 uint64, h2 uint64) {
+				assert.True(t, h1 == h2)
+			},
+		},
+		{
+			name: "different property have different hash",
+			p1: NewStringOf(s.mustAttribute(`
+{
+	"name": "userName",
+	"type": "string"
+}
+`), "foobar"),
+			p2: NewStringOf(s.mustAttribute(`
+{
+	"name": "userName",
+	"type": "string"
+}
+`), "barfoo"),
+			expect: func(t *testing.T, h1 uint64, h2 uint64) {
+				assert.False(t, h1 == h2)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			h1 := test.p1.Hash()
+			h2 := test.p2.Hash()
+			test.expect(t, h1, h2)
 		})
 	}
 }
