@@ -14,7 +14,7 @@ import (
 
 func TestSerialize(t *testing.T) {
 	s := new(JSONSerializeTestSuite)
-	s.resourceBase = "../tests/json_serialize_test_suite"
+	s.resourceBase = "../../tests/json_serialize_test_suite"
 	suite.Run(t, s)
 }
 
