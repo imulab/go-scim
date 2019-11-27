@@ -34,7 +34,14 @@ func (r *Resource) NewNavigator() *Navigator {
 
 // Adapting method to start a DFS visit on the top level property of the resource.
 func (r *Resource) Visit(visitor core.Visitor) error {
-	return core.Visit(r.data, visitor)
+	visitor.BeginChildren(r.data)
+	for _, prop := range r.data.subProps {
+		if err := core.Visit(prop, visitor); err != nil {
+			return err
+		}
+	}
+	visitor.EndChildren(r.data)
+	return nil
 }
 
 // Internal adapter to the Replace method of the data Property. It is used exclusively by package

@@ -163,7 +163,7 @@ func (p *dateTimeProperty) Replace(value interface{}) (bool, error) {
 	} else if t, err := p.fromISO8601(s); err != nil {
 		return false, err
 	} else {
-		if !(*(p.value)).Equal(t) {
+		if p.value == nil || !(*(p.value)).Equal(t) {
 			p.value = &t
 			p.mod++
 			return true, nil
