@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 var (
@@ -202,6 +203,18 @@ func (attr *Attribute) ForEachAnnotation(callback func(annotation string)) {
 	}
 }
 
+// Return true if this attribute can be addressed by the given name. The method performs a case insensitive comparision
+// of the provided name against the attribute's id, path, and name one by one. If any one matches, the attribute is
+// considered addressable by that name.
+func (attr *Attribute) GoesBy(name string) bool {
+	switch strings.ToLower(name) {
+	case strings.ToLower(attr.id), strings.ToLower(attr.path), strings.ToLower(attr.name):
+		return true
+	default:
+		return false
+	}
+}
+
 // Return an exact shallow copy of the attribute, but with the multiValued field set to false, thus
 // effectively converting any multiValued attribute to singular attribute.
 func (attr *Attribute) AsSingleValued() *Attribute {
@@ -313,6 +326,7 @@ func (attr *Attribute) UnmarshalJSON(raw []byte) error {
 		}
 	}
 	tmp.fill(attr)
+	attr.Sort()
 	return nil
 }
 
