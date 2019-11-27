@@ -18,10 +18,12 @@ type Visitor interface {
 
 // Entry point to visit a property in a depth-first-search fashion.
 func Visit(property Property, visitor Visitor) error {
-	if visitor.ShouldVisit(property) {
-		if err := visitor.Visit(property); err != nil {
-			return err
-		}
+	if !visitor.ShouldVisit(property) {
+		return nil
+	}
+
+	if err := visitor.Visit(property); err != nil {
+		return err
 	}
 
 	if container, ok := property.(Container); ok {

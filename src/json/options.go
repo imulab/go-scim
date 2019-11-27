@@ -9,8 +9,8 @@ func Options() *options {
 
 // Serialization options
 type options struct {
-	included	[]string
-	excluded	[]string
+	included []string
+	excluded []string
 }
 
 // Specify included attributes to the options.
@@ -35,30 +35,52 @@ func (opt *options) Exclude(fields ...string) *options {
 func (opt *options) shouldSerialize(property core.Property) bool {
 	attr := property.Attribute()
 
+	// Write only properties are never returned. It is usually coupled
+	// with returned=never, but we will check it to make sure.
 	if attr.Mutability() == core.MutabilityWriteOnly {
 		return false
 	}
 
-	switch attr.Returned() {
-	case core.ReturnedAlways:
+	if attr.Returned() == core.ReturnedAlways {
 		return true
-	case core.ReturnedNever:
+	}
+
+	if attr.Returned() == core.ReturnedNever {
 		return false
-	case core.ReturnedRequest:
+	}
+
+	// Request-returned attributes are only returned when
+	// it is not excluded and it is indeed included.
+	if attr.Returned() == core.ReturnedRequest {
+		for _, excluded := range opt.excluded {
+			if property.Attribute().GoesBy(excluded) {
+				return false
+			}
+		}
 		for _, included := range opt.included {
 			if attr.GoesBy(included) {
 				return true
 			}
 		}
 		return false
-	case core.ReturnedDefault:
+	}
+
+	// Default-returned attributes are returned only when
+	// it is not excluded and there's no included attributes (otherwise, only
+	// those are returned), and the property itself is not unassigned.
+	if attr.Returned() == core.ReturnedDefault {
 		for _, excluded := range opt.excluded {
 			if property.Attribute().GoesBy(excluded) {
 				return false
 			}
 		}
-		return !property.IsUnassigned()
-	default:
-		panic("invalid return-ability value")
+		for _, included := range opt.included {
+			if attr.GoesBy(included) {
+				return true
+			}
+		}
+		return len(opt.included) == 0 && !property.IsUnassigned()
 	}
+
+	return false // impossible to reach here
 }
