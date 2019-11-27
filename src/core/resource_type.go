@@ -1,6 +1,8 @@
 package core
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 var (
 	_ json.Marshaler   = (*ResourceType)(nil)
@@ -67,6 +69,43 @@ func (t *ResourceType) ForEachExtension(callback func(extension *Schema, require
 	for _, ext := range t.extensions {
 		callback(ext, t.required[ext.id])
 	}
+}
+
+// Return a complex attribute that contains all schema attributes as its sub attributes.
+func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
+	super := &Attribute{
+		id:              t.schema.id,
+		typ:             TypeComplex,
+		subAttributes:   []*Attribute{},
+		mutability:      MutabilityReadWrite,
+		returned:        ReturnedDefault,
+		uniqueness:      UniquenessNone,
+	}
+
+	if includeCore {
+		super.subAttributes = append(super.subAttributes, SchemaHub.CoreSchema().attributes...)
+	}
+	super.subAttributes = append(super.subAttributes, t.schema.attributes...)
+
+	var i = len(super.subAttributes)
+	t.ForEachExtension(func(extension *Schema, required bool) {
+		super.subAttributes = append(super.subAttributes, &Attribute{
+			id:              extension.id,
+			name:            extension.id,
+			description:     extension.description,
+			typ:             TypeComplex,
+			subAttributes:   extension.attributes,
+			required:        required,
+			mutability:      MutabilityReadWrite,
+			returned:        ReturnedDefault,
+			uniqueness:      UniquenessNone,
+			index:           i,
+			path:            extension.id,
+		})
+		i++
+	})
+
+	return super
 }
 
 func (t *ResourceType) MarshalJSON() ([]byte, error) {
