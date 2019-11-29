@@ -37,6 +37,24 @@ func (r *Resource) NewNavigator() *Navigator {
 	return NewNavigator(r.data)
 }
 
+// Convenience method to return the ID of the resource.
+func (r *Resource) ID() string {
+	p, err := r.NewNavigator().FocusName("id")
+	if err != nil {
+		return ""
+	}
+
+	if p.IsUnassigned() {
+		return ""
+	}
+
+	if id, ok := p.Raw().(string); !ok {
+		return ""
+	} else {
+		return id
+	}
+}
+
 // Adapting method to start a DFS visit on the top level property of the resource.
 func (r *Resource) Visit(visitor core.Visitor) error {
 	visitor.BeginChildren(r.data)
