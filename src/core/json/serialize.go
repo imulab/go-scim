@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/errors"
-	"github.com/imulab/go-scim/src/core/expr"
 	"github.com/imulab/go-scim/src/core/prop"
 	"math"
 	"strconv"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -29,10 +29,10 @@ type (
 	// json serializer state
 	serializer struct {
 		bytes.Buffer
-		includeFamily *expr.PathAncestry
-		excludeFamily *expr.PathAncestry
-		stack         []*frame
-		scratch       [64]byte
+		includes []string
+		excludes []string
+		stack    []*frame
+		scratch  [64]byte
 	}
 )
 
@@ -48,21 +48,21 @@ func Serialize(resource *prop.Resource, options *options) ([]byte, error) {
 
 	s := new(serializer)
 	if len(options.included) > 0 {
-		s.includeFamily = expr.NewPathFamily(resource.ResourceType())
 		for _, path := range options.included {
-			if p, err := expr.CompilePath(path); err != nil {
-				return nil, err
-			} else {
-				s.includeFamily.Add(p)
+			if len(path) > 0 {
+				s.includes = append(s.includes, strings.TrimPrefix(
+					strings.ToLower(path),
+					strings.ToLower(resource.ResourceType().Schema().ID()+":")),
+				)
 			}
 		}
 	} else if len(options.excluded) > 0 {
-		s.excludeFamily = expr.NewPathFamily(resource.ResourceType())
 		for _, path := range options.excluded {
-			if p, err := expr.CompilePath(path); err != nil {
-				return nil, err
-			} else {
-				s.excludeFamily.Add(p)
+			if len(path) > 0 {
+				s.excludes = append(s.excludes, strings.TrimPrefix(
+					strings.ToLower(path),
+					strings.ToLower(resource.ResourceType().Schema().ID()+":")),
+				)
 			}
 		}
 	}
@@ -90,23 +90,37 @@ func (s *serializer) ShouldVisit(property core.Property) bool {
 	case core.ReturnedNever:
 		return false
 	case core.ReturnedDefault:
-		if s.includeFamily == nil && s.excludeFamily == nil {
+		if len(s.includes) == 0 && len(s.excludes) == 0 {
 			return !property.IsUnassigned()
 		} else {
-			// All attribute IDs should have been pre-compiled and cached.
-			p := expr.MustPath(property.Attribute().ID())
-			if s.includeFamily != nil {
-				return s.includeFamily.IsMember(p) || s.includeFamily.IsAncestor(p) || s.includeFamily.IsOffspring(p)
-			} else if s.excludeFamily != nil {
-				return s.excludeFamily.IsMember(p) || s.excludeFamily.IsOffspring(p)
+			test := strings.ToLower(property.Attribute().Path())
+			if len(s.includes) > 0 {
+				for _, include := range s.includes {
+					if include == test || strings.HasPrefix(include, test + ".") || strings.HasPrefix(test, include + ".") {
+						return true
+					}
+				}
+				return false
+			} else if len(s.excludes) > 0 {
+				for _, exclude := range s.excludes {
+					if exclude == test || strings.HasPrefix(test, exclude + ".") {
+						return false
+					}
+				}
+				return true
 			} else {
 				panic("impossible: either includeFamily or excludeFamily")
 			}
 		}
 	case core.ReturnedRequest:
-		if s.includeFamily != nil {
-			p, _ := expr.CompilePath(property.Attribute().ID())
-			return s.includeFamily.IsMember(p) || s.includeFamily.IsAncestor(p) || s.includeFamily.IsOffspring(p)
+		if len(s.includes) > 0 {
+			test := strings.ToLower(property.Attribute().Path())
+			for _, include := range s.includes {
+				if include == test || strings.HasPrefix(include, test + ".") || strings.HasPrefix(test, include + ".") {
+					return true
+				}
+			}
+			return false
 		}
 		return false
 	default:
