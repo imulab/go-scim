@@ -209,10 +209,11 @@ func (p *multiValuedProperty) Delete() (bool, error) {
 }
 
 func (p *multiValuedProperty) NewChild() int {
-	_, err := p.newElementProperty(nil)
+	c, err := p.newElementProperty(nil)
 	if err != nil {
 		return -1
 	}
+	p.elements = append(p.elements, c)
 	return len(p.elements) - 1
 }
 
