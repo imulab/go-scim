@@ -8,10 +8,14 @@ var urnsCache = &urns{}
 // caches all schema urn ids available in a resource type, so they can be recognized later when an
 // expression that contains one is passed in as an argument to compiler.
 func Register(resourceType *core.ResourceType) {
-	urnsCache = urnsCache.insert(urnsCache, resourceType.Schema().ID(), 0)
+	register(resourceType.Schema().ID())
 	resourceType.ForEachExtension(func(extension *core.Schema, _ bool) {
-		urnsCache = urnsCache.insert(urnsCache, extension.ID(), 0)
+		register(extension.ID())
 	})
+}
+
+func register(s string) {
+	urnsCache = urnsCache.insert(urnsCache, s, 0)
 }
 
 // A trie data structure to cache all registered resource type ID URNs. These URNs

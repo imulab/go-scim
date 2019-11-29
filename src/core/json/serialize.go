@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/errors"
+	"github.com/imulab/go-scim/src/core/expr"
 	"github.com/imulab/go-scim/src/core/prop"
 	"math"
 	"strconv"
@@ -28,26 +29,89 @@ type (
 	// json serializer state
 	serializer struct {
 		bytes.Buffer
-		opt     *options
-		stack   []*frame
-		scratch [64]byte
+		includeFamily *expr.PathAncestry
+		excludeFamily *expr.PathAncestry
+		stack         []*frame
+		scratch       [64]byte
 	}
 )
 
 // Serialize the given resource to JSON bytes.
 func Serialize(resource *prop.Resource, options *options) ([]byte, error) {
+	if options == nil {
+		options = Options()
+	}
+
+	if len(options.included) > 0 && len(options.excluded) > 0 {
+		return nil, errors.InvalidRequest("only one of 'attributes' and 'excludedAttributes' may be used")
+	}
+
 	s := new(serializer)
-	s.opt = options
+	if len(options.included) > 0 {
+		s.includeFamily = expr.NewPathFamily(resource.ResourceType())
+		for _, path := range options.included {
+			if p, err := expr.CompilePath(path); err != nil {
+				return nil, err
+			} else {
+				s.includeFamily.Add(p)
+			}
+		}
+	} else if len(options.excluded) > 0 {
+		s.excludeFamily = expr.NewPathFamily(resource.ResourceType())
+		for _, path := range options.excluded {
+			if p, err := expr.CompilePath(path); err != nil {
+				return nil, err
+			} else {
+				s.excludeFamily.Add(p)
+			}
+		}
+	}
 
 	err := resource.Visit(s)
 	if err != nil {
 		return nil, errors.Internal("JSON serialization error: %s", err.Error())
 	}
+
 	return s.Bytes(), nil
 }
 
 func (s *serializer) ShouldVisit(property core.Property) bool {
-	return s.opt.shouldSerialize(property)
+	attr := property.Attribute()
+
+	// Write only properties are never returned. It is usually coupled
+	// with returned=never, but we will check it to make sure.
+	if attr.Mutability() == core.MutabilityWriteOnly {
+		return false
+	}
+
+	switch attr.Returned() {
+	case core.ReturnedAlways:
+		return true
+	case core.ReturnedNever:
+		return false
+	case core.ReturnedDefault:
+		if s.includeFamily == nil && s.excludeFamily == nil {
+			return !property.IsUnassigned()
+		} else {
+			// All attribute IDs should have been pre-compiled and cached.
+			p := expr.MustPath(property.Attribute().ID())
+			if s.includeFamily != nil {
+				return s.includeFamily.IsMember(p) || s.includeFamily.IsAncestor(p) || s.includeFamily.IsOffspring(p)
+			} else if s.excludeFamily != nil {
+				return s.excludeFamily.IsMember(p) || s.excludeFamily.IsOffspring(p)
+			} else {
+				panic("impossible: either includeFamily or excludeFamily")
+			}
+		}
+	case core.ReturnedRequest:
+		if s.includeFamily != nil {
+			p, _ := expr.CompilePath(property.Attribute().ID())
+			return s.includeFamily.IsMember(p) || s.includeFamily.IsAncestor(p) || s.includeFamily.IsOffspring(p)
+		}
+		return false
+	default:
+		panic("invalid returned-ability")
+	}
 }
 
 func (s *serializer) Visit(property core.Property) (err error) {

@@ -27,6 +27,11 @@ type Resource struct {
 	data         *complexProperty
 }
 
+// Return the resource type of this resource
+func (r *Resource) ResourceType() *core.ResourceType {
+	return r.resourceType
+}
+
 // Adapting constructor method to return a new navigator for the top level property of the resource.
 func (r *Resource) NewNavigator() *Navigator {
 	return NewNavigator(r.data)
