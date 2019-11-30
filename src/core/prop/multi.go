@@ -84,6 +84,9 @@ func (p *multiValuedProperty) Matches(another core.Property) bool {
 }
 
 func (p *multiValuedProperty) Hash() uint64 {
+	if p.hash == 0 {
+		p.computeHash()
+	}
 	return p.hash
 }
 

@@ -56,6 +56,33 @@ func (n *Navigator) FocusIndex(index int) (core.Property, error) {
 	return n.Current(), nil
 }
 
+// Focus on the element that meets given criteria, and return the focused property, or a
+// noTarget error. The returned property will be the newly focused property, as reflected
+// in the Current method.
+func (n *Navigator) FocusCriteria(criteria func(child core.Property) bool) (core.Property, error) {
+	container, ok := n.Current().(core.Container)
+	if !ok {
+		return nil, n.errNoTargetByCriteria(n.Current())
+	}
+
+	var hit core.Property = nil
+	{
+		_ = container.ForEachChild(func(index int, child core.Property) error {
+			if hit == nil && criteria(child) {
+				hit = child
+			}
+			return nil
+		})
+	}
+
+	if hit == nil {
+		return nil, n.errNoTargetByCriteria(n.Current())
+	}
+
+	n.stack = append(n.stack, hit)
+	return n.Current(), nil
+}
+
 // Return the number of properties that was focused, including the currently focused. These
 // properties, excluding the current one, can be refocused by calling Retract, one at a time
 // in the reversed order that were focused. The minimum depth is one.
@@ -82,4 +109,8 @@ func (n *Navigator) errNoTargetByName(container core.Property, name string) erro
 
 func (n *Navigator) errNoTargetByIndex(container core.Property, index int) error {
 	return errors.NoTarget("property '%s' has no element at index %d", container.Attribute().Path(), index)
+}
+
+func (n *Navigator) errNoTargetByCriteria(container core.Property) error {
+	return errors.NoTarget("property '%s' has no element meeting the given criteria", container.Attribute().Path())
 }

@@ -216,7 +216,8 @@ func (attr *Attribute) GoesBy(name string) bool {
 }
 
 // Return an exact shallow copy of the attribute, but with the multiValued field set to false, thus
-// effectively converting any multiValued attribute to singular attribute.
+// effectively converting any multiValued attribute to singular attribute. The id of the attribute
+// is appended with '$elem' to distinguish it with the container attribute.
 func (attr *Attribute) AsSingleValued() *Attribute {
 	return &Attribute{
 		name:            attr.name,
@@ -231,7 +232,7 @@ func (attr *Attribute) AsSingleValued() *Attribute {
 		returned:        attr.returned,
 		uniqueness:      attr.uniqueness,
 		referenceTypes:  attr.referenceTypes,
-		id:              attr.id,
+		id:              fmt.Sprintf("%s$elem", attr.id),
 		index:           attr.index,
 		path:            attr.path,
 		primary:         attr.primary,

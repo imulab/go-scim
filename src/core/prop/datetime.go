@@ -75,7 +75,7 @@ func (p *dateTimeProperty) Matches(another core.Property) bool {
 }
 
 func (p *dateTimeProperty) Hash() uint64 {
-	if p == nil {
+	if p.value == nil {
 		return uint64(int64(0))
 	} else {
 		return uint64((*(p.value)).Unix())

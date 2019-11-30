@@ -135,6 +135,9 @@ func (p *complexProperty) Matches(another core.Property) bool {
 }
 
 func (p *complexProperty) Hash() uint64 {
+	if p.hash == 0 {
+		p.computeHash()
+	}
 	return p.hash
 }
 
