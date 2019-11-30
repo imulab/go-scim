@@ -7,9 +7,10 @@ import (
 	"github.com/imulab/go-scim/src/protocol"
 )
 
-func NewResourceFilter(resourceType *core.ResourceType, filters []protocol.FieldFilter) protocol.ResourceFilter {
+func NewResourceFilter(resourceType *core.ResourceType, filters []protocol.FieldFilter, order int) protocol.ResourceFilter {
 	f := &defaultResourceFilter{
 		filterIndex: make(map[string][]protocol.FieldFilter),
+		order:       order,
 	}
 
 	core.SchemaHub.CoreSchema().ForEachAttribute(func(attr *core.Attribute) {
@@ -30,6 +31,7 @@ func NewResourceFilter(resourceType *core.ResourceType, filters []protocol.Field
 type (
 	defaultResourceFilter struct {
 		filterIndex map[string][]protocol.FieldFilter
+		order       int
 	}
 	// Visitor implementation to traverse the resource structure. If reference is present,
 	// best effort to keep the reference property in sync with the traversing property so
@@ -82,7 +84,7 @@ func (f *defaultResourceFilter) init(attribute *core.Attribute, filters []protoc
 }
 
 func (f *defaultResourceFilter) Order() int {
-	return 0
+	return f.order
 }
 
 func (f *defaultResourceFilter) Filter(ctx context.Context, resource *prop.Resource) error {

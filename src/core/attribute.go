@@ -190,6 +190,16 @@ func (attr *Attribute) HasIdentitySubAttributes() bool {
 	return false
 }
 
+// Return true if one of this attribute's sub attribute is marked as primary.
+func (attr *Attribute) HasPrimarySubAttribute() bool {
+	for _, subAttr := range attr.subAttributes {
+		if subAttr.IsPrimary() {
+			return true
+		}
+	}
+	return false
+}
+
 // Return the number of total annotations on this attribute.
 func (attr *Attribute) CountAnnotations() int {
 	return len(attr.annotations)
@@ -271,6 +281,21 @@ func (attr *Attribute) MustValidate() {
 				panic("binary attribute must not have uniqueness")
 			}
 		}
+	}
+
+	var exclusiveCount = 0
+	{
+		attr.ForEachSubAttribute(func(subAttribute *Attribute) {
+			if subAttribute.IsPrimary() {
+				if !subAttribute.SingleValued() || subAttribute.Type() != TypeBoolean {
+					panic("only boolean properties can be marked as primary")
+				}
+				exclusiveCount++
+			}
+		})
+	}
+	if exclusiveCount > 1 {
+		panic("only one boolean sub property may be marked as primary")
 	}
 }
 

@@ -110,7 +110,7 @@ func (s *ResourceFilterTestSuite) TestFilterRef() {
 		s.T().Run(test.name, func(t *testing.T) {
 			f := NewResourceFilter(resourceType, []protocol.FieldFilter{
 				&testFieldFilter{t: t, refAssert: test.expect},
-			})
+			}, 0)
 			err := f.FilterRef(context.Background(), test.getResource(), test.getRef())
 			assert.Nil(s.T(), err)
 		})
