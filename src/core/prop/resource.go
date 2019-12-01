@@ -55,6 +55,54 @@ func (r *Resource) ID() string {
 	}
 }
 
+// Convenience method to return the meta.location field of the resource.
+func (r *Resource) Location() string {
+	nav := r.NewNavigator()
+
+	_, err := nav.FocusName("meta")
+	if err != nil {
+		return ""
+	}
+	p, err := nav.FocusName("location")
+	if err != nil {
+		return ""
+	}
+
+	if p.IsUnassigned() {
+		return ""
+	}
+
+	if location, ok := p.Raw().(string); !ok {
+		return ""
+	} else {
+		return location
+	}
+}
+
+// Convenience method to return the meta.version field of the resource.
+func (r *Resource) Version() string {
+	nav := r.NewNavigator()
+
+	_, err := nav.FocusName("meta")
+	if err != nil {
+		return ""
+	}
+	p, err := nav.FocusName("version")
+	if err != nil {
+		return ""
+	}
+
+	if p.IsUnassigned() {
+		return ""
+	}
+
+	if version, ok := p.Raw().(string); !ok {
+		return ""
+	} else {
+		return version
+	}
+}
+
 // Adapting method to start a DFS visit on the top level property of the resource.
 func (r *Resource) Visit(visitor core.Visitor) error {
 	visitor.BeginChildren(r.data)

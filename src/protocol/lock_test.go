@@ -1,11 +1,10 @@
-package locks
+package protocol
 
 import (
 	"context"
 	"encoding/json"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/prop"
-	"github.com/imulab/go-scim/src/protocol"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
@@ -15,9 +14,9 @@ import (
 	"time"
 )
 
-func TestDefaultLockProvider(t *testing.T) {
+func TestDefaultLock(t *testing.T) {
 	s := new(DefaultLockTestSuite)
-	s.resourceBase = "../../tests/default_lock_test_suite"
+	s.resourceBase = "../tests/default_lock_test_suite"
 	suite.Run(t, s)
 }
 
@@ -33,7 +32,7 @@ func (s *DefaultLockTestSuite) TestLockTimeout() {
 		"id": "12B3657A-0951-4821-8386-315CF7EBC394",
 	})
 
-	lock := Default()
+	lock := DefaultLock()
 	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
 
 	err := lock.Lock(ctx, resource)
@@ -50,12 +49,12 @@ func (s *DefaultLockTestSuite) TestConcurrentLock() {
 		"id": "12B3657A-0951-4821-8386-315CF7EBC394",
 	})
 
-	lock := Default()
+	lock := DefaultLock()
 	var wg sync.WaitGroup
 	wg.Add(100)
 
 	for i := 0; i < 100; i++ {
-		go func(id int, l protocol.LockProvider) {
+		go func(id int, l LockProvider) {
 			defer wg.Done()
 			err := lock.Lock(context.Background(), resource)
 			s.T().Logf("%d acquired lock", id)
@@ -73,7 +72,7 @@ func (s *DefaultLockTestSuite) TestSequentialLock() {
 		"id": "12B3657A-0951-4821-8386-315CF7EBC394",
 	})
 
-	lock := Default()
+	lock := DefaultLock()
 
 	for i := 0; i < 100; i++ {
 		err := lock.Lock(context.Background(), resource)
