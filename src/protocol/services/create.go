@@ -26,8 +26,9 @@ type (
 func (s *CreateService) CreateResource(ctx context.Context, request *CreateRequest) (cr *CreateResponse, err error) {
 	s.Logger.Debug("received create request")
 
+	fctx := protocol.NewFilterContext(ctx)
 	for _, filter := range s.Filters {
-		err = filter.Filter(ctx, request.Payload)
+		err = filter.Filter(fctx, request.Payload)
 		if err != nil {
 			s.Logger.Error("create request encounter error during filter: %s", err.Error())
 			return

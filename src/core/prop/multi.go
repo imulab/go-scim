@@ -38,7 +38,6 @@ var (
 type multiValuedProperty struct {
 	attr     *core.Attribute
 	elements []core.Property
-	hash     uint64
 	touched  bool
 }
 
@@ -78,10 +77,41 @@ func (p *multiValuedProperty) Matches(another core.Property) bool {
 }
 
 func (p *multiValuedProperty) Hash() uint64 {
-	if p.hash == 0 {
-		p.computeHash()
+	if len(p.elements) == 0 {
+		return 0
 	}
-	return p.hash
+
+	hashes := make([]uint64, 0)
+	_ = p.ForEachChild(func(index int, child core.Property) error {
+		if child.IsUnassigned() {
+			return nil
+		}
+
+		// SCIM array does not have orders. We keep the hash array
+		// sorted so that different multiValue properties containing
+		// the same elements in different orders can be recognized as
+		// the same, as they compute the same hash. We use insertion
+		// sort here as we don't expect a large number of elements.
+		hashes = append(hashes, child.Hash())
+		for i := len(hashes) - 1; i > 0; i-- {
+			if hashes[i-1] > hashes[i] {
+				hashes[i-1], hashes[i] = hashes[i], hashes[i-1]
+			}
+		}
+		return nil
+	})
+
+	h := fnv.New64a()
+	for _, hash := range hashes {
+		b := make([]byte, 8)
+		binary.LittleEndian.PutUint64(b, hash)
+		_, err := h.Write(b)
+		if err != nil {
+			panic("error computing hash")
+		}
+	}
+
+	return h.Sum64()
 }
 
 func (p *multiValuedProperty) EqualsTo(value interface{}) (bool, error) {
@@ -173,7 +203,6 @@ func (p *multiValuedProperty) Add(value interface{}) error {
 			p.touched = true
 		}
 	}
-	p.computeHash()
 
 	return nil
 }
@@ -199,9 +228,8 @@ func (p *multiValuedProperty) Replace(value interface{}) (err error) {
 }
 
 func (p *multiValuedProperty) Delete() error {
-	p.elements = p.elements[:0]
+	p.elements = make([]core.Property, 0)
 	p.touched = true
-	p.computeHash()
 	return nil
 }
 
@@ -298,40 +326,6 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 	}
 
 	return
-}
-
-func (p *multiValuedProperty) computeHash() {
-	hashes := make([]uint64, 0)
-	_ = p.ForEachChild(func(index int, child core.Property) error {
-		if child.IsUnassigned() {
-			return nil
-		}
-
-		// SCIM array does not have orders. We keep the hash array
-		// sorted so that different multiValue properties containing
-		// the same elements in different orders can be recognized as
-		// the same, as they compute the same hash. We use insertion
-		// sort here as we don't expect a large number of elements.
-		hashes = append(hashes, child.Hash())
-		for i := len(hashes) - 1; i > 0; i-- {
-			if hashes[i-1] > hashes[i] {
-				hashes[i-1], hashes[i] = hashes[i], hashes[i-1]
-			}
-		}
-		return nil
-	})
-
-	h := fnv.New64a()
-	for _, hash := range hashes {
-		b := make([]byte, 8)
-		binary.LittleEndian.PutUint64(b, hash)
-		_, err := h.Write(b)
-		if err != nil {
-			panic("error computing hash")
-		}
-	}
-
-	p.hash = h.Sum64()
 }
 
 func (p *multiValuedProperty) errIncompatibleValue(value interface{}) error {

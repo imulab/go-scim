@@ -76,7 +76,6 @@ type complexProperty struct {
 	attr      *core.Attribute
 	subProps  []core.Property // array of sub properties to maintain determinate iteration order
 	nameIndex map[string]int  // attribute's name (to lower case) to index in subProps to allow fast access
-	hash      uint64
 }
 
 func (p *complexProperty) Attribute() *core.Attribute {
@@ -116,10 +115,43 @@ func (p *complexProperty) Matches(another core.Property) bool {
 }
 
 func (p *complexProperty) Hash() uint64 {
-	if p.hash == 0 {
-		p.computeHash()
+	if p.IsUnassigned() {
+		return 0
 	}
-	return p.hash
+
+	h := fnv.New64a()
+
+	hasIdentity := p.attr.HasIdentitySubAttributes()
+	err := p.ForEachChild(func(_ int, child core.Property) error {
+		// Include fields in the computation if
+		// - no sub attributes are marked as identity
+		// - this sub attribute is marked identity
+		if hasIdentity && !child.Attribute().IsIdentity() {
+			return nil
+		}
+
+		_, err := h.Write([]byte(child.Attribute().Name()))
+		if err != nil {
+			return err
+		}
+
+		// Skip the value hash if it is unassigned
+		if !child.IsUnassigned() {
+			b := make([]byte, 8)
+			binary.LittleEndian.PutUint64(b, child.Hash())
+			_, err := h.Write(b)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		panic("error computing hash")
+	}
+
+	return h.Sum64()
 }
 
 func (p *complexProperty) EqualsTo(value interface{}) (bool, error) {
@@ -172,7 +204,6 @@ func (p *complexProperty) Add(value interface{}) error {
 				return err
 			}
 		}
-		p.computeHash()
 		return nil
 	}
 }
@@ -207,7 +238,6 @@ func (p *complexProperty) Delete() error {
 			return err
 		}
 	}
-	p.computeHash()
 	return nil
 }
 
@@ -252,42 +282,6 @@ func (p *complexProperty) ChildAtIndex(index interface{}) core.Property {
 }
 
 func (p *complexProperty) Compact() {}
-
-func (p *complexProperty) computeHash() {
-	h := fnv.New64a()
-
-	hasIdentity := p.attr.HasIdentitySubAttributes()
-	err := p.ForEachChild(func(_ int, child core.Property) error {
-		// Include fields in the computation if
-		// - no sub attributes are marked as identity
-		// - this sub attribute is marked identity
-		if hasIdentity && !child.Attribute().IsIdentity() {
-			return nil
-		}
-
-		_, err := h.Write([]byte(child.Attribute().Name()))
-		if err != nil {
-			return err
-		}
-
-		// Skip the value hash if it is unassigned
-		if !child.IsUnassigned() {
-			b := make([]byte, 8)
-			binary.LittleEndian.PutUint64(b, child.Hash())
-			_, err := h.Write(b)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-	if err != nil {
-		panic("error computing hash")
-	}
-
-	p.hash = h.Sum64()
-}
 
 func (p *complexProperty) errIncompatibleValue(value interface{}) error {
 	return errors.InvalidValue("value of type %T is incompatible with attribute '%s'", value, p.attr.Path())

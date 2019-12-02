@@ -24,7 +24,6 @@ func NewResourceOf(resourceType *core.ResourceType, value interface{}) *Resource
 type Resource struct {
 	resourceType *core.ResourceType
 	data         *complexProperty
-	lastModCount int
 }
 
 // Return the resource type of this resource

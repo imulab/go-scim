@@ -9,9 +9,15 @@ import (
 	"github.com/imulab/go-scim/src/protocol"
 )
 
+func NewValidationResourceFilter(resourceType *core.ResourceType, persistence protocol.PersistenceProvider, order int) protocol.ResourceFilter {
+	return NewResourceFieldFilterOf(resourceType, []protocol.FieldFilter{
+		NewValidationFieldFilter(persistence, 0),
+	}, order)
+}
+
 // Create a validation filter that validates the property value according to the defined attributes. This filter
 // currently validates required, canonicalValues, mutability and uniqueness.
-func NewValidationFilter(persistence protocol.PersistenceProvider, order int) protocol.FieldFilter {
+func NewValidationFieldFilter(persistence protocol.PersistenceProvider, order int) protocol.FieldFilter {
 	return &validationFilter{
 		order:       order,
 		persistence: persistence,

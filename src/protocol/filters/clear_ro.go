@@ -26,11 +26,9 @@ func (f *readOnlyClearFieldFilter) Order() int {
 }
 
 func (f *readOnlyClearFieldFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) error {
-	_, err := property.Delete()
-	return err
+	return property.Delete()
 }
 
 func (f *readOnlyClearFieldFilter) FieldRef(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error {
-	_, err := property.Delete()
-	return err
+	return property.Delete()
 }
