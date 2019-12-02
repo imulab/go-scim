@@ -40,3 +40,7 @@ func (m *memoryProvider) Insert(ctx context.Context, resource *prop.Resource) er
 	return nil
 }
 
+func (m *memoryProvider) Count(ctx context.Context, filter string) (int, error) {
+	// todo
+	return 0, nil
+}
