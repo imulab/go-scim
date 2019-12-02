@@ -441,7 +441,7 @@
       "type": "complex",
       "multiValued": true,
       "mutability": "readOnly",
-      "annotations": [
+      "_annotations": [
         "@CopyReadOnly"
       ],
       "subAttributes": [

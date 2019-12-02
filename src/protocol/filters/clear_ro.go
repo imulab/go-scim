@@ -4,6 +4,7 @@ import (
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/prop"
 	"github.com/imulab/go-scim/src/protocol"
+	"strings"
 )
 
 // Create a resource filter that deletes the values in readOnly properties from a resource.
@@ -22,7 +23,8 @@ type readOnlyClearFieldFilter struct {
 }
 
 func (f *readOnlyClearFieldFilter) Supports(attribute *core.Attribute) bool {
-	return attribute.Mutability() == core.MutabilityReadOnly
+	return attribute.Mutability() == core.MutabilityReadOnly &&
+		!strings.HasSuffix(attribute.ID(), "$elem")
 }
 
 func (f *readOnlyClearFieldFilter) Order() int {
