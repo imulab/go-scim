@@ -32,6 +32,15 @@ func NewReferenceOf(attr *core.Attribute, value interface{}) core.Property {
 	return p
 }
 
+var (
+	_ core.Property = (*referenceProperty)(nil)
+	_ interface {
+		addInternal(value interface{}) error
+		replaceInternal(value interface{}) error
+		deleteInternal() error
+	} = (*referenceProperty)(nil)
+)
+
 type referenceProperty struct {
 	attr  *core.Attribute
 	value *string
@@ -132,6 +141,13 @@ func (p *referenceProperty) Add(value interface{}) (bool, error) {
 	return p.Replace(value)
 }
 
+func (p *referenceProperty) addInternal(value interface{}) error {
+	if value == nil {
+		return p.deleteInternal()
+	}
+	return p.replaceInternal(value)
+}
+
 func (p *referenceProperty) Replace(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()
@@ -150,6 +166,20 @@ func (p *referenceProperty) Replace(value interface{}) (bool, error) {
 	}
 }
 
+func (p *referenceProperty) replaceInternal(value interface{}) error {
+	if value == nil {
+		return p.deleteInternal()
+	}
+
+	if s, ok := value.(string); !ok {
+		return p.errIncompatibleValue(value)
+	} else {
+		p.value = &s
+		p.computeHash()
+		return nil
+	}
+}
+
 func (p *referenceProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
@@ -158,6 +188,12 @@ func (p *referenceProperty) Delete() (bool, error) {
 		p.mod++
 	}
 	return present, nil
+}
+
+func (p *referenceProperty) deleteInternal() error {
+	p.value = nil
+	p.computeHash()
+	return nil
 }
 
 func (p *referenceProperty) Compact() {}

@@ -16,12 +16,12 @@ type (
 		// Filter the resource and return any error. If the error returned is not nil,
 		// the caller should immediately abort the operation and avoid executing the
 		// following filters.
-		Filter(ctx context.Context, resource *prop.Resource) error
+		Filter(ctx *FilterContext, resource *prop.Resource) error
 		// Filter the resource with reference to a reference resource and return any error.
 		// The reference resource may serve as a guidance for the expected state of the resource.
 		// If the error returned is not nil, the caller should immediately abort the operation
 		// and avoid executing the following filters.
-		FilterRef(ctx context.Context, resource *prop.Resource, ref *prop.Resource) error
+		FilterRef(ctx *FilterContext, resource *prop.Resource, ref *prop.Resource) error
 	}
 	// FieldFilter is responsible of carrying out operations on a single property field. It provides more
 	// granular control than a resource filter, and is the core of the default resource filter, which simply
@@ -37,37 +37,37 @@ type (
 		Order() int
 		// Filter the given property with reference to the resource that contains this property.
 		// Any error returned shall cause the caller to abort subsequent operations.
-		Filter(ctx *FieldFilterContext, resource *prop.Resource, property core.Property) error
+		Filter(ctx *FilterContext, resource *prop.Resource, property core.Property) error
 		// Filter the given property with reference to the resource that contains this property, another reference resource which
 		// potentially holds a reference property. The reference resource and property may serve as a guidance for the expected
 		// state of the property. The reference resource shall never be nil, whereas the reference property may be nil.
 		// Any error returned shall cause the caller to abort subsequent operations.
-		FieldRef(ctx *FieldFilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error
+		FieldRef(ctx *FilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error
 	}
-	// A shared context among field filter.
-	FieldFilterContext struct {
+	// A shared context among filters.
+	FilterContext struct {
 		requestContext context.Context
 		data           map[interface{}]interface{}
 	}
 )
 
-// Create a new field filter context.
-func NewFieldFilterContext(ctx context.Context) *FieldFilterContext {
-	return &FieldFilterContext{
+// Create a new filter context.
+func NewFilterContext(ctx context.Context) *FilterContext {
+	return &FilterContext{
 		requestContext: ctx,
 		data:           make(map[interface{}]interface{}),
 	}
 }
 
-func (c *FieldFilterContext) RequestContext() context.Context {
+func (c *FilterContext) RequestContext() context.Context {
 	return c.requestContext
 }
 
-func (c *FieldFilterContext) Get(key interface{}) (value interface{}, ok bool) {
+func (c *FilterContext) Get(key interface{}) (value interface{}, ok bool) {
 	value, ok = c.data[key]
 	return
 }
 
-func (c *FieldFilterContext) Put(key, value interface{}) {
+func (c *FilterContext) Put(key, value interface{}) {
 	c.data[key] = value
 }

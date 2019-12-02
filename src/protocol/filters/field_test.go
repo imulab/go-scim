@@ -108,10 +108,10 @@ func (s *ResourceFilterTestSuite) TestFilterRef() {
 
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
-			f := NewResourceFilter(resourceType, []protocol.FieldFilter{
+			f := NewResourceFieldFilterOf(resourceType, []protocol.FieldFilter{
 				&testFieldFilter{t: t, refAssert: test.expect},
 			}, 0)
-			err := f.FilterRef(context.Background(), test.getResource(), test.getRef())
+			err := f.FilterRef(protocol.NewFilterContext(context.Background()), test.getResource(), test.getRef())
 			assert.Nil(s.T(), err)
 		})
 	}
@@ -169,11 +169,11 @@ func (tf *testFieldFilter) Order() int {
 	return 0
 }
 
-func (tf *testFieldFilter) Filter(ctx *protocol.FieldFilterContext, resource *prop.Resource, property core.Property) error {
+func (tf *testFieldFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) error {
 	return nil
 }
 
-func (tf *testFieldFilter) FieldRef(ctx *protocol.FieldFilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error {
+func (tf *testFieldFilter) FieldRef(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error {
 	tf.refAssert(tf.t, property, refProperty)
 	return nil
 }

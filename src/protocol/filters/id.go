@@ -7,48 +7,28 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// Create a new field filter that handles the 'id' field. When Filter is called, this filter generates a new uuid and
-// assigns it to the id field. When FilterRef is called, this filter copies the reference property value to the property,
-// provided reference property is present and is not unassigned. It also puts the id in the filter context under key
-// IDFieldFilterKey.
-func NewIDFieldFilter() protocol.FieldFilter {
-	return &idFieldFilter{}
+// Create a new field filter that generates a new uuid on the id field.
+func NewIDFieldFilter(order int) protocol.FieldFilter {
+	return &idFilter{order: order}
 }
 
-type (
-	idFieldFilter struct {}
-	IDFieldFilterKey struct {}
-)
+type idFilter struct {
+	order int
+}
 
-func (f *idFieldFilter) Supports(attribute *core.Attribute) bool {
+func (u *idFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.ID() == "id"
 }
 
-func (f *idFieldFilter) Order() int {
-	panic("implement me")
+func (u *idFilter) Order() int {
+	return u.order
 }
 
-func (f *idFieldFilter) Filter(ctx *protocol.FieldFilterContext, resource *prop.Resource, property core.Property) error {
-	id := uuid.NewV4().String()
-
-	_, err := property.Replace(id)
-	if err != nil {
-		return err
-	}
-	ctx.Put(IDFieldFilterKey{}, id)
-
-	return nil
-}
-
-func (f *idFieldFilter) FieldRef(ctx *protocol.FieldFilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error {
-	if refProperty == nil || refProperty.IsUnassigned() {
-		return nil
-	}
-
-	id := refProperty.Raw()
-	_, err := property.Replace(id)
-	ctx.Put(IDFieldFilterKey{}, id)
-
+func (u *idFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) error {
+	_, err := prop.Internal(property).Replace(uuid.NewV4().String())
 	return err
 }
 
+func (u *idFilter) FieldRef(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error {
+	return nil
+}

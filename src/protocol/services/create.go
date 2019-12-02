@@ -34,19 +34,12 @@ func (s *CreateService) CreateResource(ctx context.Context, request *CreateReque
 		}
 	}
 
-	var (
-		id = request.Payload.ID()
-		location = request.Payload.Location()
-		version = request.Payload.Version()
-	)
-	s.Logger.Debug("resource [id=%s] passed create filters", id)
-
 	err = s.Persistence.Insert(ctx, request.Payload)
 	if err != nil {
-		s.Logger.Error("resource [id=%s] failed to insert into persistence: %s", err.Error())
+		s.Logger.Error("resource [id=%s] failed to insert into persistence: %s", request.Payload.ID(), err.Error())
 		return
 	}
-	s.Logger.Debug("resource [id=%s] inserted into persistence", id)
+	s.Logger.Debug("resource [id=%s] inserted into persistence", request.Payload.ID())
 
 	if s.Events != nil {
 		s.Events.ResourceCreated(ctx, request.Payload)
@@ -54,8 +47,8 @@ func (s *CreateService) CreateResource(ctx context.Context, request *CreateReque
 
 	cr = &CreateResponse{
 		Resource: request.Payload,
-		Location: location,
-		Version:  version,
+		Location: request.Payload.Location(),
+		Version:  request.Payload.Version(),
 	}
 	return
 }

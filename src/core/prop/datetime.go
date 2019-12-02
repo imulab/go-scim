@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const ISO8601 = "2006-01-02T15:04:05"
+
 // Create a new unassigned string property. The method will panic if
 // given attribute is not singular dateTime type.
 func NewDateTime(attr *core.Attribute) core.Property {
@@ -30,6 +32,15 @@ func NewDateTimeOf(attr *core.Attribute, value interface{}) core.Property {
 	}
 	return p
 }
+
+var (
+	_ core.Property = (*dateTimeProperty)(nil)
+	_ interface {
+		addInternal(value interface{}) error
+		replaceInternal(value interface{}) error
+		deleteInternal() error
+	} = (*dateTimeProperty)(nil)
+)
 
 type dateTimeProperty struct {
 	attr	*core.Attribute
@@ -153,6 +164,13 @@ func (p *dateTimeProperty) Add(value interface{}) (bool, error) {
 	return p.Replace(value)
 }
 
+func (p *dateTimeProperty) addInternal(value interface{}) error {
+	if value == nil {
+		return p.deleteInternal()
+	}
+	return p.replaceInternal(value)
+}
+
 func (p *dateTimeProperty) Replace(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()
@@ -173,6 +191,21 @@ func (p *dateTimeProperty) Replace(value interface{}) (bool, error) {
 	}
 }
 
+func (p *dateTimeProperty) replaceInternal(value interface{}) error {
+	if value == nil {
+		return p.deleteInternal()
+	}
+
+	if s, ok := value.(string); !ok {
+		return p.errIncompatibleValue(value)
+	} else if t, err := p.fromISO8601(s); err != nil {
+		return err
+	} else {
+		p.value = &t
+		return nil
+	}
+}
+
 func (p *dateTimeProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
@@ -180,6 +213,11 @@ func (p *dateTimeProperty) Delete() (bool, error) {
 		p.mod++
 	}
 	return present, nil
+}
+
+func (p *dateTimeProperty) deleteInternal() error {
+	p.value = nil
+	return nil
 }
 
 func (p *dateTimeProperty) Compact() {}
@@ -192,11 +230,11 @@ func (p *dateTimeProperty) mustToISO8601() string {
 	if p.value == nil {
 		panic("do not call this method when value is nil")
 	}
-	return (*(p.value)).Format("2006-01-02T15:04:05")
+	return (*(p.value)).Format(ISO8601)
 }
 
 func (p *dateTimeProperty) fromISO8601(value string) (time.Time, error) {
-	t, err := time.Parse("2006-01-02T15:04:05", value)
+	t, err := time.Parse(ISO8601, value)
 	if err != nil {
 		return time.Time{}, p.errIncompatibleValue(value)
 	}

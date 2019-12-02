@@ -32,6 +32,15 @@ func NewBinaryOf(attr *core.Attribute, value interface{}) core.Property {
 	return p
 }
 
+var (
+	_ core.Property = (*binaryProperty)(nil)
+	_ interface {
+		addInternal(value interface{}) error
+		replaceInternal(value interface{}) error
+		deleteInternal() error
+	} = (*binaryProperty)(nil)
+)
+
 type binaryProperty struct {
 	attr  *core.Attribute
 	value []byte
@@ -125,6 +134,13 @@ func (p *binaryProperty) Add(value interface{}) (bool, error) {
 	return p.Replace(value)
 }
 
+func (p *binaryProperty) addInternal(value interface{}) error {
+	if value == nil {
+		return p.deleteInternal()
+	}
+	return p.replaceInternal(value)
+}
+
 func (p *binaryProperty) Replace(value interface{}) (bool, error) {
 	if value == nil {
 		return p.Delete()
@@ -145,6 +161,22 @@ func (p *binaryProperty) Replace(value interface{}) (bool, error) {
 	}
 }
 
+func (p *binaryProperty) replaceInternal(value interface{}) error {
+	if value == nil {
+		return p.deleteInternal()
+	}
+
+	if s, ok := value.(string); !ok {
+		return p.errIncompatibleValue(value)
+	} else if b64, err := base64.RawStdEncoding.DecodeString(s); err != nil {
+		return p.errIncompatibleValue(value)
+	} else {
+		copy(p.value, b64)
+		p.computeHash()
+		return nil
+	}
+}
+
 func (p *binaryProperty) Delete() (bool, error) {
 	present := p.Present()
 	p.value = nil
@@ -153,6 +185,12 @@ func (p *binaryProperty) Delete() (bool, error) {
 		p.mod++
 	}
 	return present, nil
+}
+
+func (p *binaryProperty) deleteInternal() error {
+	p.value = nil
+	p.computeHash()
+	return nil
 }
 
 func (p *binaryProperty) Compact() {}

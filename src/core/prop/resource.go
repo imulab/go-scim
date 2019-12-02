@@ -13,7 +13,7 @@ func NewResource(resourceType *core.ResourceType) *Resource {
 // Create a new resource of the given resource type and value. The method panics if something went wrong.
 func NewResourceOf(resourceType *core.ResourceType, value interface{}) *Resource {
 	resource := NewResource(resourceType)
-	err := resource.replace(value)
+	_, err := resource.data.Replace(value)
 	if err != nil {
 		panic(err)
 	}
@@ -25,6 +25,7 @@ func NewResourceOf(resourceType *core.ResourceType, value interface{}) *Resource
 type Resource struct {
 	resourceType *core.ResourceType
 	data         *complexProperty
+	lastModCount int
 }
 
 // Return the resource type of this resource
@@ -115,9 +116,32 @@ func (r *Resource) Visit(visitor core.Visitor) error {
 	return nil
 }
 
-// Internal adapter to the Replace method of the data Property. It is used exclusively by package
-// methods. Other modifications to the resource should go through Navigator.
-func (r *Resource) replace(value interface{}) error {
-	_, err := r.data.Replace(value)
-	return err
+// Return the total mod count of this resource at its current state.
+func (r *Resource) ModCount() int {
+	mc := &modCounter{}
+	_ = r.Visit(mc)
+	return mc.total
 }
+
+// Return the hash of the resource at its current state.
+func (r *Resource) Hash() uint64 {
+	return r.data.Hash()
+}
+
+// Visitor implementation to sum up all mod counts.
+type modCounter struct {
+	total int
+}
+
+func (mc *modCounter) ShouldVisit(property core.Property) bool {
+	_, ok := property.(core.Container)
+	return !ok // only visits non-container to avoid double counting
+}
+
+func (mc *modCounter) Visit(property core.Property) error {
+	mc.total += property.ModCount()
+}
+
+func (mc *modCounter) BeginChildren(container core.Container) {}
+
+func (mc *modCounter) EndChildren(container core.Container) {}

@@ -131,6 +131,16 @@ func (attr *Attribute) ForEachCanonicalValue(callback func(canonicalValue string
 	}
 }
 
+// Returns true if this attribute is annotated with the given value
+func (attr *Attribute) HasAnnotation(annotation string) bool {
+	for _, eachAnnotation := range attr.annotations {
+		if strings.ToLower(eachAnnotation) == strings.ToLower(annotation) {
+			return true
+		}
+	}
+	return false
+}
+
 // Return the total number of reference types
 func (attr *Attribute) CountReferenceTypes() int {
 	return len(attr.referenceTypes)

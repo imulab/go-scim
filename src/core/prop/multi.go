@@ -62,13 +62,7 @@ func (p *multiValuedProperty) IsUnassigned() bool {
 }
 
 func (p *multiValuedProperty) ModCount() int {
-	// Watch out for double counting
-	n := 0
-	_ = p.ForEachChild(func(_ int, child core.Property) error {
-		n += child.ModCount()
-		return nil
-	})
-	return n
+	return 0 // multiValued property is just a container
 }
 
 func (p *multiValuedProperty) Matches(another core.Property) bool {
@@ -322,7 +316,6 @@ func (p *multiValuedProperty) computeHash() {
 		}
 		return nil
 	})
-
 
 	h := fnv.New64a()
 	for _, hash := range hashes {

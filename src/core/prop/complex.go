@@ -112,13 +112,7 @@ func (p *complexProperty) IsUnassigned() bool {
 }
 
 func (p *complexProperty) ModCount() int {
-	// Watch out for double counting
-	n := 0
-	_ = p.ForEachChild(func(_ int, child core.Property) error {
-		n += child.ModCount()
-		return nil
-	})
-	return n
+	return 0 // complex property is just a container
 }
 
 func (p *complexProperty) Matches(another core.Property) bool {

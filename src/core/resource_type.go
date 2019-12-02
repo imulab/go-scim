@@ -52,6 +52,10 @@ func (t *ResourceType) Description() string {
 	return t.description
 }
 
+func (t *ResourceType) Endpoint() string {
+	return t.endpoint
+}
+
 // Return the main schema of the resource type
 func (t *ResourceType) Schema() *Schema {
 	return t.schema

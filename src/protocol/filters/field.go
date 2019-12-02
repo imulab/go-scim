@@ -1,14 +1,13 @@
 package filters
 
 import (
-	"context"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/prop"
 	"github.com/imulab/go-scim/src/protocol"
 )
 
-func NewResourceFilter(resourceType *core.ResourceType, filters []protocol.FieldFilter, order int) protocol.ResourceFilter {
-	f := &defaultResourceFilter{
+func NewResourceFieldFilterOf(resourceType *core.ResourceType, filters []protocol.FieldFilter, order int) protocol.ResourceFilter {
+	f := &resourceFieldFilter{
 		filterIndex: make(map[string][]protocol.FieldFilter),
 		order:       order,
 	}
@@ -29,7 +28,7 @@ func NewResourceFilter(resourceType *core.ResourceType, filters []protocol.Field
 }
 
 type (
-	defaultResourceFilter struct {
+	resourceFieldFilter struct {
 		filterIndex map[string][]protocol.FieldFilter
 		order       int
 	}
@@ -37,7 +36,7 @@ type (
 	// best effort to keep the reference property in sync with the traversing property so
 	// they can be compared.
 	resourceFieldVisitor struct {
-		ctx         *protocol.FieldFilterContext
+		ctx         *protocol.FilterContext
 		resource    *prop.Resource
 		ref         *prop.Resource
 		refNav      *prop.Navigator
@@ -55,7 +54,7 @@ type (
 	}
 )
 
-func (f *defaultResourceFilter) init(attribute *core.Attribute, filters []protocol.FieldFilter, recurse bool) {
+func (f *resourceFieldFilter) init(attribute *core.Attribute, filters []protocol.FieldFilter, recurse bool) {
 	var candidates []protocol.FieldFilter
 	{
 		for _, filter := range filters {
@@ -83,13 +82,13 @@ func (f *defaultResourceFilter) init(attribute *core.Attribute, filters []protoc
 	}
 }
 
-func (f *defaultResourceFilter) Order() int {
+func (f *resourceFieldFilter) Order() int {
 	return f.order
 }
 
-func (f *defaultResourceFilter) Filter(ctx context.Context, resource *prop.Resource) error {
+func (f *resourceFieldFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
 	v := &resourceFieldVisitor{
-		ctx:         protocol.NewFieldFilterContext(ctx),
+		ctx:         ctx,
 		resource:    resource,
 		filterIndex: f.filterIndex,
 		stack:       make([]*frame, 0),
@@ -97,13 +96,13 @@ func (f *defaultResourceFilter) Filter(ctx context.Context, resource *prop.Resou
 	return resource.Visit(v)
 }
 
-func (f *defaultResourceFilter) FilterRef(ctx context.Context, resource *prop.Resource, ref *prop.Resource) error {
+func (f *resourceFieldFilter) FilterRef(ctx *protocol.FilterContext, resource *prop.Resource, ref *prop.Resource) error {
 	if ref == nil {
 		return f.Filter(ctx, resource)
 	}
 
 	v := &resourceFieldVisitor{
-		ctx:         protocol.NewFieldFilterContext(ctx),
+		ctx:         ctx,
 		resource:    resource,
 		ref:         ref,
 		refNav:      ref.NewNavigator(),
