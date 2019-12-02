@@ -9,8 +9,12 @@ import (
 // Create a resource filter that deletes the values in readOnly properties from a resource.
 func NewClearReadOnlyResourceFilter(resourceType *core.ResourceType, order int) protocol.ResourceFilter {
 	return NewResourceFieldFilterOf(resourceType, []protocol.FieldFilter{
-		&readOnlyClearFieldFilter{order: 0},
+		NewClearReadOnlyFieldFilter(0),
 	}, order)
+}
+
+func NewClearReadOnlyFieldFilter(order int) protocol.FieldFilter {
+	return &readOnlyClearFieldFilter{order: order}
 }
 
 type readOnlyClearFieldFilter struct {

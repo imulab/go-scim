@@ -134,6 +134,9 @@ func (h *schemaHub) CoreSchema() *Schema {
 				uniqueness: UniquenessGlobal,
 				index:      1,
 				path:       "id",
+				annotations: []string{
+					"@CopyReadOnly",
+				},
 			},
 			{
 				id:    "externalId",
@@ -158,6 +161,9 @@ func (h *schemaHub) CoreSchema() *Schema {
 						mutability: MutabilityReadOnly,
 						index:      0,
 						path:       "meta.resourceType",
+						annotations: []string{
+							"@CopyReadOnly",
+						},
 					},
 					{
 						id:         "meta.created",
@@ -166,6 +172,9 @@ func (h *schemaHub) CoreSchema() *Schema {
 						mutability: MutabilityReadOnly,
 						index:      1,
 						path:       "meta.created",
+						annotations: []string{
+							"@CopyReadOnly",
+						},
 					},
 					{
 						id:         "meta.lastModified",
@@ -174,6 +183,9 @@ func (h *schemaHub) CoreSchema() *Schema {
 						mutability: MutabilityReadOnly,
 						index:      2,
 						path:       "meta.lastModified",
+						annotations: []string{
+							"@CopyReadOnly",
+						},
 					},
 					{
 						id:         "meta.location",
@@ -183,6 +195,9 @@ func (h *schemaHub) CoreSchema() *Schema {
 						mutability: MutabilityReadOnly,
 						index:      3,
 						path:       "meta.location",
+						annotations: []string{
+							"@CopyReadOnly",
+						},
 					},
 					{
 						id:         "meta.version",
@@ -191,6 +206,9 @@ func (h *schemaHub) CoreSchema() *Schema {
 						mutability: MutabilityReadOnly,
 						index:      4,
 						path:       "meta.version",
+						annotations: []string{
+							"@CopyReadOnly",
+						},
 					},
 				},
 			},
