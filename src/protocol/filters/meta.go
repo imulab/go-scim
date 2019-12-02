@@ -65,10 +65,7 @@ func (f *metaResourceFilter) Filter(ctx *protocol.FilterContext, resource *prop.
 }
 
 func (f *metaResourceFilter) FilterRef(ctx *protocol.FilterContext, resource *prop.Resource, ref *prop.Resource) error {
-	resourceHash := resource.Hash()
-	baselineHash, ok := ctx.Get(BaselineHashKey{})
-
-	if !ok || resourceHash != baselineHash.(uint64) {
+	if ref.Hash() != resource.Hash() {
 		meta, err := resource.NewNavigator().FocusName(fieldMeta)
 		if err != nil {
 			return err
@@ -92,8 +89,7 @@ func (f *metaResourceFilter) assignResourceType(meta core.Property, resourceType
 		return err
 	}
 
-	_, err = prop.Internal(p).Replace(resourceType.Name())
-	if err != nil {
+	if err = p.Replace(resourceType.Name()); err != nil {
 		return err
 	}
 
@@ -106,8 +102,7 @@ func (f *metaResourceFilter) assignCreatedTimeToNow(meta core.Property) error {
 		return err
 	}
 
-	_, err = prop.Internal(p).Replace(time.Now().Format(prop.ISO8601))
-	if err != nil {
+	if err = p.Replace(time.Now().Format(prop.ISO8601)); err != nil {
 		return err
 	}
 
@@ -120,8 +115,7 @@ func (f *metaResourceFilter) assignLastModifiedTimeToNow(meta core.Property) err
 		return err
 	}
 
-	_, err = prop.Internal(p).Replace(time.Now().Format(prop.ISO8601))
-	if err != nil {
+	if err = p.Replace(time.Now().Format(prop.ISO8601)); err != nil {
 		return err
 	}
 
@@ -139,8 +133,7 @@ func (f *metaResourceFilter) assignLocation(meta core.Property, resource *prop.R
 		return err
 	}
 
-	_, err = prop.Internal(p).Replace(fmt.Sprintf("%s/%s", resource.ResourceType().Endpoint(), id))
-	if err != nil {
+	if err = p.Replace(fmt.Sprintf("%s/%s", resource.ResourceType().Endpoint(), id)); err != nil {
 		return err
 	}
 
@@ -167,8 +160,7 @@ func (f *metaResourceFilter) updateVersion(meta core.Property, resource *prop.Re
 		return err
 	}
 
-	_, err = prop.Internal(p).Replace(fmt.Sprintf("W/\"%x\"", sum))
-	if err != nil {
+	if err = p.Replace(fmt.Sprintf("W/\"%x\"", sum)); err != nil {
 		return err
 	}
 
