@@ -10,4 +10,6 @@ import (
 type EventPublisher interface {
 	// Notify that a new resource has been created.
 	ResourceCreated(ctx context.Context, created *prop.Resource)
+	// Notify that an old resource has been updated
+	ResourceUpdated(ctx context.Context, updated *prop.Resource)
 }

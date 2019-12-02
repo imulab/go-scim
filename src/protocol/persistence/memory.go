@@ -40,7 +40,25 @@ func (m *memoryProvider) Insert(ctx context.Context, resource *prop.Resource) er
 	return nil
 }
 
+func (m *memoryProvider) Get(ctx context.Context, id string) (*prop.Resource, error) {
+	r, ok := m.db[id]
+	if !ok {
+		return nil, errors.NotFound("resource by id [%s] is not found", id)
+	}
+	return r, nil
+}
+
 func (m *memoryProvider) Count(ctx context.Context, filter string) (int, error) {
 	// todo
 	return 0, nil
+}
+
+func (m *memoryProvider) Replace(ctx context.Context, resource *prop.Resource) error {
+	id := resource.ID()
+	_, ok := m.db[id]
+	if !ok {
+		return errors.NotFound("resource by id [%s] is not found", id)
+	}
+	m.db[id] = resource
+	return nil
 }

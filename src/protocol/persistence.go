@@ -10,4 +10,8 @@ type PersistenceProvider interface {
 	Insert(ctx context.Context, resource *prop.Resource) error
 	// Count the number of resources that meets the given SCIM filter.
 	Count(ctx context.Context, filter string) (int, error)
+	// Get a resource by its id
+	Get(ctx context.Context, id string) (*prop.Resource, error)
+	// Overwrite the existing resource with same ID with the new resource
+	Replace(ctx context.Context, resource *prop.Resource) error
 }

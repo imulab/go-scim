@@ -92,6 +92,15 @@ func InvalidValue(format string, args ...interface{}) error {
 	}
 }
 
+// The specified precondition failed, request cannot proceed.
+func PreConditionFailed(format string, args ...interface{}) error {
+	return &core.Error{
+		Status:  412,
+		Type:    "preCondition",
+		Message: fmt.Sprintf(format, args...),
+	}
+}
+
 // The specified request cannot be completed, due to the passing of sensitive (e.g., personal)
 // information in a request URI.
 func Sensitive(format string, args ...interface{}) error {
