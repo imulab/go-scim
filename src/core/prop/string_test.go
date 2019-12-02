@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -85,8 +84,7 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 	"type": "string"
 }
 `))
-				_, err := prop.Delete()
-				s.Require().Nil(err)
+				s.Require().Nil(prop.Delete())
 				return prop
 			},
 			expect: func(t *testing.T, unassigned bool) {
@@ -752,7 +750,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			prop := test.prop
-			_, err := prop.Add(test.v)
+			err := prop.Add(test.v)
 			test.expect(t, prop.Raw(), err)
 		})
 	}
@@ -811,7 +809,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			prop := test.prop
-			_, err := prop.Replace(test.v)
+			err := prop.Replace(test.v)
 			test.expect(t, prop.Raw(), err)
 		})
 	}
@@ -854,7 +852,7 @@ func (s *StringPropertyTestSuite) TestDelete() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			prop := test.prop
-			_, err := prop.Delete()
+			err := prop.Delete()
 			test.expect(t, prop.Raw(), err)
 		})
 	}
@@ -930,97 +928,6 @@ func (s *StringPropertyTestSuite) TestHash() {
 			h1 := test.p1.Hash()
 			h2 := test.p2.Hash()
 			test.expect(t, h1, h2)
-		})
-	}
-}
-
-func (s *StringPropertyTestSuite) TestModCount() {
-	tests := []struct {
-		name    string
-		getProp func(t *testing.T) core.Property
-		expect  func(t *testing.T, count int)
-	}{
-		{
-			name: "modifying the property increases the mod count by 1",
-			getProp: func(t *testing.T) core.Property {
-				prop := NewString(s.mustAttribute(`
-{
-	"name": "userName",
-	"type": "string"
-}
-`))
-				_, err := prop.Add("imulab")
-				require.Nil(t, err)
-				return prop
-			},
-			expect: func(t *testing.T, count int) {
-				assert.Equal(t, 1, count)
-			},
-		},
-		{
-			name: "deleting the property immediately after creation increase mod count by 1",
-			getProp: func(t *testing.T) core.Property {
-				prop := NewString(s.mustAttribute(`
-{
-	"name": "userName",
-	"type": "string"
-}
-`))
-				_, err := prop.Delete()
-				require.Nil(t, err)
-				return prop
-			},
-			expect: func(t *testing.T, count int) {
-				assert.Equal(t, 1, count)
-			},
-		},
-		{
-			name: "modifying the property with same value does not increase mod count",
-			getProp: func(t *testing.T) core.Property {
-				prop := NewStringOf(s.mustAttribute(`
-{
-	"name": "userName",
-	"type": "string"
-}
-`), "imulab")
-				require.Equal(t, 1, prop.ModCount())
-
-				_, err := prop.Replace("imulab")
-				require.Nil(t, err)
-				return prop
-			},
-			expect: func(t *testing.T, count int) {
-				assert.Equal(t, 1, count)
-			},
-		},
-		{
-			name: "deleting an already deleted property after first attempt does not increment mod count",
-			getProp: func(t *testing.T) core.Property {
-				prop := NewStringOf(s.mustAttribute(`
-{
-	"name": "userName",
-	"type": "string"
-}
-`), "imulab")
-				_, err := prop.Delete()
-				require.Nil(t, err)
-				require.True(t, prop.IsUnassigned())
-				require.Equal(t, 2, prop.ModCount())
-
-				// delete already deleted
-				_, err = prop.Delete()
-				require.Nil(t, err)
-				return prop
-			},
-			expect: func(t *testing.T, count int) {
-				assert.Equal(t, 2, count)
-			},
-		},
-	}
-
-	for _, test := range tests {
-		s.T().Run(test.name, func(t *testing.T) {
-			test.expect(t, test.getProp(t).ModCount())
 		})
 	}
 }

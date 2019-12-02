@@ -150,7 +150,7 @@ func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
 					_, _ = nav.FocusIndex(0)
 					{
 						_, _ = nav.FocusName("primary")
-						_, _ = nav.Current().Delete()
+						_ = nav.Current().Delete()
 					}
 				}
 			},
@@ -184,7 +184,7 @@ func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
 					_, _ = nav.FocusIndex(0)
 					{
 						_, _ = nav.FocusName("primary")
-						_, _ = nav.Current().Delete()
+						_ = nav.Current().Delete()
 						nav.Retract()
 					}
 					nav.Retract()
@@ -192,7 +192,7 @@ func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
 					_, _ = nav.FocusIndex(1)
 					{
 						_, _ = nav.FocusName("primary")
-						_, _ = nav.Current().Replace(true)
+						_ = nav.Current().Replace(true)
 						nav.Retract()
 					}
 					nav.Retract()
@@ -228,7 +228,7 @@ func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
 					_, _ = nav.FocusIndex(1)
 					{
 						_, _ = nav.FocusName("primary")
-						_, _ = nav.Current().Replace(true)
+						_ = nav.Current().Replace(true)
 						nav.Retract()
 					}
 					nav.Retract()
@@ -280,7 +280,7 @@ func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
 				nav := r.NewNavigator()
 				_, _ = nav.FocusName("emails")
 				{
-					_, err := nav.Current().Add(map[string]interface{}{
+					err := nav.Current().Add(map[string]interface{}{
 						"value":   "one@foo.com",
 						"type":    "work",
 						"primary": true,
@@ -288,7 +288,7 @@ func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
 					})
 					require.Nil(t, err)
 
-					_, err = nav.Current().Add(map[string]interface{}{
+					err = nav.Current().Add(map[string]interface{}{
 						"value":   "two@foo.com",
 						"type":    "work",
 						"primary": true,

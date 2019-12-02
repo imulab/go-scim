@@ -243,16 +243,14 @@ func (d *deserializeState) parseStringProperty() error {
 	end := d.off - 1 // position of the character after the second double quote
 
 	if d.isNull(start, end) {
-		_, err := d.navigator.Current().Delete()
-		return err
+		return d.navigator.Current().Delete()
 	}
 
 	if d.data[start] != '"' || d.data[end-1] != '"' {
 		return d.errInvalidSyntax("expects string literal value for '%s'", p.Attribute().Path())
 	}
 
-	_, err := d.navigator.Current().Replace(string(d.data[start+1 : end-1]))
-	return err
+	return d.navigator.Current().Replace(string(d.data[start+1 : end-1]))
 }
 
 // Parses a JSON integer. This method expects an integer literal and the null literal.
@@ -274,8 +272,7 @@ func (d *deserializeState) parseIntegerProperty() error {
 	end := d.off - 1 // position of the character after the end of the literal
 
 	if d.isNull(start, end) {
-		_, err := d.navigator.Current().Delete()
-		return err
+		return d.navigator.Current().Delete()
 	}
 
 	val, err := strconv.ParseInt(string(d.data[start:end]), 10, 64)
@@ -283,8 +280,7 @@ func (d *deserializeState) parseIntegerProperty() error {
 		return errors.InvalidValue("expects integer value")
 	}
 
-	_, err = d.navigator.Current().Replace(val)
-	return err
+	return d.navigator.Current().Replace(val)
 }
 
 // Parses a JSON boolean. This method expects the true, false, or null literal.
@@ -306,16 +302,13 @@ func (d *deserializeState) parseBooleanProperty() error {
 	end := d.off - 1 // position of the character after the end of the literal
 
 	if d.isNull(start, end) {
-		_, err := d.navigator.Current().Delete()
-		return err
+		return d.navigator.Current().Delete()
 	}
 
 	if d.isTrue(start, end) {
-		_, err := d.navigator.Current().Replace(true)
-		return err
+		return d.navigator.Current().Replace(true)
 	} else if d.isFalse(start, end) {
-		_, err := d.navigator.Current().Replace(false)
-		return err
+		return d.navigator.Current().Replace(false)
 	} else {
 		return d.errInvalidValue("expects boolean value")
 	}
@@ -340,8 +333,7 @@ func (d *deserializeState) parseDecimalProperty() error {
 	end := d.off - 1 // position of the character after the end of the literal
 
 	if d.isNull(start, end) {
-		_, err := d.navigator.Current().Delete()
-		return err
+		return d.navigator.Current().Delete()
 	}
 
 	val, err := strconv.ParseFloat(string(d.data[start:end]), 64)
@@ -349,8 +341,7 @@ func (d *deserializeState) parseDecimalProperty() error {
 		return errors.InvalidValue("expects decimal value")
 	}
 
-	_, err = d.navigator.Current().Replace(val)
-	return err
+	return d.navigator.Current().Replace(val)
 }
 
 // Parses the JSON null literal.
@@ -368,8 +359,7 @@ func (d *deserializeState) parseNull() error {
 		return d.errInvalidSyntax("expects null")
 	}
 
-	_, err := d.navigator.Current().Delete()
-	return err
+	return d.navigator.Current().Delete()
 }
 
 func (d *deserializeState) isNull(start, end int) bool {

@@ -23,8 +23,7 @@ func NewInteger(attr *core.Attribute) core.Property {
 // marked dirty at the start.
 func NewIntegerOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewInteger(attr)
-	_, err := p.Replace(value)
-	if err != nil {
+	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -32,17 +31,12 @@ func NewIntegerOf(attr *core.Attribute, value interface{}) core.Property {
 
 var (
 	_ core.Property = (*integerProperty)(nil)
-	_ interface {
-		addInternal(value interface{}) error
-		replaceInternal(value interface{}) error
-		deleteInternal() error
-	} = (*integerProperty)(nil)
 )
 
 type integerProperty struct {
-	attr  *core.Attribute
-	value *int64
-	mod   int
+	attr    *core.Attribute
+	value   *int64
+	touched bool
 }
 
 func (p *integerProperty) Attribute() *core.Attribute {
@@ -58,10 +52,6 @@ func (p *integerProperty) Raw() interface{} {
 
 func (p *integerProperty) IsUnassigned() bool {
 	return p.value == nil
-}
-
-func (p *integerProperty) ModCount() int {
-	return p.mod
 }
 
 func (p *integerProperty) CountChildren() int {
@@ -148,62 +138,35 @@ func (p *integerProperty) Present() bool {
 	return p.value != nil
 }
 
-func (p *integerProperty) Add(value interface{}) (bool, error) {
+func (p *integerProperty) Add(value interface{}) error {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *integerProperty) addInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
-	}
-	return p.replaceInternal(value)
-}
-
-func (p *integerProperty) Replace(value interface{}) (bool, error) {
+func (p *integerProperty) Replace(value interface{}) error {
 	if value == nil {
 		return p.Delete()
-	}
-
-	if i64, err := p.tryInt64(value); err != nil {
-		return false, err
-	} else {
-		equal, _ := p.EqualsTo(i64)
-		if !equal {
-			p.value = &i64
-			p.mod++
-		}
-		return !equal, nil
-	}
-}
-
-func (p *integerProperty) replaceInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
 	}
 
 	if i64, err := p.tryInt64(value); err != nil {
 		return err
 	} else {
 		p.value = &i64
+		p.touched = true
 		return nil
 	}
 }
 
-func (p *integerProperty) Delete() (bool, error) {
-	present := p.Present()
+func (p *integerProperty) Delete() error {
 	p.value = nil
-	if p.mod == 0 || present {
-		p.mod++
-	}
-	return present, nil
+	p.touched = true
+	return nil
 }
 
-func (p *integerProperty) deleteInternal() error {
-	p.value = nil
-	return nil
+func (p *integerProperty) Touched() bool {
+	return p.touched
 }
 
 func (p *integerProperty) Compact() {}

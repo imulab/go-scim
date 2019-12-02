@@ -25,8 +25,7 @@ func NewBinary(attr *core.Attribute) core.Property {
 // marked dirty at the start.
 func NewBinaryOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewBinary(attr)
-	_, err := p.Replace(value)
-	if err != nil {
+	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -34,18 +33,13 @@ func NewBinaryOf(attr *core.Attribute, value interface{}) core.Property {
 
 var (
 	_ core.Property = (*binaryProperty)(nil)
-	_ interface {
-		addInternal(value interface{}) error
-		replaceInternal(value interface{}) error
-		deleteInternal() error
-	} = (*binaryProperty)(nil)
 )
 
 type binaryProperty struct {
-	attr  *core.Attribute
-	value []byte
-	mod   int
-	hash  uint64
+	attr    *core.Attribute
+	value   []byte
+	hash    uint64
+	touched bool
 }
 
 func (p *binaryProperty) Attribute() *core.Attribute {
@@ -61,10 +55,6 @@ func (p *binaryProperty) Raw() interface{} {
 
 func (p *binaryProperty) IsUnassigned() bool {
 	return len(p.value) == 0
-}
-
-func (p *binaryProperty) ModCount() int {
-	return p.mod
 }
 
 func (p *binaryProperty) CountChildren() int {
@@ -127,43 +117,16 @@ func (p *binaryProperty) Present() bool {
 	return len(p.value) > 0
 }
 
-func (p *binaryProperty) Add(value interface{}) (bool, error) {
+func (p *binaryProperty) Add(value interface{}) error {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *binaryProperty) addInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
-	}
-	return p.replaceInternal(value)
-}
-
-func (p *binaryProperty) Replace(value interface{}) (bool, error) {
+func (p *binaryProperty) Replace(value interface{}) error {
 	if value == nil {
 		return p.Delete()
-	}
-
-	if s, ok := value.(string); !ok {
-		return false, p.errIncompatibleValue(value)
-	} else if b64, err := base64.RawStdEncoding.DecodeString(s); err != nil {
-		return false, p.errIncompatibleValue(value)
-	} else {
-		equal := p.compareByteArray(p.value, b64)
-		if !equal {
-			copy(p.value, b64)
-			p.computeHash()
-			p.mod++
-		}
-		return !equal, nil
-	}
-}
-
-func (p *binaryProperty) replaceInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
 	}
 
 	if s, ok := value.(string); !ok {
@@ -172,19 +135,21 @@ func (p *binaryProperty) replaceInternal(value interface{}) error {
 		return p.errIncompatibleValue(value)
 	} else {
 		copy(p.value, b64)
+		p.touched = true
 		p.computeHash()
 		return nil
 	}
 }
 
-func (p *binaryProperty) Delete() (bool, error) {
-	present := p.Present()
+func (p *binaryProperty) Delete() error {
 	p.value = nil
+	p.touched = true
 	p.computeHash()
-	if p.mod == 0 || present {
-		p.mod++
-	}
-	return present, nil
+	return nil
+}
+
+func (p *binaryProperty) Touched() bool {
+	return p.touched
 }
 
 func (p *binaryProperty) deleteInternal() error {

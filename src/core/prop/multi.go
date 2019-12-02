@@ -24,8 +24,7 @@ func NewMulti(attr *core.Attribute) core.Property {
 // marked dirty at the start.
 func NewMultiOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewMulti(attr)
-	_, err := p.Add(value)
-	if err != nil {
+	if err := p.Add(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -40,6 +39,7 @@ type multiValuedProperty struct {
 	attr     *core.Attribute
 	elements []core.Property
 	hash     uint64
+	touched  bool
 }
 
 func (p *multiValuedProperty) Attribute() *core.Attribute {
@@ -122,9 +122,9 @@ func (p *multiValuedProperty) Present() bool {
 	return len(p.elements) > 0
 }
 
-func (p *multiValuedProperty) Add(value interface{}) (bool, error) {
+func (p *multiValuedProperty) Add(value interface{}) error {
 	if value == nil {
-		return false, nil
+		return nil
 	}
 
 	// transform value into properties to add
@@ -142,24 +142,23 @@ func (p *multiValuedProperty) Add(value interface{}) (bool, error) {
 				}
 				p0, err = p.newElementProperty(v)
 				if err != nil {
-					return false, err
+					return err
 				}
 				toAdd = append(toAdd, p0)
 			}
 		default:
 			p0, err = p.newElementProperty(val)
 			if err != nil {
-				return false, err
+				return err
 			}
 			toAdd = append(toAdd, p0)
 		}
 	}
 
 	if len(toAdd) == 0 {
-		return false, nil
+		return nil
 	}
 
-	n0 := p.CountChildren()
 	// Add each candidate only if they do not match existing elements
 	for _, eachToAdd := range toAdd {
 		match := false
@@ -171,38 +170,43 @@ func (p *multiValuedProperty) Add(value interface{}) (bool, error) {
 		}
 		if !match {
 			p.elements = append(p.elements, eachToAdd)
+			p.touched = true
 		}
 	}
 	p.computeHash()
 
-	return n0 != p.CountChildren(), nil
+	return nil
 }
 
-func (p *multiValuedProperty) Replace(value interface{}) (changed bool, err error) {
+func (p *multiValuedProperty) Replace(value interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = p.errIncompatibleValue(value)
 		}
 	}()
 
-	wip := NewMultiOf(p.attr, value)
-	changed = p.Hash() != wip.Hash()
-	if !changed {
+	err = p.Delete()
+	if err != nil {
 		return
 	}
 
-	p.elements = wip.(*multiValuedProperty).elements
-	p.hash = wip.(*multiValuedProperty).hash
-	wip = nil
+	err = p.Add(value)
+	if err != nil {
+		return
+	}
 
 	return
 }
 
-func (p *multiValuedProperty) Delete() (bool, error) {
-	present := p.Present()
+func (p *multiValuedProperty) Delete() error {
 	p.elements = p.elements[:0]
+	p.touched = true
 	p.computeHash()
-	return present, nil
+	return nil
+}
+
+func (p *multiValuedProperty) Touched() bool {
+	return p.touched
 }
 
 func (p *multiValuedProperty) NewChild() int {
@@ -290,7 +294,7 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 	}
 
 	if singleValue != nil {
-		_, err = prop.Replace(singleValue)
+		err = prop.Replace(singleValue)
 	}
 
 	return

@@ -23,8 +23,7 @@ func NewBoolean(attr *core.Attribute) core.Property {
 // marked dirty at the start.
 func NewBooleanOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewBoolean(attr)
-	_, err := p.Replace(value)
-	if err != nil {
+	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -32,17 +31,12 @@ func NewBooleanOf(attr *core.Attribute, value interface{}) core.Property {
 
 var (
 	_ core.Property = (*booleanProperty)(nil)
-	_ interface {
-		addInternal(value interface{}) error
-		replaceInternal(value interface{}) error
-		deleteInternal() error
-	} = (*booleanProperty)(nil)
 )
 
 type booleanProperty struct {
-	attr  *core.Attribute
-	value *bool
-	mod   int
+	attr    *core.Attribute
+	value   *bool
+	touched bool
 }
 
 func (p *booleanProperty) Attribute() *core.Attribute {
@@ -58,10 +52,6 @@ func (p *booleanProperty) Raw() interface{} {
 
 func (p *booleanProperty) IsUnassigned() bool {
 	return p.value == nil
-}
-
-func (p *booleanProperty) ModCount() int {
-	return p.mod
 }
 
 func (p *booleanProperty) CountChildren() int {
@@ -130,62 +120,35 @@ func (p *booleanProperty) Present() bool {
 	return p.value != nil
 }
 
-func (p *booleanProperty) Add(value interface{}) (bool, error) {
+func (p *booleanProperty) Add(value interface{}) error {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *booleanProperty) addInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
-	}
-	return p.replaceInternal(value)
-}
-
-func (p *booleanProperty) Replace(value interface{}) (bool, error) {
+func (p *booleanProperty) Replace(value interface{}) error {
 	if value == nil {
 		return p.Delete()
-	}
-
-	if b, ok := value.(bool); !ok {
-		return false, p.errIncompatibleValue(value)
-	} else {
-		equal, _ := p.EqualsTo(b)
-		if !equal {
-			p.value = &b
-			p.mod++
-		}
-		return !equal, nil
-	}
-}
-
-func (p *booleanProperty) replaceInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
 	}
 
 	if b, ok := value.(bool); !ok {
 		return p.errIncompatibleValue(value)
 	} else {
 		p.value = &b
+		p.touched = true
 		return nil
 	}
 }
 
-func (p *booleanProperty) Delete() (bool, error) {
-	present := p.Present()
+func (p *booleanProperty) Delete() error {
 	p.value = nil
-	if p.mod == 0 || present {
-		p.mod++
-	}
-	return present, nil
+	p.touched = true
+	return nil
 }
 
-func (p *booleanProperty) deleteInternal() error {
-	p.value = nil
-	return nil
+func (p *booleanProperty) Touched() bool {
+	return p.touched
 }
 
 func (p *booleanProperty) Compact() {}

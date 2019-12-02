@@ -13,11 +13,6 @@ type Property interface {
 	// properties; and complex properties are unassigned if and only if all its
 	// containing sub properties are unassigned.
 	IsUnassigned() bool
-	// Returns the number of times this property has been modified. In principal, the mod count increases
-	// every time a change is made to the property. Note that this does not equate calling Add, Replace or
-	// Delete as these methods may not modify the underlying data if the change proposed has no effect on
-	// it.
-	ModCount() int
 	// Return true if the two properties match each other. Properties match if and only if
 	// their attributes match and their values are comparable according to the attribute.
 	// For complex properties, two complex properties match if and only if all their sub properties
@@ -58,17 +53,17 @@ type Property interface {
 	Present() bool
 	// Add a value to the property. If the value already exists, no change will be made. Otherwise, the value will
 	// be added to the underlying data structure and mod count increased by one. For simple properties, calling this
-	// method equates to calling Replace.
-	Add(value interface{}) (bool, error)
+	// method equates to calling Replace. Calling this method makes the property Touched.
+	Add(value interface{}) error
 	// Replace value of this property. If the value equals to the current value, no change will be made. Otherwise,
-	// the underlying value will be replaced and mod count increased by one. Providing a nil value equates to
-	// calling Delete.
-	Replace(value interface{}) (bool, error)
-	// Delete value from this property. If the property is already unassigned, deleting it again has no effect and
-	// does not increase mod count. However, as a special case, when mod count is 0, deleting it will increase mod
-	// count. This behaviour is designed to distinguish between a system generated unassigned property and user declared
-	// unassigned property.
-	Delete() (bool, error)
+	// the underlying value will be replaced. Providing a nil value equates to calling Delete. Calling this method
+	// makes the property Touched.
+	Replace(value interface{}) error
+	// Delete value from this property. If the property is already unassigned, deleting it again has no effect. Calling
+	// this method makes the property Touched.
+	Delete() error
+	// Returns true if any of Add/Replace/Delete method was ever called.
+	Touched() bool
 }
 
 // Interface for SCIM properties that serve as a container to other properties. For instance, complex and multiValued

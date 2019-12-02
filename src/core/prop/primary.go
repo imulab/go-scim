@@ -80,8 +80,7 @@ func (m *PrimaryMonitor) onePrimaryInOldState(k string, newState map[string][]*b
 		diff := 0
 		for _, b := range newState[k] {
 			if b == m.state[k][0] {
-				_, err := b.Delete()
-				if err != nil {
+				if err := b.Delete(); err != nil {
 					return err
 				}
 			} else {

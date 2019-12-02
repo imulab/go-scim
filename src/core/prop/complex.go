@@ -49,19 +49,11 @@ func NewComplex(attr *core.Attribute) core.Property {
 		})
 	}
 
-	var p core.Property
-	{
-		p = &complexProperty{
-			attr:      attr,
-			subProps:  subProps,
-			nameIndex: nameIndex,
-		}
-		if !p.IsUnassigned() || p.ModCount() != 0 {
-			panic("new complex property is supposed to be unassigned and un-modded")
-		}
+	return &complexProperty{
+		attr:      attr,
+		subProps:  subProps,
+		nameIndex: nameIndex,
 	}
-
-	return p
 }
 
 // Create a new complex property with given value. The method will panic if
@@ -69,8 +61,7 @@ func NewComplex(attr *core.Attribute) core.Property {
 // marked dirty at the start unless value is empty
 func NewComplexOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewComplex(attr)
-	_, err := p.Add(value)
-	if err != nil {
+	if err := p.Add(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -109,10 +100,6 @@ func (p *complexProperty) IsUnassigned() bool {
 		}
 	}
 	return true
-}
-
-func (p *complexProperty) ModCount() int {
-	return 0 // complex property is just a container
 }
 
 func (p *complexProperty) Matches(another core.Property) bool {
@@ -168,34 +155,31 @@ func (p *complexProperty) Present() bool {
 	return false
 }
 
-func (p *complexProperty) Add(value interface{}) (bool, error) {
+func (p *complexProperty) Add(value interface{}) error {
 	if value == nil {
-		return false, nil
+		return nil
 	}
 
 	if m, ok := value.(map[string]interface{}); !ok {
-		return false, p.errIncompatibleValue(value)
+		return p.errIncompatibleValue(value)
 	} else {
-		changed := false
 		for k, v := range m {
 			i, ok := p.nameIndex[strings.ToLower(k)]
 			if !ok {
 				continue
 			}
-			ok, err := p.subProps[i].Add(v)
-			if err != nil {
-				return false, err
+			if err := p.subProps[i].Add(v); err != nil {
+				return err
 			}
-			changed = changed || ok
 		}
 		p.computeHash()
-		return changed, nil
+		return nil
 	}
 }
 
-func (p *complexProperty) Replace(value interface{}) (changed bool, err error) {
+func (p *complexProperty) Replace(value interface{}) (err error) {
 	if value == nil {
-		return false, nil
+		return nil
 	}
 
 	defer func() {
@@ -204,31 +188,36 @@ func (p *complexProperty) Replace(value interface{}) (changed bool, err error) {
 		}
 	}()
 
-	wip := NewComplexOf(p.attr, value)
-	if p.Matches(wip) {
-		changed = false
+	err = p.Delete()
+	if err != nil {
 		return
 	}
 
-	changed = true
-	p.subProps = wip.(*complexProperty).subProps
-	p.nameIndex = wip.(*complexProperty).nameIndex
-	p.hash = wip.(*complexProperty).hash
-	wip = nil
+	err = p.Add(value)
+	if err != nil {
+		return
+	}
 
 	return
 }
 
-func (p *complexProperty) Delete() (bool, error) {
-	present := p.Present()
-	for i := range p.subProps {
-		_, err := p.subProps[i].Delete()
-		if err != nil {
-			return false, err
+func (p *complexProperty) Delete() error {
+	for _, subProp := range p.subProps {
+		if err := subProp.Delete(); err != nil {
+			return err
 		}
 	}
 	p.computeHash()
-	return present, nil
+	return nil
+}
+
+func (p *complexProperty) Touched() bool {
+	for _, subProp := range p.subProps {
+		if subProp.Touched() {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *complexProperty) CountChildren() int {

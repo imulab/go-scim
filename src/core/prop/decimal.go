@@ -23,8 +23,7 @@ func NewDecimal(attr *core.Attribute) core.Property {
 // marked dirty at the start.
 func NewDecimalOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewDecimal(attr)
-	_, err := p.Replace(value)
-	if err != nil {
+	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -32,17 +31,12 @@ func NewDecimalOf(attr *core.Attribute, value interface{}) core.Property {
 
 var (
 	_ core.Property = (*decimalProperty)(nil)
-	_ interface {
-		addInternal(value interface{}) error
-		replaceInternal(value interface{}) error
-		deleteInternal() error
-	} = (*decimalProperty)(nil)
 )
 
 type decimalProperty struct {
-	attr  *core.Attribute
-	value *float64
-	mod   int
+	attr    *core.Attribute
+	value   *float64
+	touched bool
 }
 
 func (p *decimalProperty) Attribute() *core.Attribute {
@@ -58,10 +52,6 @@ func (p *decimalProperty) Raw() interface{} {
 
 func (p *decimalProperty) IsUnassigned() bool {
 	return p.value == nil
-}
-
-func (p *decimalProperty) ModCount() int {
-	return p.mod
 }
 
 func (p *decimalProperty) CountChildren() int {
@@ -147,65 +137,36 @@ func (p *decimalProperty) Present() bool {
 	return p.value != nil
 }
 
-func (p *decimalProperty) Add(value interface{}) (bool, error) {
+func (p *decimalProperty) Add(value interface{}) error {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *decimalProperty) addInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
-	}
-	return p.replaceInternal(value)
-}
-
-func (p *decimalProperty) Replace(value interface{}) (bool, error) {
+func (p *decimalProperty) Replace(value interface{}) error {
 	if value == nil {
 		return p.Delete()
-	}
-
-	if f64, err := p.tryFloat64(value); err != nil {
-		return false, err
-	} else {
-		equal, _ := p.EqualsTo(f64)
-		if !equal {
-			p.value = &f64
-			p.mod++
-		}
-		return !equal, nil
-	}
-}
-
-func (p *decimalProperty) replaceInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
 	}
 
 	if f64, err := p.tryFloat64(value); err != nil {
 		return err
 	} else {
 		p.value = &f64
+		p.touched = true
 		return nil
 	}
 }
 
-func (p *decimalProperty) Delete() (bool, error) {
-	present := p.Present()
+func (p *decimalProperty) Delete() error {
 	p.value = nil
-	if p.mod == 0 || present {
-		p.mod++
-	}
-	return present, nil
-}
-
-func (p *decimalProperty) deleteInternal() error {
-	p.value = nil
+	p.touched = true
 	return nil
 }
 
-func (p *decimalProperty) Compact() {}
+func (p *decimalProperty) Touched() bool {
+	return p.touched
+}
 
 func (p *decimalProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())

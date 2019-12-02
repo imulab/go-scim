@@ -26,8 +26,7 @@ func NewDateTime(attr *core.Attribute) core.Property {
 // The property will be marked dirty at the start.
 func NewDateTimeOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewDateTime(attr)
-	_, err := p.Replace(value)
-	if err != nil {
+	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -35,17 +34,12 @@ func NewDateTimeOf(attr *core.Attribute, value interface{}) core.Property {
 
 var (
 	_ core.Property = (*dateTimeProperty)(nil)
-	_ interface {
-		addInternal(value interface{}) error
-		replaceInternal(value interface{}) error
-		deleteInternal() error
-	} = (*dateTimeProperty)(nil)
 )
 
 type dateTimeProperty struct {
-	attr	*core.Attribute
-	value	*time.Time
-	mod		int
+	attr    *core.Attribute
+	value   *time.Time
+	touched bool
 }
 
 func (p *dateTimeProperty) Attribute() *core.Attribute {
@@ -61,10 +55,6 @@ func (p *dateTimeProperty) Raw() interface{} {
 
 func (p *dateTimeProperty) IsUnassigned() bool {
 	return p.value == nil
-}
-
-func (p *dateTimeProperty) ModCount() int {
-	return p.mod
 }
 
 func (p *dateTimeProperty) CountChildren() int {
@@ -157,43 +147,16 @@ func (p *dateTimeProperty) Present() bool {
 	return p.value != nil
 }
 
-func (p *dateTimeProperty) Add(value interface{}) (bool, error) {
+func (p *dateTimeProperty) Add(value interface{}) error {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *dateTimeProperty) addInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
-	}
-	return p.replaceInternal(value)
-}
-
-func (p *dateTimeProperty) Replace(value interface{}) (bool, error) {
+func (p *dateTimeProperty) Replace(value interface{}) error {
 	if value == nil {
 		return p.Delete()
-	}
-
-	if s, ok := value.(string); !ok {
-		return false, p.errIncompatibleValue(value)
-	} else if t, err := p.fromISO8601(s); err != nil {
-		return false, err
-	} else {
-		if p.value == nil || !(*(p.value)).Equal(t) {
-			p.value = &t
-			p.mod++
-			return true, nil
-		} else {
-			return false, nil
-		}
-	}
-}
-
-func (p *dateTimeProperty) replaceInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
 	}
 
 	if s, ok := value.(string); !ok {
@@ -202,22 +165,19 @@ func (p *dateTimeProperty) replaceInternal(value interface{}) error {
 		return err
 	} else {
 		p.value = &t
+		p.touched = true
 		return nil
 	}
 }
 
-func (p *dateTimeProperty) Delete() (bool, error) {
-	present := p.Present()
+func (p *dateTimeProperty) Delete() error {
 	p.value = nil
-	if p.mod == 0 || present {
-		p.mod++
-	}
-	return present, nil
+	p.touched = true
+	return nil
 }
 
-func (p *dateTimeProperty) deleteInternal() error {
-	p.value = nil
-	return nil
+func (p *dateTimeProperty) Touched() bool {
+	return p.touched
 }
 
 func (p *dateTimeProperty) Compact() {}

@@ -25,8 +25,7 @@ func NewReference(attr *core.Attribute) core.Property {
 // marked dirty at the start.
 func NewReferenceOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewReference(attr)
-	_, err := p.Replace(value)
-	if err != nil {
+	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -34,18 +33,13 @@ func NewReferenceOf(attr *core.Attribute, value interface{}) core.Property {
 
 var (
 	_ core.Property = (*referenceProperty)(nil)
-	_ interface {
-		addInternal(value interface{}) error
-		replaceInternal(value interface{}) error
-		deleteInternal() error
-	} = (*referenceProperty)(nil)
 )
 
 type referenceProperty struct {
-	attr  *core.Attribute
-	value *string
-	mod   int
-	hash  uint64
+	attr    *core.Attribute
+	value   *string
+	hash    uint64
+	touched bool
 }
 
 func (p *referenceProperty) Attribute() *core.Attribute {
@@ -61,10 +55,6 @@ func (p *referenceProperty) Raw() interface{} {
 
 func (p *referenceProperty) IsUnassigned() bool {
 	return p.value == nil
-}
-
-func (p *referenceProperty) ModCount() int {
-	return p.mod
 }
 
 func (p *referenceProperty) CountChildren() int {
@@ -134,66 +124,36 @@ func (p *referenceProperty) Present() bool {
 	return p.value != nil && len(*(p.value)) > 0
 }
 
-func (p *referenceProperty) Add(value interface{}) (bool, error) {
+func (p *referenceProperty) Add(value interface{}) error {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *referenceProperty) addInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
-	}
-	return p.replaceInternal(value)
-}
-
-func (p *referenceProperty) Replace(value interface{}) (bool, error) {
+func (p *referenceProperty) Replace(value interface{}) error {
 	if value == nil {
 		return p.Delete()
-	}
-
-	if s, ok := value.(string); !ok {
-		return false, p.errIncompatibleValue(value)
-	} else {
-		equal, _ := p.EqualsTo(s)
-		if !equal {
-			p.value = &s
-			p.mod++
-			p.computeHash()
-		}
-		return !equal, nil
-	}
-}
-
-func (p *referenceProperty) replaceInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
 	}
 
 	if s, ok := value.(string); !ok {
 		return p.errIncompatibleValue(value)
 	} else {
 		p.value = &s
-		p.computeHash()
+		p.touched = true
 		return nil
 	}
 }
 
-func (p *referenceProperty) Delete() (bool, error) {
-	present := p.Present()
+func (p *referenceProperty) Delete() error {
 	p.value = nil
-	p.computeHash()
-	if p.mod == 0 || present {
-		p.mod++
-	}
-	return present, nil
-}
-
-func (p *referenceProperty) deleteInternal() error {
-	p.value = nil
+	p.touched = true
 	p.computeHash()
 	return nil
+}
+
+func (p *referenceProperty) Touched() bool {
+	return p.touched
 }
 
 func (p *referenceProperty) Compact() {}

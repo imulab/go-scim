@@ -25,8 +25,7 @@ func NewString(attr *core.Attribute) core.Property {
 // marked dirty at the start.
 func NewStringOf(attr *core.Attribute, value interface{}) core.Property {
 	p := NewString(attr)
-	_, err := p.Replace(value)
-	if err != nil {
+	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
 	return p
@@ -34,18 +33,13 @@ func NewStringOf(attr *core.Attribute, value interface{}) core.Property {
 
 var (
 	_ core.Property = (*stringProperty)(nil)
-	_ interface {
-		addInternal(value interface{}) error
-		replaceInternal(value interface{}) error
-		deleteInternal() error
-	} = (*stringProperty)(nil)
 )
 
 type stringProperty struct {
-	attr  *core.Attribute
-	value *string
-	mod   int
-	hash  uint64
+	attr    *core.Attribute
+	value   *string
+	hash    uint64
+	touched bool
 }
 
 func (p *stringProperty) Attribute() *core.Attribute {
@@ -61,10 +55,6 @@ func (p *stringProperty) Raw() interface{} {
 
 func (p *stringProperty) IsUnassigned() bool {
 	return p.value == nil
-}
-
-func (p *stringProperty) ModCount() int {
-	return p.mod
 }
 
 func (p *stringProperty) CountChildren() int {
@@ -156,66 +146,37 @@ func (p *stringProperty) Present() bool {
 	return p.value != nil && len(*(p.value)) > 0
 }
 
-func (p *stringProperty) Add(value interface{}) (bool, error) {
+func (p *stringProperty) Add(value interface{}) error {
 	if value == nil {
 		return p.Delete()
 	}
 	return p.Replace(value)
 }
 
-func (p *stringProperty) addInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
-	}
-	return p.replaceInternal(value)
-}
-
-func (p *stringProperty) Replace(value interface{}) (bool, error) {
+func (p *stringProperty) Replace(value interface{}) error {
 	if value == nil {
 		return p.Delete()
-	}
-
-	if s, ok := value.(string); !ok {
-		return false, p.errIncompatibleValue(value)
-	} else {
-		equal, _ := p.EqualsTo(s)
-		if !equal {
-			p.value = &s
-			p.computeHash()
-			p.mod++
-		}
-		return !equal, nil
-	}
-}
-
-func (p *stringProperty) replaceInternal(value interface{}) error {
-	if value == nil {
-		return p.deleteInternal()
 	}
 
 	if s, ok := value.(string); !ok {
 		return p.errIncompatibleValue(value)
 	} else {
 		p.value = &s
+		p.touched = true
 		p.computeHash()
 		return nil
 	}
 }
 
-func (p *stringProperty) Delete() (bool, error) {
-	present := p.Present()
-	p.value = nil
-	p.computeHash()
-	if p.mod == 0 || present {
-		p.mod++
-	}
-	return present, nil
-}
-
-func (p *stringProperty) deleteInternal() error {
+func (p *stringProperty) Delete() error {
+	p.touched = true
 	p.value = nil
 	p.computeHash()
 	return nil
+}
+
+func (p *stringProperty) Touched() bool {
+	return p.touched
 }
 
 func (p *stringProperty) Compact() {}

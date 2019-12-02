@@ -317,7 +317,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 				nav := resource.NewNavigator()
 				_, _ = nav.FocusName("id")
 				assert.Nil(t, nav.Current().Raw())
-				assert.Equal(t, 0, nav.Current().ModCount())
+				assert.False(t, nav.Current().Touched())
 			},
 		},
 		{
@@ -345,7 +345,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 				{
 					_, _ = nav.FocusName("id")
 					assert.Nil(t, nav.Current().Raw())
-					assert.Equal(t, 1, nav.Current().ModCount())
+					assert.True(t, nav.Current().Touched())
 					nav.Retract()
 				}
 				{
@@ -353,7 +353,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 					{
 						_, _ = nav.FocusName("givenName")
 						assert.Nil(t, nav.Current().Raw())
-						assert.Equal(t, 1, nav.Current().ModCount())
+						assert.True(t, nav.Current().Touched())
 						nav.Retract()
 					}
 					nav.Retract()
@@ -365,7 +365,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 						{
 							_, _ = nav.FocusName("value")
 							assert.Nil(t, nav.Current().Raw())
-							assert.Equal(t, 1, nav.Current().ModCount())
+							assert.True(t, nav.Current().Touched())
 							nav.Retract()
 						}
 						nav.Retract()
@@ -373,10 +373,10 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 					nav.Retract()
 				}
 				{
-					// in contrast, other fields has mod count of zero
+					// in contrast, other fields was not touched
 					_, _ = nav.FocusName("userName")
 					assert.Nil(t, nav.Current().Raw())
-					assert.Equal(t, 0, nav.Current().ModCount())
+					assert.False(t, nav.Current().Touched())
 					nav.Retract()
 				}
 			},
