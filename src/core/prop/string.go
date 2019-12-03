@@ -196,7 +196,7 @@ func (p *stringProperty) Delete() error {
 func (p *stringProperty) publish(e *core.Event) error {
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
-			if err := subscriber.Notify(e); err != nil {
+			if err := subscriber.Notify(p, e); err != nil {
 				return err
 			}
 		}

@@ -151,24 +151,49 @@ func (p *referenceProperty) Replace(value interface{}) error {
 	if s, ok := value.(string); !ok {
 		return p.errIncompatibleValue(value)
 	} else {
-		p.value = &s
 		p.touched = true
+		if eq, _ := p.EqualsTo(s); !eq {
+			p.value = &s
+			p.computeHash()
+			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 }
 
 func (p *referenceProperty) Delete() error {
-	p.value = nil
 	p.touched = true
-	p.computeHash()
+	if p.value != nil {
+		p.value = nil
+		p.computeHash()
+		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *referenceProperty) publish(e *core.Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(p, e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (p *referenceProperty) Touched() bool {
 	return p.touched
 }
-
-func (p *referenceProperty) Compact() {}
 
 func (p *referenceProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())

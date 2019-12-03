@@ -19,7 +19,7 @@ type (
 		// is allowed to return a non-nil error, which will be regarded as caller's
 		// own error. Implementations are not supposed to block the Goroutine and
 		// should keep the reaction quick.
-		Notify(event *Event) error
+		Notify(publisher Property, event *Event) error
 	}
 )
 

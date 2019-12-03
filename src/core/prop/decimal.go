@@ -160,15 +160,41 @@ func (p *decimalProperty) Replace(value interface{}) error {
 	if f64, err := p.tryFloat64(value); err != nil {
 		return err
 	} else {
-		p.value = &f64
 		p.touched = true
+		if eq, _ := p.EqualsTo(f64); !eq {
+			p.value = &f64
+			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 }
 
 func (p *decimalProperty) Delete() error {
-	p.value = nil
 	p.touched = true
+	if p.value != nil {
+		p.value = nil
+		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *decimalProperty) publish(e *core.Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(p, e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

@@ -17,6 +17,7 @@ func NewComplex(attr *core.Attribute, parent core.Container) core.Property {
 
 	var (
 		p = &complexProperty{
+			parent:    parent,
 			attr:      attr,
 			subProps:  make([]core.Property, 0, attr.CountSubAttributes()),
 			nameIndex: make(map[string]int),
@@ -90,7 +91,7 @@ func (p *complexProperty) Subscribe(subscriber core.Subscriber) {
 func (p *complexProperty) Propagate(e *core.Event) error {
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
-			if err := subscriber.Notify(e); err != nil {
+			if err := subscriber.Notify(p, e); err != nil {
 				return err
 			}
 		}

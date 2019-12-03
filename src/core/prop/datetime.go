@@ -176,23 +176,47 @@ func (p *dateTimeProperty) Replace(value interface{}) error {
 	} else if t, err := p.fromISO8601(s); err != nil {
 		return err
 	} else {
-		p.value = &t
 		p.touched = true
+		if p.value == nil || !(*(p.value)).Equal(t) {
+			p.value = &t
+			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 }
 
 func (p *dateTimeProperty) Delete() error {
-	p.value = nil
 	p.touched = true
+	if p.value != nil {
+		p.value = nil
+		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *dateTimeProperty) publish(e *core.Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(p, e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (p *dateTimeProperty) Touched() bool {
 	return p.touched
 }
-
-func (p *dateTimeProperty) Compact() {}
 
 func (p *dateTimeProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())

@@ -11,123 +11,31 @@ import (
 	"testing"
 )
 
-func TestPrimaryMonitor(t *testing.T) {
-	s := new(PrimaryMonitorTestSuite)
-	s.resourceBase = "../../tests/primary_monitor_test_suite"
-	suite.Run(t, s)
+func TestExclusivePrimaryPropertySubscriber(t *testing.T) {
+	s := new(ExclusivePrimaryTestSuite)
+	s.resourceBase = "../../tests/exclusive_primary_test_suite"
+	suite.Run(t, s, )
 }
 
-type PrimaryMonitorTestSuite struct {
+type ExclusivePrimaryTestSuite struct {
 	suite.Suite
 	resourceBase string
 }
 
-func (s *PrimaryMonitorTestSuite) TestInitialScan() {
-	_ = s.mustSchema("/user_schema.json")
-	resourceType := s.mustResourceType("/user_resource_type.json")
-
-	tests := []struct {
-		name        string
-		getResource func() *Resource
-		expect      func(t *testing.T, err error)
-	}{
-		{
-			name: "resource conforming to primary rule scans no error",
-			getResource: func() *Resource {
-				return NewResourceOf(resourceType, map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "imulab@foo.com",
-							"type":    "work",
-							"primary": true,
-							"display": "imulab@foo.com",
-						},
-						map[string]interface{}{
-							"value":   "imulab@bar.com",
-							"type":    "home",
-							"display": "imulab@bar.com",
-						},
-					},
-					"phoneNumbers": []interface{}{
-						map[string]interface{}{
-							"value":   "123-45678",
-							"type":    "work",
-							"primary": true,
-							"display": "123-45678",
-						},
-						map[string]interface{}{
-							"value":   "123-45679",
-							"type":    "work",
-							"display": "123-45679",
-						},
-					},
-				})
-			},
-			expect: func(t *testing.T, err error) {
-				assert.Nil(t, err)
-			},
-		},
-		{
-			name: "resource violating primary rule scans error",
-			getResource: func() *Resource {
-				return NewResourceOf(resourceType, map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "imulab@foo.com",
-							"type":    "work",
-							"primary": true,
-							"display": "imulab@foo.com",
-						},
-						map[string]interface{}{
-							"value":   "imulab@bar.com",
-							"type":    "home",
-							"primary": true,
-							"display": "imulab@bar.com",
-						},
-					},
-					"phoneNumbers": []interface{}{
-						map[string]interface{}{
-							"value":   "123-45678",
-							"type":    "work",
-							"primary": true,
-							"display": "123-45678",
-						},
-						map[string]interface{}{
-							"value":   "123-45679",
-							"type":    "work",
-							"display": "123-45679",
-						},
-					},
-				})
-			},
-			expect: func(t *testing.T, err error) {
-				assert.NotNil(t, err)
-			},
-		},
-	}
-
-	for _, test := range tests {
-		s.T().Run(test.name, func(t *testing.T) {
-			monitor := NewPrimaryMonitor(test.getResource())
-			test.expect(t, monitor.Scan())
-		})
-	}
-}
-
-func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
+func (s *ExclusivePrimaryTestSuite) TestSubscriber() {
 	_ = s.mustSchema("/user_schema.json")
 	resourceType := s.mustResourceType("/user_resource_type.json")
 
 	tests := []struct {
 		name         string
-		getResource  func() *Resource
-		modification func(t *testing.T, r *Resource)
+		getResource  func(t *testing.T) *Resource
+		modification func(t *testing.T, r *Resource) error
 		expect       func(t *testing.T, r *Resource, err error)
 	}{
 		{
-			name: "turning off primary is fine",
-			getResource: func() *Resource {
-				return NewResourceOf(resourceType, map[string]interface{}{
+			name: "turning off the primary has no effect",
+			getResource: func(t *testing.T) *Resource {
+				resource := NewResourceOf(resourceType, map[string]interface{}{
 					"emails": []interface{}{
 						map[string]interface{}{
 							"value":   "imulab@foo.com",
@@ -142,125 +50,53 @@ func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
 						},
 					},
 				})
-			},
-			modification: func(t *testing.T, r *Resource) {
-				nav := r.NewNavigator()
-				_, _ = nav.FocusName("emails")
-				{
-					_, _ = nav.FocusIndex(0)
-					{
-						_, _ = nav.FocusName("primary")
-						_ = nav.Current().Delete()
-					}
-				}
-			},
-			expect: func(t *testing.T, r *Resource, err error) {
-				assert.Nil(t, err)
-			},
-		},
-		{
-			name: "setting new primary while turning off old primary is fine",
-			getResource: func() *Resource {
-				return NewResourceOf(resourceType, map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "imulab@foo.com",
-							"type":    "work",
-							"primary": true,
-							"display": "imulab@foo.com",
-						},
-						map[string]interface{}{
-							"value":   "imulab@bar.com",
-							"type":    "home",
-							"display": "imulab@bar.com",
-						},
-					},
-				})
-			},
-			modification: func(t *testing.T, r *Resource) {
-				nav := r.NewNavigator()
-				_, _ = nav.FocusName("emails")
-				{
-					_, _ = nav.FocusIndex(0)
-					{
-						_, _ = nav.FocusName("primary")
-						_ = nav.Current().Delete()
-						nav.Retract()
-					}
-					nav.Retract()
 
-					_, _ = nav.FocusIndex(1)
-					{
-						_, _ = nav.FocusName("primary")
-						_ = nav.Current().Replace(true)
-						nav.Retract()
-					}
-					nav.Retract()
-				}
-			},
-			expect: func(t *testing.T, r *Resource, err error) {
-				assert.Nil(t, err)
-			},
-		},
-		{
-			name: "setting new primary while leaving old primary turns off the old primary",
-			getResource: func() *Resource {
-				return NewResourceOf(resourceType, map[string]interface{}{
-					"emails": []interface{}{
-						map[string]interface{}{
-							"value":   "imulab@foo.com",
-							"type":    "work",
-							"primary": true,
-							"display": "imulab@foo.com",
-						},
-						map[string]interface{}{
-							"value":   "imulab@bar.com",
-							"type":    "home",
-							"display": "imulab@bar.com",
-						},
-					},
-				})
-			},
-			modification: func(t *testing.T, r *Resource) {
-				nav := r.NewNavigator()
-				_, _ = nav.FocusName("emails")
-				{
-					_, _ = nav.FocusIndex(1)
-					{
-						_, _ = nav.FocusName("primary")
-						_ = nav.Current().Replace(true)
-						nav.Retract()
-					}
-					nav.Retract()
-				}
-			},
-			expect: func(t *testing.T, r *Resource, err error) {
-				assert.Nil(t, err)
-				nav := r.NewNavigator()
-				_, _ = nav.FocusName("emails")
-				{
-					_, _ = nav.FocusIndex(0)
-					{
-						_, _ = nav.FocusName("primary")
-						assert.Nil(t, nav.Current().Raw())
-						nav.Retract()
-					}
-					nav.Retract()
+				p, err := resource.NewNavigator().FocusName("emails")
+				require.Nil(t, err)
+				p.Subscribe(NewExclusivePrimaryPropertySubscriber())
 
-					_, _ = nav.FocusIndex(1)
+				return resource
+			},
+			modification: func(t *testing.T, r *Resource) error {
+				nav := r.NewNavigator()
+				_, err := nav.FocusName("emails")
+				require.Nil(t, err)
+				_, err = nav.FocusIndex(0)
+				require.Nil(t, err)
+				_, err = nav.FocusName("primary")
+				require.Nil(t, err)
+				return nav.Current().Delete()
+			},
+			expect: func(t *testing.T, r *Resource, err error) {
+				assert.Nil(t, err)
+				nav := r.NewNavigator()
+				{
+					_, err = nav.FocusName("emails")
+					assert.Nil(t, err)
 					{
-						_, _ = nav.FocusName("primary")
-						assert.Equal(t, true, nav.Current().Raw())
-						nav.Retract()
+						for i, f := range []func(v interface{}){
+							func(v interface{}) { assert.Nil(t, v) },
+							func(v interface{}) { assert.Nil(t, v) },
+						} {
+							_, err = nav.FocusIndex(i)
+							assert.Nil(t, err)
+							{
+								_, err = nav.FocusName("primary")
+								assert.Nil(t, err)
+								f(nav.Current().Raw())
+								nav.Retract()
+							}
+							nav.Retract()
+						}
 					}
 					nav.Retract()
 				}
 			},
 		},
 		{
-			name: "adding two new primary is invalid",
-			getResource: func() *Resource {
-				return NewResourceOf(resourceType, map[string]interface{}{
+			name: "setting the other primary turns off the original primary",
+			getResource: func(t *testing.T) *Resource {
+				resource := NewResourceOf(resourceType, map[string]interface{}{
 					"emails": []interface{}{
 						map[string]interface{}{
 							"value":   "imulab@foo.com",
@@ -275,48 +111,125 @@ func (s *PrimaryMonitorTestSuite) TestScanAfterModification() {
 						},
 					},
 				})
-			},
-			modification: func(t *testing.T, r *Resource) {
-				nav := r.NewNavigator()
-				_, _ = nav.FocusName("emails")
-				{
-					err := nav.Current().Add(map[string]interface{}{
-						"value":   "one@foo.com",
-						"type":    "work",
-						"primary": true,
-						"display": "one@foo.com",
-					})
-					require.Nil(t, err)
 
-					err = nav.Current().Add(map[string]interface{}{
-						"value":   "two@foo.com",
-						"type":    "work",
-						"primary": true,
-						"display": "one@foo.com",
-					})
-				}
+				p, err := resource.NewNavigator().FocusName("emails")
+				require.Nil(t, err)
+				p.Subscribe(NewExclusivePrimaryPropertySubscriber())
+
+				return resource
+			},
+			modification: func(t *testing.T, r *Resource) error {
+				nav := r.NewNavigator()
+				_, err := nav.FocusName("emails")
+				require.Nil(t, err)
+				_, err = nav.FocusIndex(1)
+				require.Nil(t, err)
+				_, err = nav.FocusName("primary")
+				require.Nil(t, err)
+				return nav.Current().Replace(true)
 			},
 			expect: func(t *testing.T, r *Resource, err error) {
+				assert.Nil(t, err)
 				nav := r.NewNavigator()
-				_, _ = nav.FocusName("emails")
-				assert.Equal(t, 4, nav.Current().(core.Container).CountChildren())
-				assert.NotNil(t, err)
+				{
+					_, err = nav.FocusName("emails")
+					assert.Nil(t, err)
+					{
+						for i, f := range []func(v interface{}){
+							func(v interface{}) { assert.Nil(t, v) },
+							func(v interface{}) { assert.Equal(t, true, v) },
+						} {
+							_, err = nav.FocusIndex(i)
+							assert.Nil(t, err)
+							{
+								_, err = nav.FocusName("primary")
+								assert.Nil(t, err)
+								f(nav.Current().Raw())
+								nav.Retract()
+							}
+							nav.Retract()
+						}
+					}
+					nav.Retract()
+				}
+			},
+		},
+		{
+			name: "adding another member with primary turned on sets off the original primary",
+			getResource: func(t *testing.T) *Resource {
+				resource := NewResourceOf(resourceType, map[string]interface{}{
+					"emails": []interface{}{
+						map[string]interface{}{
+							"value":   "imulab@foo.com",
+							"type":    "work",
+							"primary": true,
+							"display": "imulab@foo.com",
+						},
+						map[string]interface{}{
+							"value":   "imulab@bar.com",
+							"type":    "home",
+							"display": "imulab@bar.com",
+						},
+					},
+				})
+
+				p, err := resource.NewNavigator().FocusName("emails")
+				require.Nil(t, err)
+				p.Subscribe(NewExclusivePrimaryPropertySubscriber())
+
+				return resource
+			},
+			modification: func(t *testing.T, r *Resource) error {
+				nav := r.NewNavigator()
+				_, err := nav.FocusName("emails")
+				require.Nil(t, err)
+				return nav.Current().Add(map[string]interface{}{
+					"value":   "random@bar.com",
+					"type":    "work",
+					"primary": true,
+					"display": "random@bar.com",
+				})
+			},
+			expect: func(t *testing.T, r *Resource, err error) {
+				assert.Nil(t, err)
+
+				nav := r.NewNavigator()
+				{
+					_, err = nav.FocusName("emails")
+					assert.Nil(t, err)
+					{
+						for i, f := range []func(v interface{}){
+							func(v interface{}) { assert.Nil(t, v) },
+							func(v interface{}) { assert.Nil(t, v) },
+							func(v interface{}) { assert.Equal(t, true, v) },
+						} {
+							_, err = nav.FocusIndex(i)
+							assert.Nil(t, err)
+							{
+								_, err = nav.FocusName("primary")
+								assert.Nil(t, err)
+								f(nav.Current().Raw())
+								nav.Retract()
+							}
+							nav.Retract()
+						}
+					}
+					nav.Retract()
+				}
 			},
 		},
 	}
 
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
-			resource := test.getResource()
-			monitor := NewPrimaryMonitor(resource)
-			require.Nil(t, monitor.Scan())
-			test.modification(t, resource)
-			test.expect(t, resource, monitor.Scan())
+			r := test.getResource(t)
+			err := test.modification(t, r)
+			test.expect(t, r, err)
 		})
 	}
 }
 
-func (s *PrimaryMonitorTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *ExclusivePrimaryTestSuite) mustResourceType(filePath string) *core.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
@@ -330,7 +243,7 @@ func (s *PrimaryMonitorTestSuite) mustResourceType(filePath string) *core.Resour
 	return rt
 }
 
-func (s *PrimaryMonitorTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *ExclusivePrimaryTestSuite) mustSchema(filePath string) *core.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 

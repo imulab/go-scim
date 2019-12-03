@@ -146,31 +146,49 @@ func (p *binaryProperty) Replace(value interface{}) error {
 	} else if b64, err := base64.RawStdEncoding.DecodeString(s); err != nil {
 		return p.errIncompatibleValue(value)
 	} else {
-		copy(p.value, b64)
 		p.touched = true
-		p.computeHash()
+		if !p.compareByteArray(p.value, b64) {
+			copy(p.value, b64)
+			p.computeHash()
+			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 }
 
 func (p *binaryProperty) Delete() error {
-	p.value = nil
 	p.touched = true
-	p.computeHash()
+	if len(p.value) > 0 {
+		p.value = nil
+		p.computeHash()
+		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *binaryProperty) publish(e *core.Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(p, e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (p *binaryProperty) Touched() bool {
 	return p.touched
 }
-
-func (p *binaryProperty) deleteInternal() error {
-	p.value = nil
-	p.computeHash()
-	return nil
-}
-
-func (p *binaryProperty) Compact() {}
 
 func (p *binaryProperty) String() string {
 	return fmt.Sprintf("[%s] len=%d", p.attr.String(), len(p.value))
