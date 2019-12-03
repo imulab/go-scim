@@ -8,21 +8,23 @@ import (
 
 // Create a new unassigned integer property. The method will panic if
 // given attribute is not singular integer type.
-func NewInteger(attr *core.Attribute) core.Property {
+func NewInteger(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeInteger {
 		panic("invalid attribute for integer property")
 	}
 	return &integerProperty{
-		attr:  attr,
-		value: nil,
+		parent:      parent,
+		attr:        attr,
+		value:       nil,
+		subscribers: []core.Subscriber{},
 	}
 }
 
 // Create a new integer property with given value. The method will panic if
 // given attribute is not singular integer type. The property will be
 // marked dirty at the start.
-func NewIntegerOf(attr *core.Attribute, value interface{}) core.Property {
-	p := NewInteger(attr)
+func NewIntegerOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
+	p := NewInteger(attr, parent)
 	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
@@ -34,13 +36,19 @@ var (
 )
 
 type integerProperty struct {
-	attr    *core.Attribute
-	value   *int64
-	touched bool
+	parent      core.Container
+	attr        *core.Attribute
+	value       *int64
+	touched     bool
+	subscribers []core.Subscriber
 }
 
 func (p *integerProperty) Attribute() *core.Attribute {
 	return p.attr
+}
+
+func (p *integerProperty) Parent() core.Container {
+	return p.parent
 }
 
 func (p *integerProperty) Raw() interface{} {
@@ -169,7 +177,9 @@ func (p *integerProperty) Touched() bool {
 	return p.touched
 }
 
-func (p *integerProperty) Compact() {}
+func (p *integerProperty) Subscribe(subscriber core.Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
+}
 
 func (p *integerProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())

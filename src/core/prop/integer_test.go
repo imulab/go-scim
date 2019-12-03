@@ -29,7 +29,7 @@ func (s *IntegerPropertyTestSuite) TestRaw() {
 	"name": "age",
 	"type": "integer"
 }
-`)),
+`), nil),
 			expect: func(t *testing.T, raw interface{}) {
 				assert.Nil(t, raw)
 			},
@@ -41,7 +41,7 @@ func (s *IntegerPropertyTestSuite) TestRaw() {
 	"name": "age",
 	"type": "integer"
 }
-`), 100),
+`), nil, 100),
 			expect: func(t *testing.T, raw interface{}) {
 				assert.Equal(t, int64(100), raw)
 			},
@@ -69,7 +69,7 @@ func (s *IntegerPropertyTestSuite) TestUnassigned() {
 	"name": "age",
 	"type": "integer"
 }
-`))
+`), nil)
 			},
 			expect: func(t *testing.T, unassigned bool) {
 				assert.True(t, unassigned)
@@ -83,7 +83,7 @@ func (s *IntegerPropertyTestSuite) TestUnassigned() {
 	"name": "age",
 	"type": "integer"
 }
-`))
+`), nil)
 				s.Require().Nil(prop.Delete())
 				return prop
 			},
@@ -99,7 +99,7 @@ func (s *IntegerPropertyTestSuite) TestUnassigned() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18)
+`), nil, 18)
 				return prop
 			},
 			expect: func(t *testing.T, unassigned bool) {
@@ -130,14 +130,14 @@ func (s *IntegerPropertyTestSuite) TestMatches() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			p2: NewIntegerOf(s.mustAttribute(`
 {
 	"id": "age",
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			expect: func(t *testing.T, match bool) {
 				assert.True(t, match)
 			},
@@ -150,14 +150,14 @@ func (s *IntegerPropertyTestSuite) TestMatches() {
 	"name": "age",
 	"type": "integer"
 }
-`), 65),
+`), nil, 65),
 			p2: NewIntegerOf(s.mustAttribute(`
 {
 	"id": "score",
 	"name": "score",
 	"type": "integer"
 }
-`), 65),
+`), nil, 65),
 			expect: func(t *testing.T, match bool) {
 				assert.False(t, match)
 			},
@@ -186,7 +186,7 @@ func (s *IntegerPropertyTestSuite) TestEqualsTo() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: 18,
 			expect: func(t *testing.T, equal bool, err error) {
 				assert.Nil(t, err)
@@ -201,7 +201,7 @@ func (s *IntegerPropertyTestSuite) TestEqualsTo() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: 19,
 			expect: func(t *testing.T, equal bool, err error) {
 				assert.Nil(t, err)
@@ -216,7 +216,7 @@ func (s *IntegerPropertyTestSuite) TestEqualsTo() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: "foobar",
 			expect: func(t *testing.T, equal bool, err error) {
 				assert.NotNil(t, err)
@@ -247,7 +247,7 @@ func (s *IntegerPropertyTestSuite) TestGreaterThan() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: 17,
 			expect: func(t *testing.T, greaterThan bool, err error) {
 				assert.Nil(t, err)
@@ -262,7 +262,7 @@ func (s *IntegerPropertyTestSuite) TestGreaterThan() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: "foobar",
 			expect: func(t *testing.T, greaterThan bool, err error) {
 				assert.NotNil(t, err)
@@ -293,7 +293,7 @@ func (s *IntegerPropertyTestSuite) TestLessThan() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: 19,
 			expect: func(t *testing.T, lessThan bool, err error) {
 				assert.Nil(t, err)
@@ -308,7 +308,7 @@ func (s *IntegerPropertyTestSuite) TestLessThan() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: "foobar",
 			expect: func(t *testing.T, lessThan bool, err error) {
 				assert.NotNil(t, err)
@@ -337,7 +337,7 @@ func (s *IntegerPropertyTestSuite) TestPresent() {
 	"name": "age",
 	"type": "integer"
 }
-`)),
+`), nil),
 			expect: func(t *testing.T, present bool) {
 				assert.False(t, present)
 			},
@@ -349,7 +349,7 @@ func (s *IntegerPropertyTestSuite) TestPresent() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			expect: func(t *testing.T, present bool) {
 				assert.True(t, present)
 			},
@@ -377,7 +377,7 @@ func (s *IntegerPropertyTestSuite) TestAdd() {
 	"name": "age",
 	"type": "integer"
 }
-`)),
+`), nil),
 			v: 18,
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
@@ -391,7 +391,7 @@ func (s *IntegerPropertyTestSuite) TestAdd() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: 20,
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
@@ -405,7 +405,7 @@ func (s *IntegerPropertyTestSuite) TestAdd() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: "100",
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.NotNil(t, err)
@@ -436,7 +436,7 @@ func (s *IntegerPropertyTestSuite) TestReplace() {
 	"name": "age",
 	"type": "integer"
 }
-`)),
+`), nil),
 			v: 18,
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
@@ -450,7 +450,7 @@ func (s *IntegerPropertyTestSuite) TestReplace() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: 20,
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
@@ -464,7 +464,7 @@ func (s *IntegerPropertyTestSuite) TestReplace() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			v: "100",
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.NotNil(t, err)
@@ -494,7 +494,7 @@ func (s *IntegerPropertyTestSuite) TestDelete() {
 	"name": "age",
 	"type": "integer"
 }
-`)),
+`), nil),
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
 				assert.Nil(t, raw)
@@ -507,7 +507,7 @@ func (s *IntegerPropertyTestSuite) TestDelete() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
 				assert.Nil(t, raw)
@@ -539,14 +539,14 @@ func (s *IntegerPropertyTestSuite) TestHash() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			p2: NewIntegerOf(s.mustAttribute(`
 {
 	"id": "age",
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			expect: func(t *testing.T, h1 uint64, h2 uint64) {
 				assert.True(t, h1 == h2)
 			},
@@ -559,14 +559,14 @@ func (s *IntegerPropertyTestSuite) TestHash() {
 	"name": "age",
 	"type": "integer"
 }
-`), 18),
+`), nil, 18),
 			p2: NewIntegerOf(s.mustAttribute(`
 {
 	"id": "age",
 	"name": "age",
 	"type": "integer"
 }
-`), 20),
+`), nil, 20),
 			expect: func(t *testing.T, h1 uint64, h2 uint64) {
 				assert.False(t, h1 == h2)
 			},

@@ -11,21 +11,23 @@ const ISO8601 = "2006-01-02T15:04:05"
 
 // Create a new unassigned string property. The method will panic if
 // given attribute is not singular dateTime type.
-func NewDateTime(attr *core.Attribute) core.Property {
+func NewDateTime(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeDateTime {
 		panic("invalid attribute for dateTime property")
 	}
 	return &dateTimeProperty{
-		attr:  attr,
-		value: nil,
+		parent:      parent,
+		attr:        attr,
+		value:       nil,
+		subscribers: []core.Subscriber{},
 	}
 }
 
 // Create a new string property with given value. The method will panic if
 // given attribute is not singular dateTime type or the value is not of ISO8601 format.
 // The property will be marked dirty at the start.
-func NewDateTimeOf(attr *core.Attribute, value interface{}) core.Property {
-	p := NewDateTime(attr)
+func NewDateTimeOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
+	p := NewDateTime(attr, parent)
 	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
@@ -37,9 +39,19 @@ var (
 )
 
 type dateTimeProperty struct {
-	attr    *core.Attribute
-	value   *time.Time
-	touched bool
+	parent      core.Container
+	attr        *core.Attribute
+	value       *time.Time
+	touched     bool
+	subscribers []core.Subscriber
+}
+
+func (p *dateTimeProperty) Parent() core.Container {
+	return p.parent
+}
+
+func (p *dateTimeProperty) Subscribe(subscriber core.Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
 }
 
 func (p *dateTimeProperty) Attribute() *core.Attribute {

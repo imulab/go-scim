@@ -10,21 +10,23 @@ import (
 
 // Create a new unassigned string property. The method will panic if
 // given attribute is not singular string type.
-func NewString(attr *core.Attribute) core.Property {
+func NewString(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeString {
 		panic("invalid attribute for string property")
 	}
 	return &stringProperty{
-		attr:  attr,
-		value: nil,
+		parent:      parent,
+		attr:        attr,
+		value:       nil,
+		subscribers: []core.Subscriber{},
 	}
 }
 
 // Create a new string property with given value. The method will panic if
 // given attribute is not singular string type. The property will be
 // marked dirty at the start.
-func NewStringOf(attr *core.Attribute, value interface{}) core.Property {
-	p := NewString(attr)
+func NewStringOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
+	p := NewString(attr, parent)
 	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
@@ -36,10 +38,16 @@ var (
 )
 
 type stringProperty struct {
-	attr    *core.Attribute
-	value   *string
-	hash    uint64
-	touched bool
+	parent      core.Container
+	attr        *core.Attribute
+	value       *string
+	hash        uint64
+	touched     bool
+	subscribers []core.Subscriber
+}
+
+func (p *stringProperty) Parent() core.Container {
+	return p.parent
 }
 
 func (p *stringProperty) Attribute() *core.Attribute {
@@ -161,17 +169,43 @@ func (p *stringProperty) Replace(value interface{}) error {
 	if s, ok := value.(string); !ok {
 		return p.errIncompatibleValue(value)
 	} else {
-		p.value = &s
 		p.touched = true
-		p.computeHash()
+		if eq, _ := p.EqualsTo(s); !eq {
+			p.value = &s
+			p.computeHash()
+			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 }
 
 func (p *stringProperty) Delete() error {
 	p.touched = true
-	p.value = nil
-	p.computeHash()
+	if p.value != nil {
+		p.value = nil
+		p.computeHash()
+		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *stringProperty) publish(e *core.Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -179,7 +213,9 @@ func (p *stringProperty) Touched() bool {
 	return p.touched
 }
 
-func (p *stringProperty) Compact() {}
+func (p *stringProperty) Subscribe(subscriber core.Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
+}
 
 func (p *stringProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())

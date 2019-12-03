@@ -9,21 +9,23 @@ import (
 
 // Create a new unassigned multiValued property. The method will panic if
 // given attribute is not multiValued type.
-func NewMulti(attr *core.Attribute) core.Property {
+func NewMulti(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.MultiValued() {
 		panic("invalid attribute for multiValued property")
 	}
 	return &multiValuedProperty{
-		attr:     attr,
-		elements: make([]core.Property, 0),
+		parent:      parent,
+		attr:        attr,
+		elements:    make([]core.Property, 0),
+		subscribers: []core.Subscriber{},
 	}
 }
 
 // Create a new multiValued property with given value. The method will panic if
 // given attribute is not multiValued type. The property will be
 // marked dirty at the start.
-func NewMultiOf(attr *core.Attribute, value interface{}) core.Property {
-	p := NewMulti(attr)
+func NewMultiOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
+	p := NewMulti(attr, parent)
 	if err := p.Add(value); err != nil {
 		panic(err)
 	}
@@ -36,9 +38,35 @@ var (
 )
 
 type multiValuedProperty struct {
-	attr     *core.Attribute
-	elements []core.Property
-	touched  bool
+	parent      core.Container
+	attr        *core.Attribute
+	elements    []core.Property
+	touched     bool
+	subscribers []core.Subscriber
+}
+
+func (p *multiValuedProperty) Parent() core.Container {
+	return p.parent
+}
+
+func (p *multiValuedProperty) Subscribe(subscriber core.Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
+}
+
+func (p *multiValuedProperty) Propagate(e *core.Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *multiValuedProperty) Attribute() *core.Attribute {
@@ -302,21 +330,21 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 	attr := p.Attribute().AsSingleValued()
 	switch attr.Type() {
 	case core.TypeString:
-		prop = NewString(attr)
+		prop = NewString(attr, p)
 	case core.TypeInteger:
-		prop = NewInteger(attr)
+		prop = NewInteger(attr, p)
 	case core.TypeDecimal:
-		prop = NewDecimal(attr)
+		prop = NewDecimal(attr, p)
 	case core.TypeBoolean:
-		prop = NewBoolean(attr)
+		prop = NewBoolean(attr, p)
 	case core.TypeReference:
-		prop = NewReference(attr)
+		prop = NewReference(attr, p)
 	case core.TypeBinary:
-		prop = NewBinary(attr)
+		prop = NewBinary(attr, p)
 	case core.TypeDateTime:
-		prop = NewDateTime(attr)
+		prop = NewDateTime(attr, p)
 	case core.TypeComplex:
-		prop = NewComplex(attr)
+		prop = NewComplex(attr, p)
 	default:
 		panic("invalid type")
 	}

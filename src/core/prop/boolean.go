@@ -8,21 +8,23 @@ import (
 
 // Create a new unassigned boolean property. The method will panic if
 // given attribute is not singular boolean type.
-func NewBoolean(attr *core.Attribute) core.Property {
+func NewBoolean(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeBoolean {
 		panic("invalid attribute for boolean property")
 	}
 	return &booleanProperty{
-		attr:  attr,
-		value: nil,
+		parent:      parent,
+		attr:        attr,
+		value:       nil,
+		subscribers: []core.Subscriber{},
 	}
 }
 
 // Create a new boolean property with given value. The method will panic if
 // given attribute is not singular boolean type. The property will be
 // marked dirty at the start.
-func NewBooleanOf(attr *core.Attribute, value interface{}) core.Property {
-	p := NewBoolean(attr)
+func NewBooleanOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
+	p := NewBoolean(attr, parent)
 	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
@@ -34,9 +36,19 @@ var (
 )
 
 type booleanProperty struct {
-	attr    *core.Attribute
-	value   *bool
-	touched bool
+	parent      core.Container
+	attr        *core.Attribute
+	value       *bool
+	touched     bool
+	subscribers []core.Subscriber
+}
+
+func (p *booleanProperty) Parent() core.Container {
+	return p.parent
+}
+
+func (p *booleanProperty) Subscribe(subscriber core.Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
 }
 
 func (p *booleanProperty) Attribute() *core.Attribute {

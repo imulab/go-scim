@@ -10,57 +10,56 @@ import (
 
 // Create a new unassigned complex property. The method will panic if
 // given attribute is not singular complex type.
-func NewComplex(attr *core.Attribute) core.Property {
+func NewComplex(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeComplex {
 		panic("invalid attribute for complex property")
 	}
 
 	var (
-		subProps  = make([]core.Property, 0, attr.CountSubAttributes())
-		nameIndex = make(map[string]int)
+		p = &complexProperty{
+			attr:      attr,
+			subProps:  make([]core.Property, 0, attr.CountSubAttributes()),
+			nameIndex: make(map[string]int),
+		}
 	)
 	{
 		attr.ForEachSubAttribute(func(subAttribute *core.Attribute) {
 			if subAttribute.MultiValued() {
-				subProps = append(subProps, NewMulti(subAttribute))
+				p.subProps = append(p.subProps, NewMulti(subAttribute, p))
 			} else {
 				switch subAttribute.Type() {
 				case core.TypeString:
-					subProps = append(subProps, NewString(subAttribute))
+					p.subProps = append(p.subProps, NewString(subAttribute, p))
 				case core.TypeInteger:
-					subProps = append(subProps, NewInteger(subAttribute))
+					p.subProps = append(p.subProps, NewInteger(subAttribute, p))
 				case core.TypeDecimal:
-					subProps = append(subProps, NewDecimal(subAttribute))
+					p.subProps = append(p.subProps, NewDecimal(subAttribute, p))
 				case core.TypeBoolean:
-					subProps = append(subProps, NewBoolean(subAttribute))
+					p.subProps = append(p.subProps, NewBoolean(subAttribute, p))
 				case core.TypeDateTime:
-					subProps = append(subProps, NewDateTime(subAttribute))
+					p.subProps = append(p.subProps, NewDateTime(subAttribute, p))
 				case core.TypeReference:
-					subProps = append(subProps, NewReference(subAttribute))
+					p.subProps = append(p.subProps, NewReference(subAttribute, p))
 				case core.TypeBinary:
-					subProps = append(subProps, NewBinary(subAttribute))
+					p.subProps = append(p.subProps, NewBinary(subAttribute, p))
 				case core.TypeComplex:
-					subProps = append(subProps, NewComplex(subAttribute))
+					p.subProps = append(p.subProps, NewComplex(subAttribute, p))
 				default:
 					panic("invalid type")
 				}
 			}
-			nameIndex[strings.ToLower(subAttribute.Name())] = len(subProps) - 1
+			p.nameIndex[strings.ToLower(subAttribute.Name())] = len(p.subProps) - 1
 		})
 	}
 
-	return &complexProperty{
-		attr:      attr,
-		subProps:  subProps,
-		nameIndex: nameIndex,
-	}
+	return p
 }
 
 // Create a new complex property with given value. The method will panic if
 // given attribute is not singular complex type. The property will be
 // marked dirty at the start unless value is empty
-func NewComplexOf(attr *core.Attribute, value interface{}) core.Property {
-	p := NewComplex(attr)
+func NewComplexOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
+	p := NewComplex(attr, parent)
 	if err := p.Add(value); err != nil {
 		panic(err)
 	}
@@ -73,9 +72,35 @@ var (
 )
 
 type complexProperty struct {
-	attr      *core.Attribute
-	subProps  []core.Property // array of sub properties to maintain determinate iteration order
-	nameIndex map[string]int  // attribute's name (to lower case) to index in subProps to allow fast access
+	parent      core.Container
+	attr        *core.Attribute
+	subProps    []core.Property // array of sub properties to maintain determinate iteration order
+	nameIndex   map[string]int  // attribute's name (to lower case) to index in subProps to allow fast access
+	subscribers []core.Subscriber
+}
+
+func (p *complexProperty) Parent() core.Container {
+	return p.parent
+}
+
+func (p *complexProperty) Subscribe(subscriber core.Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
+}
+
+func (p *complexProperty) Propagate(e *core.Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *complexProperty) Attribute() *core.Attribute {

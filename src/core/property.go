@@ -5,6 +5,8 @@ package core
 type Property interface {
 	// Return a non-nil attribute about this property
 	Attribute() *Attribute
+	// Return the parent container of this property
+	Parent() Container
 	// Return the property's value in Golang's native type, or nil.
 	// Implementations shall document the type returned here.
 	Raw() interface{}
@@ -64,6 +66,8 @@ type Property interface {
 	Delete() error
 	// Returns true if any of Add/Replace/Delete method was ever called.
 	Touched() bool
+	// Add the subscriber to the properties emitted events
+	Subscribe(subscriber Subscriber)
 }
 
 // Interface for SCIM properties that serve as a container to other properties. For instance, complex and multiValued
@@ -82,4 +86,6 @@ type Container interface {
 	NewChild() int
 	// Consolidate and remove any unwanted child properties
 	Compact()
+	// Propagate the event for a child property.
+	Propagate(e *Event) error
 }

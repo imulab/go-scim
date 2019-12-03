@@ -29,7 +29,7 @@ func (s *StringPropertyTestSuite) TestRaw() {
 	"name": "userName",
 	"type": "string"
 }
-`)),
+`), nil),
 			expect: func(t *testing.T, value interface{}) {
 				assert.Nil(t, value)
 			},
@@ -41,7 +41,7 @@ func (s *StringPropertyTestSuite) TestRaw() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			expect: func(t *testing.T, value interface{}) {
 				assert.Equal(t, "imulab", value)
 			},
@@ -69,7 +69,7 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 	"name": "userName",
 	"type": "string"
 }
-`))
+`), nil)
 			},
 			expect: func(t *testing.T, unassigned bool) {
 				assert.True(t, unassigned)
@@ -83,7 +83,7 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 	"name": "userName",
 	"type": "string"
 }
-`))
+`), nil)
 				s.Require().Nil(prop.Delete())
 				return prop
 			},
@@ -99,7 +99,7 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab")
+`), nil, "imulab")
 				return prop
 			},
 			expect: func(t *testing.T, unassigned bool) {
@@ -130,14 +130,14 @@ func (s *StringPropertyTestSuite) TestMatches() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			p2: NewStringOf(s.mustAttribute(`
 {
 	"id": "userName",
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			expect: func(t *testing.T, match bool) {
 				assert.True(t, match)
 			},
@@ -150,14 +150,14 @@ func (s *StringPropertyTestSuite) TestMatches() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			p2: NewStringOf(s.mustAttribute(`
 {
 	"id": "userName",
 	"name": "userName",
 	"type": "string"
 }
-`), "IMULAB"),
+`), nil, "IMULAB"),
 			expect: func(t *testing.T, match bool) {
 				assert.True(t, match)
 			},
@@ -170,14 +170,14 @@ func (s *StringPropertyTestSuite) TestMatches() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			p2: NewStringOf(s.mustAttribute(`
 {
 	"id": "title",
 	"name": "title",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			expect: func(t *testing.T, match bool) {
 				assert.False(t, match)
 			},
@@ -206,7 +206,7 @@ func (s *StringPropertyTestSuite) TestEqualsTo() {
 	"type": "string",
 	"caseExact": true
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "imulab",
 			expect: func(t *testing.T, equal bool, err error) {
 				assert.Nil(t, err)
@@ -221,7 +221,7 @@ func (s *StringPropertyTestSuite) TestEqualsTo() {
 	"type": "string",
 	"caseExact": false
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "IMULAB",
 			expect: func(t *testing.T, equal bool, err error) {
 				assert.Nil(t, err)
@@ -236,7 +236,7 @@ func (s *StringPropertyTestSuite) TestEqualsTo() {
 	"type": "string",
 	"caseExact": true
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "IMULAB",
 			expect: func(t *testing.T, equal bool, err error) {
 				assert.Nil(t, err)
@@ -250,7 +250,7 @@ func (s *StringPropertyTestSuite) TestEqualsTo() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "foobar",
 			expect: func(t *testing.T, equal bool, err error) {
 				assert.Nil(t, err)
@@ -264,7 +264,7 @@ func (s *StringPropertyTestSuite) TestEqualsTo() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: 100,
 			expect: func(t *testing.T, equal bool, err error) {
 				assert.NotNil(t, err)
@@ -295,7 +295,7 @@ func (s *StringPropertyTestSuite) TestStartsWith() {
 	"type": "string",
 	"caseExact": true
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "i",
 			expect: func(t *testing.T, startsWith bool, err error) {
 				assert.Nil(t, err)
@@ -310,7 +310,7 @@ func (s *StringPropertyTestSuite) TestStartsWith() {
 	"type": "string",
 	"caseExact": false
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "I",
 			expect: func(t *testing.T, startsWith bool, err error) {
 				assert.Nil(t, err)
@@ -325,7 +325,7 @@ func (s *StringPropertyTestSuite) TestStartsWith() {
 	"type": "string",
 	"caseExact": true
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "I",
 			expect: func(t *testing.T, startsWith bool, err error) {
 				assert.Nil(t, err)
@@ -339,7 +339,7 @@ func (s *StringPropertyTestSuite) TestStartsWith() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "a",
 			expect: func(t *testing.T, startsWith bool, err error) {
 				assert.Nil(t, err)
@@ -371,7 +371,7 @@ func (s *StringPropertyTestSuite) TestEndsWith() {
 	"type": "string",
 	"caseExact": true
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "b",
 			expect: func(t *testing.T, endsWith bool, err error) {
 				assert.Nil(t, err)
@@ -386,7 +386,7 @@ func (s *StringPropertyTestSuite) TestEndsWith() {
 	"type": "string",
 	"caseExact": false
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "B",
 			expect: func(t *testing.T, endsWith bool, err error) {
 				assert.Nil(t, err)
@@ -401,7 +401,7 @@ func (s *StringPropertyTestSuite) TestEndsWith() {
 	"type": "string",
 	"caseExact": true
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "B",
 			expect: func(t *testing.T, endsWith bool, err error) {
 				assert.Nil(t, err)
@@ -415,7 +415,7 @@ func (s *StringPropertyTestSuite) TestEndsWith() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "a",
 			expect: func(t *testing.T, endsWith bool, err error) {
 				assert.Nil(t, err)
@@ -447,7 +447,7 @@ func (s *StringPropertyTestSuite) TestContains() {
 	"type": "string",
 	"caseExact": true
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "mula",
 			expect: func(t *testing.T, contains bool, err error) {
 				assert.Nil(t, err)
@@ -462,7 +462,7 @@ func (s *StringPropertyTestSuite) TestContains() {
 	"type": "string",
 	"caseExact": false
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "MULA",
 			expect: func(t *testing.T, contains bool, err error) {
 				assert.Nil(t, err)
@@ -477,7 +477,7 @@ func (s *StringPropertyTestSuite) TestContains() {
 	"type": "string",
 	"caseExact": true
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "MULA",
 			expect: func(t *testing.T, contains bool, err error) {
 				assert.Nil(t, err)
@@ -491,7 +491,7 @@ func (s *StringPropertyTestSuite) TestContains() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil, "imulab"),
 			v: "foobar",
 			expect: func(t *testing.T, contains bool, err error) {
 				assert.Nil(t, err)
@@ -523,7 +523,7 @@ func (s *StringPropertyTestSuite) TestGreaterThan() {
 	"type": "string",
 	"caseExact": true
 }
-`), "b"),
+`), nil, "b"),
 			v: "a",
 			expect: func(t *testing.T, greaterThan bool, err error) {
 				assert.Nil(t, err)
@@ -538,7 +538,7 @@ func (s *StringPropertyTestSuite) TestGreaterThan() {
 	"type": "string",
 	"caseExact": false
 }
-`), "b"),
+`), nil, "b"),
 			v: "A",
 			expect: func(t *testing.T, greaterThan bool, err error) {
 				assert.Nil(t, err)
@@ -553,7 +553,7 @@ func (s *StringPropertyTestSuite) TestGreaterThan() {
 	"type": "string",
 	"caseExact": true
 }
-`), "A"),
+`), nil, "A"),
 			v: "a",
 			expect: func(t *testing.T, greaterThan bool, err error) {
 				assert.Nil(t, err)
@@ -567,7 +567,7 @@ func (s *StringPropertyTestSuite) TestGreaterThan() {
 	"name": "userName",
 	"type": "string"
 }
-`), "a"),
+`), nil, "a"),
 			v: 100,
 			expect: func(t *testing.T, greaterThan bool, err error) {
 				assert.NotNil(t, err)
@@ -598,7 +598,7 @@ func (s *StringPropertyTestSuite) TestLessThan() {
 	"type": "string",
 	"caseExact": true
 }
-`), "a"),
+`), nil, "a"),
 			v: "b",
 			expect: func(t *testing.T, lessThan bool, err error) {
 				assert.Nil(t, err)
@@ -613,7 +613,7 @@ func (s *StringPropertyTestSuite) TestLessThan() {
 	"type": "string",
 	"caseExact": false
 }
-`), "A"),
+`), nil, "A"),
 			v: "b",
 			expect: func(t *testing.T, lessThan bool, err error) {
 				assert.Nil(t, err)
@@ -628,7 +628,7 @@ func (s *StringPropertyTestSuite) TestLessThan() {
 	"type": "string",
 	"caseExact": true
 }
-`), "a"),
+`), nil, "a"),
 			v: "A",
 			expect: func(t *testing.T, lessThan bool, err error) {
 				assert.Nil(t, err)
@@ -642,7 +642,7 @@ func (s *StringPropertyTestSuite) TestLessThan() {
 	"name": "userName",
 	"type": "string"
 }
-`), "a"),
+`), nil, "a"),
 			v: 100,
 			expect: func(t *testing.T, lessThan bool, err error) {
 				assert.NotNil(t, err)
@@ -671,7 +671,7 @@ func (s *StringPropertyTestSuite) TestPresent() {
 	"name": "userName",
 	"type": "string"
 }
-`)),
+`), nil),
 			expect: func(t *testing.T, present bool) {
 				assert.False(t, present)
 			},
@@ -683,7 +683,7 @@ func (s *StringPropertyTestSuite) TestPresent() {
 	"name": "userName",
 	"type": "string"
 }
-`), "imulab"),
+`), nil,"imulab"),
 			expect: func(t *testing.T, present bool) {
 				assert.True(t, present)
 			},
@@ -711,7 +711,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 	"name": "userName",
 	"type": "string"
 }
-`)),
+`), nil),
 			v: "imulab",
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
@@ -725,7 +725,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 	"name": "userName",
 	"type": "string"
 }
-`), "foobar"),
+`), nil, "foobar"),
 			v: "imulab",
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
@@ -739,7 +739,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 	"name": "userName",
 	"type": "string"
 }
-`), "foobar"),
+`), nil, "foobar"),
 			v: 100,
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.NotNil(t, err)
@@ -770,7 +770,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 	"name": "userName",
 	"type": "string"
 }
-`)),
+`), nil),
 			v: "imulab",
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
@@ -784,7 +784,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 	"name": "userName",
 	"type": "string"
 }
-`), "foobar"),
+`), nil, "foobar"),
 			v: "imulab",
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
@@ -798,7 +798,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 	"name": "userName",
 	"type": "string"
 }
-`), "foobar"),
+`), nil, "foobar"),
 			v: 100,
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.NotNil(t, err)
@@ -828,7 +828,7 @@ func (s *StringPropertyTestSuite) TestDelete() {
 	"name": "userName",
 	"type": "string"
 }
-`)),
+`), nil),
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
 				assert.Nil(t, raw)
@@ -841,7 +841,7 @@ func (s *StringPropertyTestSuite) TestDelete() {
 	"name": "userName",
 	"type": "string"
 }
-`), "foobar"),
+`), nil, "foobar"),
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
 				assert.Nil(t, raw)
@@ -873,14 +873,14 @@ func (s *StringPropertyTestSuite) TestHash() {
 	"type": "string",
 	"caseExact": true
 }
-`), "foobar"),
+`), nil, "foobar"),
 			p2: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
 	"type": "string",
 	"caseExact": true
 }
-`), "foobar"),
+`), nil, "foobar"),
 			expect: func(t *testing.T, h1 uint64, h2 uint64) {
 				assert.True(t, h1 == h2)
 			},
@@ -892,13 +892,13 @@ func (s *StringPropertyTestSuite) TestHash() {
 	"name": "userName",
 	"type": "string"
 }
-`), "foobar"),
+`), nil, "foobar"),
 			p2: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
 	"type": "string"
 }
-`), "foobar"),
+`), nil, "foobar"),
 			expect: func(t *testing.T, h1 uint64, h2 uint64) {
 				assert.True(t, h1 == h2)
 			},
@@ -910,13 +910,13 @@ func (s *StringPropertyTestSuite) TestHash() {
 	"name": "userName",
 	"type": "string"
 }
-`), "foobar"),
+`), nil, "foobar"),
 			p2: NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
 	"type": "string"
 }
-`), "barfoo"),
+`), nil, "barfoo"),
 			expect: func(t *testing.T, h1 uint64, h2 uint64) {
 				assert.False(t, h1 == h2)
 			},

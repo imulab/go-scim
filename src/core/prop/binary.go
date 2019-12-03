@@ -10,21 +10,23 @@ import (
 
 // Create a new unassigned binary property. The method will panic if
 // given attribute is not singular binary type.
-func NewBinary(attr *core.Attribute) core.Property {
+func NewBinary(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeBinary {
 		panic("invalid attribute for binary property")
 	}
 	return &binaryProperty{
-		attr:  attr,
-		value: nil,
+		parent:      parent,
+		attr:        attr,
+		value:       nil,
+		subscribers: []core.Subscriber{},
 	}
 }
 
 // Create a new binary property with given base64 encoded value. The method will panic if
 // given attribute is not singular binary type. The property will be
 // marked dirty at the start.
-func NewBinaryOf(attr *core.Attribute, value interface{}) core.Property {
-	p := NewBinary(attr)
+func NewBinaryOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
+	p := NewBinary(attr, parent)
 	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
@@ -36,10 +38,20 @@ var (
 )
 
 type binaryProperty struct {
-	attr    *core.Attribute
-	value   []byte
-	hash    uint64
-	touched bool
+	parent      core.Container
+	attr        *core.Attribute
+	value       []byte
+	hash        uint64
+	touched     bool
+	subscribers []core.Subscriber
+}
+
+func (p *binaryProperty) Parent() core.Container {
+	return p.parent
+}
+
+func (p *binaryProperty) Subscribe(subscriber core.Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
 }
 
 func (p *binaryProperty) Attribute() *core.Attribute {

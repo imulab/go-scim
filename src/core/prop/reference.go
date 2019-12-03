@@ -10,21 +10,23 @@ import (
 
 // Create a new unassigned reference property. The method will panic if
 // given attribute is not singular reference type.
-func NewReference(attr *core.Attribute) core.Property {
+func NewReference(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeReference {
 		panic("invalid attribute for reference property")
 	}
 	return &referenceProperty{
-		attr:  attr,
-		value: nil,
+		parent:      parent,
+		attr:        attr,
+		value:       nil,
+		subscribers: []core.Subscriber{},
 	}
 }
 
 // Create a new reference property with given value. The method will panic if
 // given attribute is not singular reference type. The property will be
 // marked dirty at the start.
-func NewReferenceOf(attr *core.Attribute, value interface{}) core.Property {
-	p := NewReference(attr)
+func NewReferenceOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
+	p := NewReference(attr, parent)
 	if err := p.Replace(value); err != nil {
 		panic(err)
 	}
@@ -36,10 +38,20 @@ var (
 )
 
 type referenceProperty struct {
-	attr    *core.Attribute
-	value   *string
-	hash    uint64
-	touched bool
+	parent      core.Container
+	attr        *core.Attribute
+	value       *string
+	hash        uint64
+	touched     bool
+	subscribers []core.Subscriber
+}
+
+func (p *referenceProperty) Parent() core.Container {
+	return p.parent
+}
+
+func (p *referenceProperty) Subscribe(subscriber core.Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
 }
 
 func (p *referenceProperty) Attribute() *core.Attribute {
