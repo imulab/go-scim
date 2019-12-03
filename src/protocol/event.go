@@ -12,4 +12,6 @@ type EventPublisher interface {
 	ResourceCreated(ctx context.Context, created *prop.Resource)
 	// Notify that an old resource has been updated
 	ResourceUpdated(ctx context.Context, updated *prop.Resource)
+	// Notify that a resource has been deleted
+	ResourceDeleted(ctx context.Context, deleted *prop.Resource)
 }

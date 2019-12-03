@@ -62,3 +62,8 @@ func (m *memoryProvider) Replace(ctx context.Context, resource *prop.Resource) e
 	m.db[id] = resource
 	return nil
 }
+
+func (m *memoryProvider) Delete(ctx context.Context, id string) error {
+	delete(m.db, id)
+	return nil
+}

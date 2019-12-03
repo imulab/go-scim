@@ -14,4 +14,6 @@ type PersistenceProvider interface {
 	Get(ctx context.Context, id string) (*prop.Resource, error)
 	// Overwrite the existing resource with same ID with the new resource
 	Replace(ctx context.Context, resource *prop.Resource) error
+	// Delete a resource by its id
+	Delete(ctx context.Context, id string) error
 }
