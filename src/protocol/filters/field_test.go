@@ -108,9 +108,7 @@ func (s *ResourceFilterTestSuite) TestFilterRef() {
 
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
-			f := NewResourceFieldFilterOf(resourceType, []protocol.FieldFilter{
-				&testFieldFilter{t: t, refAssert: test.expect},
-			}, 0)
+			f := NewResourceFieldFilterOf(&testFieldFilter{t: t, refAssert: test.expect})
 			err := f.FilterRef(protocol.NewFilterContext(context.Background()), test.getResource(), test.getRef())
 			assert.Nil(s.T(), err)
 		})
@@ -163,10 +161,6 @@ func (s *ResourceFilterTestSuite) mustSchema(filePath string) *core.Schema {
 
 func (tf *testFieldFilter) Supports(attribute *core.Attribute) bool {
 	return true
-}
-
-func (tf *testFieldFilter) Order() int {
-	return 0
 }
 
 func (tf *testFieldFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) error {

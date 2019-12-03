@@ -8,27 +8,19 @@ import (
 )
 
 // Create a resource filter that deletes the values in readOnly properties from a resource.
-func NewClearReadOnlyResourceFilter(resourceType *core.ResourceType, order int) protocol.ResourceFilter {
-	return NewResourceFieldFilterOf(resourceType, []protocol.FieldFilter{
-		NewClearReadOnlyFieldFilter(0),
-	}, order)
+func NewClearReadOnlyResourceFilter() protocol.ResourceFilter {
+	return NewResourceFieldFilterOf(NewClearReadOnlyFieldFilter())
 }
 
-func NewClearReadOnlyFieldFilter(order int) protocol.FieldFilter {
-	return &readOnlyClearFieldFilter{order: order}
+func NewClearReadOnlyFieldFilter() protocol.FieldFilter {
+	return &readOnlyClearFieldFilter{}
 }
 
-type readOnlyClearFieldFilter struct {
-	order int
-}
+type readOnlyClearFieldFilter struct {}
 
 func (f *readOnlyClearFieldFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Mutability() == core.MutabilityReadOnly &&
 		!strings.HasSuffix(attribute.ID(), "$elem")
-}
-
-func (f *readOnlyClearFieldFilter) Order() int {
-	return f.order
 }
 
 func (f *readOnlyClearFieldFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) error {

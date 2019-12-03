@@ -7,17 +7,11 @@ import (
 )
 
 // Create a new resource filter that generates a new uuid on the id field.
-func NewIDResourceFilter(order int) protocol.ResourceFilter {
-	return &idFilter{order: order}
+func NewIDResourceFilter() protocol.ResourceFilter {
+	return &idFilter{}
 }
 
-type idFilter struct {
-	order int
-}
-
-func (f *idFilter) Order() int {
-	return f.order
-}
+type idFilter struct {}
 
 func (f *idFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
 	idProp, err := resource.NewNavigator().FocusName("id")

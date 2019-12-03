@@ -9,10 +9,6 @@ import (
 type (
 	// ResourceFilter is responsible of carrying out operations on a resource like validation, modification, etc.
 	ResourceFilter interface {
-		// Return an integer to determine this filter's place among other filter.
-		// Multiple filters will be sorted based on the order value in ascending
-		// order and executed sequentially.
-		Order() int
 		// Filter the resource and return any error. If the error returned is not nil,
 		// the caller should immediately abort the operation and avoid executing the
 		// following filters.
@@ -31,10 +27,6 @@ type (
 		// will only be called when this method returns true. This method is expected to be
 		// called at setup time.
 		Supports(attribute *core.Attribute) bool
-		// Returns an integer to determine this filter's place among others. Multiple filters
-		// on the same attribute will be sorted based on the order value in ascending order.
-		// This method is expected to be called at setup time.
-		Order() int
 		// Filter the given property with reference to the resource that contains this property.
 		// Any error returned shall cause the caller to abort subsequent operations.
 		Filter(ctx *FilterContext, resource *prop.Resource, property core.Property) error

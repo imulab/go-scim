@@ -9,32 +9,24 @@ import (
 	"github.com/imulab/go-scim/src/protocol"
 )
 
-func NewValidationResourceFilter(resourceType *core.ResourceType, persistence protocol.PersistenceProvider, order int) protocol.ResourceFilter {
-	return NewResourceFieldFilterOf(resourceType, []protocol.FieldFilter{
-		NewValidationFieldFilter(persistence, 0),
-	}, order)
+func NewValidationResourceFilter(persistence protocol.PersistenceProvider) protocol.ResourceFilter {
+	return NewResourceFieldFilterOf(NewValidationFieldFilter(persistence))
 }
 
 // Create a validation filter that validates the property value according to the defined attributes. This filter
 // currently validates required, canonicalValues, mutability and uniqueness.
-func NewValidationFieldFilter(persistence protocol.PersistenceProvider, order int) protocol.FieldFilter {
+func NewValidationFieldFilter(persistence protocol.PersistenceProvider) protocol.FieldFilter {
 	return &validationFilter{
-		order:       order,
 		persistence: persistence,
 	}
 }
 
 type validationFilter struct {
-	order       int
 	persistence protocol.PersistenceProvider
 }
 
 func (f *validationFilter) Supports(attribute *core.Attribute) bool {
 	return true
-}
-
-func (f *validationFilter) Order() int {
-	return f.order
 }
 
 func (f *validationFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) error {
@@ -145,7 +137,7 @@ func (f *validationFilter) validateUniqueness(ctx context.Context, resource *pro
 	if err != nil {
 		return err
 	} else if n > 0 {
-		return errors.Uniqueness("'%s' violated uniqueness constraint")
+		return errors.Uniqueness("'%s' violated uniqueness constraint", attr.Path())
 	}
 
 	return nil

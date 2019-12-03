@@ -23,17 +23,11 @@ const (
 
 // Create a new meta resource filter. The filter assigns metadata to the meta field on Filter. On FilterWithRef, the filter
 // updates lastModified time and version only if hash has changed since baseline (key BaselineHashKey in context).
-func NewMetaResourceFilter(order int) protocol.ResourceFilter {
-	return &metaResourceFilter{order: order}
+func NewMetaResourceFilter() protocol.ResourceFilter {
+	return &metaResourceFilter{}
 }
 
-type metaResourceFilter struct {
-	order int
-}
-
-func (f *metaResourceFilter) Order() int {
-	return f.order
-}
+type metaResourceFilter struct {}
 
 func (f *metaResourceFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
 	meta, err := resource.NewNavigator().FocusName(fieldMeta)

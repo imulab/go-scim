@@ -6,42 +6,26 @@ import (
 	"github.com/imulab/go-scim/src/protocol"
 )
 
-func NewResourceFieldFilterOf(resourceType *core.ResourceType, filters []protocol.FieldFilter, order int) protocol.ResourceFilter {
-	f := &resourceFieldFilter{
-		filterIndex: make(map[string][]protocol.FieldFilter),
-		order:       order,
+func NewResourceFieldFilterOf(filters ...protocol.FieldFilter) protocol.ResourceFilter {
+	return &resourceFieldFilter{
+		filters: filters,
 	}
-
-	core.SchemaHub.CoreSchema().ForEachAttribute(func(attr *core.Attribute) {
-		f.init(attr, filters, true)
-	})
-	resourceType.Schema().ForEachAttribute(func(attr *core.Attribute) {
-		f.init(attr, filters, true)
-	})
-	resourceType.ForEachExtension(func(extension *core.Schema, _ bool) {
-		extension.ForEachAttribute(func(attr *core.Attribute) {
-			f.init(attr, filters, true)
-		})
-	})
-
-	return f
 }
 
 type (
 	resourceFieldFilter struct {
-		filterIndex map[string][]protocol.FieldFilter
-		order       int
+		filters []protocol.FieldFilter
 	}
 	// Visitor implementation to traverse the resource structure. If reference is present,
 	// best effort to keep the reference property in sync with the traversing property so
 	// they can be compared.
 	resourceFieldVisitor struct {
-		ctx         *protocol.FilterContext
-		resource    *prop.Resource
-		ref         *prop.Resource
-		refNav      *prop.Navigator
-		filterIndex map[string][]protocol.FieldFilter
-		stack       []*frame
+		ctx      *protocol.FilterContext
+		resource *prop.Resource
+		ref      *prop.Resource
+		refNav   *prop.Navigator
+		filters  []protocol.FieldFilter
+		stack    []*frame
 	}
 	// Stack frame to keep track during the resource traversal.
 	frame struct {
@@ -54,44 +38,12 @@ type (
 	}
 )
 
-func (f *resourceFieldFilter) init(attribute *core.Attribute, filters []protocol.FieldFilter, recurse bool) {
-	var candidates []protocol.FieldFilter
-	{
-		for _, filter := range filters {
-			if filter.Supports(attribute) {
-				candidates = append(candidates, filter)
-				for i := len(candidates) - 1; i > 0; i-- {
-					if candidates[i].Order() < candidates[i-1].Order() {
-						candidates[i-1], candidates[i] = candidates[i], candidates[i-1]
-					}
-				}
-			}
-			if attribute.MultiValued() {
-				f.init(attribute.AsSingleValued(), filters, false)
-			}
-		}
-	}
-	if len(candidates) > 0 {
-		f.filterIndex[attribute.ID()] = candidates
-	}
-
-	if recurse {
-		attribute.ForEachSubAttribute(func(subAttribute *core.Attribute) {
-			f.init(subAttribute, filters, recurse)
-		})
-	}
-}
-
-func (f *resourceFieldFilter) Order() int {
-	return f.order
-}
-
 func (f *resourceFieldFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
 	v := &resourceFieldVisitor{
-		ctx:         ctx,
-		resource:    resource,
-		filterIndex: f.filterIndex,
-		stack:       make([]*frame, 0),
+		ctx:      ctx,
+		resource: resource,
+		filters:  f.filters,
+		stack:    make([]*frame, 0),
 	}
 	return resource.Visit(v)
 }
@@ -102,12 +54,12 @@ func (f *resourceFieldFilter) FilterRef(ctx *protocol.FilterContext, resource *p
 	}
 
 	v := &resourceFieldVisitor{
-		ctx:         ctx,
-		resource:    resource,
-		ref:         ref,
-		refNav:      ref.NewNavigator(),
-		filterIndex: f.filterIndex,
-		stack:       make([]*frame, 0),
+		ctx:      ctx,
+		resource: resource,
+		ref:      ref,
+		refNav:   ref.NewNavigator(),
+		filters:  f.filters,
+		stack:    make([]*frame, 0),
 	}
 	return resource.Visit(v)
 }
@@ -144,34 +96,24 @@ func (v *resourceFieldVisitor) Visit(property core.Property) error {
 }
 
 func (v *resourceFieldVisitor) visitWithRef(property core.Property, refProp core.Property) error {
-	filters, ok := v.filterIndex[property.Attribute().ID()]
-	if !ok {
-		return nil
-	}
-
-	for _, filter := range filters {
-		err := filter.FieldRef(v.ctx, v.resource, property, v.ref, refProp)
-		if err != nil {
-			return err
+	for _, filter := range v.filters {
+		if filter.Supports(property.Attribute()) {
+			if err := filter.FieldRef(v.ctx, v.resource, property, v.ref, refProp); err != nil {
+				return err
+			}
 		}
 	}
-
 	return nil
 }
 
 func (v *resourceFieldVisitor) visit(property core.Property) error {
-	filters, ok := v.filterIndex[property.Attribute().ID()]
-	if !ok {
-		return nil
-	}
-
-	for _, filter := range filters {
-		err := filter.Filter(v.ctx, v.resource, property)
-		if err != nil {
-			return err
+	for _, filter := range v.filters {
+		if filter.Supports(property.Attribute()) {
+			if err := filter.Filter(v.ctx, v.resource, property); err != nil {
+				return err
+			}
 		}
 	}
-
 	return nil
 }
 

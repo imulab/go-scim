@@ -44,11 +44,11 @@ func (s *CreateServiceTestSuite) TestCreate() {
 				return &CreateService{
 					Logger: protocol.NoOpLogger(),
 					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(resourceType, 0),
-						filters.NewIDResourceFilter(100),
-						filters.NewPasswordResourceFilter(10, 200),
-						filters.NewMetaResourceFilter(300),
-						filters.NewValidationResourceFilter(resourceType, memoryPersistence, 400),
+						filters.NewClearReadOnlyResourceFilter(),
+						filters.NewIDResourceFilter(),
+						filters.NewPasswordResourceFilter(10),
+						filters.NewMetaResourceFilter(),
+						filters.NewValidationResourceFilter(memoryPersistence),
 					},
 					Persistence: memoryPersistence,
 				}
@@ -73,11 +73,11 @@ func (s *CreateServiceTestSuite) TestCreate() {
 				return &CreateService{
 					Logger: protocol.NoOpLogger(),
 					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(resourceType, 0),
-						filters.NewIDResourceFilter(100),
-						filters.NewPasswordResourceFilter(10, 200),
-						filters.NewMetaResourceFilter(300),
-						filters.NewValidationResourceFilter(resourceType, memoryPersistence, 400),
+						filters.NewClearReadOnlyResourceFilter(),
+						filters.NewIDResourceFilter(),
+						filters.NewPasswordResourceFilter(10),
+						filters.NewMetaResourceFilter(),
+						filters.NewValidationResourceFilter(memoryPersistence),
 					},
 					Persistence: memoryPersistence,
 				}
@@ -100,11 +100,11 @@ func (s *CreateServiceTestSuite) TestCreate() {
 				return &CreateService{
 					Logger: protocol.NoOpLogger(),
 					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(resourceType, 0),
-						filters.NewIDResourceFilter(100),
-						filters.NewPasswordResourceFilter(10, 200),
-						filters.NewMetaResourceFilter(300),
-						filters.NewValidationResourceFilter(resourceType, memoryPersistence, 400),
+						filters.NewClearReadOnlyResourceFilter(),
+						filters.NewIDResourceFilter(),
+						filters.NewPasswordResourceFilter(10),
+						filters.NewMetaResourceFilter(),
+						filters.NewValidationResourceFilter(memoryPersistence),
 					},
 					Persistence: memoryPersistence,
 				}

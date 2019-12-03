@@ -9,20 +9,14 @@ import (
 
 // Return a field filter that BCrypt hashes the password field. It only performs the hashing when the value is not yet
 // bcrypted.
-func NewPasswordResourceFilter(bcryptCost int, order int) protocol.ResourceFilter {
+func NewPasswordResourceFilter(bcryptCost int) protocol.ResourceFilter {
 	return &passwordFilter{
 		cost:  bcryptCost,
-		order: order,
 	}
 }
 
 type passwordFilter struct {
-	order int
 	cost  int
-}
-
-func (f *passwordFilter) Order() int {
-	return f.order
 }
 
 func (f *passwordFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
