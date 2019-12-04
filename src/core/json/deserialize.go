@@ -28,6 +28,49 @@ func Deserialize(json []byte, resource *prop.Resource) error {
 	return state.parseComplexProperty(false)
 }
 
+// Entry point to deserialize a piece of JSON data into the given property. The JSON data is expected to be the content
+// of a json.RawMessage parsed from the built-in encoding/json mechanism, hence, it should not contain any preceding
+// spaces, and should a fragment of valid JSON.
+// The allowElementForArray option is provided to allow JSON array element values be provided for a multiValued property
+// so that it will be de-serialized as its element. The result will be a multiValued property containing a single element.
+func DeserializeProperty(json []byte, property core.Property, allowElementForArray bool) error {
+	state := &deserializeState{
+		data:      json,
+		off:       0,
+		opCode:    scanContinue,
+		scan:      scanner{},
+		navigator: prop.NewNavigator(property),
+	}
+	state.scan.reset()
+
+	// Since this function is intended for bytes from json.RawMessage, it is not possible for it to precede with
+	// spaces. Hence, simply use scanNext to read in the first byte, then use stateBeginValue to forcibly set the
+	// state and op code. This is necessary since we are dealing with potentially just a fragment of valid JSON.
+	state.scanNext()
+	state.opCode = stateBeginValue(&state.scan, state.data[0])
+
+	if property.Attribute().SingleValued() {
+		return state.parseSingleValuedProperty()
+	} else {
+		// Check the value is indeed a JSON array
+		if state.data[0] == '[' {
+			return state.parseMultiValuedProperty()
+		}
+
+		// We may choose to allow callers to provide value that corresponds to multiValue element
+		// to be provided as a value for the multiValue property itself. If this feature is enabled,
+		// we will parse the value as the multiValued element and add it to the multiValued container.
+		if !allowElementForArray {
+			return state.errInvalidSyntax("expects JSON array")
+		}
+		i := state.navigator.Current().(core.Container).NewChild()
+		if _, err := state.navigator.FocusIndex(i); err != nil {
+			return err
+		}
+		return state.parseSingleValuedProperty()
+	}
+}
+
 // State of the deserialization process. In essence, a scanner is used to infer contextual information about what the
 // current byte means. It is used in conjunction with off (offset) and opCode. In addition, a navigator is used to record
 // the tracks of traversal inside the complete structure of the resource. The location of properties can be in sync with

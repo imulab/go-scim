@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -20,6 +21,303 @@ func TestDeserialize(t *testing.T) {
 type JSONDeserializeTestSuite struct {
 	suite.Suite
 	resourceBase string
+}
+
+func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
+	tests := []struct {
+		name        string
+		getProperty func(t *testing.T) core.Property
+		json        string
+		expect      func(t *testing.T, property core.Property, err error)
+	}{
+		{
+			name: "deserialize string property",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewString(s.mustAttribute(`
+{
+	"id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
+	"name": "userName",
+	"type": "string"
+}
+`), nil)
+			},
+			json: `"imulab"`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "imulab", property.Raw())
+			},
+		},
+		{
+			name: "deserialize integer property",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewInteger(s.mustAttribute(`
+{
+	"name": "age",
+	"type": "integer"
+}
+`), nil)
+			},
+			json: `18`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, int64(18), property.Raw())
+			},
+		},
+		{
+			name: "deserialize decimal property",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewDecimal(s.mustAttribute(`
+{
+	"name": "score",
+	"type": "decimal"
+}
+`), nil)
+			},
+			json: `123.123`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, 123.123, property.Raw())
+			},
+		},
+		{
+			name: "deserialize boolean property",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewBoolean(s.mustAttribute(`
+{
+	"name": "active",
+	"type": "boolean"
+}
+`), nil)
+			},
+			json: `true`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, true, property.Raw())
+			},
+		},
+		{
+			name: "deserialize dateTime property",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewDateTime(s.mustAttribute(`
+{
+	"name": "lastModified",
+	"type": "dateTime"
+}
+`), nil)
+			},
+			json: `"2019-12-04T13:10:00"`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "2019-12-04T13:10:00", property.Raw())
+			},
+		},
+		{
+			name: "deserialize reference property",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewReference(s.mustAttribute(`
+{
+	"name": "link",
+	"type": "reference"
+}
+`), nil)
+			},
+			json: `"http://imulab.io"`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "http://imulab.io", property.Raw())
+			},
+		},
+		{
+			name: "deserialize binary property",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewBinary(s.mustAttribute(`
+{
+	"name": "certificate",
+	"type": "binary"
+}
+`), nil)
+			},
+			json: `"aGVsbG8K"`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "aGVsbG8K", property.Raw())
+			},
+		},
+		{
+			name: "deserialize complex property",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewComplex(s.mustAttribute(`
+{
+ 	"id": "urn:ietf:params:scim:schemas:core:2.0:User:name",
+ 	"name": "name",
+ 	"type": "complex",
+ 	"subAttributes": [
+		{
+	  		"id": "urn:ietf:params:scim:schemas:core:2.0:User:name.familyName",
+	  		"name": "familyName",
+	  		"type": "string",
+	  		"_path": "name.familyName"
+		},
+		{
+	  		"id": "urn:ietf:params:scim:schemas:core:2.0:User:name.givenName",
+	  		"name": "givenName",
+	  		"type": "string",
+	  		"_path": "name.givenName"
+		}
+ 	],
+ 	"_path": "name"
+}
+`), nil)
+			},
+			json: `{
+	"familyName": "Qiu",
+	"givenName": "David"
+}`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				v := property.Raw()
+				assert.IsType(t, map[string]interface{}{}, v)
+				assert.Equal(t, "Qiu", v.(map[string]interface{})["familyName"])
+				assert.Equal(t, "David", v.(map[string]interface{})["givenName"])
+			},
+		},
+		{
+			name: "deserialize multiValued property containing simple properties",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewMulti(s.mustAttribute(`
+{
+ 	"name": "collection",
+ 	"type": "string",
+	"multiValued": true
+}
+`), nil)
+			},
+			json: `["A", "B", "C"]`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				v := property.Raw()
+				assert.IsType(t, []interface{}{}, v)
+				assert.Equal(t, "A", v.([]interface{})[0])
+				assert.Equal(t, "B", v.([]interface{})[1])
+				assert.Equal(t, "C", v.([]interface{})[2])
+			},
+		},
+		{
+			name: "deserialize multiValued property containing complex properties",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewMulti(s.mustAttribute(`
+{
+  	"name": "emails",
+  	"type": "complex",
+	"multiValued": true,
+	"subAttributes": [
+		{
+			"name": "value",
+  			"type": "string"
+		},
+		{
+			"name": "type",
+  			"type": "string"
+		}
+	]
+}
+`), nil)
+			},
+			json: `[
+	{
+		"value": "foo@bar.com",
+		"type": "work"
+	},
+	{
+		"value": "bar@foo.com",
+		"type": "home"
+	}
+]`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				v := property.Raw()
+				assert.IsType(t, []interface{}{}, v)
+				{
+					assert.IsType(t, map[string]interface{}{}, v.([]interface{})[0])
+					v0 := v.([]interface{})[0].(map[string]interface{})
+					assert.Equal(t, "foo@bar.com", v0["value"])
+					assert.Equal(t, "work", v0["type"])
+				}
+				{
+					assert.IsType(t, map[string]interface{}{}, v.([]interface{})[1])
+					v1 := v.([]interface{})[1].(map[string]interface{})
+					assert.Equal(t, "bar@foo.com", v1["value"])
+					assert.Equal(t, "home", v1["type"])
+				}
+			},
+		},
+		{
+			name: "deserialize multiValued property with an element",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewMulti(s.mustAttribute(`
+{
+ 	"name": "collection",
+ 	"type": "string",
+	"multiValued": true
+}
+`), nil)
+			},
+			json: `"A"`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				v := property.Raw()
+				assert.IsType(t, []interface{}{}, v)
+				assert.Len(t, v, 1)
+				assert.Equal(t, "A", v.([]interface{})[0])
+			},
+		},
+		{
+			name: "deserialize complex multiValued property with an element",
+			getProperty: func(t *testing.T) core.Property {
+				return prop.NewMulti(s.mustAttribute(`
+{
+  	"name": "emails",
+  	"type": "complex",
+	"multiValued": true,
+	"subAttributes": [
+		{
+			"name": "value",
+  			"type": "string"
+		},
+		{
+			"name": "type",
+  			"type": "string"
+		}
+	]
+}
+`), nil)
+			},
+			json: `{
+	"value": "foo@bar.com",
+	"type": "work"
+}`,
+			expect: func(t *testing.T, property core.Property, err error) {
+				assert.Nil(t, err)
+				v := property.Raw()
+				assert.IsType(t, []interface{}{}, v)
+				assert.Len(t, v, 1)
+				{
+					assert.IsType(t, map[string]interface{}{}, v.([]interface{})[0])
+					v0 := v.([]interface{})[0].(map[string]interface{})
+					assert.Equal(t, "foo@bar.com", v0["value"])
+					assert.Equal(t, "work", v0["type"])
+				}
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			property := test.getProperty(t)
+			err := DeserializeProperty([]byte(test.json), property, true)
+			test.expect(t, property, err)
+		})
+	}
 }
 
 func (s *JSONDeserializeTestSuite) TestDeserialize() {
@@ -420,4 +718,15 @@ func (s *JSONDeserializeTestSuite) mustSchema(filePath string) *core.Schema {
 	core.SchemaHub.Put(sch)
 
 	return sch
+}
+
+func (s *JSONDeserializeTestSuite) mustAttribute(attrJSON string) *core.Attribute {
+	raw, err := ioutil.ReadAll(strings.NewReader(attrJSON))
+	s.Require().Nil(err)
+
+	attr := new(core.Attribute)
+	err = json.Unmarshal(raw, attr)
+	s.Require().Nil(err)
+
+	return attr
 }

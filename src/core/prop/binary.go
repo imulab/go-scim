@@ -150,7 +150,7 @@ func (p *binaryProperty) Replace(value interface{}) error {
 	} else {
 		p.touched = true
 		if !p.compareByteArray(p.value, b64) {
-			copy(p.value, b64)
+			p.value = b64
 			p.computeHash()
 			if err := p.publish(core.EventAssigned); err != nil {
 				return err
