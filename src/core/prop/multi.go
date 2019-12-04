@@ -3,6 +3,7 @@ package prop
 import (
 	"encoding/binary"
 	"github.com/imulab/go-scim/src/core"
+	"github.com/imulab/go-scim/src/core/annotations"
 	"github.com/imulab/go-scim/src/core/errors"
 	"hash/fnv"
 )
@@ -13,12 +14,14 @@ func NewMulti(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.MultiValued() {
 		panic("invalid attribute for multiValued property")
 	}
-	return &multiValuedProperty{
+	p := &multiValuedProperty{
 		parent:      parent,
 		attr:        attr,
 		elements:    make([]core.Property, 0),
 		subscribers: []core.Subscriber{},
 	}
+	subscribeWithAnnotation(p)
+	return p
 }
 
 // Create a new multiValued property with given value. The method will panic if
@@ -327,24 +330,23 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 		}
 	}()
 
-	attr := p.Attribute().AsSingleValued()
-	switch attr.Type() {
+	switch p.Attribute().Type() {
 	case core.TypeString:
-		prop = NewString(attr, p)
+		prop = NewString(p.Attribute().NewElementAttribute(), p)
 	case core.TypeInteger:
-		prop = NewInteger(attr, p)
+		prop = NewInteger(p.Attribute().NewElementAttribute(), p)
 	case core.TypeDecimal:
-		prop = NewDecimal(attr, p)
+		prop = NewDecimal(p.Attribute().NewElementAttribute(), p)
 	case core.TypeBoolean:
-		prop = NewBoolean(attr, p)
+		prop = NewBoolean(p.Attribute().NewElementAttribute(), p)
 	case core.TypeReference:
-		prop = NewReference(attr, p)
+		prop = NewReference(p.Attribute().NewElementAttribute(), p)
 	case core.TypeBinary:
-		prop = NewBinary(attr, p)
+		prop = NewBinary(p.Attribute().NewElementAttribute(), p)
 	case core.TypeDateTime:
-		prop = NewDateTime(attr, p)
+		prop = NewDateTime(p.Attribute().NewElementAttribute(), p)
 	case core.TypeComplex:
-		prop = NewComplex(attr, p)
+		prop = NewComplex(p.Attribute().NewElementAttribute(annotations.StateSummary), p)
 	default:
 		panic("invalid type")
 	}

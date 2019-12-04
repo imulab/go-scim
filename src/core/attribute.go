@@ -235,10 +235,14 @@ func (attr *Attribute) GoesBy(name string) bool {
 	}
 }
 
-// Return an exact shallow copy of the attribute, but with the multiValued field set to false, thus
-// effectively converting any multiValued attribute to singular attribute. The id of the attribute
-// is appended with '$elem' to distinguish it with the container attribute.
-func (attr *Attribute) AsSingleValued() *Attribute {
+// Returns true if this attribute is the derived element attribute of the other attribute.
+func (attr *Attribute) IsElementAttributeOf(other *Attribute) bool {
+	return fmt.Sprintf("%s$elem", other.ID()) == attr.ID()
+}
+
+// Create the derived element attribute of this attribute. The multiValue attribute is set to false and caller can
+// redefine annotations. The id attribute is suffixed with "$elem".
+func (attr *Attribute) NewElementAttribute(annotations ...string) *Attribute {
 	return &Attribute{
 		name:            attr.name,
 		description:     attr.description,
@@ -252,12 +256,12 @@ func (attr *Attribute) AsSingleValued() *Attribute {
 		returned:        attr.returned,
 		uniqueness:      attr.uniqueness,
 		referenceTypes:  attr.referenceTypes,
-		id:              fmt.Sprintf("%s$elem", attr.id),
+		id:              fmt.Sprintf("%s$elem", attr.ID()),
 		index:           attr.index,
 		path:            attr.path,
 		primary:         attr.primary,
 		identity:        attr.identity,
-		annotations:     attr.annotations,
+		annotations:     annotations,
 	}
 }
 

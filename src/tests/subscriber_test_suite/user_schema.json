@@ -215,7 +215,11 @@
         }
       ],
       "_index": 112,
-      "_path": "emails"
+      "_path": "emails",
+      "_annotations": [
+        "@AutoCompact",
+        "@ExclusivePrimary"
+      ]
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers",
@@ -264,7 +268,11 @@
         }
       ],
       "_index": 113,
-      "_path": "phoneNumbers"
+      "_path": "phoneNumbers",
+      "_annotations": [
+        "@AutoCompact",
+        "@ExclusivePrimary"
+      ]
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims",
@@ -312,7 +320,11 @@
         }
       ],
       "_index": 114,
-      "_path": "ims"
+      "_path": "ims",
+      "_annotations": [
+        "@AutoCompact",
+        "@ExclusivePrimary"
+      ]
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos",
@@ -353,7 +365,11 @@
         }
       ],
       "_index": 115,
-      "_path": "photos"
+      "_path": "photos",
+      "_annotations": [
+        "@AutoCompact",
+        "@ExclusivePrimary"
+      ]
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses",
@@ -433,7 +449,11 @@
         }
       ],
       "_index": 116,
-      "_path": "addresses"
+      "_path": "addresses",
+      "_annotations": [
+        "@AutoCompact",
+        "@ExclusivePrimary"
+      ]
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups",
@@ -523,7 +543,11 @@
         }
       ],
       "_index": 118,
-      "_path": "entitlements"
+      "_path": "entitlements",
+      "_annotations": [
+        "@AutoCompact",
+        "@ExclusivePrimary"
+      ]
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles",
@@ -564,7 +588,11 @@
         }
       ],
       "_index": 119,
-      "_path": "roles"
+      "_path": "roles",
+      "_annotations": [
+        "@AutoCompact",
+        "@ExclusivePrimary"
+      ]
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates",
@@ -605,7 +633,11 @@
         }
       ],
       "_index": 120,
-      "_path": "x509Certificates"
+      "_path": "x509Certificates",
+      "_annotations": [
+        "@AutoCompact",
+        "@ExclusivePrimary"
+      ]
     }
   ]
 }

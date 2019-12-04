@@ -123,6 +123,7 @@ func (h *schemaHub) CoreSchema() *Schema {
 				returned:    ReturnedAlways,
 				index:       0,
 				path:        "schemas",
+				annotations: []string{"@AutoCompact"},
 			},
 			{
 				id:         "id",

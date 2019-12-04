@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/imulab/go-scim/src/core/annotations"
 )
 
 var (
@@ -78,33 +79,35 @@ func (t *ResourceType) ForEachExtension(callback func(extension *Schema, require
 // Return a complex attribute that contains all schema attributes as its sub attributes.
 func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 	super := &Attribute{
-		id:              t.schema.id,
-		typ:             TypeComplex,
-		subAttributes:   []*Attribute{},
-		mutability:      MutabilityReadWrite,
-		returned:        ReturnedDefault,
-		uniqueness:      UniquenessNone,
+		id:            t.schema.id,
+		typ:           TypeComplex,
+		subAttributes: []*Attribute{},
+		mutability:    MutabilityReadWrite,
+		returned:      ReturnedDefault,
+		uniqueness:    UniquenessNone,
 	}
 
 	if includeCore {
 		super.subAttributes = append(super.subAttributes, SchemaHub.CoreSchema().attributes...)
+		super.annotations = append(super.annotations, annotations.SyncSchema)
 	}
 	super.subAttributes = append(super.subAttributes, t.schema.attributes...)
 
 	var i = len(super.subAttributes)
 	t.ForEachExtension(func(extension *Schema, required bool) {
 		super.subAttributes = append(super.subAttributes, &Attribute{
-			id:              extension.id,
-			name:            extension.id,
-			description:     extension.description,
-			typ:             TypeComplex,
-			subAttributes:   extension.attributes,
-			required:        required,
-			mutability:      MutabilityReadWrite,
-			returned:        ReturnedDefault,
-			uniqueness:      UniquenessNone,
-			index:           i,
-			path:            extension.id,
+			id:            extension.id,
+			name:          extension.id,
+			description:   extension.description,
+			typ:           TypeComplex,
+			subAttributes: extension.attributes,
+			required:      required,
+			mutability:    MutabilityReadWrite,
+			returned:      ReturnedDefault,
+			uniqueness:    UniquenessNone,
+			index:         i,
+			path:          extension.id,
+			annotations:   []string{annotations.StateSummary, annotations.SchemaExtensionRoot},
 		})
 		i++
 	})

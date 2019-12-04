@@ -14,12 +14,14 @@ func NewString(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeString {
 		panic("invalid attribute for string property")
 	}
-	return &stringProperty{
+	p := &stringProperty{
 		parent:      parent,
 		attr:        attr,
 		value:       nil,
 		subscribers: []core.Subscriber{},
 	}
+	subscribeWithAnnotation(p)
+	return p
 }
 
 // Create a new string property with given value. The method will panic if
@@ -173,7 +175,7 @@ func (p *stringProperty) Replace(value interface{}) error {
 		if eq, _ := p.EqualsTo(s); !eq {
 			p.value = &s
 			p.computeHash()
-			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+			if err := p.publish(core.EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -186,14 +188,15 @@ func (p *stringProperty) Delete() error {
 	if p.value != nil {
 		p.value = nil
 		p.computeHash()
-		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+		if err := p.publish(core.EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *stringProperty) publish(e *core.Event) error {
+func (p *stringProperty) publish(t core.EventType) error {
+	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
 			if err := subscriber.Notify(p, e); err != nil {

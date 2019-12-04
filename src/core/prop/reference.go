@@ -14,12 +14,14 @@ func NewReference(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeReference {
 		panic("invalid attribute for reference property")
 	}
-	return &referenceProperty{
+	p := &referenceProperty{
 		parent:      parent,
 		attr:        attr,
 		value:       nil,
 		subscribers: []core.Subscriber{},
 	}
+	subscribeWithAnnotation(p)
+	return p
 }
 
 // Create a new reference property with given value. The method will panic if
@@ -155,7 +157,7 @@ func (p *referenceProperty) Replace(value interface{}) error {
 		if eq, _ := p.EqualsTo(s); !eq {
 			p.value = &s
 			p.computeHash()
-			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+			if err := p.publish(core.EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -168,14 +170,15 @@ func (p *referenceProperty) Delete() error {
 	if p.value != nil {
 		p.value = nil
 		p.computeHash()
-		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+		if err := p.publish(core.EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *referenceProperty) publish(e *core.Event) error {
+func (p *referenceProperty) publish(t core.EventType) error {
+	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
 			if err := subscriber.Notify(p, e); err != nil {

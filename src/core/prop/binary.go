@@ -14,12 +14,14 @@ func NewBinary(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeBinary {
 		panic("invalid attribute for binary property")
 	}
-	return &binaryProperty{
+	p := &binaryProperty{
 		parent:      parent,
 		attr:        attr,
 		value:       nil,
 		subscribers: []core.Subscriber{},
 	}
+	subscribeWithAnnotation(p)
+	return p
 }
 
 // Create a new binary property with given base64 encoded value. The method will panic if
@@ -150,7 +152,7 @@ func (p *binaryProperty) Replace(value interface{}) error {
 		if !p.compareByteArray(p.value, b64) {
 			copy(p.value, b64)
 			p.computeHash()
-			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+			if err := p.publish(core.EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -163,14 +165,15 @@ func (p *binaryProperty) Delete() error {
 	if len(p.value) > 0 {
 		p.value = nil
 		p.computeHash()
-		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+		if err := p.publish(core.EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *binaryProperty) publish(e *core.Event) error {
+func (p *binaryProperty) publish(t core.EventType) error {
+	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
 			if err := subscriber.Notify(p, e); err != nil {

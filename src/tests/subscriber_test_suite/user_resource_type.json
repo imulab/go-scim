@@ -4,5 +4,10 @@
   "description": "User resource type",
   "endpoint": "https://scim.imulab.io/Users",
   "schema": "urn:ietf:params:scim:schemas:core:2.0:User",
-  "schemaExtensions": []
+  "schemaExtensions": [
+    {
+      "schema": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+      "required": false
+    }
+  ]
 }

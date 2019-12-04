@@ -24,6 +24,7 @@ func NewComplex(attr *core.Attribute, parent core.Container) core.Property {
 		}
 	)
 	{
+		subscribeWithAnnotation(p)
 		attr.ForEachSubAttribute(func(subAttribute *core.Attribute) {
 			if subAttribute.MultiValued() {
 				p.subProps = append(p.subProps, NewMulti(subAttribute, p))

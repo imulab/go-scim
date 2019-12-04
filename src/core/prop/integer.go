@@ -12,12 +12,14 @@ func NewInteger(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeInteger {
 		panic("invalid attribute for integer property")
 	}
-	return &integerProperty{
+	p := &integerProperty{
 		parent:      parent,
 		attr:        attr,
 		value:       nil,
 		subscribers: []core.Subscriber{},
 	}
+	subscribeWithAnnotation(p)
+	return p
 }
 
 // Create a new integer property with given value. The method will panic if
@@ -164,7 +166,7 @@ func (p *integerProperty) Replace(value interface{}) error {
 		p.touched = true
 		if eq, _ := p.EqualsTo(i64); !eq {
 			p.value = &i64
-			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+			if err := p.publish(core.EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -176,14 +178,15 @@ func (p *integerProperty) Delete() error {
 	p.touched = true
 	if p.value != nil {
 		p.value = nil
-		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+		if err := p.publish(core.EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *integerProperty) publish(e *core.Event) error {
+func (p *integerProperty) publish(t core.EventType) error {
+	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
 			if err := subscriber.Notify(p, e); err != nil {

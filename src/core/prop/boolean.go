@@ -12,12 +12,14 @@ func NewBoolean(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeBoolean {
 		panic("invalid attribute for boolean property")
 	}
-	return &booleanProperty{
+	p := &booleanProperty{
 		parent:      parent,
 		attr:        attr,
 		value:       nil,
 		subscribers: []core.Subscriber{},
 	}
+	subscribeWithAnnotation(p)
+	return p
 }
 
 // Create a new boolean property with given value. The method will panic if
@@ -150,7 +152,7 @@ func (p *booleanProperty) Replace(value interface{}) error {
 		p.touched = true
 		if eq, _ := p.EqualsTo(b); !eq {
 			p.value = &b
-			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+			if err := p.publish(core.EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -162,14 +164,15 @@ func (p *booleanProperty) Delete() error {
 	p.touched = true
 	if p.value != nil {
 		p.value = nil
-		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+		if err := p.publish(core.EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *booleanProperty) publish(e *core.Event) error {
+func (p *booleanProperty) publish(t core.EventType) error {
+	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
 			if err := subscriber.Notify(p, e); err != nil {

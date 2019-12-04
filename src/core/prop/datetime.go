@@ -15,12 +15,14 @@ func NewDateTime(attr *core.Attribute, parent core.Container) core.Property {
 	if !attr.SingleValued() || attr.Type() != core.TypeDateTime {
 		panic("invalid attribute for dateTime property")
 	}
-	return &dateTimeProperty{
+	p := &dateTimeProperty{
 		parent:      parent,
 		attr:        attr,
 		value:       nil,
 		subscribers: []core.Subscriber{},
 	}
+	subscribeWithAnnotation(p)
+	return p
 }
 
 // Create a new string property with given value. The method will panic if
@@ -179,7 +181,7 @@ func (p *dateTimeProperty) Replace(value interface{}) error {
 		p.touched = true
 		if p.value == nil || !(*(p.value)).Equal(t) {
 			p.value = &t
-			if err := p.publish(core.NewEvent(core.EventNewValue, p)); err != nil {
+			if err := p.publish(core.EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -191,14 +193,15 @@ func (p *dateTimeProperty) Delete() error {
 	p.touched = true
 	if p.value != nil {
 		p.value = nil
-		if err := p.publish(core.NewEvent(core.EventDelete, p)); err != nil {
+		if err := p.publish(core.EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *dateTimeProperty) publish(e *core.Event) error {
+func (p *dateTimeProperty) publish(t core.EventType) error {
+	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
 			if err := subscriber.Notify(p, e); err != nil {
