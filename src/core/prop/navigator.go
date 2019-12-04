@@ -13,7 +13,7 @@ func NewNavigator(source core.Property) *Navigator {
 // how to traverse through the property structure, as opposed to
 // Visitor and DFS traversal where the structure itself is in control.
 type Navigator struct {
-	stack	[]core.Property
+	stack []core.Property
 }
 
 // Focus on the sub property that goes by the given name (case insensitive), and

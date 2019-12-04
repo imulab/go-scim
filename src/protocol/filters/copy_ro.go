@@ -19,7 +19,7 @@ func NewCopyReadOnlyFieldFilter() protocol.FieldFilter {
 // the attribute is marked with annotation '@CopyReadOnly'. It is suggested that: for simple singular attribute, mark
 // on the attribute itself; for complex singular attribute, mark on the sub attributes instead; for multiValued attribute,
 // mark on the attribute itself.
-type copyReadOnlyFieldFilter struct {}
+type copyReadOnlyFieldFilter struct{}
 
 func (f *copyReadOnlyFieldFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Mutability() == core.MutabilityReadOnly &&

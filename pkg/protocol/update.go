@@ -9,14 +9,14 @@ import (
 )
 
 type UpdateEndpoint struct {
-	ResourceIdParamName	string
+	ResourceIdParamName string
 	HttpProvider        HttpProvider
 	ResourceType        *core.ResourceType
 	PostParseHook       stage.PostParseHook
 	FilterStage         stage.FilterStage
 	PrePersistHook      stage.PrePersistHook
 	PersistenceProvider persistence.Provider
-	PostPersistHook		stage.PostPersistHook
+	PostPersistHook     stage.PostPersistHook
 }
 
 func (h *UpdateEndpoint) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -134,4 +134,3 @@ func (h *UpdateEndpoint) renderSuccess(rw http.ResponseWriter, resource *core.Re
 
 	return nil
 }
-

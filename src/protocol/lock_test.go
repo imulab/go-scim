@@ -33,7 +33,7 @@ func (s *DefaultLockTestSuite) TestLockTimeout() {
 	})
 
 	lock := DefaultLock()
-	ctx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 
 	err := lock.Lock(ctx, resource)
 	assert.Nil(s.T(), err)

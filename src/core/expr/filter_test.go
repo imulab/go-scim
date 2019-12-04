@@ -364,4 +364,3 @@ func (s *FilterTestSuite) TestFilterScanner() {
 		})
 	}
 }
-

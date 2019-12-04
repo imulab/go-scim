@@ -34,7 +34,7 @@ func (s *SubscriberTestSuite) TestSyncSchema() {
 		expect       func(t *testing.T, r *Resource, err error)
 	}{
 		{
-			name: 	"add to a previously unassigned schema extension property will add the schema",
+			name: "add to a previously unassigned schema extension property will add the schema",
 			getResource: func(t *testing.T) *Resource {
 				resource := NewResourceOf(resourceType, map[string]interface{}{
 					"schemas": []interface{}{
@@ -63,7 +63,7 @@ func (s *SubscriberTestSuite) TestSyncSchema() {
 			},
 		},
 		{
-			name: 	"add to a previously assigned schema extension property will not repeatedly add the schema",
+			name: "add to a previously assigned schema extension property will not repeatedly add the schema",
 			getResource: func(t *testing.T) *Resource {
 				resource := NewResourceOf(resourceType, map[string]interface{}{
 					"schemas": []interface{}{
@@ -93,7 +93,7 @@ func (s *SubscriberTestSuite) TestSyncSchema() {
 			},
 		},
 		{
-			name: 	"schema extension urn is removed when schema becomes completely unassigned",
+			name: "schema extension urn is removed when schema becomes completely unassigned",
 			getResource: func(t *testing.T) *Resource {
 				resource := NewResourceOf(resourceType, map[string]interface{}{
 					"schemas": []interface{}{
@@ -126,7 +126,7 @@ func (s *SubscriberTestSuite) TestSyncSchema() {
 			},
 		},
 		{
-			name: 	"schema extension urn remains when schema is not completely unassigned",
+			name: "schema extension urn remains when schema is not completely unassigned",
 			getResource: func(t *testing.T) *Resource {
 				resource := NewResourceOf(resourceType, map[string]interface{}{
 					"schemas": []interface{}{
@@ -136,7 +136,7 @@ func (s *SubscriberTestSuite) TestSyncSchema() {
 					"userName": "imulab",
 					"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": map[string]interface{}{
 						"employeeNumber": "imulab",
-						"organization": "imulab",
+						"organization":   "imulab",
 					},
 				})
 				return resource

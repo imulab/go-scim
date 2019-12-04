@@ -23,14 +23,14 @@ type JSONDeserializeTestSuite struct {
 }
 
 func (s *JSONDeserializeTestSuite) TestDeserialize() {
-	tests := []struct{
-		name			string
-		getResource	func(t *testing.T) *prop.Resource
-		json		string
-		expect		func(t *testing.T, resource *prop.Resource, err error)
+	tests := []struct {
+		name        string
+		getResource func(t *testing.T) *prop.Resource
+		json        string
+		expect      func(t *testing.T, resource *prop.Resource, err error)
 	}{
 		{
-			name: 	"default json deserialization",
+			name: "default json deserialization",
 			getResource: func(t *testing.T) *prop.Resource {
 				_ = s.mustSchema("/user_schema.json")
 				return prop.NewResource(s.mustResourceType("/user_resource_type.json"))
@@ -306,12 +306,12 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 			},
 		},
 		{
-			name:        "empty json",
+			name: "empty json",
 			getResource: func(t *testing.T) *prop.Resource {
 				_ = s.mustSchema("/user_schema.json")
 				return prop.NewResource(s.mustResourceType("/user_resource_type.json"))
 			},
-			json:        "{}",
+			json: "{}",
 			expect: func(t *testing.T, resource *prop.Resource, err error) {
 				assert.Nil(t, err)
 				nav := resource.NewNavigator()
@@ -321,7 +321,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 			},
 		},
 		{
-			name: 	"explicit nulls",
+			name: "explicit nulls",
 			getResource: func(t *testing.T) *prop.Resource {
 				_ = s.mustSchema("/user_schema.json")
 				return prop.NewResource(s.mustResourceType("/user_resource_type.json"))

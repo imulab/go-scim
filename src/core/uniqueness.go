@@ -6,6 +6,7 @@ const (
 	UniquenessServer
 	UniquenessGlobal
 )
+
 // SCIM uniqueness definition
 type Uniqueness int
 

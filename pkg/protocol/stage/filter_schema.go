@@ -13,7 +13,7 @@ func NewSchemaFilter(order int) PropertyFilter {
 
 var _ PropertyFilter = (*schemaFilter)(nil)
 
-type schemaFilter struct {order int}
+type schemaFilter struct{ order int }
 
 func (f *schemaFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Id == "schemas" && attribute.MultiValued

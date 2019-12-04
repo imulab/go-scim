@@ -6,7 +6,7 @@ import "github.com/imulab/go-scim/src/core"
 func NewResource(resourceType *core.ResourceType) *Resource {
 	return &Resource{
 		resourceType: resourceType,
-		data: NewComplex(resourceType.SuperAttribute(true), nil).(*complexProperty),
+		data:         NewComplex(resourceType.SuperAttribute(true), nil).(*complexProperty),
 	}
 }
 

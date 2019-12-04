@@ -11,7 +11,7 @@ func NewIDResourceFilter() protocol.ResourceFilter {
 	return &idFilter{}
 }
 
-type idFilter struct {}
+type idFilter struct{}
 
 func (f *idFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
 	idProp, err := resource.NewNavigator().FocusName("id")

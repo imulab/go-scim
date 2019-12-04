@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	HeaderContentType = "Content-Type"
+	HeaderContentType              = "Content-Type"
 	ContentTypeApplicationJsonScim = "application/json+scim"
 	ContentTypeApplicationJson     = "application/json"
 )
@@ -29,7 +29,7 @@ type (
 	}
 
 	defaultHttpProvider struct {
-		urlRegex	[]string
+		urlRegex []string
 	}
 )
 

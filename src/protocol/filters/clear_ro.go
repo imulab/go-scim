@@ -16,7 +16,7 @@ func NewClearReadOnlyFieldFilter() protocol.FieldFilter {
 	return &readOnlyClearFieldFilter{}
 }
 
-type readOnlyClearFieldFilter struct {}
+type readOnlyClearFieldFilter struct{}
 
 func (f *readOnlyClearFieldFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Mutability() == core.MutabilityReadOnly &&

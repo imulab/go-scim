@@ -19,7 +19,7 @@ func NewMutabilityFilter(order int) PropertyFilter {
 
 var _ PropertyFilter = (*mutabilityFilter)(nil)
 
-type mutabilityFilter struct {order int}
+type mutabilityFilter struct{ order int }
 
 func (f *mutabilityFilter) Supports(attribute *core.Attribute) bool {
 	// We do not have to worry about read only attributes because server is allowed

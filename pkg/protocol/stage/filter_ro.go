@@ -24,7 +24,7 @@ func NewReadOnlyFilter(order int) PropertyFilter {
 
 var _ PropertyFilter = (*readOnlyFilter)(nil)
 
-type readOnlyFilter struct{order int}
+type readOnlyFilter struct{ order int }
 
 func (f *readOnlyFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Mutability == core.MutabilityReadOnly

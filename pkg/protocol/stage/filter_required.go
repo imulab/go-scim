@@ -13,7 +13,7 @@ func NewRequiredFilter(order int) PropertyFilter {
 
 var _ PropertyFilter = (*requiredFilter)(nil)
 
-type requiredFilter struct {order int}
+type requiredFilter struct{ order int }
 
 func (f *requiredFilter) Supports(attribute *core.Attribute) bool {
 	return attribute.Required

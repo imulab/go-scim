@@ -42,7 +42,7 @@ type (
 		m *sync.Map
 	}
 	// no op locker
-	noOpLocker struct {}
+	noOpLocker struct{}
 )
 
 func (p *defaultLocker) Lock(ctx context.Context, resource *prop.Resource) error {
@@ -100,4 +100,3 @@ func (n noOpLocker) Lock(ctx context.Context, resource *prop.Resource) error {
 }
 
 func (n noOpLocker) Unlock(ctx context.Context, resource *prop.Resource) {}
-

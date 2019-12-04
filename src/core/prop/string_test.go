@@ -683,7 +683,7 @@ func (s *StringPropertyTestSuite) TestPresent() {
 	"name": "userName",
 	"type": "string"
 }
-`), nil,"imulab"),
+`), nil, "imulab"),
 			expect: func(t *testing.T, present bool) {
 				assert.True(t, present)
 			},

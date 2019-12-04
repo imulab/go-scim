@@ -418,4 +418,3 @@ func (p *orderedProps) Swap(i, j int) {
 	p.props[i], p.props[j] = p.props[j], p.props[i]
 	p.order[i], p.order[j] = p.order[j], p.order[i]
 }
-

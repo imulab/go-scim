@@ -25,7 +25,7 @@ func TestNewSchemaFilter(t *testing.T) {
 		assert         func(t *testing.T, resource *core.Resource, property core.Property, err error)
 	}{
 		{
-			name: 		"resource with required schema is passed",
+			name: "resource with required schema is passed",
 			getResource: func(t *testing.T) *core.Resource {
 				resource := core.Resources.New(resourceType)
 				err := resource.Add(core.Steps.NewPath("schemas"), "urn:ietf:params:scim:schemas:core:2.0:User")
@@ -50,7 +50,7 @@ func TestNewSchemaFilter(t *testing.T) {
 			},
 		},
 		{
-			name: 		"resource without required schema is rejected",
+			name: "resource without required schema is rejected",
 			getResource: func(t *testing.T) *core.Resource {
 				resource := core.Resources.New(resourceType)
 				err := resource.Add(core.Steps.NewPath("schemas"), "foobar")

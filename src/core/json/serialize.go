@@ -96,14 +96,14 @@ func (s *serializer) ShouldVisit(property core.Property) bool {
 			test := strings.ToLower(property.Attribute().Path())
 			if len(s.includes) > 0 {
 				for _, include := range s.includes {
-					if include == test || strings.HasPrefix(include, test + ".") || strings.HasPrefix(test, include + ".") {
+					if include == test || strings.HasPrefix(include, test+".") || strings.HasPrefix(test, include+".") {
 						return true
 					}
 				}
 				return false
 			} else if len(s.excludes) > 0 {
 				for _, exclude := range s.excludes {
-					if exclude == test || strings.HasPrefix(test, exclude + ".") {
+					if exclude == test || strings.HasPrefix(test, exclude+".") {
 						return false
 					}
 				}
@@ -116,7 +116,7 @@ func (s *serializer) ShouldVisit(property core.Property) bool {
 		if len(s.includes) > 0 {
 			test := strings.ToLower(property.Attribute().Path())
 			for _, include := range s.includes {
-				if include == test || strings.HasPrefix(include, test + ".") || strings.HasPrefix(test, include + ".") {
+				if include == test || strings.HasPrefix(include, test+".") || strings.HasPrefix(test, include+".") {
 					return true
 				}
 			}

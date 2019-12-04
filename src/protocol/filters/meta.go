@@ -27,7 +27,7 @@ func NewMetaResourceFilter() protocol.ResourceFilter {
 	return &metaResourceFilter{}
 }
 
-type metaResourceFilter struct {}
+type metaResourceFilter struct{}
 
 func (f *metaResourceFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
 	meta, err := resource.NewNavigator().FocusName(fieldMeta)

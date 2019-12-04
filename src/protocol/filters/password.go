@@ -11,12 +11,12 @@ import (
 // bcrypted.
 func NewPasswordResourceFilter(bcryptCost int) protocol.ResourceFilter {
 	return &passwordFilter{
-		cost:  bcryptCost,
+		cost: bcryptCost,
 	}
 }
 
 type passwordFilter struct {
-	cost  int
+	cost int
 }
 
 func (f *passwordFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {

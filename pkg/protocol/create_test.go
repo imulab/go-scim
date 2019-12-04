@@ -15,7 +15,7 @@ import (
 func TestCreateEndpoint(t *testing.T) {
 	var (
 		endpoint *CreateEndpoint
-		err error
+		err      error
 	)
 	{
 		_ = core.Schemas.MustLoad("../resource/schema/user_schema.json")

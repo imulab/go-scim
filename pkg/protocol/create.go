@@ -15,7 +15,7 @@ type CreateEndpoint struct {
 	FilterStage         stage.FilterStage
 	PrePersistHook      stage.PrePersistHook
 	PersistenceProvider persistence.Provider
-	PostPersistHook		stage.PostPersistHook
+	PostPersistHook     stage.PostPersistHook
 }
 
 func (h *CreateEndpoint) ServeHTTP(rw http.ResponseWriter, r *http.Request) {

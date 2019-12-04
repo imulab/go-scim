@@ -25,14 +25,14 @@ type JSONSerializeTestSuite struct {
 }
 
 func (s *JSONSerializeTestSuite) TestSerialize() {
-	tests := []struct{
-		name		string
-		getResource	func(t *testing.T) *prop.Resource
-		getOption	func() *options
-		expect		func(t *testing.T, raw []byte, err error)
+	tests := []struct {
+		name        string
+		getResource func(t *testing.T) *prop.Resource
+		getOption   func() *options
+		expect      func(t *testing.T, raw []byte, err error)
 	}{
 		{
-			name: 	"default serialize",
+			name: "default serialize",
 			getResource: func(t *testing.T) *prop.Resource {
 				_ = s.mustSchema("/user_schema.json")
 				resource := prop.NewResourceOf(s.mustResourceType("/user_resource_type.json"), map[string]interface{}{
@@ -42,48 +42,48 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
 					"id": "3cc032f5-2361-417f-9e2f-bc80adddf4a3",
 					"meta": map[string]interface{}{
 						"resourceType": "User",
-						"created": "2019-11-20T13:09:00",
+						"created":      "2019-11-20T13:09:00",
 						"lastModified": "2019-11-20T13:09:00",
-						"location": "https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-						"version": "W/\"1\"",
+						"location":     "https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+						"version":      "W/\"1\"",
 					},
 					"userName": "imulab",
 					"name": map[string]interface{}{
-						"formatted": "Mr. Weinan Qiu",
-						"familyName": "Qiu",
-						"givenName": "Weinan",
+						"formatted":       "Mr. Weinan Qiu",
+						"familyName":      "Qiu",
+						"givenName":       "Weinan",
 						"honorificPrefix": "Mr.",
 					},
-					"displayName": "Weinan",
-					"profileUrl": "https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-					"userType": "Employee",
+					"displayName":       "Weinan",
+					"profileUrl":        "https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+					"userType":          "Employee",
 					"preferredLanguage": "zh_CN",
-					"locale": "zh_CN",
-					"timezone": "Asia/Shanghai",
-					"active": true,
+					"locale":            "zh_CN",
+					"timezone":          "Asia/Shanghai",
+					"active":            true,
 					"emails": []interface{}{
 						map[string]interface{}{
-							"value": "imulab@foo.com",
-							"type": "work",
+							"value":   "imulab@foo.com",
+							"type":    "work",
 							"primary": true,
 							"display": "imulab@foo.com",
 						},
 						map[string]interface{}{
-							"value": "imulab@bar.com",
-							"type": "home",
+							"value":   "imulab@bar.com",
+							"type":    "home",
 							"display": "imulab@bar.com",
 						},
 					},
 					"phoneNumbers": []interface{}{
 						map[string]interface{}{
-							"value": "123-45678",
-							"type": "work",
+							"value":   "123-45678",
+							"type":    "work",
 							"primary": true,
 							"display": "123-45678",
 						},
 						map[string]interface{}{
-							"value": "123-45679",
-							"type": "work",
+							"value":   "123-45679",
+							"type":    "work",
 							"display": "123-45679",
 						},
 					},
@@ -155,7 +155,7 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
 			},
 		},
 		{
-			name: 	"serialize with included attributes",
+			name: "serialize with included attributes",
 			getResource: func(t *testing.T) *prop.Resource {
 				_ = s.mustSchema("/user_schema.json")
 				resourceType := s.mustResourceType("/user_resource_type.json")
@@ -167,48 +167,48 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
 					"id": "3cc032f5-2361-417f-9e2f-bc80adddf4a3",
 					"meta": map[string]interface{}{
 						"resourceType": "User",
-						"created": "2019-11-20T13:09:00",
+						"created":      "2019-11-20T13:09:00",
 						"lastModified": "2019-11-20T13:09:00",
-						"location": "https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-						"version": "W/\"1\"",
+						"location":     "https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+						"version":      "W/\"1\"",
 					},
 					"userName": "imulab",
 					"name": map[string]interface{}{
-						"formatted": "Mr. Weinan Qiu",
-						"familyName": "Qiu",
-						"givenName": "Weinan",
+						"formatted":       "Mr. Weinan Qiu",
+						"familyName":      "Qiu",
+						"givenName":       "Weinan",
 						"honorificPrefix": "Mr.",
 					},
-					"displayName": "Weinan",
-					"profileUrl": "https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-					"userType": "Employee",
+					"displayName":       "Weinan",
+					"profileUrl":        "https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+					"userType":          "Employee",
 					"preferredLanguage": "zh_CN",
-					"locale": "zh_CN",
-					"timezone": "Asia/Shanghai",
-					"active": true,
+					"locale":            "zh_CN",
+					"timezone":          "Asia/Shanghai",
+					"active":            true,
 					"emails": []interface{}{
 						map[string]interface{}{
-							"value": "imulab@foo.com",
-							"type": "work",
+							"value":   "imulab@foo.com",
+							"type":    "work",
 							"primary": true,
 							"display": "imulab@foo.com",
 						},
 						map[string]interface{}{
-							"value": "imulab@bar.com",
-							"type": "home",
+							"value":   "imulab@bar.com",
+							"type":    "home",
 							"display": "imulab@bar.com",
 						},
 					},
 					"phoneNumbers": []interface{}{
 						map[string]interface{}{
-							"value": "123-45678",
-							"type": "work",
+							"value":   "123-45678",
+							"type":    "work",
 							"primary": true,
 							"display": "123-45678",
 						},
 						map[string]interface{}{
-							"value": "123-45679",
-							"type": "work",
+							"value":   "123-45679",
+							"type":    "work",
 							"display": "123-45679",
 						},
 					},
@@ -243,7 +243,7 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
 			},
 		},
 		{
-			name: 	"serialize with excluded attributes",
+			name: "serialize with excluded attributes",
 			getResource: func(t *testing.T) *prop.Resource {
 				_ = s.mustSchema("/user_schema.json")
 				resourceType := s.mustResourceType("/user_resource_type.json")
@@ -255,48 +255,48 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
 					"id": "3cc032f5-2361-417f-9e2f-bc80adddf4a3",
 					"meta": map[string]interface{}{
 						"resourceType": "User",
-						"created": "2019-11-20T13:09:00",
+						"created":      "2019-11-20T13:09:00",
 						"lastModified": "2019-11-20T13:09:00",
-						"location": "https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-						"version": "W/\"1\"",
+						"location":     "https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+						"version":      "W/\"1\"",
 					},
 					"userName": "imulab",
 					"name": map[string]interface{}{
-						"formatted": "Mr. Weinan Qiu",
-						"familyName": "Qiu",
-						"givenName": "Weinan",
+						"formatted":       "Mr. Weinan Qiu",
+						"familyName":      "Qiu",
+						"givenName":       "Weinan",
 						"honorificPrefix": "Mr.",
 					},
-					"displayName": "Weinan",
-					"profileUrl": "https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-					"userType": "Employee",
+					"displayName":       "Weinan",
+					"profileUrl":        "https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+					"userType":          "Employee",
 					"preferredLanguage": "zh_CN",
-					"locale": "zh_CN",
-					"timezone": "Asia/Shanghai",
-					"active": true,
+					"locale":            "zh_CN",
+					"timezone":          "Asia/Shanghai",
+					"active":            true,
 					"emails": []interface{}{
 						map[string]interface{}{
-							"value": "imulab@foo.com",
-							"type": "work",
+							"value":   "imulab@foo.com",
+							"type":    "work",
 							"primary": true,
 							"display": "imulab@foo.com",
 						},
 						map[string]interface{}{
-							"value": "imulab@bar.com",
-							"type": "home",
+							"value":   "imulab@bar.com",
+							"type":    "home",
 							"display": "imulab@bar.com",
 						},
 					},
 					"phoneNumbers": []interface{}{
 						map[string]interface{}{
-							"value": "123-45678",
-							"type": "work",
+							"value":   "123-45678",
+							"type":    "work",
 							"primary": true,
 							"display": "123-45678",
 						},
 						map[string]interface{}{
-							"value": "123-45679",
-							"type": "work",
+							"value":   "123-45679",
+							"type":    "work",
 							"display": "123-45679",
 						},
 					},

@@ -9,9 +9,9 @@ import (
 
 type (
 	ReplaceRequest struct {
-		ResourceID		string
-		Payload			*prop.Resource
-		MatchCriteria	func(resource *prop.Resource) bool
+		ResourceID    string
+		Payload       *prop.Resource
+		MatchCriteria func(resource *prop.Resource) bool
 	}
 	ReplaceResponse struct {
 		Resource   *prop.Resource
@@ -21,7 +21,7 @@ type (
 	}
 	ReplaceService struct {
 		Logger      protocol.LogProvider
-		Lock		protocol.LockProvider
+		Lock        protocol.LockProvider
 		Filters     []protocol.ResourceFilter
 		Persistence protocol.PersistenceProvider
 		Events      protocol.EventPublisher

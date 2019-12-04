@@ -184,7 +184,7 @@ func (v *filterVisitor) BeginComplex(complex core.Property) {
 	// After this point, we are sure there is at least one frame, meaning we are not on top level.
 	var (
 		selector interface{}
-		attr = v.currentFrame().container.Attribute()
+		attr     = v.currentFrame().container.Attribute()
 	)
 	v.push(complex)
 	switch {

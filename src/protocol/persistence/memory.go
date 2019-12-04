@@ -20,7 +20,7 @@ func Memory() protocol.PersistenceProvider {
 
 type memoryProvider struct {
 	sync.RWMutex
-	db	map[string]*prop.Resource
+	db map[string]*prop.Resource
 }
 
 func (m *memoryProvider) Insert(ctx context.Context, resource *prop.Resource) error {

@@ -14,7 +14,7 @@ type (
 	}
 	DeleteService struct {
 		Logger      protocol.LogProvider
-		Lock		protocol.LockProvider
+		Lock        protocol.LockProvider
 		Persistence protocol.PersistenceProvider
 		Events      protocol.EventPublisher
 	}
