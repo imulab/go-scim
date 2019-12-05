@@ -29,6 +29,18 @@ func (e *Expression) Token() string {
 	return e.token
 }
 
+func (e *Expression) Next() *Expression {
+	return e.next
+}
+
+func (e *Expression) Left() *Expression {
+	return e.left
+}
+
+func (e *Expression) Right() *Expression {
+	return e.right
+}
+
 func (e *Expression) IsPath() bool {
 	return e.typ == exprPath
 }

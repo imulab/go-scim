@@ -118,3 +118,13 @@ func (r *Resource) Visit(visitor core.Visitor) error {
 func (r *Resource) Hash() uint64 {
 	return r.data.Hash()
 }
+
+// Add value to the top level of the resource.
+func (r *Resource) Add(value interface{}) error {
+	return r.data.Add(value)
+}
+
+// Replace value on the top level of the resource.
+func (r *Resource) Replace(value interface{}) error {
+	return r.data.Replace(value)
+}
