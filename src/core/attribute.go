@@ -169,6 +169,16 @@ func (attr *Attribute) ForEachSubAttribute(callback func(subAttribute *Attribute
 	}
 }
 
+// Return the sub attribute that goes by the name, or nil
+func (attr *Attribute) SubAttributeForName(name string) *Attribute {
+	for _, eachSubAttribute := range attr.subAttributes {
+		if eachSubAttribute.GoesBy(name) {
+			return eachSubAttribute
+		}
+	}
+	return nil
+}
+
 // Return the metadata about the relative index of this attribute among its parent container.
 // This index is used to sort the attribute in order to maintain a stable and ideal iteration order.
 func (attr *Attribute) Index() int {

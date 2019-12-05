@@ -31,6 +31,11 @@ func (r *Resource) ResourceType() *core.ResourceType {
 	return r.resourceType
 }
 
+// Return the super attribute that describes this resource.
+func (r *Resource) SuperAttribute() *core.Attribute {
+	return r.data.Attribute()
+}
+
 // Adapting constructor method to return a new navigator for the top level property of the resource.
 func (r *Resource) NewNavigator() *Navigator {
 	return NewNavigator(r.data)

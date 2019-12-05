@@ -47,3 +47,15 @@ func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target 
 		}
 	}
 }
+
+func skipResourceNamespace(resource *prop.Resource, query *expr.Expression) *expr.Expression {
+	if query == nil {
+		return nil
+	}
+
+	if query.IsPath() && query.Token() == resource.ResourceType().ID() {
+		return query.Next()
+	}
+
+	return query
+}

@@ -20,7 +20,7 @@ func Add(resource *prop.Resource, path string, value interface{}) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), head, func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipResourceNamespace(resource, head), func(target core.Property) error {
 		return target.Add(value)
 	})
 }
@@ -38,7 +38,7 @@ func Replace(resource *prop.Resource, path string, value interface{}) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), head, func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipResourceNamespace(resource, head), func(target core.Property) error {
 		return target.Replace(value)
 	})
 }
@@ -54,7 +54,7 @@ func Delete(resource *prop.Resource, path string) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), head, func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipResourceNamespace(resource, head), func(target core.Property) error {
 		return target.Delete()
 	})
 }
