@@ -45,6 +45,21 @@ type integerProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *integerProperty) Clone(parent core.Container) core.Property {
+	c := &integerProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		p.value = &v
+	}
+	return c
+}
+
 func (p *integerProperty) Attribute() *core.Attribute {
 	return p.attr
 }

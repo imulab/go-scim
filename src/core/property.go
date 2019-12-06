@@ -68,6 +68,10 @@ type Property interface {
 	Touched() bool
 	// Add the subscriber to the properties emitted events
 	Subscribe(subscriber Subscriber)
+	// Return an exact clone of the property. The cloned property may share the same instance of attribute and
+	// subscribers, but must retain individual copies of their values. The cloned property should be attached to
+	// the new parent container, which usually is the result of previous Clone call.
+	Clone(parent Container) Property
 }
 
 // Interface for SCIM properties that serve as a container to other properties. For instance, complex and multiValued

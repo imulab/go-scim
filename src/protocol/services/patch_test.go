@@ -1,12 +1,17 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/imulab/go-scim/src/core"
 	"github.com/imulab/go-scim/src/core/expr"
 	scimJSON "github.com/imulab/go-scim/src/core/json"
 	"github.com/imulab/go-scim/src/core/prop"
+	"github.com/imulab/go-scim/src/protocol"
+	"github.com/imulab/go-scim/src/protocol/filters"
+	"github.com/imulab/go-scim/src/protocol/persistence"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"os"
@@ -22,6 +27,149 @@ func TestPatchService(t *testing.T) {
 type PatchServiceTestSuite struct {
 	suite.Suite
 	resourceBase string
+}
+
+func (s *PatchServiceTestSuite) TestPatchService() {
+	_ = s.mustSchema("/user_schema.json")
+	resourceType := s.mustResourceType("/user_resource_type.json")
+	expr.Register(resourceType)
+
+	tests := []struct{
+		name		string
+		setup      func(t *testing.T) *PatchService
+		getRequest func(t *testing.T) *PatchRequest
+		expect     func(t *testing.T, resp *PatchResponse, err error)
+	}{
+		{
+			name: 	"patch to make a difference",
+			setup: func(t *testing.T) *PatchService {
+				memoryPersistence := persistence.Memory()
+				require.Nil(t, memoryPersistence.Insert(
+					context.Background(),
+					s.mustResource("/user_000.json", resourceType)),
+				)
+				return &PatchService{
+					Logger:           protocol.NoOpLogger(),
+					Lock:             protocol.DefaultLock(),
+					PrePatchFilters:  []protocol.ResourceFilter{},
+					PostPatchFilters: []protocol.ResourceFilter{
+						filters.NewCopyReadOnlyResourceFilter(),
+						filters.NewPasswordResourceFilter(10),
+						filters.NewValidationResourceFilter(memoryPersistence),
+						filters.NewMetaResourceFilter(),
+					},
+					Persistence:      memoryPersistence,
+				}
+			},
+			getRequest: func(t *testing.T) *PatchRequest {
+				req := new(PatchRequest)
+				err := json.Unmarshal([]byte(`
+{
+	"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+	"Operations": [
+		{
+			"op": "add",
+			"path": "userName",
+			"value": "foobar"
+		},
+		{
+			"op": "replace",
+			"path": "emails[type eq \"home\"].type",
+			"value": "work"
+		},
+		{
+			"op": "remove",
+			"path": "timezone"
+		}
+	]
+}
+`), req)
+				require.Nil(t, err)
+				req.ResourceID = "3cc032f5-2361-417f-9e2f-bc80adddf4a3"
+				return req
+			},
+			expect: func(t *testing.T, resp *PatchResponse, err error) {
+				assert.Nil(t, err)
+				assert.NotEqual(t, resp.OldVersion, resp.NewVersion)
+
+				nav := resp.Resource.NewNavigator()
+				{
+					_, err := nav.FocusName("userName")
+					assert.Nil(t, err)
+					assert.Equal(t, "foobar", nav.Current().Raw())
+					nav.Retract()
+				}
+				{
+					_, err := nav.FocusName("timezone")
+					assert.Nil(t, err)
+					assert.Nil(t, nav.Current().Raw())
+					nav.Retract()
+				}
+				{
+					_, err := nav.FocusName("emails")
+					assert.Nil(t, err)
+					_ = nav.Current().(core.Container).ForEachChild(func(index int, child core.Property) error {
+						assert.Equal(t, "work", child.(core.Container).ChildAtIndex("type").Raw())
+						return nil
+					})
+					nav.Retract()
+				}
+			},
+		},
+		{
+			name: 	"patch to not make a difference",
+			setup: func(t *testing.T) *PatchService {
+				memoryPersistence := persistence.Memory()
+				require.Nil(t, memoryPersistence.Insert(
+					context.Background(),
+					s.mustResource("/user_000.json", resourceType)),
+				)
+				return &PatchService{
+					Logger:           protocol.NoOpLogger(),
+					Lock:             protocol.DefaultLock(),
+					PrePatchFilters:  []protocol.ResourceFilter{},
+					PostPatchFilters: []protocol.ResourceFilter{
+						filters.NewCopyReadOnlyResourceFilter(),
+						filters.NewPasswordResourceFilter(10),
+						filters.NewValidationResourceFilter(memoryPersistence),
+						filters.NewMetaResourceFilter(),
+					},
+					Persistence:      memoryPersistence,
+				}
+			},
+			getRequest: func(t *testing.T) *PatchRequest {
+				req := new(PatchRequest)
+				err := json.Unmarshal([]byte(`
+{
+	"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+	"Operations": [
+		{
+			"op": "add",
+			"path": "userName",
+			"value": "imulab"
+		}
+	]
+}
+`), req)
+				require.Nil(t, err)
+				req.ResourceID = "3cc032f5-2361-417f-9e2f-bc80adddf4a3"
+				return req
+			},
+			expect: func(t *testing.T, resp *PatchResponse, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, resp.OldVersion, resp.NewVersion)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			service := test.setup(t)
+			request := test.getRequest(t)
+			response, err := service.PatchResource(context.Background(), request)
+			test.expect(t, response, err)
+		})
+	}
 }
 
 func (s *PatchServiceTestSuite) TestParsePayload() {

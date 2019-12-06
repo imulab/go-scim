@@ -48,6 +48,22 @@ type referenceProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *referenceProperty) Clone(parent core.Container) core.Property {
+	c := &referenceProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		hash:        p.hash,
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		c.value = &v
+	}
+	return c
+}
+
 func (p *referenceProperty) Parent() core.Container {
 	return p.parent
 }

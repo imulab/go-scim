@@ -26,6 +26,15 @@ type Resource struct {
 	data         *complexProperty
 }
 
+// Return a clone of this resource. The clone will contain properties that share the same instance of attribute and
+// subscribers with the original property before the clone, but retain separate instance of values.
+func (r *Resource) Clone() *Resource {
+	return &Resource{
+		resourceType: r.resourceType,
+		data:         r.data.Clone(nil).(*complexProperty),
+	}
+}
+
 // Return the resource type of this resource
 func (r *Resource) ResourceType() *core.ResourceType {
 	return r.resourceType

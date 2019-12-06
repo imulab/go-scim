@@ -48,6 +48,20 @@ type multiValuedProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *multiValuedProperty) Clone(parent core.Container) core.Property {
+	c := &multiValuedProperty{
+		parent:      parent,
+		attr:        p.attr,
+		elements:    make([]core.Property, 0),
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	for _, elem := range p.elements {
+		c.elements = append(c.elements, elem.Clone(parent))
+	}
+	return c
+}
+
 func (p *multiValuedProperty) Parent() core.Container {
 	return p.parent
 }

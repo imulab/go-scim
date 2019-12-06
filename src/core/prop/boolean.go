@@ -45,6 +45,21 @@ type booleanProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *booleanProperty) Clone(parent core.Container) core.Property {
+	c := &booleanProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		c.value = &v
+	}
+	return c
+}
+
 func (p *booleanProperty) Parent() core.Container {
 	return p.parent
 }

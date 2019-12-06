@@ -48,6 +48,22 @@ type stringProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *stringProperty) Clone(parent core.Container) core.Property {
+	c := &stringProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		hash:        p.hash,
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		c.value = &v
+	}
+	return c
+}
+
 func (p *stringProperty) Parent() core.Container {
 	return p.parent
 }

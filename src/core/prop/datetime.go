@@ -48,6 +48,21 @@ type dateTimeProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *dateTimeProperty) Clone(parent core.Container) core.Property {
+	c := &dateTimeProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v, _ := time.Parse(ISO8601, p.Raw().(string))
+		c.value = &v
+	}
+	return c
+}
+
 func (p *dateTimeProperty) Parent() core.Container {
 	return p.parent
 }

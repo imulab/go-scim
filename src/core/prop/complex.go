@@ -81,6 +81,21 @@ type complexProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *complexProperty) Clone(parent core.Container) core.Property {
+	c := &complexProperty{
+		parent:      parent,
+		attr:        p.attr,
+		subProps:    make([]core.Property, 0, len(p.subProps)),
+		nameIndex:   make(map[string]int),
+		subscribers: p.subscribers,
+	}
+	for i, sp := range p.subProps {
+		c.subProps = append(c.subProps, sp.Clone(c))
+		c.nameIndex[strings.ToLower(sp.Attribute().Name())] = i
+	}
+	return c
+}
+
 func (p *complexProperty) Parent() core.Container {
 	return p.parent
 }

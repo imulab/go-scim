@@ -45,6 +45,21 @@ type decimalProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *decimalProperty) Clone(parent core.Container) core.Property {
+	c := &decimalProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		c.value = &v
+	}
+	return c
+}
+
 func (p *decimalProperty) Attribute() *core.Attribute {
 	return p.attr
 }

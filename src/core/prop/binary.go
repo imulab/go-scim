@@ -48,6 +48,19 @@ type binaryProperty struct {
 	subscribers []core.Subscriber
 }
 
+func (p *binaryProperty) Clone(parent core.Container) core.Property {
+	c := &binaryProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       make([]byte, len(p.value), len(p.value)),
+		hash:        p.hash,
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	copy(c.value, p.value)
+	return c
+}
+
 func (p *binaryProperty) Parent() core.Container {
 	return p.parent
 }
