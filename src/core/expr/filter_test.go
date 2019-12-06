@@ -1,7 +1,6 @@
 package expr
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -53,7 +52,7 @@ func (s *FilterTestSuite) TestFilterCompiler() {
 				assert.Nil(t, err)
 				assert.Len(t, trail, 3)
 
-				assert.Equal(t, core.Eq, trail[0].value)
+				assert.Equal(t, Eq, trail[0].value)
 				assert.Equal(t, "username", trail[1].value)
 				assert.Equal(t, "\"foo\"", trail[2].value)
 
@@ -69,7 +68,7 @@ func (s *FilterTestSuite) TestFilterCompiler() {
 				assert.Nil(t, err)
 				assert.Len(t, trail, 3)
 
-				assert.Equal(t, core.Gt, trail[0].value)
+				assert.Equal(t, Gt, trail[0].value)
 				assert.Equal(t, "age", trail[1].value)
 				assert.Equal(t, "10", trail[2].value)
 
@@ -85,7 +84,7 @@ func (s *FilterTestSuite) TestFilterCompiler() {
 				assert.Nil(t, err)
 				assert.Len(t, trail, 5)
 
-				assert.Equal(t, core.Gt, trail[0].value)
+				assert.Equal(t, Gt, trail[0].value)
 				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User", trail[1].value)
 				assert.Equal(t, "meta", trail[2].value)
 				assert.Equal(t, "created", trail[3].value)
@@ -105,8 +104,8 @@ func (s *FilterTestSuite) TestFilterCompiler() {
 				assert.Nil(t, err)
 				assert.Len(t, trail, 3)
 
-				assert.Equal(t, core.Not, trail[0].value)
-				assert.Equal(t, core.Pr, trail[1].value)
+				assert.Equal(t, Not, trail[0].value)
+				assert.Equal(t, Pr, trail[1].value)
 				assert.Equal(t, "name", trail[2].value)
 
 				assert.Equal(t, operator, trail[0].typ)
@@ -121,11 +120,11 @@ func (s *FilterTestSuite) TestFilterCompiler() {
 				assert.Nil(t, err)
 				assert.Len(t, trail, 7)
 
-				assert.Equal(t, core.And, trail[0].value)
-				assert.Equal(t, core.Eq, trail[1].value)
+				assert.Equal(t, And, trail[0].value)
+				assert.Equal(t, Eq, trail[1].value)
 				assert.Equal(t, "username", trail[2].value)
 				assert.Equal(t, "\"foo\"", trail[3].value)
-				assert.Equal(t, core.Gt, trail[4].value)
+				assert.Equal(t, Gt, trail[4].value)
 				assert.Equal(t, "age", trail[5].value)
 				assert.Equal(t, "10", trail[6].value)
 

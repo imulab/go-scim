@@ -1,7 +1,6 @@
 package expr
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -89,7 +88,7 @@ func (s *PathTestSuite) TestPathCompiler() {
 				assert.Nil(t, err)
 				assert.Len(t, trail, 4)
 				assert.Equal(t, "emails", trail[0].value)
-				assert.Equal(t, core.Eq, trail[1].value)
+				assert.Equal(t, Eq, trail[1].value)
 				assert.Equal(t, "primary", trail[2].value)
 				assert.Equal(t, "true", trail[3].value)
 				assert.Equal(t, step, trail[0].typ)
@@ -105,7 +104,7 @@ func (s *PathTestSuite) TestPathCompiler() {
 				assert.Nil(t, err)
 				assert.Len(t, trail, 5)
 				assert.Equal(t, "emails", trail[0].value)
-				assert.Equal(t, core.Eq, trail[1].value)
+				assert.Equal(t, Eq, trail[1].value)
 				assert.Equal(t, "primary", trail[2].value)
 				assert.Equal(t, "true", trail[3].value)
 				assert.Equal(t, "value", trail[4].value)

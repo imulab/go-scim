@@ -1,9 +1,0 @@
-{
-  "schemas": ["urn:imulab:scim:TestObject"],
-  "id": "b8194be4-3f3e-42e4-9b80-f3d84df3165b",
-  "name": "testObject1",
-  "age": 18,
-  "score": 95.5,
-  "status": true,
-  "tags": ["testObject", "one"]
-}

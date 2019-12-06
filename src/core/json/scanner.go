@@ -5,7 +5,7 @@ package json
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/core"
+	"github.com/imulab/go-scim/src/core/errors"
 	"strconv"
 )
 
@@ -120,7 +120,7 @@ func (s *scanner) eof() int {
 		return scanEnd
 	}
 	if s.err == nil {
-		s.err = core.Errors.InvalidSyntax(fmt.Sprintf("unexpected end of JSON input (%d)", s.bytes))
+		s.err = errors.InvalidSyntax(fmt.Sprintf("unexpected end of JSON input (%d)", s.bytes))
 	}
 	return scanError
 }
@@ -539,7 +539,7 @@ func stateError(s *scanner, c byte) int {
 // errInvalidSyntax records an errInvalidSyntax and switches to the errInvalidSyntax state.
 func (s *scanner) error(c byte, context string) int {
 	s.step = stateError
-	s.err = core.Errors.InvalidSyntax(fmt.Sprintf("invalid character %s %s (%d)", quoteChar(c), context, s.bytes))
+	s.err = errors.InvalidSyntax(fmt.Sprintf("invalid character %s %s (%d)", quoteChar(c), context, s.bytes))
 	return scanError
 }
 
