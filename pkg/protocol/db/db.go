@@ -1,11 +1,12 @@
-package protocol
+package db
 
 import (
 	"context"
 	"github.com/imulab/go-scim/pkg/core/prop"
 )
 
-type PersistenceProvider interface {
+// Abstraction for the database that provides the main persistence and look up capabilities.
+type DB interface {
 	// Insert the given resource into the database, or return any error.
 	Insert(ctx context.Context, resource *prop.Resource) error
 	// Count the number of resources that meets the given SCIM filter.

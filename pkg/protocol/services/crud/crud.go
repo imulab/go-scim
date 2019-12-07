@@ -1,7 +1,6 @@
 package crud
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	"github.com/imulab/go-scim/pkg/core/prop"
@@ -10,7 +9,7 @@ import (
 // Add value to SCIM resource at the given SCIM path. If SCIM path is empty, value will be added
 // to the root of the resource. The supplied value must be compatible with the target property attribute,
 // otherwise error will be returned.
-func Add(resource *prop.Resource, path string, value interface{}) errors {
+func Add(resource *prop.Resource, path string, value interface{}) error {
 	if len(path) == 0 {
 		return resource.Add(value)
 	}
@@ -20,7 +19,7 @@ func Add(resource *prop.Resource, path string, value interface{}) errors {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) errors {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target prop.Property) error {
 		return target.Add(value)
 	})
 }
@@ -28,7 +27,7 @@ func Add(resource *prop.Resource, path string, value interface{}) errors {
 // Replace value in SCIM resource at the given SCIM path. If SCIM path is empty, the root of the resource
 // will be replaced. The supplied value must be compatible with the target property attribute, otherwise
 // error will be returned.
-func Replace(resource *prop.Resource, path string, value interface{}) errors {
+func Replace(resource *prop.Resource, path string, value interface{}) error {
 	if len(path) == 0 {
 		return resource.Replace(value)
 	}
@@ -38,13 +37,13 @@ func Replace(resource *prop.Resource, path string, value interface{}) errors {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) errors {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target prop.Property) error {
 		return target.Replace(value)
 	})
 }
 
 // Delete value from the SCIM resource at the specified SCIM path. The path cannot be empty.
-func Delete(resource *prop.Resource, path string) errors {
+func Delete(resource *prop.Resource, path string) error {
 	if len(path) == 0 {
 		return errors.InvalidPath("path must not be empty when deleting from resource")
 	}
@@ -54,7 +53,7 @@ func Delete(resource *prop.Resource, path string) errors {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) errors {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target prop.Property) error {
 		return target.Delete()
 	})
 }

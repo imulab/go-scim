@@ -2,10 +2,10 @@ package crud
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	scimJSON "github.com/imulab/go-scim/pkg/core/json"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
@@ -15,7 +15,7 @@ import (
 
 func TestCRUD(t *testing.T) {
 	s := new(CRUDTestSuite)
-	s.resourceBase = "../../tests/crud_test_suite"
+	s.resourceBase = "../../../tests/crud_test_suite"
 	suite.Run(t, s)
 }
 
@@ -140,8 +140,8 @@ func (s *CRUDTestSuite) TestAdd() {
 					_, err = nav.FocusName("emails")
 					assert.Nil(t, err)
 				}
-				_ = nav.Current().(core.Container).ForEachChild(func(index int, child core.Property) error {
-					assert.Equal(t, "foobar", child.(core.Container).ChildAtIndex("display").Raw())
+				_ = nav.Current().(prop.Container).ForEachChild(func(index int, child prop.Property) error {
+					assert.Equal(t, "foobar", child.(prop.Container).ChildAtIndex("display").Raw())
 					return nil
 				})
 			},
@@ -164,15 +164,15 @@ func (s *CRUDTestSuite) TestAdd() {
 				{
 					_, err = nav.FocusIndex(0)
 					assert.Nil(t, err)
-					assert.Equal(t, "imulab@foo.com", nav.Current().(core.Container).ChildAtIndex("value").Raw())
-					assert.Nil(t, nav.Current().(core.Container).ChildAtIndex("primary").Raw())
+					assert.Equal(t, "imulab@foo.com", nav.Current().(prop.Container).ChildAtIndex("value").Raw())
+					assert.Nil(t, nav.Current().(prop.Container).ChildAtIndex("primary").Raw())
 					nav.Retract()
 				}
 				{
 					_, err = nav.FocusIndex(1)
 					assert.Nil(t, err)
-					assert.Equal(t, "imulab@bar.com", nav.Current().(core.Container).ChildAtIndex("value").Raw())
-					assert.Equal(t, true, nav.Current().(core.Container).ChildAtIndex("primary").Raw())
+					assert.Equal(t, "imulab@bar.com", nav.Current().(prop.Container).ChildAtIndex("value").Raw())
+					assert.Equal(t, true, nav.Current().(prop.Container).ChildAtIndex("primary").Raw())
 					nav.Retract()
 				}
 			},
@@ -255,7 +255,7 @@ func (s *CRUDTestSuite) TestReplace() {
 					_, err = nav.FocusName("emails")
 					assert.Nil(t, err)
 				}
-				assert.Equal(t, 1, nav.Current().(core.Container).CountChildren())
+				assert.Equal(t, 1, nav.Current().(prop.Container).CountChildren())
 			},
 		},
 		{
@@ -275,15 +275,15 @@ func (s *CRUDTestSuite) TestReplace() {
 				{
 					_, err = nav.FocusIndex(0)
 					assert.Nil(t, err)
-					assert.Equal(t, "imulab@foo.com", nav.Current().(core.Container).ChildAtIndex("value").Raw())
-					assert.NotEmpty(t, nav.Current().(core.Container).ChildAtIndex("display").Raw())
+					assert.Equal(t, "imulab@foo.com", nav.Current().(prop.Container).ChildAtIndex("value").Raw())
+					assert.NotEmpty(t, nav.Current().(prop.Container).ChildAtIndex("display").Raw())
 					nav.Retract()
 				}
 				{
 					_, err = nav.FocusIndex(1)
 					assert.Nil(t, err)
-					assert.Equal(t, "imulab@bar.com", nav.Current().(core.Container).ChildAtIndex("value").Raw())
-					assert.True(t, nav.Current().(core.Container).ChildAtIndex("display").IsUnassigned())
+					assert.Equal(t, "imulab@bar.com", nav.Current().(prop.Container).ChildAtIndex("value").Raw())
+					assert.True(t, nav.Current().(prop.Container).ChildAtIndex("display").IsUnassigned())
 					nav.Retract()
 				}
 			},
@@ -375,7 +375,7 @@ func (s *CRUDTestSuite) TestDelete() {
 					_, err = nav.FocusName("emails")
 					assert.Nil(t, err)
 				}
-				assert.Equal(t, 1, nav.Current().(core.Container).CountChildren())
+				assert.Equal(t, 1, nav.Current().(prop.Container).CountChildren())
 			},
 		},
 		{
@@ -396,15 +396,15 @@ func (s *CRUDTestSuite) TestDelete() {
 				{
 					_, err = nav.FocusIndex(0)
 					assert.Nil(t, err)
-					assert.Equal(t, "imulab@foo.com", nav.Current().(core.Container).ChildAtIndex("value").Raw())
-					assert.Nil(t, nav.Current().(core.Container).ChildAtIndex("primary").Raw())
+					assert.Equal(t, "imulab@foo.com", nav.Current().(prop.Container).ChildAtIndex("value").Raw())
+					assert.Nil(t, nav.Current().(prop.Container).ChildAtIndex("primary").Raw())
 					nav.Retract()
 				}
 				{
 					_, err = nav.FocusIndex(1)
 					assert.Nil(t, err)
-					assert.Equal(t, "imulab@bar.com", nav.Current().(core.Container).ChildAtIndex("value").Raw())
-					assert.Equal(t, true, nav.Current().(core.Container).ChildAtIndex("primary").Raw())
+					assert.Equal(t, "imulab@bar.com", nav.Current().(prop.Container).ChildAtIndex("value").Raw())
+					assert.Equal(t, true, nav.Current().(prop.Container).ChildAtIndex("primary").Raw())
 					nav.Retract()
 				}
 			},
@@ -420,7 +420,7 @@ func (s *CRUDTestSuite) TestDelete() {
 	}
 }
 
-func (s *CRUDTestSuite) mustResource(filePath string, resourceType *core.ResourceType) *prop.Resource {
+func (s *CRUDTestSuite) mustResource(filePath string, resourceType *spec.ResourceType) *prop.Resource {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
@@ -434,32 +434,32 @@ func (s *CRUDTestSuite) mustResource(filePath string, resourceType *core.Resourc
 	return resource
 }
 
-func (s *CRUDTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *CRUDTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *CRUDTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *CRUDTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }

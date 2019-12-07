@@ -1,36 +1,27 @@
-package filters
+package filter
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
+	"context"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
+	"github.com/imulab/go-scim/pkg/core/spec"
 )
 
-func NewResourceFieldFilterOf(filters ...protocol.FieldFilter) protocol.ResourceFilter {
-	return &resourceFieldFilter{
-		filters: filters,
-	}
-}
-
 type (
-	resourceFieldFilter struct {
-		filters []protocol.FieldFilter
-	}
 	// Visitor implementation to traverse the resource structure. If reference is present,
 	// best effort to keep the reference property in sync with the traversing property so
 	// they can be compared.
-	resourceFieldVisitor struct {
-		ctx      *protocol.FilterContext
+	syncPropertyVisitor struct {
+		ctx      context.Context
 		resource *prop.Resource
 		ref      *prop.Resource
 		refNav   *prop.Navigator
-		filters  []protocol.FieldFilter
+		filters  []ForProperty
 		stack    []*frame
 	}
 	// Stack frame to keep track during the resource traversal.
 	frame struct {
 		// Container properties for all properties being visited in the current frame
-		container core.Container
+		container prop.Container
 		// true, if the currently focused property on refNav corresponds to the above container
 		inSync bool
 		// function to invoke when the current frame is about to be retired
@@ -38,54 +29,28 @@ type (
 	}
 )
 
-func (f *resourceFieldFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
-	v := &resourceFieldVisitor{
-		ctx:      ctx,
-		resource: resource,
-		filters:  f.filters,
-		stack:    make([]*frame, 0),
-	}
-	return resource.Visit(v)
-}
-
-func (f *resourceFieldFilter) FilterRef(ctx *protocol.FilterContext, resource *prop.Resource, ref *prop.Resource) error {
-	if ref == nil {
-		return f.Filter(ctx, resource)
-	}
-
-	v := &resourceFieldVisitor{
-		ctx:      ctx,
-		resource: resource,
-		ref:      ref,
-		refNav:   ref.NewNavigator(),
-		filters:  f.filters,
-		stack:    make([]*frame, 0),
-	}
-	return resource.Visit(v)
-}
-
-func (v *resourceFieldVisitor) ShouldVisit(property core.Property) bool {
+func (v *syncPropertyVisitor) ShouldVisit(property prop.Property) bool {
 	return true
 }
 
-func (v *resourceFieldVisitor) Visit(property core.Property) error {
+func (v *syncPropertyVisitor) Visit(property prop.Property) error {
 	if v.ref == nil {
 		return v.visit(property)
 	}
 
-	var refProp core.Property = nil
+	var refProp prop.Property
 	{
 		if v.currentFrame().inSync {
-			container := v.refNav.Current().(core.Container)
+			container := v.refNav.Current().(prop.Container)
 			switch {
 			case container.Attribute().MultiValued():
-				if r, err := v.refNav.FocusCriteria(func(child core.Property) bool {
+				if r, err := v.refNav.FocusCriteria(func(child prop.Property) bool {
 					return child.Matches(property)
 				}); err == nil {
 					v.refNav.Retract() // we don't want to actually focus, just get the child property
 					refProp = r
 				}
-			case container.Attribute().Type() == core.TypeComplex:
+			case container.Attribute().Type() == spec.TypeComplex:
 				refProp = container.ChildAtIndex(property.Attribute().Name())
 			default:
 				panic("invalid state")
@@ -95,7 +60,7 @@ func (v *resourceFieldVisitor) Visit(property core.Property) error {
 	return v.visitWithRef(property, refProp)
 }
 
-func (v *resourceFieldVisitor) visitWithRef(property core.Property, refProp core.Property) error {
+func (v *syncPropertyVisitor) visitWithRef(property prop.Property, refProp prop.Property) error {
 	for _, filter := range v.filters {
 		if filter.Supports(property.Attribute()) {
 			if err := filter.FieldRef(v.ctx, v.resource, property, v.ref, refProp); err != nil {
@@ -106,7 +71,7 @@ func (v *resourceFieldVisitor) visitWithRef(property core.Property, refProp core
 	return nil
 }
 
-func (v *resourceFieldVisitor) visit(property core.Property) error {
+func (v *syncPropertyVisitor) visit(property prop.Property) error {
 	for _, filter := range v.filters {
 		if filter.Supports(property.Attribute()) {
 			if err := filter.Filter(v.ctx, v.resource, property); err != nil {
@@ -117,16 +82,16 @@ func (v *resourceFieldVisitor) visit(property core.Property) error {
 	return nil
 }
 
-func (v *resourceFieldVisitor) BeginChildren(container core.Container) {
+func (v *syncPropertyVisitor) BeginChildren(container prop.Container) {
 	switch {
 	case container.Attribute().MultiValued():
 		v.beginMulti(container)
-	case container.Attribute().Type() == core.TypeComplex:
+	case container.Attribute().Type() == spec.TypeComplex:
 		v.beginComplex(container)
 	}
 }
 
-func (v *resourceFieldVisitor) beginComplex(newContainer core.Container) {
+func (v *syncPropertyVisitor) beginComplex(newContainer prop.Container) {
 	// Short circuit: no reference to worry about
 	if v.refNav == nil {
 		v.push(newContainer)
@@ -159,10 +124,10 @@ func (v *resourceFieldVisitor) beginComplex(newContainer core.Container) {
 		oldContainerAttr := v.currentFrame().container.Attribute()
 		switch {
 		case oldContainerAttr.MultiValued():
-			_, focusErr = v.refNav.FocusCriteria(func(child core.Property) bool {
+			_, focusErr = v.refNav.FocusCriteria(func(child prop.Property) bool {
 				return newContainer.Matches(child)
 			})
-		case oldContainerAttr.Type() == core.TypeComplex:
+		case oldContainerAttr.Type() == spec.TypeComplex:
 			_, focusErr = v.refNav.FocusName(newContainer.Attribute().Name())
 		default:
 			panic("invalid frame")
@@ -177,7 +142,7 @@ func (v *resourceFieldVisitor) beginComplex(newContainer core.Container) {
 	}
 }
 
-func (v *resourceFieldVisitor) beginMulti(newContainer core.Container) {
+func (v *syncPropertyVisitor) beginMulti(newContainer prop.Container) {
 	// Short circuit: no reference to worry about
 	if v.refNav == nil {
 		v.push(newContainer)
@@ -202,28 +167,32 @@ func (v *resourceFieldVisitor) beginMulti(newContainer core.Container) {
 	}
 }
 
-func (v *resourceFieldVisitor) EndChildren(container core.Container) {
+func (v *syncPropertyVisitor) EndChildren(container prop.Container) {
 	if v.currentFrame().exitFunc != nil {
 		v.currentFrame().exitFunc()
 	}
 	v.pop()
 }
 
-func (v *resourceFieldVisitor) push(container core.Container) {
+func (v *syncPropertyVisitor) push(container prop.Container) {
 	v.stack = append(v.stack, &frame{
 		container: container,
 	})
 }
 
-func (v *resourceFieldVisitor) pop() {
+func (v *syncPropertyVisitor) pop() {
 	if len(v.stack) > 0 {
 		v.stack = v.stack[:len(v.stack)-1]
 	}
 }
 
-func (v *resourceFieldVisitor) currentFrame() *frame {
+func (v *syncPropertyVisitor) currentFrame() *frame {
 	if len(v.stack) == 0 {
 		panic("stack is empty")
 	}
 	return v.stack[len(v.stack)-1]
 }
+
+var (
+	_ prop.Visitor = (*syncPropertyVisitor)(nil)
+)

@@ -1,7 +1,6 @@
 package crud
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	"github.com/imulab/go-scim/pkg/core/prop"
@@ -9,7 +8,7 @@ import (
 
 // Walk down the currently focused property in the navigator, following the current node in the query expression,
 // and eventually invoke callback on the property corresponding to the end of the query.
-func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target core.Property) errors) errors {
+func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target prop.Property) error) error {
 	if query == nil {
 		return callback(nav.Current())
 	}
@@ -19,7 +18,7 @@ func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target 
 			return errors.InvalidFilter("filter cannot be applied to singular properties")
 		}
 
-		return nav.Current().(core.Container).ForEachChild(func(_ int, child core.Property) errors {
+		return nav.Current().(prop.Container).ForEachChild(func(_ int, child prop.Property) error {
 			if r, e := evaluate(child, query); e != nil {
 				return e
 			} else if r {
@@ -31,7 +30,7 @@ func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target 
 	}
 
 	if nav.Current().Attribute().MultiValued() {
-		return nav.Current().(core.Container).ForEachChild(func(_ int, child core.Property) errors {
+		return nav.Current().(prop.Container).ForEachChild(func(_ int, child prop.Property) error {
 			childNav := prop.NewNavigator(child)
 			if _, err := childNav.FocusName(query.Token()); err != nil {
 				return err

@@ -3,13 +3,14 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	scimJSON "github.com/imulab/go-scim/pkg/core/json"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
-	"github.com/imulab/go-scim/pkg/protocol/filters"
-	"github.com/imulab/go-scim/pkg/protocol/persistence"
+	"github.com/imulab/go-scim/pkg/core/spec"
+	"github.com/imulab/go-scim/pkg/protocol/db"
+	"github.com/imulab/go-scim/pkg/protocol/lock"
+	"github.com/imulab/go-scim/pkg/protocol/log"
+	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -43,22 +44,22 @@ func (s *PatchServiceTestSuite) TestPatchService() {
 		{
 			name: 	"patch to make a difference",
 			setup: func(t *testing.T) *PatchService {
-				memoryPersistence := persistence.Memory()
-				require.Nil(t, memoryPersistence.Insert(
+				memoryDB := db.Memory()
+				require.Nil(t, memoryDB.Insert(
 					context.Background(),
 					s.mustResource("/user_000.json", resourceType)),
 				)
 				return &PatchService{
-					Logger:           protocol.NoOpLogger(),
-					Lock:             protocol.DefaultLock(),
-					PrePatchFilters:  []protocol.ResourceFilter{},
-					PostPatchFilters: []protocol.ResourceFilter{
-						filters.NewCopyReadOnlyResourceFilter(),
-						filters.NewPasswordResourceFilter(10),
-						filters.NewValidationResourceFilter(memoryPersistence),
-						filters.NewMetaResourceFilter(),
+					Logger:           log.None(),
+					Lock:             lock.Default(),
+					PrePatchFilters: []filter.ForResource{},
+					PostPatchFilters: []filter.ForResource{
+						filter.CopyReadOnly(),
+						filter.Password(10),
+						filter.Validation(memoryDB),
+						filter.Meta(),
 					},
-					Persistence:      memoryPersistence,
+					Database: memoryDB,
 				}
 			},
 			getRequest: func(t *testing.T) *PatchRequest {
@@ -108,8 +109,8 @@ func (s *PatchServiceTestSuite) TestPatchService() {
 				{
 					_, err := nav.FocusName("emails")
 					assert.Nil(t, err)
-					_ = nav.Current().(core.Container).ForEachChild(func(index int, child core.Property) error {
-						assert.Equal(t, "work", child.(core.Container).ChildAtIndex("type").Raw())
+					_ = nav.Current().(prop.Container).ForEachChild(func(index int, child prop.Property) error {
+						assert.Equal(t, "work", child.(prop.Container).ChildAtIndex("type").Raw())
 						return nil
 					})
 					nav.Retract()
@@ -119,22 +120,22 @@ func (s *PatchServiceTestSuite) TestPatchService() {
 		{
 			name: 	"patch to not make a difference",
 			setup: func(t *testing.T) *PatchService {
-				memoryPersistence := persistence.Memory()
-				require.Nil(t, memoryPersistence.Insert(
+				memoryDB := db.Memory()
+				require.Nil(t, memoryDB.Insert(
 					context.Background(),
 					s.mustResource("/user_000.json", resourceType)),
 				)
 				return &PatchService{
-					Logger:           protocol.NoOpLogger(),
-					Lock:             protocol.DefaultLock(),
-					PrePatchFilters:  []protocol.ResourceFilter{},
-					PostPatchFilters: []protocol.ResourceFilter{
-						filters.NewCopyReadOnlyResourceFilter(),
-						filters.NewPasswordResourceFilter(10),
-						filters.NewValidationResourceFilter(memoryPersistence),
-						filters.NewMetaResourceFilter(),
+					Logger:           log.None(),
+					Lock:             lock.Default(),
+					PrePatchFilters: []filter.ForResource{},
+					PostPatchFilters: []filter.ForResource{
+						filter.CopyReadOnly(),
+						filter.Password(10),
+						filter.Validation(memoryDB),
+						filter.Meta(),
 					},
-					Persistence:      memoryPersistence,
+					Database: memoryDB,
 				}
 			},
 			getRequest: func(t *testing.T) *PatchRequest {
@@ -365,7 +366,7 @@ func (s *PatchServiceTestSuite) TestParsePayload() {
 	}
 }
 
-func (s *PatchServiceTestSuite) mustResource(filePath string, resourceType *core.ResourceType) *prop.Resource {
+func (s *PatchServiceTestSuite) mustResource(filePath string, resourceType *spec.ResourceType) *prop.Resource {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
@@ -379,32 +380,32 @@ func (s *PatchServiceTestSuite) mustResource(filePath string, resourceType *core
 	return resource
 }
 
-func (s *PatchServiceTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *PatchServiceTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *PatchServiceTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *PatchServiceTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }

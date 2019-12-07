@@ -3,12 +3,13 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
+	"github.com/imulab/go-scim/pkg/core/errors"
 	scimJSON "github.com/imulab/go-scim/pkg/core/json"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
-	"github.com/imulab/go-scim/pkg/protocol/filters"
-	"github.com/imulab/go-scim/pkg/protocol/persistence"
+	"github.com/imulab/go-scim/pkg/core/spec"
+	"github.com/imulab/go-scim/pkg/protocol/db"
+	"github.com/imulab/go-scim/pkg/protocol/log"
+	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
@@ -40,17 +41,17 @@ func (s *CreateServiceTestSuite) TestCreate() {
 		{
 			name: "create a new user",
 			setup: func(t *testing.T) *CreateService {
-				memoryPersistence := persistence.Memory()
+				memoryDB := db.Memory()
 				return &CreateService{
-					Logger: protocol.NoOpLogger(),
-					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(),
-						filters.NewIDResourceFilter(),
-						filters.NewPasswordResourceFilter(10),
-						filters.NewMetaResourceFilter(),
-						filters.NewValidationResourceFilter(memoryPersistence),
+					Logger: log.None(),
+					Filters: []filter.ForResource{
+						filter.ClearReadOnly(),
+						filter.ID(),
+						filter.Password(10),
+						filter.Meta(),
+						filter.Validation(memoryDB),
 					},
-					Persistence: memoryPersistence,
+					Database: memoryDB,
 				}
 			},
 			getRequest: func() *CreateRequest {
@@ -69,17 +70,17 @@ func (s *CreateServiceTestSuite) TestCreate() {
 		{
 			name: "create a user missing required userName",
 			setup: func(t *testing.T) *CreateService {
-				memoryPersistence := persistence.Memory()
+				memoryDB := db.Memory()
 				return &CreateService{
-					Logger: protocol.NoOpLogger(),
-					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(),
-						filters.NewIDResourceFilter(),
-						filters.NewPasswordResourceFilter(10),
-						filters.NewMetaResourceFilter(),
-						filters.NewValidationResourceFilter(memoryPersistence),
+					Logger: log.None(),
+					Filters: []filter.ForResource{
+						filter.ClearReadOnly(),
+						filter.ID(),
+						filter.Password(10),
+						filter.Meta(),
+						filter.Validation(memoryDB),
 					},
-					Persistence: memoryPersistence,
+					Database: memoryDB,
 				}
 			},
 			getRequest: func() *CreateRequest {
@@ -90,23 +91,23 @@ func (s *CreateServiceTestSuite) TestCreate() {
 			},
 			expect: func(t *testing.T, resp *CreateResponse, err error) {
 				assert.NotNil(t, err)
-				assert.Equal(t, "invalidValue", err.(*core.Error).Type)
+				assert.Equal(t, "invalidValue", err.(*errors.Error).Type)
 			},
 		},
 		{
 			name: "self administered readOnly fields are ignored",
 			setup: func(t *testing.T) *CreateService {
-				memoryPersistence := persistence.Memory()
+				memoryDB := db.Memory()
 				return &CreateService{
-					Logger: protocol.NoOpLogger(),
-					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(),
-						filters.NewIDResourceFilter(),
-						filters.NewPasswordResourceFilter(10),
-						filters.NewMetaResourceFilter(),
-						filters.NewValidationResourceFilter(memoryPersistence),
+					Logger: log.None(),
+					Filters: []filter.ForResource{
+						filter.ClearReadOnly(),
+						filter.ID(),
+						filter.Password(10),
+						filter.Meta(),
+						filter.Validation(memoryDB),
 					},
-					Persistence: memoryPersistence,
+					Database: memoryDB,
 				}
 			},
 			getRequest: func() *CreateRequest {
@@ -133,7 +134,7 @@ func (s *CreateServiceTestSuite) TestCreate() {
 	}
 }
 
-func (s *CreateServiceTestSuite) mustResource(filePath string, resourceType *core.ResourceType) *prop.Resource {
+func (s *CreateServiceTestSuite) mustResource(filePath string, resourceType *spec.ResourceType) *prop.Resource {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
@@ -147,32 +148,32 @@ func (s *CreateServiceTestSuite) mustResource(filePath string, resourceType *cor
 	return resource
 }
 
-func (s *CreateServiceTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *CreateServiceTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *CreateServiceTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *CreateServiceTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }

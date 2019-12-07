@@ -4,7 +4,10 @@ import (
 	"context"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
+	"github.com/imulab/go-scim/pkg/protocol/db"
+	"github.com/imulab/go-scim/pkg/protocol/event"
+	"github.com/imulab/go-scim/pkg/protocol/lock"
+	"github.com/imulab/go-scim/pkg/protocol/log"
 )
 
 type (
@@ -13,17 +16,17 @@ type (
 		MatchCriteria func(resource *prop.Resource) bool
 	}
 	DeleteService struct {
-		Logger      protocol.LogProvider
-		Lock        protocol.LockProvider
-		Persistence protocol.PersistenceProvider
-		Events      protocol.EventPublisher
+		Logger   log.Logger
+		Lock     lock.Lock
+		Database db.DB
+		Event    event.Publisher
 	}
 )
 
-func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteRequest) errors {
+func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteRequest) error {
 	s.Logger.Debug("received delete request [id=%s]", request.ResourceID)
 
-	resource, err := s.Persistence.Get(ctx, request.ResourceID)
+	resource, err := s.Database.Get(ctx, request.ResourceID)
 	if err != nil {
 		return err
 	} else if request.MatchCriteria != nil && !request.MatchCriteria(resource) {
@@ -36,15 +39,15 @@ func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteReque
 		return err
 	}
 
-	err = s.Persistence.Delete(ctx, request.ResourceID)
+	err = s.Database.Delete(ctx, request.ResourceID)
 	if err != nil {
 		s.Logger.Error("resource [id=%s] failed to delete from persistence: %s", request.ResourceID, err.Error())
 		return err
 	}
 	s.Logger.Debug("resource [id=%s] deleted from persistence", request.ResourceID)
 
-	if s.Events != nil {
-		s.Events.ResourceDeleted(ctx, resource)
+	if s.Event != nil {
+		s.Event.ResourceDeleted(ctx, resource)
 	}
 
 	return nil

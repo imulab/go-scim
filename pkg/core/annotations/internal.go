@@ -9,4 +9,5 @@ const (
 	Primary				= "@Primary"
 	Identity			= "@Identity"
 	CopyReadOnly		= "@CopyReadOnly"
+	RelaxCanonical 		= "@RelaxCanonical"
 )

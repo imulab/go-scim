@@ -1,29 +1,28 @@
-package persistence
+package db
 
 import (
 	"context"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
 	"sync"
 )
 
-// Return a new memory implementation of PersistenceProvider. This implementation saves resources in memory. Although
-// it does allow for concurrent access through the use of RWMutex, it does not however allow for high throughput usage.
+// Return a new memory implementation of Database. This implementation saves resources in memory. Although
+// it does allow for concurrent access through the use of RWMutex, it does not allow for high throughput usage.
 // It is intended for testing and showcasing purposes only.
-func Memory() protocol.PersistenceProvider {
-	return &memoryProvider{
+func Memory() DB {
+	return &memoryDB{
 		RWMutex: sync.RWMutex{},
 		db:      make(map[string]*prop.Resource),
 	}
 }
 
-type memoryProvider struct {
+type memoryDB struct {
 	sync.RWMutex
 	db map[string]*prop.Resource
 }
 
-func (m *memoryProvider) Insert(ctx context.Context, resource *prop.Resource) errors {
+func (m *memoryDB) Insert(ctx context.Context, resource *prop.Resource) error {
 	id := resource.ID()
 	if len(id) == 0 {
 		return errors.Internal("cannot save resource with empty id")
@@ -40,7 +39,7 @@ func (m *memoryProvider) Insert(ctx context.Context, resource *prop.Resource) er
 	return nil
 }
 
-func (m *memoryProvider) Get(ctx context.Context, id string) (*prop.Resource, errors) {
+func (m *memoryDB) Get(ctx context.Context, id string) (*prop.Resource, error) {
 	r, ok := m.db[id]
 	if !ok {
 		return nil, errors.NotFound("resource by id [%s] is not found", id)
@@ -48,12 +47,12 @@ func (m *memoryProvider) Get(ctx context.Context, id string) (*prop.Resource, er
 	return r, nil
 }
 
-func (m *memoryProvider) Count(ctx context.Context, filter string) (int, errors) {
+func (m *memoryDB) Count(ctx context.Context, filter string) (int, error) {
 	// todo
 	return 0, nil
 }
 
-func (m *memoryProvider) Replace(ctx context.Context, resource *prop.Resource) errors {
+func (m *memoryDB) Replace(ctx context.Context, resource *prop.Resource) error {
 	id := resource.ID()
 	_, ok := m.db[id]
 	if !ok {
@@ -63,7 +62,7 @@ func (m *memoryProvider) Replace(ctx context.Context, resource *prop.Resource) e
 	return nil
 }
 
-func (m *memoryProvider) Delete(ctx context.Context, id string) errors {
+func (m *memoryDB) Delete(ctx context.Context, id string) error {
 	delete(m.db, id)
 	return nil
 }

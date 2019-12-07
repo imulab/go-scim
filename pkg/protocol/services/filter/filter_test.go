@@ -1,12 +1,11 @@
-package filters
+package filter
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
 	scimJSON "github.com/imulab/go-scim/pkg/core/json"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
@@ -14,24 +13,24 @@ import (
 	"testing"
 )
 
-func TestResourceFilter(t *testing.T) {
-	s := new(ResourceFilterTestSuite)
-	s.resourceBase = "../../tests/resource_filter_test_suite"
+func TestFromForProperty(t *testing.T) {
+	s := new(FromForPropertyTestSuite)
+	s.resourceBase = "../../../tests/from_for_property_test_suite"
 	suite.Run(t, s)
 }
 
 type (
-	ResourceFilterTestSuite struct {
+	FromForPropertyTestSuite struct {
 		suite.Suite
 		resourceBase string
 	}
-	testFieldFilter struct {
+	testForPropertyFilter struct {
 		t         *testing.T
-		refAssert func(t *testing.T, prop core.Property, refProp core.Property)
+		refAssert func(t *testing.T, prop prop.Property, refProp prop.Property)
 	}
 )
 
-func (s *ResourceFilterTestSuite) TestFilterRef() {
+func (s *FromForPropertyTestSuite) TestFilterRef() {
 	_ = s.mustSchema("/user_schema.json")
 	resourceType := s.mustResourceType("/user_resource_type.json")
 
@@ -39,7 +38,7 @@ func (s *ResourceFilterTestSuite) TestFilterRef() {
 		name        string
 		getResource func() *prop.Resource
 		getRef      func() *prop.Resource
-		expect      func(t *testing.T, prop core.Property, refProp core.Property)
+		expect      func(t *testing.T, prop prop.Property, refProp prop.Property)
 	}{
 		{
 			name: "filter with identical resources",
@@ -49,7 +48,7 @@ func (s *ResourceFilterTestSuite) TestFilterRef() {
 			getRef: func() *prop.Resource {
 				return s.mustResource("/user_001.json", resourceType)
 			},
-			expect: func(t *testing.T, prop core.Property, refProp core.Property) {
+			expect: func(t *testing.T, prop prop.Property, refProp prop.Property) {
 				assert.Equal(t, prop.Attribute().ID(), refProp.Attribute().ID())
 				assert.True(t, prop.Matches(refProp))
 			},
@@ -62,7 +61,7 @@ func (s *ResourceFilterTestSuite) TestFilterRef() {
 			getRef: func() *prop.Resource {
 				return s.mustResource("/user_002.json", resourceType)
 			},
-			expect: func(t *testing.T, prop core.Property, refProp core.Property) {
+			expect: func(t *testing.T, prop prop.Property, refProp prop.Property) {
 				switch prop.Attribute().ID() {
 				case "schemas",
 					"schemas$elem",
@@ -108,14 +107,14 @@ func (s *ResourceFilterTestSuite) TestFilterRef() {
 
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
-			f := NewResourceFieldFilterOf(&testFieldFilter{t: t, refAssert: test.expect})
-			err := f.FilterRef(protocol.NewFilterContext(context.Background()), test.getResource(), test.getRef())
+			f := FromForProperty(&testForPropertyFilter{t: t, refAssert: test.expect})
+			err := f.FilterRef(context.Background(), test.getResource(), test.getRef())
 			assert.Nil(s.T(), err)
 		})
 	}
 }
 
-func (s *ResourceFilterTestSuite) mustResource(filePath string, resourceType *core.ResourceType) *prop.Resource {
+func (s *FromForPropertyTestSuite) mustResource(filePath string, resourceType *spec.ResourceType) *prop.Resource {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
@@ -129,45 +128,46 @@ func (s *ResourceFilterTestSuite) mustResource(filePath string, resourceType *co
 	return resource
 }
 
-func (s *ResourceFilterTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *FromForPropertyTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *ResourceFilterTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *FromForPropertyTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }
 
-func (tf *testFieldFilter) Supports(attribute *core.Attribute) bool {
+func (tf *testForPropertyFilter) Supports(attribute *spec.Attribute) bool {
 	return true
 }
 
-func (tf *testFieldFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) error {
+func (tf *testForPropertyFilter) Filter(ctx context.Context, resource *prop.Resource, property prop.Property) error {
 	return nil
 }
 
-func (tf *testFieldFilter) FieldRef(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error {
+func (tf *testForPropertyFilter) FieldRef(ctx context.Context, resource *prop.Resource, property prop.Property,
+	refResource *prop.Resource, refProperty prop.Property) error {
 	tf.refAssert(tf.t, property, refProperty)
 	return nil
 }

@@ -4,7 +4,11 @@ import (
 	"context"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
+	"github.com/imulab/go-scim/pkg/protocol/db"
+	"github.com/imulab/go-scim/pkg/protocol/event"
+	"github.com/imulab/go-scim/pkg/protocol/lock"
+	"github.com/imulab/go-scim/pkg/protocol/log"
+	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 )
 
 type (
@@ -20,18 +24,18 @@ type (
 		NewVersion string
 	}
 	ReplaceService struct {
-		Logger      protocol.LogProvider
-		Lock        protocol.LockProvider
-		Filters     []protocol.ResourceFilter
-		Persistence protocol.PersistenceProvider
-		Events      protocol.EventPublisher
+		Logger   log.Logger
+		Lock     lock.Lock
+		Filters  []filter.ForResource
+		Database db.DB
+		Event    event.Publisher
 	}
 )
 
-func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRequest) (*ReplaceResponse, errors) {
+func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRequest) (*ReplaceResponse, error) {
 	s.Logger.Debug("received replace request [id=%s]", request.ResourceID)
 
-	ref, err := s.Persistence.Get(ctx, request.ResourceID)
+	ref, err := s.Database.Get(ctx, request.ResourceID)
 	if err != nil {
 		return nil, err
 	} else if request.MatchCriteria != nil && !request.MatchCriteria(ref) {
@@ -44,9 +48,8 @@ func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRe
 		return nil, err
 	}
 
-	fctx := protocol.NewFilterContext(ctx)
-	for _, filter := range s.Filters {
-		if err := filter.FilterRef(fctx, request.Payload, ref); err != nil {
+	for _, f := range s.Filters {
+		if err := f.FilterRef(ctx, request.Payload, ref); err != nil {
 			s.Logger.Error("replace request encounter error during filter for resource [id=%s]: %s", request.ResourceID, err.Error())
 			return nil, err
 		}
@@ -54,15 +57,15 @@ func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRe
 
 	// Only replace when version is bumped
 	if request.Payload.Version() != ref.Version() {
-		err = s.Persistence.Replace(ctx, request.Payload)
+		err = s.Database.Replace(ctx, request.Payload)
 		if err != nil {
 			s.Logger.Error("resource [id=%s] failed to save into persistence: %s", request.ResourceID, err.Error())
 			return nil, err
 		}
 		s.Logger.Debug("resource [id=%s] saved in persistence", request.ResourceID)
 
-		if s.Events != nil {
-			s.Events.ResourceUpdated(ctx, request.Payload)
+		if s.Event != nil {
+			s.Event.ResourceUpdated(ctx, request.Payload)
 		}
 	}
 
