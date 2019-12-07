@@ -1,10 +1,10 @@
-package protocol
+package lock
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
@@ -16,7 +16,7 @@ import (
 
 func TestDefaultLock(t *testing.T) {
 	s := new(DefaultLockTestSuite)
-	s.resourceBase = "../tests/default_lock_test_suite"
+	s.resourceBase = "../../tests/default_lock_test_suite"
 	suite.Run(t, s)
 }
 
@@ -32,7 +32,7 @@ func (s *DefaultLockTestSuite) TestLockTimeout() {
 		"id": "12B3657A-0951-4821-8386-315CF7EBC394",
 	})
 
-	lock := DefaultLock()
+	lock := Default()
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 
 	err := lock.Lock(ctx, resource)
@@ -49,12 +49,12 @@ func (s *DefaultLockTestSuite) TestConcurrentLock() {
 		"id": "12B3657A-0951-4821-8386-315CF7EBC394",
 	})
 
-	lock := DefaultLock()
+	lock := Default()
 	var wg sync.WaitGroup
 	wg.Add(100)
 
 	for i := 0; i < 100; i++ {
-		go func(id int, l LockProvider) {
+		go func(id int, l Lock) {
 			defer wg.Done()
 			err := lock.Lock(context.Background(), resource)
 			s.T().Logf("%d acquired lock", id)
@@ -72,7 +72,7 @@ func (s *DefaultLockTestSuite) TestSequentialLock() {
 		"id": "12B3657A-0951-4821-8386-315CF7EBC394",
 	})
 
-	lock := DefaultLock()
+	lock := Default()
 
 	for i := 0; i < 100; i++ {
 		err := lock.Lock(context.Background(), resource)
@@ -81,32 +81,32 @@ func (s *DefaultLockTestSuite) TestSequentialLock() {
 	}
 }
 
-func (s *DefaultLockTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *DefaultLockTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *DefaultLockTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *DefaultLockTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }
