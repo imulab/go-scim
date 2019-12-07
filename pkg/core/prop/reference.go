@@ -2,78 +2,27 @@ package prop
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"hash/fnv"
 	"strings"
 )
 
-// Create a new unassigned reference property. The method will panic if
-// given attribute is not singular reference type.
-func NewReference(attr *core.Attribute, parent core.Container) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeReference {
-		panic("invalid attribute for reference property")
-	}
-	p := &referenceProperty{
-		parent:      parent,
-		attr:        attr,
-		value:       nil,
-		subscribers: []core.Subscriber{},
-	}
-	subscribeWithAnnotation(p)
-	return p
-}
-
-// Create a new reference property with given value. The method will panic if
-// given attribute is not singular reference type. The property will be
-// marked dirty at the start.
-func NewReferenceOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
-	p := NewReference(attr, parent)
-	if err := p.Replace(value); err != nil {
-		panic(err)
-	}
-	return p
-}
-
-var (
-	_ core.Property = (*referenceProperty)(nil)
-)
-
 type referenceProperty struct {
-	parent      core.Container
-	attr        *core.Attribute
+	parent      Container
+	attr        *spec.Attribute
 	value       *string
 	hash        uint64
-	touched     bool
-	subscribers []core.Subscriber
+	dirty       bool
+	subscribers []Subscriber
 }
 
-func (p *referenceProperty) Clone(parent core.Container) core.Property {
-	c := &referenceProperty{
-		parent:      parent,
-		attr:        p.attr,
-		value:       nil,
-		hash:        p.hash,
-		touched:     p.touched,
-		subscribers: p.subscribers,
-	}
-	if p.value != nil {
-		v := *(p.value)
-		c.value = &v
-	}
-	return c
-}
-
-func (p *referenceProperty) Parent() core.Container {
-	return p.parent
-}
-
-func (p *referenceProperty) Subscribe(subscriber core.Subscriber) {
-	p.subscribers = append(p.subscribers, subscriber)
-}
-
-func (p *referenceProperty) Attribute() *core.Attribute {
+func (p *referenceProperty) Attribute() *spec.Attribute {
 	return p.attr
+}
+
+func (p *referenceProperty) Parent() Container {
+	return p.parent
 }
 
 func (p *referenceProperty) Raw() interface{} {
@@ -87,13 +36,7 @@ func (p *referenceProperty) IsUnassigned() bool {
 	return p.value == nil
 }
 
-func (p *referenceProperty) CountChildren() int {
-	return 0
-}
-
-func (p *referenceProperty) ForEachChild(callback func(index int, child core.Property)) {}
-
-func (p *referenceProperty) Matches(another core.Property) bool {
+func (p *referenceProperty) Matches(another Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
@@ -107,6 +50,19 @@ func (p *referenceProperty) Matches(another core.Property) bool {
 
 func (p *referenceProperty) Hash() uint64 {
 	return p.hash
+}
+
+func (p *referenceProperty) computeHash() {
+	if p.value == nil {
+		p.hash = 0
+	} else {
+		h := fnv.New64a()
+		_, err := h.Write([]byte(*(p.value)))
+		if err != nil {
+			panic("error computing hash")
+		}
+		p.hash = h.Sum64()
+	}
 }
 
 func (p *referenceProperty) EqualsTo(value interface{}) (bool, error) {
@@ -169,11 +125,11 @@ func (p *referenceProperty) Replace(value interface{}) error {
 	if s, ok := value.(string); !ok {
 		return p.errIncompatibleValue(value)
 	} else {
-		p.touched = true
+		p.dirty = true
 		if eq, _ := p.EqualsTo(s); !eq {
 			p.value = &s
 			p.computeHash()
-			if err := p.publish(core.EventAssigned); err != nil {
+			if err := p.publish(EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -182,18 +138,18 @@ func (p *referenceProperty) Replace(value interface{}) error {
 }
 
 func (p *referenceProperty) Delete() error {
-	p.touched = true
+	p.dirty = true
 	if p.value != nil {
 		p.value = nil
 		p.computeHash()
-		if err := p.publish(core.EventUnassigned); err != nil {
+		if err := p.publish(EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *referenceProperty) publish(t core.EventType) error {
+func (p *referenceProperty) publish(t EventType) error {
 	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
@@ -210,25 +166,32 @@ func (p *referenceProperty) publish(t core.EventType) error {
 	return nil
 }
 
-func (p *referenceProperty) Touched() bool {
-	return p.touched
+func (p *referenceProperty) Dirty() bool {
+	return p.dirty
+}
+
+func (p *referenceProperty) Clone(parent Container) Property {
+	c := &referenceProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		hash:        p.hash,
+		dirty:       p.dirty,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		c.value = &v
+	}
+	return c
+}
+
+func (p *referenceProperty) Subscribe(subscriber Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
 }
 
 func (p *referenceProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())
-}
-
-func (p *referenceProperty) computeHash() {
-	if p.value == nil {
-		p.hash = 0
-	} else {
-		h := fnv.New64a()
-		_, err := h.Write([]byte(*(p.value)))
-		if err != nil {
-			panic("error computing hash")
-		}
-		p.hash = h.Sum64()
-	}
 }
 
 func (p *referenceProperty) errIncompatibleValue(value interface{}) error {
@@ -238,3 +201,7 @@ func (p *referenceProperty) errIncompatibleValue(value interface{}) error {
 func (p *referenceProperty) errIncompatibleOp() error {
 	return errors.Internal("incompatible operation")
 }
+
+var (
+	_ Property = (*referenceProperty)(nil)
+)

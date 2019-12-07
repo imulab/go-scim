@@ -30,7 +30,7 @@ type (
 		// Try to obtain a lock on the given resource represented by the id. The method blocks indefinitely
 		// if some other process is currently holding the lock and context does not specify a timeout period.
 		// If lock failed to obtain within the contextual time limits, an error will be returned.
-		Lock(ctx context.Context, resource *prop.Resource) error
+		Lock(ctx context.Context, resource *prop.Resource) errors
 		// Return the held lock. In any situation, the method should return immediately.
 		Unlock(ctx context.Context, resource *prop.Resource)
 	}
@@ -45,7 +45,7 @@ type (
 	noOpLocker struct{}
 )
 
-func (p *defaultLocker) Lock(ctx context.Context, resource *prop.Resource) error {
+func (p *defaultLocker) Lock(ctx context.Context, resource *prop.Resource) errors {
 	id := resource.ID()
 	if len(id) == 0 {
 		return errors.Internal("Cannot obtain lock for resource without ID")
@@ -95,7 +95,7 @@ func (p *defaultLocker) Unlock(ctx context.Context, resource *prop.Resource) {
 	}
 }
 
-func (n noOpLocker) Lock(ctx context.Context, resource *prop.Resource) error {
+func (n noOpLocker) Lock(ctx context.Context, resource *prop.Resource) errors {
 	return nil
 }
 

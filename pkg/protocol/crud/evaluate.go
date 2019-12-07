@@ -10,7 +10,7 @@ import (
 )
 
 // Evaluate if the property meets the compiled SCIM filter.
-func evaluate(property core.Property, filter *expr.Expression) (bool, error) {
+func evaluate(property core.Property, filter *expr.Expression) (bool, errors) {
 	if filter == nil {
 		return false, errors.InvalidFilter("filter is invalid")
 	}
@@ -47,7 +47,7 @@ func evaluate(property core.Property, filter *expr.Expression) (bool, error) {
 	var (
 		result bool
 	)
-	if err := traverse(prop.NewNavigator(property), filter.Left(), func(target core.Property) (fe error) {
+	if err := traverse(prop.NewNavigator(property), filter.Left(), func(target core.Property) (fe errors) {
 		var value interface{}
 		if filter.Token() != expr.Pr {
 			value, fe = normalize(target.Attribute(), filter.Right().Token())
@@ -117,7 +117,7 @@ func evaluate(property core.Property, filter *expr.Expression) (bool, error) {
 }
 
 // Take the raw string presentation of a value and normalize it to corresponding types according to the attribute.
-func normalize(attr *core.Attribute, token string) (interface{}, error) {
+func normalize(attr *core.Attribute, token string) (interface{}, errors) {
 	switch attr.Type() {
 	case core.TypeString, core.TypeDateTime, core.TypeBinary, core.TypeReference:
 		if strings.HasPrefix(token, "\"") && strings.HasSuffix(token, "\"") {

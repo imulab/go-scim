@@ -9,7 +9,7 @@ import (
 
 // Entry point of JSON deserialization. Unmarshal the JSON input bytes into the unassigned
 // structure of resource.
-func Deserialize(json []byte, resource *prop.Resource) error {
+func Deserialize(json []byte, resource *prop.Resource) errors {
 	if err := checkValid(json, &scanner{}); err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func Deserialize(json []byte, resource *prop.Resource) error {
 // spaces, and should a fragment of valid JSON.
 // The allowElementForArray option is provided to allow JSON array element values be provided for a multiValued property
 // so that it will be de-serialized as its element. The result will be a multiValued property containing a single element.
-func DeserializeProperty(json []byte, property core.Property, allowElementForArray bool) error {
+func DeserializeProperty(json []byte, property core.Property, allowElementForArray bool) errors {
 	state := &deserializeState{
 		data:      json,
 		off:       0,
@@ -87,17 +87,17 @@ type deserializeState struct {
 	navigator *prop.Navigator
 }
 
-func (d *deserializeState) errInvalidSyntax(msg string, args ...interface{}) error {
+func (d *deserializeState) errInvalidSyntax(msg string, args ...interface{}) errors {
 	return errors.InvalidSyntax("failed to parse json: "+msg+" (idx: %d)", append(args, d.off)...)
 }
 
-func (d *deserializeState) errInvalidValue(msg string, args ...interface{}) error {
+func (d *deserializeState) errInvalidValue(msg string, args ...interface{}) errors {
 	return errors.InvalidValue("failed to parse json: "+msg+" (idx: %d)", append(args, d.off)...)
 }
 
 // Parses the attribute/field name in a JSON object. This method expects a quoted string and skips through
 // as much empty spaces and colon (appears as scanObjectKey) after it as possible.
-func (d *deserializeState) parseFieldName() (string, error) {
+func (d *deserializeState) parseFieldName() (string, errors) {
 	if d.opCode != scanBeginLiteral {
 		return "", d.errInvalidSyntax("expects attribute name")
 	}
@@ -122,7 +122,7 @@ Skip:
 // Parses a top level or embedded JSON object. When parsing a top level object, allowNull shall be false as top level
 // object does not correspond to any field name and hence cannot be null; when parsing an embedded object, allowNull may
 // be true. This method expects '{' (appears as scanBeginObject) to be the current byte
-func (d *deserializeState) parseComplexProperty(allowNull bool) error {
+func (d *deserializeState) parseComplexProperty(allowNull bool) errors {
 	// expects '{', and depending on allowNull, allowing for the null literal.
 	if d.opCode != scanBeginObject {
 		if allowNull && d.opCode == scanBeginLiteral {
@@ -139,7 +139,7 @@ kvs:
 		// Focus on the property that corresponds to the field name
 		var (
 			p   core.Property
-			err error
+			err errors
 		)
 		{
 			attrName, err := d.parseFieldName()
@@ -192,7 +192,7 @@ kvs:
 
 // Delegate method to parse single valued field values. The caller must ensure that the currently focused property
 // is indeed single valued.
-func (d *deserializeState) parseSingleValuedProperty() error {
+func (d *deserializeState) parseSingleValuedProperty() errors {
 	switch d.navigator.Current().Attribute().Type() {
 	case core.TypeString, core.TypeDateTime, core.TypeBinary, core.TypeReference:
 		return d.parseStringProperty()
@@ -211,7 +211,7 @@ func (d *deserializeState) parseSingleValuedProperty() error {
 
 // Parses a JSON array. This method expects '[' (appears as scanBeginArray) to be the current byte, or the literal
 // null.
-func (d *deserializeState) parseMultiValuedProperty() error {
+func (d *deserializeState) parseMultiValuedProperty() errors {
 	// Expect '[' or null.
 	if d.opCode != scanBeginArray {
 		if d.opCode == scanBeginLiteral {
@@ -265,7 +265,7 @@ elements:
 }
 
 // Parses a JSON string. This method expects a double quoted literal and the null literal.
-func (d *deserializeState) parseStringProperty() error {
+func (d *deserializeState) parseStringProperty() errors {
 	p := d.navigator.Current()
 
 	// check property type
@@ -297,7 +297,7 @@ func (d *deserializeState) parseStringProperty() error {
 }
 
 // Parses a JSON integer. This method expects an integer literal and the null literal.
-func (d *deserializeState) parseIntegerProperty() error {
+func (d *deserializeState) parseIntegerProperty() errors {
 	p := d.navigator.Current()
 
 	// check property type
@@ -327,7 +327,7 @@ func (d *deserializeState) parseIntegerProperty() error {
 }
 
 // Parses a JSON boolean. This method expects the true, false, or null literal.
-func (d *deserializeState) parseBooleanProperty() error {
+func (d *deserializeState) parseBooleanProperty() errors {
 	p := d.navigator.Current()
 
 	// check property type
@@ -358,7 +358,7 @@ func (d *deserializeState) parseBooleanProperty() error {
 }
 
 // Parses a JSON decimal. This method expects a decimal literal and the null literal.
-func (d *deserializeState) parseDecimalProperty() error {
+func (d *deserializeState) parseDecimalProperty() errors {
 	p := d.navigator.Current()
 
 	// check property type
@@ -388,7 +388,7 @@ func (d *deserializeState) parseDecimalProperty() error {
 }
 
 // Parses the JSON null literal.
-func (d *deserializeState) parseNull() error {
+func (d *deserializeState) parseNull() errors {
 	// should start with literal
 	if d.opCode != scanBeginLiteral {
 		return d.errInvalidSyntax("expects property value")

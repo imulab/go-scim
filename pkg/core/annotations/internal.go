@@ -6,4 +6,7 @@ const (
 	SchemaExtensionRoot = "@SchemaExtensionRoot"
 	ExclusivePrimary    = "@ExclusivePrimary"
 	AutoCompact         = "@AutoCompact"
+	Primary				= "@Primary"
+	Identity			= "@Identity"
+	CopyReadOnly		= "@CopyReadOnly"
 )

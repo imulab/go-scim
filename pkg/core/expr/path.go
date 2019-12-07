@@ -9,7 +9,7 @@ import (
 
 // Create a new SCIM path expression, returns the head of the path expression linked list, or any error.
 // The result may contain a filter root node, depending on the given path expression.
-func CompilePath(path string) (*Expression, error) {
+func CompilePath(path string) (*Expression, errors) {
 	compiler := &pathCompiler{
 		scan: &pathScanner{},
 		data: append(copyOf(path), 0, 0),
@@ -79,7 +79,7 @@ func (c *pathCompiler) hasMore() bool {
 }
 
 // Produce the next token
-func (c *pathCompiler) next() (*Expression, error) {
+func (c *pathCompiler) next() (*Expression, errors) {
 	if c.op == scanPathError {
 		return nil, c.scan.err
 	}
@@ -101,7 +101,7 @@ func (c *pathCompiler) next() (*Expression, error) {
 }
 
 // Scan and make the path step after reading scanPathBeginStep op code.
-func (c *pathCompiler) scanStep() (*Expression, error) {
+func (c *pathCompiler) scanStep() (*Expression, errors) {
 	// start offset is one previous of the internal offset state because this function is only
 	// invoked after seeing scanPathBeginStep, hence we are already one pass the actual start
 	// of the step
@@ -126,7 +126,7 @@ func (c *pathCompiler) scanStep() (*Expression, error) {
 }
 
 // Scan and make the filter step after reading scanPathBeginFilter op code. The work is delegated filterCompiler
-func (c *pathCompiler) scanFilter() (*Expression, error) {
+func (c *pathCompiler) scanFilter() (*Expression, errors) {
 	start := c.off
 	end := c.skipWhile(scanPathContinue)
 	switch c.op {
@@ -205,7 +205,7 @@ type pathScanner struct {
 	step func(*pathScanner, byte) int
 	// error incurred during the scanning. Once errored, the state machine shall remain
 	// in error state.
-	err error
+	err errors
 	// number of bytes that has been scanned. This is assisting data that helps formulating
 	// error information.
 	bytes int64

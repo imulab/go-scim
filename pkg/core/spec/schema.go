@@ -1,36 +1,21 @@
-package core
+package spec
 
-import "encoding/json"
-
-var (
-	_ json.Marshaler   = (*Schema)(nil)
-	_ json.Unmarshaler = (*Schema)(nil)
-
-	// Central repository for schemas
-	SchemaHub = &schemaHub{schemaById: make(map[string]*Schema)}
+import (
+	"encoding/json"
+	"github.com/imulab/go-scim/pkg/core/annotations"
 )
 
-type (
-	// A SCIM schema is a collection of attributes, used to describe a whole or a part of a resource.
-	Schema struct {
-		id          string
-		name        string
-		description string
-		attributes  []*Attribute
-	}
-	// Adapter for schema to serialize to and deserialize from JSON format, so that schema does not have
-	// to expose internal pointers.
-	schemaJSONAdapter struct {
-		ID          string       `json:"id"`
-		Name        string       `json:"name"`
-		Description string       `json:"description"`
-		Attributes  []*Attribute `json:"attributes"`
-	}
-	// A collection of schemas by their ID.
-	schemaHub struct {
-		schemaById map[string]*Schema
-	}
-)
+// Central repository for schemas
+var SchemaHub = &schemaHub{schemaById: make(map[string]*Schema)}
+
+// A SCIM schema is a collection of attributes, used to describe
+// a whole or a part of a resource.
+type Schema struct {
+	id          string
+	name        string
+	description string
+	attributes  []*Attribute
+}
 
 // Return the ID of the schema.
 func (s *Schema) ID() string {
@@ -79,6 +64,21 @@ func (s *Schema) UnmarshalJSON(raw []byte) error {
 	return nil
 }
 
+type (
+	// Adapter for schema to serialize to and deserialize from JSON format, so that schema does not have
+	// to expose internal pointers.
+	schemaJSONAdapter struct {
+		ID          string       `json:"id"`
+		Name        string       `json:"name"`
+		Description string       `json:"description"`
+		Attributes  []*Attribute `json:"attributes"`
+	}
+	// A collection of schemas by their ID.
+	schemaHub struct {
+		schemaById map[string]*Schema
+	}
+)
+
 // Extract values from schema into this adapter
 func (d *schemaJSONAdapter) extract(s *Schema) {
 	d.ID = s.id
@@ -116,99 +116,101 @@ func (h *schemaHub) CoreSchema() *Schema {
 			{
 				id:          "schemas",
 				name:        "schemas",
+				path:        "schemas",
 				typ:         TypeReference,
 				multiValued: true,
 				required:    true,
 				caseExact:   true,
 				returned:    ReturnedAlways,
 				index:       0,
-				path:        "schemas",
-				annotations: []string{"@AutoCompact"},
+				annotationIndex: map[string]struct{}{
+					annotations.AutoCompact: {},
+				},
 			},
 			{
 				id:         "id",
 				name:       "id",
+				path:       "id",
 				typ:        TypeString,
 				caseExact:  true,
 				mutability: MutabilityReadOnly,
 				returned:   ReturnedAlways,
 				uniqueness: UniquenessGlobal,
 				index:      1,
-				path:       "id",
-				annotations: []string{
-					"@CopyReadOnly",
+				annotationIndex: map[string]struct{}{
+					annotations.CopyReadOnly: {},
 				},
 			},
 			{
 				id:    "externalId",
 				name:  "externalId",
+				path:  "externalId",
 				typ:   TypeString,
 				index: 2,
-				path:  "externalId",
 			},
 			{
 				id:         "meta",
 				name:       "meta",
+				path:       "meta",
 				typ:        TypeComplex,
 				mutability: MutabilityReadOnly,
 				index:      3,
-				path:       "meta",
 				subAttributes: []*Attribute{
 					{
 						id:         "meta.resourceType",
 						name:       "resourceType",
+						path:       "meta.resourceType",
 						typ:        TypeString,
 						caseExact:  true,
 						mutability: MutabilityReadOnly,
 						index:      0,
-						path:       "meta.resourceType",
-						annotations: []string{
-							"@CopyReadOnly",
+						annotationIndex: map[string]struct{}{
+							annotations.CopyReadOnly: {},
 						},
 					},
 					{
 						id:         "meta.created",
 						name:       "created",
+						path:       "meta.created",
 						typ:        TypeDateTime,
 						mutability: MutabilityReadOnly,
 						index:      1,
-						path:       "meta.created",
-						annotations: []string{
-							"@CopyReadOnly",
+						annotationIndex: map[string]struct{}{
+							annotations.CopyReadOnly: {},
 						},
 					},
 					{
 						id:         "meta.lastModified",
 						name:       "lastModified",
+						path:       "meta.lastModified",
 						typ:        TypeDateTime,
 						mutability: MutabilityReadOnly,
 						index:      2,
-						path:       "meta.lastModified",
-						annotations: []string{
-							"@CopyReadOnly",
+						annotationIndex: map[string]struct{}{
+							annotations.CopyReadOnly: {},
 						},
 					},
 					{
 						id:         "meta.location",
 						name:       "location",
+						path:       "meta.location",
 						typ:        TypeReference,
 						caseExact:  true,
 						mutability: MutabilityReadOnly,
 						index:      3,
-						path:       "meta.location",
-						annotations: []string{
-							"@CopyReadOnly",
+						annotationIndex: map[string]struct{}{
+							annotations.CopyReadOnly: {},
 						},
 					},
 					{
 						id:         "meta.version",
 						name:       "version",
+						path:       "meta.version",
 						typ:        TypeString,
 						mutability: MutabilityReadOnly,
 						index:      4,
-						path:       "meta.version",
-						annotations: []string{
-							"@CopyReadOnly",
+						annotationIndex: map[string]struct{}{
+							annotations.CopyReadOnly: {},
 						},
 					},
 				},
@@ -216,3 +218,8 @@ func (h *schemaHub) CoreSchema() *Schema {
 		},
 	}
 }
+
+var (
+	_ json.Marshaler   = (*Schema)(nil)
+	_ json.Unmarshaler = (*Schema)(nil)
+)

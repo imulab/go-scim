@@ -1,4 +1,4 @@
-package core
+package prop
 
 // type of an event
 type EventType int
@@ -43,6 +43,7 @@ func (e *Event) Target() Property {
 	return e.target
 }
 
+// Returns true if the event should be propagated to the parent of its target.
 func (e *Event) WillPropagate() bool {
 	return e.propagate
 }
@@ -53,11 +54,3 @@ func (e *Event) StopPropagation() {
 	e.propagate = false
 }
 
-// A subscriber to the event.
-type Subscriber interface {
-	// Be notified and react to the event. Implementations of this method
-	// is allowed to return a non-nil error, which will be regarded as caller's
-	// own error. Implementations are not supposed to block the Goroutine and
-	// should keep the reaction quick.
-	Notify(publisher Property, event *Event) error
-}

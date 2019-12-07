@@ -2,77 +2,27 @@ package prop
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"time"
 )
 
 const ISO8601 = "2006-01-02T15:04:05"
 
-// Create a new unassigned string property. The method will panic if
-// given attribute is not singular dateTime type.
-func NewDateTime(attr *core.Attribute, parent core.Container) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeDateTime {
-		panic("invalid attribute for dateTime property")
-	}
-	p := &dateTimeProperty{
-		parent:      parent,
-		attr:        attr,
-		value:       nil,
-		subscribers: []core.Subscriber{},
-	}
-	subscribeWithAnnotation(p)
-	return p
-}
-
-// Create a new string property with given value. The method will panic if
-// given attribute is not singular dateTime type or the value is not of ISO8601 format.
-// The property will be marked dirty at the start.
-func NewDateTimeOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
-	p := NewDateTime(attr, parent)
-	if err := p.Replace(value); err != nil {
-		panic(err)
-	}
-	return p
-}
-
-var (
-	_ core.Property = (*dateTimeProperty)(nil)
-)
-
 type dateTimeProperty struct {
-	parent      core.Container
-	attr        *core.Attribute
+	parent      Container
+	attr        *spec.Attribute
 	value       *time.Time
-	touched     bool
-	subscribers []core.Subscriber
+	dirty       bool
+	subscribers []Subscriber
 }
 
-func (p *dateTimeProperty) Clone(parent core.Container) core.Property {
-	c := &dateTimeProperty{
-		parent:      parent,
-		attr:        p.attr,
-		value:       nil,
-		touched:     p.touched,
-		subscribers: p.subscribers,
-	}
-	if p.value != nil {
-		v, _ := time.Parse(ISO8601, p.Raw().(string))
-		c.value = &v
-	}
-	return c
-}
-
-func (p *dateTimeProperty) Parent() core.Container {
-	return p.parent
-}
-
-func (p *dateTimeProperty) Subscribe(subscriber core.Subscriber) {
-	p.subscribers = append(p.subscribers, subscriber)
-}
-
-func (p *dateTimeProperty) Attribute() *core.Attribute {
+func (p *dateTimeProperty) Attribute() *spec.Attribute {
 	return p.attr
+}
+
+func (p *dateTimeProperty) Parent() Container {
+	return p.parent
 }
 
 func (p *dateTimeProperty) Raw() interface{} {
@@ -86,13 +36,7 @@ func (p *dateTimeProperty) IsUnassigned() bool {
 	return p.value == nil
 }
 
-func (p *dateTimeProperty) CountChildren() int {
-	return 0
-}
-
-func (p *dateTimeProperty) ForEachChild(callback func(index int, child core.Property)) {}
-
-func (p *dateTimeProperty) Matches(another core.Property) bool {
+func (p *dateTimeProperty) Matches(another Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
@@ -193,10 +137,10 @@ func (p *dateTimeProperty) Replace(value interface{}) error {
 	} else if t, err := p.fromISO8601(s); err != nil {
 		return err
 	} else {
-		p.touched = true
+		p.dirty = true
 		if p.value == nil || !(*(p.value)).Equal(t) {
 			p.value = &t
-			if err := p.publish(core.EventAssigned); err != nil {
+			if err := p.publish(EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -205,17 +149,17 @@ func (p *dateTimeProperty) Replace(value interface{}) error {
 }
 
 func (p *dateTimeProperty) Delete() error {
-	p.touched = true
+	p.dirty = true
 	if p.value != nil {
 		p.value = nil
-		if err := p.publish(core.EventUnassigned); err != nil {
+		if err := p.publish(EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *dateTimeProperty) publish(t core.EventType) error {
+func (p *dateTimeProperty) publish(t EventType) error {
 	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
@@ -232,8 +176,27 @@ func (p *dateTimeProperty) publish(t core.EventType) error {
 	return nil
 }
 
-func (p *dateTimeProperty) Touched() bool {
-	return p.touched
+func (p *dateTimeProperty) Dirty() bool {
+	return p.dirty
+}
+
+func (p *dateTimeProperty) Subscribe(subscriber Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
+}
+
+func (p *dateTimeProperty) Clone(parent Container) Property {
+	c := &dateTimeProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		dirty:       p.dirty,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v, _ := time.Parse(ISO8601, p.Raw().(string))
+		c.value = &v
+	}
+	return c
 }
 
 func (p *dateTimeProperty) String() string {
@@ -262,3 +225,7 @@ func (p *dateTimeProperty) errIncompatibleValue(value interface{}) error {
 func (p *dateTimeProperty) errIncompatibleOp() error {
 	return errors.Internal("incompatible operation")
 }
+
+var (
+	_ Property = (*dateTimeProperty)(nil)
+)

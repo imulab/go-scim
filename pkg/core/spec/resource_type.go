@@ -1,42 +1,22 @@
-package core
+package spec
 
 import (
 	"encoding/json"
 	"github.com/imulab/go-scim/pkg/core/annotations"
 )
 
-var (
-	_ json.Marshaler   = (*ResourceType)(nil)
-	_ json.Unmarshaler = (*ResourceType)(nil)
-)
-
-type (
-	// A SCIM resource type is a collection of schemas to describe a resource.
-	ResourceType struct {
-		id          string
-		name        string
-		description string
-		endpoint    string
-		schema      *Schema
-		extensions  []*Schema
-		// A map of schema id to a bool indicating
-		// whether the schema by this id is required
-		required map[string]bool
-	}
-	// JSON adapter to resource type to serialize to and deserialize from JSON format.
-	resourceTypeJSONAdapter struct {
-		ID          string             `json:"id"`
-		Name        string             `json:"name"`
-		Description string             `json:"description"`
-		Endpoint    string             `json:"endpoint"`
-		Schema      string             `json:"schema"`
-		Extensions  []*schemaExtension `json:"schemaExtensions"`
-	}
-	schemaExtension struct {
-		Schema   string `json:"schema"`
-		Required bool   `json:"required"`
-	}
-)
+// A SCIM resource type is a collection of schemas to describe a resource.
+type ResourceType struct {
+	id          string
+	name        string
+	description string
+	endpoint    string
+	schema      *Schema
+	extensions  []*Schema
+	// A map of schema id to a bool indicating
+	// whether the schema by this id is required
+	required map[string]bool
+}
 
 // Return the id of the resource type
 func (t *ResourceType) ID() string {
@@ -79,17 +59,18 @@ func (t *ResourceType) ForEachExtension(callback func(extension *Schema, require
 // Return a complex attribute that contains all schema attributes as its sub attributes.
 func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 	super := &Attribute{
-		id:            t.schema.id,
-		typ:           TypeComplex,
-		subAttributes: []*Attribute{},
-		mutability:    MutabilityReadWrite,
-		returned:      ReturnedDefault,
-		uniqueness:    UniquenessNone,
+		id:              t.schema.id,
+		typ:             TypeComplex,
+		subAttributes:   []*Attribute{},
+		mutability:      MutabilityReadWrite,
+		returned:        ReturnedDefault,
+		uniqueness:      UniquenessNone,
+		annotationIndex: map[string]struct{}{},
 	}
 
 	if includeCore {
 		super.subAttributes = append(super.subAttributes, SchemaHub.CoreSchema().attributes...)
-		super.annotations = append(super.annotations, annotations.SyncSchema)
+		super.annotationIndex[annotations.SyncSchema] = struct{}{}
 	}
 	super.subAttributes = append(super.subAttributes, t.schema.attributes...)
 
@@ -107,7 +88,10 @@ func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 			uniqueness:    UniquenessNone,
 			index:         i,
 			path:          extension.id,
-			annotations:   []string{annotations.StateSummary, annotations.SchemaExtensionRoot},
+			annotationIndex: map[string]struct{}{
+				annotations.StateSummary:        {},
+				annotations.SchemaExtensionRoot: {},
+			},
 		})
 		i++
 	})
@@ -133,6 +117,22 @@ func (t *ResourceType) UnmarshalJSON(raw []byte) error {
 	tmp.fill(t)
 	return nil
 }
+
+type (
+	// JSON adapter to resource type to serialize to and deserialize from JSON format.
+	resourceTypeJSONAdapter struct {
+		ID          string             `json:"id"`
+		Name        string             `json:"name"`
+		Description string             `json:"description"`
+		Endpoint    string             `json:"endpoint"`
+		Schema      string             `json:"schema"`
+		Extensions  []*schemaExtension `json:"schemaExtensions"`
+	}
+	schemaExtension struct {
+		Schema   string `json:"schema"`
+		Required bool   `json:"required"`
+	}
+)
 
 // Extract values from resource type to this adapter.
 func (d *resourceTypeJSONAdapter) extract(t *ResourceType) {
@@ -166,3 +166,8 @@ func (d *resourceTypeJSONAdapter) fill(t *ResourceType) {
 		}
 	}
 }
+
+var (
+	_ json.Marshaler   = (*ResourceType)(nil)
+	_ json.Unmarshaler = (*ResourceType)(nil)
+)

@@ -16,7 +16,7 @@ func Valid(data []byte) bool {
 
 // checkValid verifies that data is valid JSON-encoded data.
 // scan is passed in for use by checkValid to avoid an allocation.
-func checkValid(data []byte, scan *scanner) error {
+func checkValid(data []byte, scan *scanner) errors {
 	scan.reset()
 	for _, c := range data {
 		scan.bytes++
@@ -56,7 +56,7 @@ type scanner struct {
 	parseState []int
 
 	// Error that happened, if any.
-	err error
+	err errors
 
 	// total bytes consumed, updated by decoder.Decode
 	bytes int64

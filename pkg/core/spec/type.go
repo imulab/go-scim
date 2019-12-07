@@ -1,4 +1,6 @@
-package core
+package spec
+
+import "encoding/json"
 
 const (
 	// SCIM data types defined in RFC7643
@@ -67,3 +69,7 @@ func (t Type) String() string {
 func (t Type) MarshalJSON() ([]byte, error) {
 	return []byte(t.String()), nil
 }
+
+var (
+	_ json.Marshaler = (Type)(0)
+)

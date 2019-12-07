@@ -23,7 +23,7 @@ type memoryProvider struct {
 	db map[string]*prop.Resource
 }
 
-func (m *memoryProvider) Insert(ctx context.Context, resource *prop.Resource) error {
+func (m *memoryProvider) Insert(ctx context.Context, resource *prop.Resource) errors {
 	id := resource.ID()
 	if len(id) == 0 {
 		return errors.Internal("cannot save resource with empty id")
@@ -40,7 +40,7 @@ func (m *memoryProvider) Insert(ctx context.Context, resource *prop.Resource) er
 	return nil
 }
 
-func (m *memoryProvider) Get(ctx context.Context, id string) (*prop.Resource, error) {
+func (m *memoryProvider) Get(ctx context.Context, id string) (*prop.Resource, errors) {
 	r, ok := m.db[id]
 	if !ok {
 		return nil, errors.NotFound("resource by id [%s] is not found", id)
@@ -48,12 +48,12 @@ func (m *memoryProvider) Get(ctx context.Context, id string) (*prop.Resource, er
 	return r, nil
 }
 
-func (m *memoryProvider) Count(ctx context.Context, filter string) (int, error) {
+func (m *memoryProvider) Count(ctx context.Context, filter string) (int, errors) {
 	// todo
 	return 0, nil
 }
 
-func (m *memoryProvider) Replace(ctx context.Context, resource *prop.Resource) error {
+func (m *memoryProvider) Replace(ctx context.Context, resource *prop.Resource) errors {
 	id := resource.ID()
 	_, ok := m.db[id]
 	if !ok {
@@ -63,7 +63,7 @@ func (m *memoryProvider) Replace(ctx context.Context, resource *prop.Resource) e
 	return nil
 }
 
-func (m *memoryProvider) Delete(ctx context.Context, id string) error {
+func (m *memoryProvider) Delete(ctx context.Context, id string) errors {
 	delete(m.db, id)
 	return nil
 }

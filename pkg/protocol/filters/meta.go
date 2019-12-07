@@ -29,7 +29,7 @@ func NewMetaResourceFilter() protocol.ResourceFilter {
 
 type metaResourceFilter struct{}
 
-func (f *metaResourceFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
+func (f *metaResourceFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) errors {
 	meta, err := resource.NewNavigator().FocusName(fieldMeta)
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func (f *metaResourceFilter) Filter(ctx *protocol.FilterContext, resource *prop.
 	return nil
 }
 
-func (f *metaResourceFilter) FilterRef(ctx *protocol.FilterContext, resource *prop.Resource, ref *prop.Resource) error {
+func (f *metaResourceFilter) FilterRef(ctx *protocol.FilterContext, resource *prop.Resource, ref *prop.Resource) errors {
 	if ref.Hash() != resource.Hash() {
 		meta, err := resource.NewNavigator().FocusName(fieldMeta)
 		if err != nil {
@@ -77,7 +77,7 @@ func (f *metaResourceFilter) FilterRef(ctx *protocol.FilterContext, resource *pr
 	return nil
 }
 
-func (f *metaResourceFilter) assignResourceType(meta core.Property, resourceType *core.ResourceType) error {
+func (f *metaResourceFilter) assignResourceType(meta core.Property, resourceType *core.ResourceType) errors {
 	p, err := prop.NewNavigator(meta).FocusName(fieldResourceType)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (f *metaResourceFilter) assignResourceType(meta core.Property, resourceType
 	return nil
 }
 
-func (f *metaResourceFilter) assignCreatedTimeToNow(meta core.Property) error {
+func (f *metaResourceFilter) assignCreatedTimeToNow(meta core.Property) errors {
 	p, err := prop.NewNavigator(meta).FocusName(fieldCreated)
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func (f *metaResourceFilter) assignCreatedTimeToNow(meta core.Property) error {
 	return nil
 }
 
-func (f *metaResourceFilter) assignLastModifiedTimeToNow(meta core.Property) error {
+func (f *metaResourceFilter) assignLastModifiedTimeToNow(meta core.Property) errors {
 	p, err := prop.NewNavigator(meta).FocusName(fieldLastModified)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (f *metaResourceFilter) assignLastModifiedTimeToNow(meta core.Property) err
 	return nil
 }
 
-func (f *metaResourceFilter) assignLocation(meta core.Property, resource *prop.Resource) error {
+func (f *metaResourceFilter) assignLocation(meta core.Property, resource *prop.Resource) errors {
 	id := resource.ID()
 	if len(id) == 0 {
 		return errors.Internal("id is not assigned to resource")
@@ -134,7 +134,7 @@ func (f *metaResourceFilter) assignLocation(meta core.Property, resource *prop.R
 	return nil
 }
 
-func (f *metaResourceFilter) updateVersion(meta core.Property, resource *prop.Resource) error {
+func (f *metaResourceFilter) updateVersion(meta core.Property, resource *prop.Resource) errors {
 	id := resource.ID()
 	if len(id) == 0 {
 		return errors.Internal("id is not assigned to resource")

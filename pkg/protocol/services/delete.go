@@ -20,7 +20,7 @@ type (
 	}
 )
 
-func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteRequest) error {
+func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteRequest) errors {
 	s.Logger.Debug("received delete request [id=%s]", request.ResourceID)
 
 	resource, err := s.Persistence.Get(ctx, request.ResourceID)

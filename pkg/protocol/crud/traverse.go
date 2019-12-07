@@ -9,7 +9,7 @@ import (
 
 // Walk down the currently focused property in the navigator, following the current node in the query expression,
 // and eventually invoke callback on the property corresponding to the end of the query.
-func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target core.Property) error) error {
+func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target core.Property) errors) errors {
 	if query == nil {
 		return callback(nav.Current())
 	}
@@ -19,7 +19,7 @@ func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target 
 			return errors.InvalidFilter("filter cannot be applied to singular properties")
 		}
 
-		return nav.Current().(core.Container).ForEachChild(func(_ int, child core.Property) error {
+		return nav.Current().(core.Container).ForEachChild(func(_ int, child core.Property) errors {
 			if r, e := evaluate(child, query); e != nil {
 				return e
 			} else if r {
@@ -31,7 +31,7 @@ func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target 
 	}
 
 	if nav.Current().Attribute().MultiValued() {
-		return nav.Current().(core.Container).ForEachChild(func(_ int, child core.Property) error {
+		return nav.Current().(core.Container).ForEachChild(func(_ int, child core.Property) errors {
 			childNav := prop.NewNavigator(child)
 			if _, err := childNav.FocusName(query.Token()); err != nil {
 				return err

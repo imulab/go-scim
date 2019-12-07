@@ -37,7 +37,7 @@ type (
 )
 
 // Serialize the given resource to JSON bytes.
-func Serialize(resource *prop.Resource, options *options) ([]byte, error) {
+func Serialize(resource *prop.Resource, options *options) ([]byte, errors) {
 	if options == nil {
 		options = Options()
 	}
@@ -128,7 +128,7 @@ func (s *serializer) ShouldVisit(property core.Property) bool {
 	}
 }
 
-func (s *serializer) Visit(property core.Property) (err error) {
+func (s *serializer) Visit(property core.Property) (err errors) {
 	if s.current().index > 0 {
 		_ = s.WriteByte(',')
 	}

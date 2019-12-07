@@ -1,4 +1,6 @@
-package core
+package spec
+
+import "encoding/json"
 
 const (
 	// SCIM mutability attribute defined in RFC7643
@@ -47,3 +49,7 @@ func (m Mutability) String() string {
 func (m Mutability) MarshalJSON() ([]byte, error) {
 	return []byte(m.String()), nil
 }
+
+var (
+	_ json.Marshaler = (Mutability)(0)
+)

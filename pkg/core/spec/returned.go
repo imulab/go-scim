@@ -1,4 +1,6 @@
-package core
+package spec
+
+import "encoding/json"
 
 const (
 	// SCIM returned attribute defined in RFC7643
@@ -47,3 +49,7 @@ func (r Returned) String() string {
 func (r Returned) MarshalJSON() ([]byte, error) {
 	return []byte(r.String()), nil
 }
+
+var (
+	_ json.Marshaler = (Returned)(0)
+)

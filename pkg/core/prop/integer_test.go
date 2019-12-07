@@ -2,7 +2,7 @@ package prop
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -19,7 +19,7 @@ type IntegerPropertyTestSuite struct {
 func (s *IntegerPropertyTestSuite) TestRaw() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		expect func(t *testing.T, raw interface{})
 	}{
 		{
@@ -58,12 +58,12 @@ func (s *IntegerPropertyTestSuite) TestRaw() {
 func (s *IntegerPropertyTestSuite) TestUnassigned() {
 	tests := []struct {
 		name    string
-		getProp func() core.Property
+		getProp func() Property
 		expect  func(t *testing.T, unassigned bool)
 	}{
 		{
 			name: "unassigned property returns true for unassigned, and false for dirty",
-			getProp: func() core.Property {
+			getProp: func() Property {
 				return NewInteger(s.mustAttribute(`
 {
 	"name": "age",
@@ -77,7 +77,7 @@ func (s *IntegerPropertyTestSuite) TestUnassigned() {
 		},
 		{
 			name: "explicitly unassigned property returns true for unassigned, and true for dirty",
-			getProp: func() core.Property {
+			getProp: func() Property {
 				prop := NewInteger(s.mustAttribute(`
 {
 	"name": "age",
@@ -93,7 +93,7 @@ func (s *IntegerPropertyTestSuite) TestUnassigned() {
 		},
 		{
 			name: "assigned property returns false for unassigned, and true for dirty",
-			getProp: func() core.Property {
+			getProp: func() Property {
 				prop := NewIntegerOf(s.mustAttribute(`
 {
 	"name": "age",
@@ -118,8 +118,8 @@ func (s *IntegerPropertyTestSuite) TestUnassigned() {
 func (s *IntegerPropertyTestSuite) TestMatches() {
 	tests := []struct {
 		name   string
-		p1     core.Property
-		p2     core.Property
+		p1     Property
+		p2     Property
 		expect func(t *testing.T, match bool)
 	}{
 		{
@@ -174,7 +174,7 @@ func (s *IntegerPropertyTestSuite) TestMatches() {
 func (s *IntegerPropertyTestSuite) TestEqualsTo() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, equal bool, err error)
 	}{
@@ -235,7 +235,7 @@ func (s *IntegerPropertyTestSuite) TestEqualsTo() {
 func (s *IntegerPropertyTestSuite) TestGreaterThan() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, greaterThan bool, err error)
 	}{
@@ -281,7 +281,7 @@ func (s *IntegerPropertyTestSuite) TestGreaterThan() {
 func (s *IntegerPropertyTestSuite) TestLessThan() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, lessThan bool, err error)
 	}{
@@ -327,7 +327,7 @@ func (s *IntegerPropertyTestSuite) TestLessThan() {
 func (s *IntegerPropertyTestSuite) TestPresent() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		expect func(t *testing.T, present bool)
 	}{
 		{
@@ -366,7 +366,7 @@ func (s *IntegerPropertyTestSuite) TestPresent() {
 func (s *IntegerPropertyTestSuite) TestAdd() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, raw interface{}, err error)
 	}{
@@ -425,7 +425,7 @@ func (s *IntegerPropertyTestSuite) TestAdd() {
 func (s *IntegerPropertyTestSuite) TestReplace() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, raw interface{}, err error)
 	}{
@@ -484,7 +484,7 @@ func (s *IntegerPropertyTestSuite) TestReplace() {
 func (s *IntegerPropertyTestSuite) TestDelete() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		expect func(t *testing.T, raw interface{}, err error)
 	}{
 		{
@@ -527,8 +527,8 @@ func (s *IntegerPropertyTestSuite) TestDelete() {
 func (s *IntegerPropertyTestSuite) TestHash() {
 	tests := []struct {
 		name   string
-		p1     core.Property
-		p2     core.Property
+		p1     Property
+		p2     Property
 		expect func(t *testing.T, h1 uint64, h2 uint64)
 	}{
 		{
@@ -582,8 +582,8 @@ func (s *IntegerPropertyTestSuite) TestHash() {
 	}
 }
 
-func (s *IntegerPropertyTestSuite) mustAttribute(jsonValue string) *core.Attribute {
-	attr := new(core.Attribute)
+func (s *IntegerPropertyTestSuite) mustAttribute(jsonValue string) *spec.Attribute {
+	attr := new(spec.Attribute)
 	err := json.Unmarshal([]byte(jsonValue), attr)
 	s.Require().Nil(err)
 	return attr

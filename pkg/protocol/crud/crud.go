@@ -10,7 +10,7 @@ import (
 // Add value to SCIM resource at the given SCIM path. If SCIM path is empty, value will be added
 // to the root of the resource. The supplied value must be compatible with the target property attribute,
 // otherwise error will be returned.
-func Add(resource *prop.Resource, path string, value interface{}) error {
+func Add(resource *prop.Resource, path string, value interface{}) errors {
 	if len(path) == 0 {
 		return resource.Add(value)
 	}
@@ -20,7 +20,7 @@ func Add(resource *prop.Resource, path string, value interface{}) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) errors {
 		return target.Add(value)
 	})
 }
@@ -28,7 +28,7 @@ func Add(resource *prop.Resource, path string, value interface{}) error {
 // Replace value in SCIM resource at the given SCIM path. If SCIM path is empty, the root of the resource
 // will be replaced. The supplied value must be compatible with the target property attribute, otherwise
 // error will be returned.
-func Replace(resource *prop.Resource, path string, value interface{}) error {
+func Replace(resource *prop.Resource, path string, value interface{}) errors {
 	if len(path) == 0 {
 		return resource.Replace(value)
 	}
@@ -38,13 +38,13 @@ func Replace(resource *prop.Resource, path string, value interface{}) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) errors {
 		return target.Replace(value)
 	})
 }
 
 // Delete value from the SCIM resource at the specified SCIM path. The path cannot be empty.
-func Delete(resource *prop.Resource, path string) error {
+func Delete(resource *prop.Resource, path string) errors {
 	if len(path) == 0 {
 		return errors.InvalidPath("path must not be empty when deleting from resource")
 	}
@@ -54,7 +54,7 @@ func Delete(resource *prop.Resource, path string) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) errors {
 		return target.Delete()
 	})
 }

@@ -1,9 +1,11 @@
 package prop
 
-import "github.com/imulab/go-scim/pkg/core"
+import (
+	"github.com/imulab/go-scim/pkg/core/spec"
+)
 
 // Create a new resource of the given resource type. The method panics if something went wrong.
-func NewResource(resourceType *core.ResourceType) *Resource {
+func NewResource(resourceType *spec.ResourceType) *Resource {
 	return &Resource{
 		resourceType: resourceType,
 		data:         NewComplex(resourceType.SuperAttribute(true), nil).(*complexProperty),
@@ -11,7 +13,7 @@ func NewResource(resourceType *core.ResourceType) *Resource {
 }
 
 // Create a new resource of the given resource type and value. The method panics if something went wrong.
-func NewResourceOf(resourceType *core.ResourceType, value interface{}) *Resource {
+func NewResourceOf(resourceType *spec.ResourceType, value interface{}) *Resource {
 	resource := NewResource(resourceType)
 	if err := resource.data.Replace(value); err != nil {
 		panic(err)
@@ -22,7 +24,7 @@ func NewResourceOf(resourceType *core.ResourceType, value interface{}) *Resource
 // Resource represents a SCIM resource. This is the main object of interaction in the SCIM spec. It is implemented
 // as a wrapper around the top level complex property and the resource type.
 type Resource struct {
-	resourceType *core.ResourceType
+	resourceType *spec.ResourceType
 	data         *complexProperty
 }
 
@@ -36,12 +38,12 @@ func (r *Resource) Clone() *Resource {
 }
 
 // Return the resource type of this resource
-func (r *Resource) ResourceType() *core.ResourceType {
+func (r *Resource) ResourceType() *spec.ResourceType {
 	return r.resourceType
 }
 
 // Return the super attribute that describes this resource.
-func (r *Resource) SuperAttribute() *core.Attribute {
+func (r *Resource) SuperAttribute() *spec.Attribute {
 	return r.data.Attribute()
 }
 
@@ -50,66 +52,47 @@ func (r *Resource) NewNavigator() *Navigator {
 	return NewNavigator(r.data)
 }
 
-// Convenience method to return the ID of the resource.
+// Convenience method to return the ID of the resource. If id does not exist, return empty string.
 func (r *Resource) ID() string {
-	p, err := r.NewNavigator().FocusName("id")
-	if err != nil {
+	if p, err := r.NewNavigator().FocusName(id); err != nil {
 		return ""
-	}
-
-	if p.IsUnassigned() {
+	} else if p.IsUnassigned() {
 		return ""
-	}
-
-	if id, ok := p.Raw().(string); !ok {
+	} else if id, ok := p.Raw().(string); !ok {
 		return ""
 	} else {
 		return id
 	}
 }
 
-// Convenience method to return the meta.location field of the resource.
+// Convenience method to return the meta.location field of the resource, or empty string if it does not exist.
 func (r *Resource) Location() string {
 	nav := r.NewNavigator()
-
-	_, err := nav.FocusName("meta")
-	if err != nil {
+	if _, err := nav.FocusName(meta); err != nil {
 		return ""
 	}
-	p, err := nav.FocusName("location")
-	if err != nil {
+	if p, err := nav.FocusName(location); err != nil {
 		return ""
-	}
-
-	if p.IsUnassigned() {
+	} else if p.IsUnassigned() {
 		return ""
-	}
-
-	if location, ok := p.Raw().(string); !ok {
+	} else if location, ok := p.Raw().(string); !ok {
 		return ""
 	} else {
 		return location
 	}
 }
 
-// Convenience method to return the meta.version field of the resource.
+// Convenience method to return the meta.version field of the resource, or empty string if it does not exist
 func (r *Resource) Version() string {
 	nav := r.NewNavigator()
-
-	_, err := nav.FocusName("meta")
-	if err != nil {
+	if _, err := nav.FocusName(meta); err != nil {
 		return ""
 	}
-	p, err := nav.FocusName("version")
-	if err != nil {
+	if p, err := nav.FocusName(version); err != nil {
 		return ""
-	}
-
-	if p.IsUnassigned() {
+	} else if p.IsUnassigned() {
 		return ""
-	}
-
-	if version, ok := p.Raw().(string); !ok {
+	} else if version, ok := p.Raw().(string); !ok {
 		return ""
 	} else {
 		return version
@@ -117,10 +100,10 @@ func (r *Resource) Version() string {
 }
 
 // Adapting method to start a DFS visit on the top level property of the resource.
-func (r *Resource) Visit(visitor core.Visitor) error {
+func (r *Resource) Visit(visitor Visitor) error {
 	visitor.BeginChildren(r.data)
 	for _, prop := range r.data.subProps {
-		if err := core.Visit(prop, visitor); err != nil {
+		if err := Visit(prop, visitor); err != nil {
 			return err
 		}
 	}
@@ -142,3 +125,10 @@ func (r *Resource) Add(value interface{}) error {
 func (r *Resource) Replace(value interface{}) error {
 	return r.data.Replace(value)
 }
+
+const (
+	id = "id"
+	meta = "meta"
+	location = "location"
+	version = "version"
+)

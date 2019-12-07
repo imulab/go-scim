@@ -23,7 +23,7 @@
           "type": "string",
           "_index": 0,
           "_path": "name.formatted",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.familyName",
@@ -31,7 +31,7 @@
           "type": "string",
           "_index": 1,
           "_path": "name.familyName",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.givenName",
@@ -39,7 +39,7 @@
           "type": "string",
           "_index": 2,
           "_path": "name.givenName",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.middleName",
@@ -47,7 +47,7 @@
           "type": "string",
           "_index": 3,
           "_path": "name.middleName",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.honorificPrefix",
@@ -55,7 +55,7 @@
           "type": "string",
           "_index": 4,
           "_path": "name.honorificPrefix",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:name.honorificSuffix",
@@ -63,7 +63,7 @@
           "type": "string",
           "_index": 5,
           "_path": "name.honorificSuffix",
-          "_identity": true
+          "_annotations": ["@Identity"]
         }
       ],
       "_index": 101,
@@ -183,7 +183,7 @@
           "type": "string",
           "_index": 0,
           "_path": "emails.value",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.type",
@@ -196,7 +196,7 @@
           ],
           "_index": 1,
           "_path": "emails.type",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.primary",
@@ -204,7 +204,7 @@
           "type": "boolean",
           "_index": 2,
           "_path": "emails.primary",
-          "_primary": true
+          "_annotations": ["@Primary"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:emails.display",
@@ -233,7 +233,7 @@
           "type": "string",
           "_index": 0,
           "_path": "phoneNumbers.value",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.type",
@@ -249,7 +249,7 @@
           ],
           "_index": 1,
           "_path": "phoneNumbers.type",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.primary",
@@ -257,7 +257,7 @@
           "type": "boolean",
           "_index": 2,
           "_path": "phoneNumbers.primary",
-          "_primary": true
+          "_annotations": ["@Primary"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers.display",
@@ -286,7 +286,7 @@
           "type": "string",
           "_index": 0,
           "_path": "ims.value",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.type",
@@ -301,7 +301,7 @@
           ],
           "_index": 1,
           "_path": "ims.type",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.primary",
@@ -309,7 +309,7 @@
           "type": "boolean",
           "_index": 2,
           "_path": "ims.primary",
-          "_primary": true
+          "_annotations": ["@Primary"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:ims.display",
@@ -341,7 +341,7 @@
           ],
           "_index": 0,
           "_path": "photos.value",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.type",
@@ -353,7 +353,7 @@
           ],
           "_index": 1,
           "_path": "photos.type",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:photos.primary",
@@ -361,7 +361,7 @@
           "type": "boolean",
           "_index": 2,
           "_path": "photos.primary",
-          "_primary": true
+          "_annotations": ["@Primary"]
         }
       ],
       "_index": 115,
@@ -390,7 +390,7 @@
           "type": "string",
           "_index": 1,
           "_path": "photos.streetAddress",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.locality",
@@ -398,7 +398,7 @@
           "type": "string",
           "_index": 2,
           "_path": "photos.locality",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.region",
@@ -406,7 +406,7 @@
           "type": "string",
           "_index": 3,
           "_path": "photos.region",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.postalCode",
@@ -414,7 +414,7 @@
           "type": "string",
           "_index": 4,
           "_path": "photos.postalCode",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.country",
@@ -422,7 +422,7 @@
           "type": "string",
           "_index": 5,
           "_path": "photos.country",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.type",
@@ -437,7 +437,7 @@
           ],
           "_index": 6,
           "_path": "photos.type",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.primary",
@@ -445,7 +445,7 @@
           "type": "boolean",
           "_index": 7,
           "_path": "photos.primary",
-          "_primary": true
+          "_annotations": ["@Primary"]
         }
       ],
       "_index": 116,
@@ -469,7 +469,7 @@
           "mutability": "readOnly",
           "_index": 0,
           "_path": "groups.value",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.$ref",
@@ -478,7 +478,7 @@
           "mutability": "readOnly",
           "_index": 1,
           "_path": "groups.$ref",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.type",
@@ -516,7 +516,7 @@
           "type": "string",
           "_index": 0,
           "_path": "entitlements.value",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.type",
@@ -524,7 +524,7 @@
           "type": "string",
           "_index": 0,
           "_path": "entitlements.type",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.primary",
@@ -532,7 +532,7 @@
           "type": "boolean",
           "_index": 0,
           "_path": "entitlements.primary",
-          "_primary": true
+          "_annotations": ["@Primary"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements.display",
@@ -561,7 +561,7 @@
           "type": "string",
           "_index": 0,
           "_path": "roles.value",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.type",
@@ -569,7 +569,7 @@
           "type": "string",
           "_index": 1,
           "_path": "roles.type",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.primary",
@@ -577,7 +577,7 @@
           "type": "boolean",
           "_index": 2,
           "_path": "roles.primary",
-          "_primary": true
+          "_annotations": ["@Primary"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:roles.display",
@@ -606,7 +606,7 @@
           "type": "binary",
           "_index": 0,
           "_path": "x509Certificates.value",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.type",
@@ -614,7 +614,7 @@
           "type": "string",
           "_index": 1,
           "_path": "x509Certificates.type",
-          "_identity": true
+          "_annotations": ["@Identity"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.primary",
@@ -622,7 +622,7 @@
           "type": "boolean",
           "_index": 2,
           "_path": "x509Certificates.primary",
-          "_primary": true
+          "_annotations": ["@Primary"]
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates.display",

@@ -49,7 +49,7 @@ type (
 	}
 )
 
-func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest) (*PatchResponse, error) {
+func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest) (*PatchResponse, errors) {
 	s.Logger.Debug("received patch request [id=%s]", request.ResourceID)
 
 	if err := request.Validate(); err != nil {
@@ -130,7 +130,7 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 	}, nil
 }
 
-func (pr *PatchRequest) Validate() error {
+func (pr *PatchRequest) Validate() errors {
 	if len(pr.Schemas) != 1 && pr.Schemas[0] != PatchOpSchema {
 		return errors.InvalidSyntax("patch request must describe payload with schema '%s'", PatchOpSchema)
 	}
@@ -159,10 +159,10 @@ func (pr *PatchRequest) Validate() error {
 	return nil
 }
 
-func (po *PatchOperation) ParseValue(resource *prop.Resource) (interface{}, error) {
+func (po *PatchOperation) ParseValue(resource *prop.Resource) (interface{}, errors) {
 	var (
 		head *expr.Expression
-		err  error
+		err  errors
 	)
 	{
 		if len(po.Path) > 0 {
@@ -181,7 +181,7 @@ func (po *PatchOperation) ParseValue(resource *prop.Resource) (interface{}, erro
 		return nil, errors.NoTarget("'%s' does not yield any target", po.Path)
 	}
 
-	p := prop.NewProperty(attr, nil)
+	p := prop.New(attr, nil)
 	if err := scimJSON.DeserializeProperty(po.Value, p, po.Op == OpAdd); err != nil {
 		return nil, err
 	}

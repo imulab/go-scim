@@ -1,4 +1,4 @@
-package core
+package prop
 
 // Interface to implement for callers to react to a property structure traversal.
 type Visitor interface {

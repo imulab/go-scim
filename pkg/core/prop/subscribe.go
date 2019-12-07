@@ -1,40 +1,50 @@
 package prop
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/annotations"
+	"github.com/imulab/go-scim/pkg/core/spec"
 )
+
+// A subscriber to the event.
+type Subscriber interface {
+	// Be notified and react to the event. Implementations of this method
+	// is allowed to return a non-nil error, which will be regarded as caller's
+	// own error. Implementations are not supposed to block the Goroutine and
+	// should keep the reaction quick.
+	Notify(publisher Property, event *Event) error
+}
+
 
 // Create a subscriber that handles the exclusive primary problem. The subscriber listens on the EventAssigned event
 // emitted by a property whose sub attribute is marked as primary. If the value of that property becomes "true", the
 // subscriber will go through all elements of this property (assuming being a multiValued complex property) and delete
 // all other sub properties that went by the same name of the event target. The end result would be that only one
 // primary sub property will have the value "true".
-func NewExclusivePrimarySubscriber() core.Subscriber {
+func NewExclusivePrimarySubscriber() Subscriber {
 	return &exclusivePrimarySubscriber{}
 }
 
 type exclusivePrimarySubscriber struct{}
 
-func (s *exclusivePrimarySubscriber) supports(event *core.Event) bool {
-	return event.Type() == core.EventAssigned &&
+func (s *exclusivePrimarySubscriber) supports(event *Event) bool {
+	return event.Type() == EventAssigned &&
 		event.Target().Attribute().IsPrimary() &&
 		event.Target().Raw() == true
 }
 
-func (s *exclusivePrimarySubscriber) Notify(publisher core.Property, event *core.Event) error {
+func (s *exclusivePrimarySubscriber) Notify(publisher Property, event *Event) error {
 	if !s.supports(event) {
 		return nil
-	} else if publisher.Attribute().SingleValued() || publisher.Attribute().Type() != core.TypeComplex {
+	} else if publisher.Attribute().SingleValued() || publisher.Attribute().Type() != spec.TypeComplex {
 		return nil // this subscriber should only be hooked on complex multiValued containers
 	}
 
 	var (
 		target    = event.Target()
-		container = publisher.(core.Container)
+		container = publisher.(Container)
 	)
 	for i := 0; i < container.CountChildren(); i++ {
-		primaryProperty := container.ChildAtIndex(i).(core.Container).ChildAtIndex(target.Attribute().Name())
+		primaryProperty := container.ChildAtIndex(i).(Container).ChildAtIndex(target.Attribute().Name())
 		if primaryProperty != target {
 			if err := primaryProperty.Delete(); err != nil {
 				return err
@@ -52,30 +62,30 @@ func (s *exclusivePrimarySubscriber) Notify(publisher core.Property, event *core
 // the complex property (container) has become unassigned and only emits EventUnassigned event when it became unassigned.
 //
 // This subscriber is useful when upstream subscribers need a summary of the container state as a whole.
-func NewComplexStateSubscriber() core.Subscriber {
+func NewComplexStateSubscriber() Subscriber {
 	return &complexStateSubscriber{}
 }
 
 type complexStateSubscriber struct{}
 
-func (s *complexStateSubscriber) Notify(publisher core.Property, event *core.Event) (err error) {
+func (s *complexStateSubscriber) Notify(publisher Property, event *Event) (err error) {
 	if publisher == event.Target() {
 		// We will invoke Propagate on publisher later, avoid
 		// creating a pub-sub dead loop.
 		return
 	}
 
-	container, ok := publisher.(core.Container)
+	container, ok := publisher.(Container)
 	if !ok {
 		return
 	}
 
 	switch event.Type() {
-	case core.EventAssigned:
-		err = container.Propagate(core.EventAssigned.NewFrom(publisher))
-	case core.EventUnassigned:
+	case EventAssigned:
+		err = container.Propagate(EventAssigned.NewFrom(publisher))
+	case EventUnassigned:
 		if container.IsUnassigned() {
-			err = container.Propagate(core.EventUnassigned.NewFrom(publisher))
+			err = container.Propagate(EventUnassigned.NewFrom(publisher))
 		}
 	}
 
@@ -85,20 +95,21 @@ func (s *complexStateSubscriber) Notify(publisher core.Property, event *core.Eve
 // Creates a subscriber that automatically compacts multiValued properties. This subscriber listens for EventUnassigned
 // events from its elements (special attributes whose attribute id suffixes "$elem" on its multiValued container). If
 // any element was unassigned, it calls the Compact method on the multiValued container in order to compact the collection.
-func NewAutoCompactSubscriber() core.Subscriber {
+func NewAutoCompactSubscriber() Subscriber {
 	return &autoCompactSubscriber{}
 }
 
 type autoCompactSubscriber struct{}
 
-func (s *autoCompactSubscriber) Notify(publisher core.Property, event *core.Event) error {
+func (s *autoCompactSubscriber) Notify(publisher Property, event *Event) error {
+	println(event.Target().Attribute().ID(), publisher.Attribute().ID())
 	if !event.Target().Attribute().IsElementAttributeOf(publisher.Attribute()) {
 		return nil
-	} else if event.Type() != core.EventUnassigned {
+	} else if event.Type() != EventUnassigned {
 		return nil
 	}
 
-	container, ok := publisher.(core.Container)
+	container, ok := publisher.(Container)
 	if !ok {
 		return nil
 	}
@@ -117,21 +128,21 @@ func (s *autoCompactSubscriber) Notify(publisher core.Property, event *core.Even
 // When EventUnassigned is emitted, it ensures the schema extension URN is absent from the "schemas" attribute by
 // removing it. The removal does not automatically compact the multiValued "schema" property. As a result, it will
 // have an unassigned element in its collection. The compacting can be done by triggering the AutoCompactSubscriber.
-func NewSchemaSyncSubscriber() core.Subscriber {
+func NewSchemaSyncSubscriber() Subscriber {
 	return &schemaSyncSubscriber{}
 }
 
 type schemaSyncSubscriber struct{}
 
-func (s *schemaSyncSubscriber) Notify(publisher core.Property, event *core.Event) (err error) {
+func (s *schemaSyncSubscriber) Notify(publisher Property, event *Event) (err error) {
 	if !event.Target().Attribute().HasAnnotation(annotations.StateSummary) ||
 		!event.Target().Attribute().HasAnnotation(annotations.SchemaExtensionRoot) {
 		return
 	}
 
-	var schemas core.Property
+	var schemas Property
 	{
-		container, ok := publisher.(core.Container)
+		container, ok := publisher.(Container)
 		if !ok {
 			return
 		}
@@ -144,10 +155,10 @@ func (s *schemaSyncSubscriber) Notify(publisher core.Property, event *core.Event
 	}
 
 	switch event.Type() {
-	case core.EventAssigned:
+	case EventAssigned:
 		err = schemas.Add(event.Target().Attribute().Name())
-	case core.EventUnassigned:
-		err = schemas.(core.Container).ForEachChild(func(index int, child core.Property) error {
+	case EventUnassigned:
+		err = schemas.(Container).ForEachChild(func(index int, child Property) error {
 			if child.Raw() == event.Target().Attribute().Name() {
 				return child.Delete()
 			}
@@ -158,21 +169,21 @@ func (s *schemaSyncSubscriber) Notify(publisher core.Property, event *core.Event
 }
 
 var (
-	subscriberFactory = map[string]func() core.Subscriber{
-		annotations.AutoCompact:      func() core.Subscriber { return NewAutoCompactSubscriber() },
-		annotations.ExclusivePrimary: func() core.Subscriber { return NewExclusivePrimarySubscriber() },
-		annotations.StateSummary:     func() core.Subscriber { return NewComplexStateSubscriber() },
-		annotations.SyncSchema:       func() core.Subscriber { return NewSchemaSyncSubscriber() },
+	subscriberFactory = map[string]func() Subscriber{
+		annotations.AutoCompact:      func() Subscriber { return NewAutoCompactSubscriber() },
+		annotations.ExclusivePrimary: func() Subscriber { return NewExclusivePrimarySubscriber() },
+		annotations.StateSummary:     func() Subscriber { return NewComplexStateSubscriber() },
+		annotations.SyncSchema:       func() Subscriber { return NewSchemaSyncSubscriber() },
 	}
 )
 
 // Add a subscriber factory function that corresponds to a given annotation.
-func AddEventFactory(annotation string, factory func() core.Subscriber) {
+func AddEventFactory(annotation string, factory func() Subscriber) {
 	subscriberFactory[annotation] = factory
 }
 
 // Go through the registered annotations of a property attribute, and subscribe all corresponding subscribers.
-func subscribeWithAnnotation(property core.Property) {
+func subscribeWithAnnotation(property Property) {
 	property.Attribute().ForEachAnnotation(func(annotation string) {
 		if f, ok := subscriberFactory[annotation]; ok {
 			property.Subscribe(f())

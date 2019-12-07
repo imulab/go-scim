@@ -29,7 +29,7 @@ func (f *validationFilter) Supports(attribute *core.Attribute) bool {
 	return true
 }
 
-func (f *validationFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) error {
+func (f *validationFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property) errors {
 	if err := f.validateRequired(property); err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (f *validationFilter) Filter(ctx *protocol.FilterContext, resource *prop.Re
 	return nil
 }
 
-func (f *validationFilter) FieldRef(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) error {
+func (f *validationFilter) FieldRef(ctx *protocol.FilterContext, resource *prop.Resource, property core.Property, refResource *prop.Resource, refProperty core.Property) errors {
 	if err := f.validateRequired(property); err != nil {
 		return err
 	}
@@ -65,14 +65,14 @@ func (f *validationFilter) FieldRef(ctx *protocol.FilterContext, resource *prop.
 	return nil
 }
 
-func (f *validationFilter) validateRequired(property core.Property) error {
+func (f *validationFilter) validateRequired(property core.Property) errors {
 	if property.Attribute().Required() && property.IsUnassigned() {
 		return errors.InvalidValue("'%s' is required, but is unassigned", property.Attribute().Path())
 	}
 	return nil
 }
 
-func (f *validationFilter) validateCanonical(property core.Property) error {
+func (f *validationFilter) validateCanonical(property core.Property) errors {
 	if property.IsUnassigned() {
 		return nil
 	}
@@ -96,7 +96,7 @@ func (f *validationFilter) validateCanonical(property core.Property) error {
 	return nil
 }
 
-func (f *validationFilter) validateMutability(property core.Property, refProp core.Property) error {
+func (f *validationFilter) validateMutability(property core.Property, refProp core.Property) errors {
 	if refProp == nil {
 		return nil
 	}
@@ -115,7 +115,7 @@ func (f *validationFilter) validateMutability(property core.Property, refProp co
 	return nil
 }
 
-func (f *validationFilter) validateUniqueness(ctx context.Context, resource *prop.Resource, property core.Property) error {
+func (f *validationFilter) validateUniqueness(ctx context.Context, resource *prop.Resource, property core.Property) errors {
 	if property.IsUnassigned() {
 		return nil
 	}

@@ -1,21 +1,24 @@
-package core
+package spec
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/imulab/go-scim/pkg/core/annotations"
 	"sort"
 	"strings"
 )
 
-var (
-	_ json.Marshaler   = (*Attribute)(nil)
-	_ json.Unmarshaler = (*Attribute)(nil)
+const (
+	elemSuffix = "$elem"
 )
 
-// The attribute model that is used through out SCIM to
-// determine data type and constraint.
+// Enhanced SCIM attribute model. Attribute is the basic unit that describes data requirement in SCIM. It
+// includes the data requirement defined in RFC7643. It also includes additional metadata that makes actual
+// SCIM processing easier.
 type Attribute struct {
-	// attributes defined in SCIM
+	// ==========================
+	// Attributes defined in SCIM
+	// ==========================
 	name            string
 	description     string
 	typ             Type
@@ -29,31 +32,67 @@ type Attribute struct {
 	uniqueness      Uniqueness
 	referenceTypes  []string
 
-	// metadata of attribute id. an attribute id is the id of the schema to which
-	// this attribute belongs to, appended by the full path of this attribute.
-	// i.e. schemas, meta.version, urn:ietf:params:scim:schemas:core:2.0:Group:displayName
-	id string
-	// metadata for the relative index of this attribute
-	// within its parent container
-	index int
-	// metadata for the full path of this attribute (without urn prefix)
-	path string
-	// metadata to indicate whether this attribute is the primary attribute.
-	// primary attributes are boolean attribute within a multiValued complex
-	// container. there can only be one true value among all elements.
-	primary bool
-	// metadata to indicate whether this attribute is the identity attribute.
-	// identity attributes participates in equality comparison for its
-	// complex container.
-	identity bool
-	// metadata of the list of annotations on this attribute.
-	annotations []string
+	// =====================
+	// Additional attributes
+	// =====================
+	id              string
+	index           int
+	path            string
+	annotationIndex map[string]struct{}
 }
 
-// Return the ID of the attribute.
-// The ID can be used to universally identify an attribute.
+// Validate the attribute. This method panics if encounters any error.
+func (attr *Attribute) MustValidate() {
+	v := &attributeValidator{attr:attr}
+	for _, rule := range []func() error {
+		v.checkRequired,
+		v.checkCaseExact,
+		v.checkPrimary,
+		v.checkUniqueness,
+	} {
+		if err := rule(); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// Return ID of the attribute that uniquely identifies an attribute globally. ID shall be in
+// the format of <schema_urn>:<full_path>. Core attributes has no need to prefix the schema URN.
+// For instance, "schemas", "meta.version", "urn:ietf:params:scim:schemas:core:2.0:Group:displayName"
 func (attr *Attribute) ID() string {
 	return attr.id
+}
+
+// Return relative index of this attribute within its parent attribute, or on the top level. This
+// index is used to sort the attribute, or the property carrying this attribute in ascending
+// order within the scope of its container. The intention is to provide a stable iteration order,
+// despite Golang's map does not range in a predictable order. The actual value of the index does
+// not matter as long as they can be sorted in ascending order correctly.
+func (attr *Attribute) Index() int {
+	return attr.index
+}
+
+// Return the full path of this attribute. The full path will be the name of the attribute if this
+// attribute is on the top level. If the attribute is a sub attribute, it will be attribute names
+// delimited by period (".").
+func (attr *Attribute) Path() string {
+	return attr.path
+}
+
+// Return true if this attribute is considered a primary attribute. A primary attribute is annotated with
+// annotations.Primary (@Primary). It is only effective when it is annotated on a singular boolean attribute
+// as a sub attribute of a multiValued complex attribute. The purpose is that among all the element boolean
+// properties carrying this attribute, at most one can assume a true value.
+func (attr *Attribute) IsPrimary() bool {
+	return attr.HasAnnotation(annotations.Primary)
+}
+
+// Return true if this attribute is considered an identity attribute. An identity attribute is annotated with
+// annotations.Identity (@Identity). When one or more sub attributes for a complex attribute is annotated with
+// @Identity, they will collectively be used to determine the identity of the complex attribute. Other attributes
+// that were not annotated with @Identity no longer participates in operations like equality which involves identity.
+func (attr *Attribute) IsIdentity() bool {
+	return attr.HasAnnotation(annotations.Identity)
 }
 
 // Return the name of the attribute.
@@ -66,8 +105,8 @@ func (attr *Attribute) Description() string {
 	return attr.description
 }
 
-// Return the data type of the attribute. Note that the type
-// could indicate either singular or multiValued attribute.
+// Return the data type of the attribute. The data type cannot be used to definitively
+// determine the nature of the attribute unless combined with the method MultiValued.
 func (attr *Attribute) Type() Type {
 	return attr.typ
 }
@@ -94,7 +133,6 @@ func (attr *Attribute) Optional() bool {
 
 // Return true if the attribute's value is case sensitive. Note that case sensitivity
 // only applies to string type attributes.
-//
 // The API does not provide a version in reverse form (i.e. CaseInExact) because they
 // are too similar, and may potentially confuse developers, leading to bugs. Too check
 // for case insensitivity, just use !attribute.CaseExact()
@@ -123,18 +161,17 @@ func (attr *Attribute) CountCanonicalValues() int {
 }
 
 // Iterate through all canonical values and invoke the callback function on each value.
-// This method is designed to preserve the SOLID principal. The callback SHALL NOT block
-// the executing Goroutine.
 func (attr *Attribute) ForEachCanonicalValue(callback func(canonicalValue string)) {
-	for _, eachCanonicalValue := range attr.canonicalValues {
-		callback(eachCanonicalValue)
+	for _, each := range attr.canonicalValues {
+		callback(each)
 	}
 }
 
-// Returns true if this attribute is annotated with the given value
-func (attr *Attribute) HasAnnotation(annotation string) bool {
-	for _, eachAnnotation := range attr.annotations {
-		if strings.ToLower(eachAnnotation) == strings.ToLower(annotation) {
+// Returns true if the a certain canonical value that meets the given criteria is defined among
+// the canonical values of this attribute.
+func (attr *Attribute) HasCanonicalValue(criteria func(value string) bool) bool {
+	for _, each := range attr.canonicalValues {
+		if criteria(each) {
 			return true
 		}
 	}
@@ -147,12 +184,21 @@ func (attr *Attribute) CountReferenceTypes() int {
 }
 
 // Iterate through all reference types and invoke the callback function on each value.
-// This method is designed to preserve the SOLID principal. The callback SHALL NOT block
-// the executing Goroutine.
 func (attr *Attribute) ForEachReferenceType(callback func(referenceType string)) {
-	for _, eachReferenceType := range attr.referenceTypes {
-		callback(eachReferenceType)
+	for _, each := range attr.referenceTypes {
+		callback(each)
 	}
+}
+
+// Returns true if the a certain reference type that meets the given criteria is defined among
+// the reference types of this attribute.
+func (attr *Attribute) HasReferenceType(criteria func(value string) bool) bool {
+	for _, each := range attr.referenceTypes {
+		if criteria(each) {
+			return true
+		}
+	}
+	return false
 }
 
 // Return the total number of sub attributes.
@@ -179,27 +225,6 @@ func (attr *Attribute) SubAttributeForName(name string) *Attribute {
 	return nil
 }
 
-// Return the metadata about the relative index of this attribute among its parent container.
-// This index is used to sort the attribute in order to maintain a stable and ideal iteration order.
-func (attr *Attribute) Index() int {
-	return attr.index
-}
-
-// Return the full path of this attribute.
-func (attr *Attribute) Path() string {
-	return attr.path
-}
-
-// Return true if this attribute is a primary attribute.
-func (attr *Attribute) IsPrimary() bool {
-	return attr.primary
-}
-
-// Return true if this attribute is an identity attribute.
-func (attr *Attribute) IsIdentity() bool {
-	return attr.identity
-}
-
 // Return true if one or more of this attribute's sub attributes is marked as identity
 func (attr *Attribute) HasIdentitySubAttributes() bool {
 	for _, subAttr := range attr.subAttributes {
@@ -222,20 +247,25 @@ func (attr *Attribute) HasPrimarySubAttribute() bool {
 
 // Return the number of total annotations on this attribute.
 func (attr *Attribute) CountAnnotations() int {
-	return len(attr.annotations)
+	return len(attr.annotationIndex)
+}
+
+// Returns true if this attribute is annotated with the given value
+func (attr *Attribute) HasAnnotation(annotation string) bool {
+	_, ok := attr.annotationIndex[annotation]
+	return ok
 }
 
 // Iterate through all annotations on this attribute and invoke callback function on each.
-// This method maintains SOLID principal. The callback function SHALL NOT block.
 func (attr *Attribute) ForEachAnnotation(callback func(annotation string)) {
-	for _, annotation := range attr.annotations {
+	for annotation := range attr.annotationIndex {
 		callback(annotation)
 	}
 }
 
-// Return true if this attribute can be addressed by the given name. The method performs a case insensitive comparision
-// of the provided name against the attribute's id, path, and name one by one. If any one matches, the attribute is
-// considered addressable by that name.
+// Return true if this attribute can be addressed by the given name. The method performs a case insensitive
+// comparision of the provided name against the attribute's id, path, and name. If any matches, the attribute
+// is considered addressable by that name.
 func (attr *Attribute) GoesBy(name string) bool {
 	switch strings.ToLower(name) {
 	case strings.ToLower(attr.id), strings.ToLower(attr.path), strings.ToLower(attr.name):
@@ -247,13 +277,14 @@ func (attr *Attribute) GoesBy(name string) bool {
 
 // Returns true if this attribute is the derived element attribute of the other attribute.
 func (attr *Attribute) IsElementAttributeOf(other *Attribute) bool {
-	return fmt.Sprintf("%s$elem", other.ID()) == attr.ID()
+	return fmt.Sprintf("%s%s", other.ID(), elemSuffix) == attr.ID()
 }
 
-// Create the derived element attribute of this attribute. The multiValue attribute is set to false and caller can
-// redefine annotations. The id attribute is suffixed with "$elem".
+// Create the element attribute from this attribute. The element attribute is a derived attribute design for
+// elements of a multiValued attribute. The ID of the attribute is suffixed with elemSuffix ("$elem"), and
+// the multiValued attribute is set to false. All other attributes are carried over.
 func (attr *Attribute) NewElementAttribute(annotations ...string) *Attribute {
-	return &Attribute{
+	elemAttr := &Attribute{
 		name:            attr.name,
 		description:     attr.description,
 		typ:             attr.typ,
@@ -266,64 +297,18 @@ func (attr *Attribute) NewElementAttribute(annotations ...string) *Attribute {
 		returned:        attr.returned,
 		uniqueness:      attr.uniqueness,
 		referenceTypes:  attr.referenceTypes,
-		id:              fmt.Sprintf("%s$elem", attr.ID()),
+		id:              fmt.Sprintf("%s%s", attr.ID(), elemSuffix),
 		index:           attr.index,
 		path:            attr.path,
-		primary:         attr.primary,
-		identity:        attr.identity,
-		annotations:     annotations,
+		annotationIndex: map[string]struct{}{},
 	}
+	for _, annotation := range annotations {
+		elemAttr.annotationIndex[annotation] = struct{}{}
+	}
+	return elemAttr
 }
 
-// Validate the attribute and panic if the required fields are not present.
-func (attr *Attribute) MustValidate() {
-	if len(attr.id) == 0 {
-		panic("attribute id is required")
-	}
-	if len(attr.name) == 0 {
-		panic("attribute name is required")
-	}
-	if len(attr.path) == 0 {
-		panic("attribute path is required")
-	}
-
-	if !attr.multiValued {
-		switch attr.typ {
-		case TypeReference:
-			if !attr.caseExact {
-				panic("reference attribute must be case exact")
-			}
-		case TypeDateTime:
-			if !attr.caseExact {
-				panic("dateTime attribute must be case exact")
-			}
-		case TypeBinary:
-			if !attr.caseExact {
-				panic("binary attribute must be case exact")
-			}
-			if attr.uniqueness != UniquenessNone {
-				panic("binary attribute must not have uniqueness")
-			}
-		}
-	}
-
-	var exclusiveCount = 0
-	{
-		attr.ForEachSubAttribute(func(subAttribute *Attribute) {
-			if subAttribute.IsPrimary() {
-				if !subAttribute.SingleValued() || subAttribute.Type() != TypeBoolean {
-					panic("only boolean properties can be marked as primary")
-				}
-				exclusiveCount++
-			}
-		})
-	}
-	if exclusiveCount > 1 {
-		panic("only one boolean sub property may be marked as primary")
-	}
-}
-
-// Sort the sub attributes recursively based on the index metadata.
+// Sort the sub attributes recursively based on the index.
 func (attr *Attribute) Sort() {
 	attr.ForEachSubAttribute(func(subAttribute *Attribute) {
 		subAttribute.Sort()
@@ -334,7 +319,6 @@ func (attr *Attribute) Sort() {
 func (attr *Attribute) Len() int {
 	return len(attr.subAttributes)
 }
-
 func (attr *Attribute) Less(i, j int) bool {
 	return attr.subAttributes[i].index < attr.subAttributes[j].index
 }
@@ -344,10 +328,9 @@ func (attr *Attribute) Swap(i, j int) {
 }
 
 // Returns true if the two attributes are equal. This method checks pointer equality first.
-// If does not match, goes on to check whether id and multiValued matches: these two properties
-// can effectively dictate if two attributes refer to the same one.
+// If does not match, goes on to check whether id matches.
 func (attr *Attribute) Equals(other *Attribute) bool {
-	return (attr == other) || (attr.id == other.id && attr.multiValued == other.multiValued)
+	return (attr == other) || attr.id == other.id
 }
 
 // Return a string representation of the attribute. This method is intended to assist
@@ -451,10 +434,10 @@ func (u *attributeUnmarshaler) fill(attr *Attribute) {
 	attr.referenceTypes = u.ReferenceTypes
 	attr.index = u.Index
 	attr.path = u.Path
-	attr.primary = u.Primary
-	attr.identity = u.Identity
-	attr.annotations = u.Annotations
-
+	attr.annotationIndex = map[string]struct{}{}
+	for _, annotation := range u.Annotations {
+		attr.annotationIndex[annotation] = struct{}{}
+	}
 	if len(u.SubAttributes) > 0 {
 		attr.subAttributes = make([]*Attribute, len(u.SubAttributes), len(u.SubAttributes))
 		for i, sub := range u.SubAttributes {
@@ -464,3 +447,89 @@ func (u *attributeUnmarshaler) fill(attr *Attribute) {
 		}
 	}
 }
+
+type attributeValidator struct {
+	attr *Attribute
+}
+
+func (v *attributeValidator) checkRequired() error {
+	for _, required := range []struct {
+		v    string
+		name string
+	}{
+		{v: v.attr.id, name: "id"},
+		{v: v.attr.name, name: "name"},
+		{v: v.attr.path, name: "path"},
+	} {
+		if len(required.v) == 0 {
+			return fmt.Errorf("'%s' is required in attribute", required.name)
+		}
+	}
+	return nil
+}
+
+func (v *attributeValidator) checkCaseExact() error {
+	nonCaseExactAllowed := map[Type]bool{
+		TypeString:    true,
+		TypeInteger:   true,
+		TypeDecimal:   true,
+		TypeBoolean:   true,
+		TypeReference: false,
+		TypeDateTime:  false,
+		TypeBinary:    false,
+		TypeComplex:   false,
+	}[v.attr.Type()]
+	if !v.attr.CaseExact() && !nonCaseExactAllowed {
+		return fmt.Errorf("%s attribute must be case exact", v.attr.Type().String())
+	}
+	return nil
+}
+
+func (v *attributeValidator) checkUniqueness() error {
+	uniquenessAllowed := map[Type]bool{
+		TypeString:    true,
+		TypeInteger:   true,
+		TypeDecimal:   true,
+		TypeBoolean:   true,
+		TypeReference: true,
+		TypeDateTime:  true,
+		TypeBinary:    false,
+		TypeComplex:   false,
+	}[v.attr.Type()]
+	if v.attr.Uniqueness() != UniquenessNone && !uniquenessAllowed {
+		return fmt.Errorf("%s attribute must not be unique", v.attr.Type().String())
+	}
+	return nil
+}
+
+func (v *attributeValidator) checkPrimary() error {
+	count := 0
+	for _, subAttr := range v.attr.subAttributes {
+		if subAttr.IsPrimary() {
+			if subAttr.Type() != TypeBoolean || subAttr.MultiValued() {
+				return fmt.Errorf("only singular boolean attribute can be annotated %s (violation %s)",
+					annotations.Primary, v.attr.ID())
+			}
+			count++
+		}
+	}
+	switch count {
+	case 0:
+	case 1:
+		if v.attr.SingleValued() {
+			return fmt.Errorf(
+				"only multiValued complex property can annotate %s on its boolean sub attribute (violation: %s)",
+				annotations.Primary,
+				v.attr.ID())
+		}
+	default:
+		return fmt.Errorf("only one boolean sub attribute can be annotated %s (violation: %s)",
+			annotations.Primary, v.attr.ID())
+	}
+	return nil
+}
+
+var (
+	_ json.Marshaler   = (*Attribute)(nil)
+	_ json.Unmarshaler = (*Attribute)(nil)
+)

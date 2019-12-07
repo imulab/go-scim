@@ -19,15 +19,15 @@ type passwordFilter struct {
 	cost int
 }
 
-func (f *passwordFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) error {
+func (f *passwordFilter) Filter(ctx *protocol.FilterContext, resource *prop.Resource) errors {
 	return f.tryBCrypt(ctx, resource)
 }
 
-func (f *passwordFilter) FilterRef(ctx *protocol.FilterContext, resource *prop.Resource, ref *prop.Resource) error {
+func (f *passwordFilter) FilterRef(ctx *protocol.FilterContext, resource *prop.Resource, ref *prop.Resource) errors {
 	return f.tryBCrypt(ctx, resource)
 }
 
-func (f *passwordFilter) tryBCrypt(ctx *protocol.FilterContext, resource *prop.Resource) error {
+func (f *passwordFilter) tryBCrypt(ctx *protocol.FilterContext, resource *prop.Resource) errors {
 	pwdProp, err := resource.NewNavigator().FocusName("password")
 	if err != nil {
 		return err

@@ -28,7 +28,7 @@ type (
 	}
 )
 
-func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRequest) (*ReplaceResponse, error) {
+func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRequest) (*ReplaceResponse, errors) {
 	s.Logger.Debug("received replace request [id=%s]", request.ResourceID)
 
 	ref, err := s.Persistence.Get(ctx, request.ResourceID)
