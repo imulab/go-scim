@@ -7,7 +7,7 @@ import (
 )
 
 // Create a SCIM filter and return the root of the abstract syntax tree, or any error.
-func CompileFilter(filter string) (*Expression, errors) {
+func CompileFilter(filter string) (*Expression, error) {
 	compiler := &filterCompiler{
 		scan:    &filterScanner{},
 		data:    append(copyOf(filter), 0, 0),
@@ -191,7 +191,7 @@ func (c *filterCompiler) popOperatorIf(condition func(top *Expression) bool) *Ex
 }
 
 // Part of the shunting yard algorithm. Push operators onto the result stack to form a tree.
-func (c *filterCompiler) pushBuildResult(step *Expression) errors {
+func (c *filterCompiler) pushBuildResult(step *Expression) error {
 	// Literal: push and return
 	if step.IsLiteral() {
 		c.rsStack = append(c.rsStack, step)
@@ -246,7 +246,7 @@ func (c *filterCompiler) hasMore() bool {
 }
 
 // Produce the next token
-func (c *filterCompiler) next() (*Expression, errors) {
+func (c *filterCompiler) next() (*Expression, error) {
 	if c.op == scanFilterError {
 		return nil, c.scan.err
 	}
@@ -273,7 +273,7 @@ func (c *filterCompiler) next() (*Expression, errors) {
 
 // Produce a literal node from the current offset. This should only be called when scanFilterBeginLiteral is returned
 // as op code.
-func (c *filterCompiler) scanLiteral() (*Expression, errors) {
+func (c *filterCompiler) scanLiteral() (*Expression, error) {
 	start := c.off - 1
 	end := c.scanWhile(scanFilterContinue)
 	switch c.op {
@@ -286,7 +286,7 @@ func (c *filterCompiler) scanLiteral() (*Expression, errors) {
 
 // Produce an operator node from the current offset. This should only be called when scanFilterBeginOp is returned
 // as op code.
-func (c *filterCompiler) scanOperator() (*Expression, errors) {
+func (c *filterCompiler) scanOperator() (*Expression, error) {
 	start := c.off - 1
 	end := c.scanWhile(scanFilterContinue)
 	switch c.op {
@@ -300,7 +300,7 @@ func (c *filterCompiler) scanOperator() (*Expression, errors) {
 // Produce an path step from the current offset. Note the returned step will be the unsegmented whole of the path
 // in the filter as the filterScanner does not break them down. The caller will need to call CompilePath to replace
 // the step with the compiled head.
-func (c *filterCompiler) scanPath() (*Expression, errors) {
+func (c *filterCompiler) scanPath() (*Expression, error) {
 	start := c.off - 1
 	end := c.scanWhile(scanFilterContinue)
 	switch c.op {
@@ -314,7 +314,7 @@ func (c *filterCompiler) scanPath() (*Expression, errors) {
 // Produce a path or operator node from the current offset. This fits the case where we read 'n' at the start of the
 // predicate, we are not quite sure whether it is going to be 'not' and just another path with prefix 'n'. This should
 // only be called when scanFilterBeginAny is returned as op code.
-func (c *filterCompiler) scanOperatorOrPath() (*Expression, errors) {
+func (c *filterCompiler) scanOperatorOrPath() (*Expression, error) {
 	start := c.off - 1
 	end := c.scanWhile(scanFilterContinue)
 	switch c.op {
@@ -426,7 +426,7 @@ type filterScanner struct {
 	parenLevel int
 	// error incurred during the scanning. Once errored, the state machine shall remain
 	// in error state.
-	err errors
+	err error
 	// number of bytes that has been scanned. This is assisting data that helps formulating
 	// error information.
 	bytes int64
