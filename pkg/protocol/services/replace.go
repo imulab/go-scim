@@ -35,7 +35,7 @@ type (
 func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRequest) (*ReplaceResponse, error) {
 	s.Logger.Debug("received replace request [id=%s]", request.ResourceID)
 
-	ref, err := s.Database.Get(ctx, request.ResourceID)
+	ref, err := s.Database.Get(ctx, request.ResourceID, nil)
 	if err != nil {
 		return nil, err
 	} else if request.MatchCriteria != nil && !request.MatchCriteria(ref) {

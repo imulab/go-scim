@@ -61,7 +61,7 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 		return nil, err
 	}
 
-	ref, err := s.Database.Get(ctx, request.ResourceID)
+	ref, err := s.Database.Get(ctx, request.ResourceID, nil)
 	if err != nil {
 		return nil, err
 	} else if request.MatchCriteria != nil && !request.MatchCriteria(ref) {

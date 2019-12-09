@@ -26,7 +26,7 @@ type (
 func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteRequest) error {
 	s.Logger.Debug("received delete request [id=%s]", request.ResourceID)
 
-	resource, err := s.Database.Get(ctx, request.ResourceID)
+	resource, err := s.Database.Get(ctx, request.ResourceID, nil)
 	if err != nil {
 		return err
 	} else if request.MatchCriteria != nil && !request.MatchCriteria(resource) {
