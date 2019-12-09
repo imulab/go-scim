@@ -102,7 +102,6 @@ func NewAutoCompactSubscriber() Subscriber {
 type autoCompactSubscriber struct{}
 
 func (s *autoCompactSubscriber) Notify(publisher Property, event *Event) error {
-	println(event.Target().Attribute().ID(), publisher.Attribute().ID())
 	if !event.Target().Attribute().IsElementAttributeOf(publisher.Attribute()) {
 		return nil
 	} else if event.Type() != EventUnassigned {

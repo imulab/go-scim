@@ -10,30 +10,30 @@ import (
 )
 
 // Evaluate if the property meets the compiled SCIM filter.
-func evaluate(property prop.Property, filter *expr.Expression) (bool, error) {
+func Evaluate(property prop.Property, filter *expr.Expression) (bool, error) {
 	if filter == nil {
 		return false, errors.InvalidFilter("filter is invalid")
 	}
 
 	switch filter.Token() {
 	case expr.And:
-		if left, err := evaluate(property, filter.Left()); err != nil {
+		if left, err := Evaluate(property, filter.Left()); err != nil {
 			return false, err
 		} else if !left {
 			return false, nil
 		} else {
-			return evaluate(property, filter.Right())
+			return Evaluate(property, filter.Right())
 		}
 	case expr.Or:
-		if left, err := evaluate(property, filter.Left()); err != nil {
+		if left, err := Evaluate(property, filter.Left()); err != nil {
 			return false, err
 		} else if left {
 			return true, nil
 		} else {
-			return evaluate(property, filter.Right())
+			return Evaluate(property, filter.Right())
 		}
 	case expr.Not:
-		if left, err := evaluate(property, filter.Left()); err != nil {
+		if left, err := Evaluate(property, filter.Left()); err != nil {
 			return false, err
 		} else {
 			return !left, nil

@@ -8,11 +8,11 @@ import (
 	scimJSON "github.com/imulab/go-scim/pkg/core/json"
 	"github.com/imulab/go-scim/pkg/core/prop"
 	"github.com/imulab/go-scim/pkg/core/spec"
+	"github.com/imulab/go-scim/pkg/protocol/crud"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/event"
 	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
-	"github.com/imulab/go-scim/pkg/protocol/services/crud"
 	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 )
 

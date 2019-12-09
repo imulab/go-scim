@@ -19,7 +19,7 @@ func traverse(nav *prop.Navigator, query *expr.Expression, callback func(target 
 		}
 
 		return nav.Current().(prop.Container).ForEachChild(func(_ int, child prop.Property) error {
-			if r, e := evaluate(child, query); e != nil {
+			if r, e := Evaluate(child, query); e != nil {
 				return e
 			} else if r {
 				return traverse(prop.NewNavigator(child), query.Next(), callback)

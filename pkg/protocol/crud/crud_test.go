@@ -15,7 +15,7 @@ import (
 
 func TestCRUD(t *testing.T) {
 	s := new(CRUDTestSuite)
-	s.resourceBase = "../../../tests/crud_test_suite"
+	s.resourceBase = "../../tests/crud_test_suite"
 	suite.Run(t, s)
 }
 

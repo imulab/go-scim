@@ -232,7 +232,6 @@ func (s *SubscriberTestSuite) TestAutoCompact() {
 				require.Equal(t, 2, nav.Current().(Container).CountChildren())
 				b, err := nav.FocusIndex(1)
 				require.Nil(t, err)
-				println("start deleting")
 				return b.(Container).ForEachChild(func(index int, child Property) error {
 					return child.Delete()
 				})
