@@ -51,6 +51,10 @@ func (m *memoryDB) Get(ctx context.Context, id string, _ *crud.Projection) (*pro
 }
 
 func (m *memoryDB) Count(ctx context.Context, filter string) (int, error) {
+	if len(filter) == 0 {
+		return len(m.db), nil
+	}
+
 	root, err := expr.CompileFilter(filter)
 	if err != nil {
 		return 0, err
@@ -58,7 +62,7 @@ func (m *memoryDB) Count(ctx context.Context, filter string) (int, error) {
 	n := 0
 	for _, r := range m.db {
 		ok, _ := crud.Evaluate(r.NewNavigator().Current(), root)
-		if !ok {
+		if ok {
 			n++
 		}
 	}
