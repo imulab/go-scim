@@ -6,11 +6,12 @@ import (
 	"sort"
 )
 
-type SortOrder int
+type SortOrder string
 
 const (
-	SortAsc SortOrder = iota
-	SortDesc
+	SortDefault SortOrder = ""
+	SortAsc     SortOrder = "ascending"
+	SortDesc    SortOrder = "descending"
 )
 
 type (
@@ -84,7 +85,7 @@ func (s *sortWrapper) Less(i, j int) bool {
 	}
 
 	less, _ := iProp.LessThan(jProp.Raw())
-	if s.dir == SortAsc {
+	if s.dir == SortAsc || s.dir == SortDefault {
 		return less
 	} else {
 		return !less
