@@ -51,9 +51,9 @@ func (h *Create) Handle(request http.Request, response http.Response) {
 		return
 	}
 
-	response.WriteBody(raw)
+	response.WriteStatus(201)
 	response.WriteSCIMContentType()
 	response.WriteETag(cr.Version)
 	response.WriteLocation(cr.Location)
-	response.WriteStatus(201)
+	response.WriteBody(raw)
 }
