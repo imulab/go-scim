@@ -2,6 +2,7 @@ package crud
 
 import (
 	"encoding/json"
+	"github.com/imulab/go-scim/pkg/core/expr"
 	scimJSON "github.com/imulab/go-scim/pkg/core/json"
 	"github.com/imulab/go-scim/pkg/core/prop"
 	"github.com/imulab/go-scim/pkg/core/spec"
@@ -21,6 +22,99 @@ func TestSortResource(t *testing.T) {
 type SortResourceTestSuite struct {
 	suite.Suite
 	resourceBase string
+}
+
+func (s *SortResourceTestSuite) TestSeekSortTarget() {
+	_ = s.mustSchema("/user_schema.json")
+	resourceType := s.mustResourceType("/user_resource_type.json")
+
+	tests := []struct{
+		name		string
+		getResource	func() *prop.Resource
+		sortBy		string
+		expect		func(t *testing.T, target prop.Property, err error)
+	}{
+		{
+			name: 	"simple target",
+			getResource: func() *prop.Resource {
+				return s.mustResource("/user_000.json", resourceType)
+			},
+			sortBy: "userName",
+			expect: func(t *testing.T, target prop.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "userName", target.Attribute().Name())
+				assert.Equal(t, "imulab", target.Raw())
+			},
+		},
+		{
+			name: 	"nested simple target",
+			getResource: func() *prop.Resource {
+				return s.mustResource("/user_000.json", resourceType)
+			},
+			sortBy: "name.familyName",
+			expect: func(t *testing.T, target prop.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "familyName", target.Attribute().Name())
+				assert.Equal(t, "Qiu", target.Raw())
+			},
+		},
+		{
+			name: 	"simple multiValued",
+			getResource: func() *prop.Resource {
+				return s.mustResource("/user_000.json", resourceType)
+			},
+			sortBy: "schemas",
+			expect: func(t *testing.T, target prop.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "schemas$elem", target.Attribute().ID())
+				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User", target.Raw())
+			},
+		},
+		{
+			name: 	"multiValued with primary",
+			getResource: func() *prop.Resource {
+				return s.mustResource("/user_000.json", resourceType)
+			},
+			sortBy: "emails.value",
+			expect: func(t *testing.T, target prop.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "value", target.Attribute().Name())
+				assert.Equal(t, "imulab@foo.com", target.Raw())
+			},
+		},
+		{
+			name: 	"multiValued without primary",
+			getResource: func() *prop.Resource {
+				return s.mustResource("/user_000.json", resourceType)
+			},
+			sortBy: "phoneNumbers.value",
+			expect: func(t *testing.T, target prop.Property, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "value", target.Attribute().Name())
+				assert.Equal(t, "123-45678", target.Raw())
+			},
+		},
+		{
+			name: 	"invalid",
+			getResource: func() *prop.Resource {
+				return s.mustResource("/user_000.json", resourceType)
+			},
+			sortBy: "emails",
+			expect: func(t *testing.T, target prop.Property, err error) {
+				assert.NotNil(t, err)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			resource := test.getResource()
+			by, err := expr.CompilePath(test.sortBy)
+			assert.Nil(t, err)
+			prop, err := SeekSortTarget(resource, by)
+			test.expect(t, prop, err)
+		})
+	}
 }
 
 func (s *SortResourceTestSuite) TestSort() {
