@@ -54,9 +54,12 @@ func (h *Query) parseRequest(request http.Request) (qr *services.QueryRequest, e
 			}
 		}
 		if len(request.QueryParam(attributes)) > 0 || len(request.QueryParam(excludedAttributes)) > 0 {
-			qr.Projection = &crud.Projection{
-				Attributes:         strings.Split(strings.TrimSpace(request.QueryParam(attributes)), space),
-				ExcludedAttributes: strings.Split(strings.TrimSpace(request.QueryParam(excludedAttributes)), space),
+			qr.Projection = &crud.Projection{}
+			if v := strings.TrimSpace(request.QueryParam(attributes)); len(v) > 0 {
+				qr.Projection.Attributes = strings.Split(v, space)
+			}
+			if v := strings.TrimSpace(request.QueryParam(excludedAttributes)); len(v) > 0 {
+				qr.Projection.ExcludedAttributes = strings.Split(v, space)
 			}
 		}
 		if len(request.QueryParam(startIndex)) > 0 || len(request.QueryParam(count)) > 0 {
