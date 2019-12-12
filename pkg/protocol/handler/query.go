@@ -82,8 +82,8 @@ func (h *Query) parseRequest(request http.Request) (qr *services.QueryRequest, e
 			}
 		}
 	case "POST":
-		raw, err := request.Body()
-		if err != nil {
+		raw, e := request.Body()
+		if e != nil {
 			err = errors.Internal("failed to read request body")
 			return
 		}
@@ -97,8 +97,8 @@ func (h *Query) parseRequest(request http.Request) (qr *services.QueryRequest, e
 			StartIndex         int      `json:"startIndex"`
 			Count              int      `json:"count"`
 		})
-		if err := json.Unmarshal(raw, wip); err != nil {
-			err = errors.InvalidSyntax("failed to parse search request: %s", err.Error())
+		if e := json.Unmarshal(raw, wip); e != nil {
+			err = errors.InvalidSyntax("failed to parse search request: %s", e.Error())
 			return
 		}
 		if len(wip.Schemas) != 1 || wip.Schemas[0] != "urn:ietf:params:scim:api:messages:2.0:SearchRequest" {

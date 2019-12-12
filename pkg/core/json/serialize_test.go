@@ -316,7 +316,6 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
       "urn:ietf:params:scim:schemas:core:2.0:User"
    ],
    "id":"3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-   "externalId":null,
    "meta":{
       "resourceType":"User",
       "created":"2019-11-20T13:09:00",
@@ -329,14 +328,10 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
       "formatted":"Mr. Weinan Qiu",
       "familyName":"Qiu",
       "givenName":"Weinan",
-      "middleName":null,
-      "honorificPrefix":"Mr.",
-      "honorificSuffix":null
+      "honorificPrefix":"Mr."
    },
    "displayName":"Weinan",
-   "nickName":null,
    "profileUrl":"https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-   "title":null,
    "userType":"Employee",
    "preferredLanguage":"zh_CN",
    "locale":"zh_CN",

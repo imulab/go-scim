@@ -2,6 +2,7 @@ package errors
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 const (
@@ -27,7 +28,7 @@ func (s Error) MarshalJSON() ([]byte, error) {
 		Detail   string   `json:"detail"`
 	}{
 		Schemas:  []string{Schema},
-		Status:   string(s.Status),
+		Status:   fmt.Sprintf("%d", s.Status),
 		ScimType: s.Type,
 		Detail:   s.Message,
 	})

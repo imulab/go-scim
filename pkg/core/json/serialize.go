@@ -97,7 +97,7 @@ func (s *serializer) ShouldVisit(property prop.Property) bool {
 			if len(s.includes) > 0 {
 				for _, include := range s.includes {
 					if include == test || strings.HasPrefix(include, test+".") || strings.HasPrefix(test, include+".") {
-						return true
+						return !property.IsUnassigned()
 					}
 				}
 				return false
@@ -107,7 +107,7 @@ func (s *serializer) ShouldVisit(property prop.Property) bool {
 						return false
 					}
 				}
-				return true
+				return !property.IsUnassigned()
 			} else {
 				panic("impossible: either includeFamily or excludeFamily")
 			}

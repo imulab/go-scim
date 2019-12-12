@@ -30,8 +30,12 @@ func (h *Get) Handle(request http.Request, response http.Response) {
 			return
 		}
 
-		attributesParam = strings.Split(strings.TrimSpace(request.QueryParam(attributes)), space)
-		excludedAttributesParam = strings.Split(strings.TrimSpace(request.QueryParam(excludedAttributes)), space)
+		if v := strings.TrimSpace(request.QueryParam(attributes)); len(v) > 0 {
+			attributesParam = strings.Split(v, space)
+		}
+		if v := strings.TrimSpace(request.QueryParam(excludedAttributes)); len(v) > 0 {
+			excludedAttributesParam = strings.Split(v, space)
+		}
 		if len(attributesParam) > 0 && len(excludedAttributesParam) > 0 {
 			WriteError(response, errors.InvalidRequest("only one of %s and %s parameter may be used", attributes, excludedAttributes))
 			return
@@ -56,9 +60,9 @@ func (h *Get) Handle(request http.Request, response http.Response) {
 		return
 	}
 
-	response.WriteBody(raw)
+	response.WriteStatus(200)
 	response.WriteSCIMContentType()
 	response.WriteETag(gr.Version)
 	response.WriteLocation(gr.Location)
-	response.WriteStatus(200)
+	response.WriteBody(raw)
 }

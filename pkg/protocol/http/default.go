@@ -32,7 +32,7 @@ type defaultRequest struct {
 }
 
 func (r *defaultRequest) Context() context.Context {
-	return r.Context()
+	return r.req.Context()
 }
 
 func (r *defaultRequest) Method() string {

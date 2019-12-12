@@ -20,10 +20,10 @@ func WriteError(response http.Response, err error) {
 		}
 	}
 
+	response.WriteStatus(scimError.Status)
+	response.WriteSCIMContentType()
 	raw, _ := json.Marshal(scimError)
 	response.WriteBody(raw)
-	response.WriteSCIMContentType()
-	response.WriteStatus(scimError.Status)
 }
 
 const (
