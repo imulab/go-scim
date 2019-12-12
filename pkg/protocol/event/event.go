@@ -11,7 +11,7 @@ type Publisher interface {
 	// Notify that a new resource has been created.
 	ResourceCreated(ctx context.Context, created *prop.Resource)
 	// Notify that an old resource has been updated
-	ResourceUpdated(ctx context.Context, updated *prop.Resource)
+	ResourceUpdated(ctx context.Context, updated *prop.Resource, original *prop.Resource)
 	// Notify that a resource has been deleted
 	ResourceDeleted(ctx context.Context, deleted *prop.Resource)
 }

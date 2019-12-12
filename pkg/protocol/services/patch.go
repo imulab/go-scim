@@ -120,7 +120,7 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 		s.Logger.Debug("resource [id=%s] saved in persistence", request.ResourceID)
 
 		if s.Event != nil {
-			s.Event.ResourceUpdated(ctx, resource)
+			s.Event.ResourceUpdated(ctx, resource, ref)
 		}
 	}
 

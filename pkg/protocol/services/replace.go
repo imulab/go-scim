@@ -65,7 +65,7 @@ func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRe
 		s.Logger.Debug("resource [id=%s] saved in persistence", request.ResourceID)
 
 		if s.Event != nil {
-			s.Event.ResourceUpdated(ctx, request.Payload)
+			s.Event.ResourceUpdated(ctx, request.Payload, ref)
 		}
 	}
 
