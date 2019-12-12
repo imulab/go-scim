@@ -221,7 +221,7 @@ func (p *multiValuedProperty) Clone(parent Container) Property {
 		subscribers: p.subscribers,
 	}
 	for _, elem := range p.elements {
-		c.elements = append(c.elements, elem.Clone(parent))
+		c.elements = append(c.elements, elem.Clone(c))
 	}
 	return c
 }

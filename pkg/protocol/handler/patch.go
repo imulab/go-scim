@@ -18,23 +18,22 @@ type Patch struct {
 func (h *Patch) Handle(request http.Request, response http.Response) {
 	var payload *services.PatchRequest
 	{
-		resourceID := request.PathParam(h.ResourceIDPathParam)
+		payload = new(services.PatchRequest)
+
+		payload.ResourceID = request.PathParam(h.ResourceIDPathParam)
+		payload.MatchCriteria = interpretConditionalHeader(request)
 
 		raw, err := request.Body()
 		if err != nil {
-			h.Log.Error("failed to read request body for patching resource [id=%s]: %s", resourceID, err.Error())
+			h.Log.Error("failed to read request body for patching resource [id=%s]: %s", payload.ResourceID, err.Error())
 			WriteError(response, errors.Internal("failed to read request body"))
 			return
 		}
-
-		payload := new(services.PatchRequest)
 		if err := json.Unmarshal(raw, payload); err != nil {
-			h.Log.Error("failed to parse request body for patching resource [id=%s]: %s", resourceID, err.Error())
+			h.Log.Error("failed to parse request body for patching resource [id=%s]: %s", payload.ResourceID, err.Error())
 			WriteError(response, err)
 			return
 		}
-		payload.ResourceID = resourceID
-		payload.MatchCriteria = interpretConditionalHeader(request)
 	}
 
 	pr, err := h.Service.PatchResource(request.Context(), payload)
