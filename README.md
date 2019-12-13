@@ -2,7 +2,7 @@
 
 > GoSCIM aims to be a fully featured implementation of [SCIM v2](http://www.simplecloud.info/) specifiction. It provides basic building blocks to SCIM functions and a functional out-of-box server. It is also designed with extensibility in mind to make customizations easy.
 
-**Caution** This is the early stage of `v2.0.0` version of go-scim. We are now at `v2.0.0-m1` ([release notes](https://github.com/imulab/go-scim/releases/tag/v2.0.0-m1)). This second major release will introduce drastic changes to the way resources are handled in the system. 
+**Caution** This is the early stage of `v2.0.0` version of go-scim. We are now at `v2.0.0-m2` ([release notes](https://github.com/imulab/go-scim/releases/tag/v2.0.0-m2)). This second major release will introduce drastic changes to the way resources are handled in the system. 
 
 For the currently stable version, checkout tag `v1.0.1`, or go to [here](https://github.com/imulab/go-scim/tree/v1.0.1).
 
@@ -42,10 +42,9 @@ $ go test ./pkg/...
 While the fundamentals of the functions are delivered in `v2.0.0-m1`, we are still hard at work to deliver the rest. In the coming weeks and months, the rest of functions towrads `v2.0.0` will be released.
 In addition to the scheduled functions, tests and documentations will also be added.
 
-- `v2.0.0-m2` to introduce package refactoring, query functionality, HTTP handlers.
-- `v2.0.0-m3` to introduce a working server that bootstraps all functions.
-- `v2.0.0-m4` to exprimentally tackle resource root query and bulk operations.
-- `v2.0.0-m5` to (re-)introduce mongo db persistence
+- `v2.0.0-m3` to introduce group membership synchronization and a working server.
+- `v2.0.0-m4` to (re-)introduce mongo db persistence
+- `v2.0.0-m5` to tackle resource root query and bulk operations.
 - `v2.0.0-rc1` to complete tests and documentations
 
 As for after the release of `v2.0.0`, more features are being planned. The list includes:

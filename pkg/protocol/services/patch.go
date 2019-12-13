@@ -3,13 +3,17 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	scimJSON "github.com/imulab/go-scim/pkg/core/json"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/crud"
+	"github.com/imulab/go-scim/pkg/protocol/db"
+	"github.com/imulab/go-scim/pkg/protocol/event"
+	"github.com/imulab/go-scim/pkg/protocol/lock"
+	"github.com/imulab/go-scim/pkg/protocol/log"
+	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 )
 
 const (
@@ -40,12 +44,12 @@ type (
 		NewVersion string
 	}
 	PatchService struct {
-		Logger           protocol.LogProvider
-		Lock             protocol.LockProvider
-		PrePatchFilters  []protocol.ResourceFilter
-		PostPatchFilters []protocol.ResourceFilter
-		Persistence      protocol.PersistenceProvider
-		Events           protocol.EventPublisher
+		Logger           log.Logger
+		Lock             lock.Lock
+		PrePatchFilters  []filter.ForResource
+		PostPatchFilters []filter.ForResource
+		Database         db.DB
+		Event            event.Publisher
 	}
 )
 
@@ -57,7 +61,7 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 		return nil, err
 	}
 
-	ref, err := s.Persistence.Get(ctx, request.ResourceID)
+	ref, err := s.Database.Get(ctx, request.ResourceID, nil)
 	if err != nil {
 		return nil, err
 	} else if request.MatchCriteria != nil && !request.MatchCriteria(ref) {
@@ -71,10 +75,8 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 	}
 
 	resource := ref.Clone()
-	fctx := protocol.NewFilterContext(ctx)
-
-	for _, filter := range s.PrePatchFilters {
-		if err := filter.FilterRef(fctx, resource, ref); err != nil {
+	for _, f := range s.PrePatchFilters {
+		if err := f.FilterRef(ctx, resource, ref); err != nil {
 			s.Logger.Error("patch request encounter error during filter for resource [id=%s]: %s", request.ResourceID, err.Error())
 			return nil, err
 		}
@@ -101,8 +103,8 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 		}
 	}
 
-	for _, filter := range s.PostPatchFilters {
-		if err := filter.FilterRef(fctx, resource, ref); err != nil {
+	for _, f := range s.PostPatchFilters {
+		if err := f.FilterRef(ctx, resource, ref); err != nil {
 			s.Logger.Error("patch request encounter error during filter for resource [id=%s]: %s", request.ResourceID, err.Error())
 			return nil, err
 		}
@@ -110,15 +112,15 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 
 	// Only replace when version is bumped
 	if resource.Version() != ref.Version() {
-		err = s.Persistence.Replace(ctx, resource)
+		err = s.Database.Replace(ctx, resource)
 		if err != nil {
 			s.Logger.Error("resource [id=%s] failed to save into persistence: %s", request.ResourceID, err.Error())
 			return nil, err
 		}
 		s.Logger.Debug("resource [id=%s] saved in persistence", request.ResourceID)
 
-		if s.Events != nil {
-			s.Events.ResourceUpdated(ctx, resource)
+		if s.Event != nil {
+			s.Event.ResourceUpdated(ctx, resource, ref)
 		}
 	}
 
@@ -181,7 +183,7 @@ func (po *PatchOperation) ParseValue(resource *prop.Resource) (interface{}, erro
 		return nil, errors.NoTarget("'%s' does not yield any target", po.Path)
 	}
 
-	p := prop.NewProperty(attr, nil)
+	p := prop.New(attr, nil)
 	if err := scimJSON.DeserializeProperty(po.Value, p, po.Op == OpAdd); err != nil {
 		return nil, err
 	}
@@ -189,7 +191,7 @@ func (po *PatchOperation) ParseValue(resource *prop.Resource) (interface{}, erro
 	return p.Raw(), nil
 }
 
-func (po *PatchOperation) getTargetAttribute(parentAttr *core.Attribute, cursor *expr.Expression) *core.Attribute {
+func (po *PatchOperation) getTargetAttribute(parentAttr *spec.Attribute, cursor *expr.Expression) *spec.Attribute {
 	if cursor == nil {
 		return parentAttr
 	}

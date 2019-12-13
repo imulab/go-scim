@@ -1,9 +1,9 @@
 package json
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"strconv"
 )
 
@@ -33,7 +33,7 @@ func Deserialize(json []byte, resource *prop.Resource) error {
 // spaces, and should a fragment of valid JSON.
 // The allowElementForArray option is provided to allow JSON array element values be provided for a multiValued property
 // so that it will be de-serialized as its element. The result will be a multiValued property containing a single element.
-func DeserializeProperty(json []byte, property core.Property, allowElementForArray bool) error {
+func DeserializeProperty(json []byte, property prop.Property, allowElementForArray bool) error {
 	state := &deserializeState{
 		data:      json,
 		off:       0,
@@ -63,7 +63,7 @@ func DeserializeProperty(json []byte, property core.Property, allowElementForArr
 		if !allowElementForArray {
 			return state.errInvalidSyntax("expects JSON array")
 		}
-		i := state.navigator.Current().(core.Container).NewChild()
+		i := state.navigator.Current().(prop.Container).NewChild()
 		if _, err := state.navigator.FocusIndex(i); err != nil {
 			return err
 		}
@@ -138,7 +138,7 @@ kvs:
 	for d.opCode != scanEndObject {
 		// Focus on the property that corresponds to the field name
 		var (
-			p   core.Property
+			p   prop.Property
 			err error
 		)
 		{
@@ -194,15 +194,15 @@ kvs:
 // is indeed single valued.
 func (d *deserializeState) parseSingleValuedProperty() error {
 	switch d.navigator.Current().Attribute().Type() {
-	case core.TypeString, core.TypeDateTime, core.TypeBinary, core.TypeReference:
+	case spec.TypeString, spec.TypeDateTime, spec.TypeBinary, spec.TypeReference:
 		return d.parseStringProperty()
-	case core.TypeInteger:
+	case spec.TypeInteger:
 		return d.parseIntegerProperty()
-	case core.TypeDecimal:
+	case spec.TypeDecimal:
 		return d.parseDecimalProperty()
-	case core.TypeBoolean:
+	case spec.TypeBoolean:
 		return d.parseBooleanProperty()
-	case core.TypeComplex:
+	case spec.TypeComplex:
 		return d.parseComplexProperty(true)
 	default:
 		panic("invalid attribute type")
@@ -226,7 +226,7 @@ func (d *deserializeState) parseMultiValuedProperty() error {
 elements:
 	for d.opCode != scanEndArray {
 		// Create the place-holding element prototype and focus on it
-		i := d.navigator.Current().(core.Container).NewChild()
+		i := d.navigator.Current().(prop.Container).NewChild()
 		_, err := d.navigator.FocusIndex(i)
 		if err != nil {
 			return err
@@ -269,10 +269,10 @@ func (d *deserializeState) parseStringProperty() error {
 	p := d.navigator.Current()
 
 	// check property type
-	if !(p.Attribute().SingleValued() && (p.Attribute().Type() == core.TypeString ||
-		p.Attribute().Type() == core.TypeDateTime ||
-		p.Attribute().Type() == core.TypeReference ||
-		p.Attribute().Type() == core.TypeBinary)) {
+	if !(p.Attribute().SingleValued() && (p.Attribute().Type() == spec.TypeString ||
+		p.Attribute().Type() == spec.TypeDateTime ||
+		p.Attribute().Type() == spec.TypeReference ||
+		p.Attribute().Type() == spec.TypeBinary)) {
 		return d.errInvalidSyntax("expects string based property for '%s'", p.Attribute().Path())
 	}
 
@@ -301,7 +301,7 @@ func (d *deserializeState) parseIntegerProperty() error {
 	p := d.navigator.Current()
 
 	// check property type
-	if !(p.Attribute().SingleValued() && p.Attribute().Type() == core.TypeInteger) {
+	if !(p.Attribute().SingleValued() && p.Attribute().Type() == spec.TypeInteger) {
 		return d.errInvalidSyntax("expects integer property for '%s'", p.Attribute().Path())
 	}
 
@@ -331,7 +331,7 @@ func (d *deserializeState) parseBooleanProperty() error {
 	p := d.navigator.Current()
 
 	// check property type
-	if !(p.Attribute().SingleValued() && p.Attribute().Type() == core.TypeBoolean) {
+	if !(p.Attribute().SingleValued() && p.Attribute().Type() == spec.TypeBoolean) {
 		return d.errInvalidSyntax("expects decimal property for '%s'", p.Attribute().Path())
 	}
 
@@ -362,7 +362,7 @@ func (d *deserializeState) parseDecimalProperty() error {
 	p := d.navigator.Current()
 
 	// check property type
-	if !(p.Attribute().SingleValued() && p.Attribute().Type() == core.TypeDecimal) {
+	if !(p.Attribute().SingleValued() && p.Attribute().Type() == spec.TypeDecimal) {
 		return d.errInvalidSyntax("expects decimal property for '%s'", p.Attribute().Path())
 	}
 

@@ -2,7 +2,7 @@ package prop
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
@@ -169,50 +169,50 @@ func (s *ResourceTestSuite) TestVisit() {
 	})
 }
 
-func (s *ResourceTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *ResourceTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *ResourceTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *ResourceTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }
 
-func (v *testVisitor) ShouldVisit(property core.Property) bool {
+func (v *testVisitor) ShouldVisit(property Property) bool {
 	return true
 }
 
-func (v *testVisitor) Visit(property core.Property) error {
+func (v *testVisitor) Visit(property Property) error {
 	v.trails = append(v.trails, property.Attribute().ID())
 	return nil
 }
 
-func (v *testVisitor) BeginChildren(container core.Container) {
+func (v *testVisitor) BeginChildren(container Container) {
 	v.trails = append(v.trails, "<")
 }
 
-func (v *testVisitor) EndChildren(container core.Container) {
+func (v *testVisitor) EndChildren(container Container) {
 	v.trails = append(v.trails, ">")
 }
 

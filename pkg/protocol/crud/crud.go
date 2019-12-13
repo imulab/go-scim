@@ -1,7 +1,6 @@
 package crud
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	"github.com/imulab/go-scim/pkg/core/prop"
@@ -20,7 +19,7 @@ func Add(resource *prop.Resource, path string, value interface{}) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target prop.Property) error {
 		return target.Add(value)
 	})
 }
@@ -38,7 +37,7 @@ func Replace(resource *prop.Resource, path string, value interface{}) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target prop.Property) error {
 		return target.Replace(value)
 	})
 }
@@ -54,7 +53,7 @@ func Delete(resource *prop.Resource, path string) error {
 		return err
 	}
 
-	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target core.Property) error {
+	return traverse(resource.NewNavigator(), skipMainSchemaNamespace(resource, head), func(target prop.Property) error {
 		return target.Delete()
 	})
 }

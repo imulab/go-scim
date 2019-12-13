@@ -2,9 +2,9 @@ package json
 
 import (
 	"bytes"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"math"
 	"strconv"
 	"strings"
@@ -75,21 +75,21 @@ func Serialize(resource *prop.Resource, options *options) ([]byte, error) {
 	return s.Bytes(), nil
 }
 
-func (s *serializer) ShouldVisit(property core.Property) bool {
+func (s *serializer) ShouldVisit(property prop.Property) bool {
 	attr := property.Attribute()
 
 	// Write only properties are never returned. It is usually coupled
 	// with returned=never, but we will check it to make sure.
-	if attr.Mutability() == core.MutabilityWriteOnly {
+	if attr.Mutability() == spec.MutabilityWriteOnly {
 		return false
 	}
 
 	switch attr.Returned() {
-	case core.ReturnedAlways:
+	case spec.ReturnedAlways:
 		return true
-	case core.ReturnedNever:
+	case spec.ReturnedNever:
 		return false
-	case core.ReturnedDefault:
+	case spec.ReturnedDefault:
 		if len(s.includes) == 0 && len(s.excludes) == 0 {
 			return !property.IsUnassigned()
 		} else {
@@ -97,7 +97,7 @@ func (s *serializer) ShouldVisit(property core.Property) bool {
 			if len(s.includes) > 0 {
 				for _, include := range s.includes {
 					if include == test || strings.HasPrefix(include, test+".") || strings.HasPrefix(test, include+".") {
-						return true
+						return !property.IsUnassigned()
 					}
 				}
 				return false
@@ -107,12 +107,12 @@ func (s *serializer) ShouldVisit(property core.Property) bool {
 						return false
 					}
 				}
-				return true
+				return !property.IsUnassigned()
 			} else {
 				panic("impossible: either includeFamily or excludeFamily")
 			}
 		}
-	case core.ReturnedRequest:
+	case spec.ReturnedRequest:
 		if len(s.includes) > 0 {
 			test := strings.ToLower(property.Attribute().Path())
 			for _, include := range s.includes {
@@ -128,7 +128,7 @@ func (s *serializer) ShouldVisit(property core.Property) bool {
 	}
 }
 
-func (s *serializer) Visit(property core.Property) (err error) {
+func (s *serializer) Visit(property prop.Property) (err error) {
 	if s.current().index > 0 {
 		_ = s.WriteByte(',')
 	}
@@ -137,7 +137,7 @@ func (s *serializer) Visit(property core.Property) (err error) {
 		s.appendPropertyName(property.Attribute())
 	}
 
-	if _, ok := property.(core.Container); ok {
+	if _, ok := property.(prop.Container); ok {
 		return
 	}
 
@@ -147,13 +147,13 @@ func (s *serializer) Visit(property core.Property) (err error) {
 	}
 
 	switch property.Attribute().Type() {
-	case core.TypeString, core.TypeReference, core.TypeDateTime, core.TypeBinary:
+	case spec.TypeString, spec.TypeReference, spec.TypeDateTime, spec.TypeBinary:
 		s.appendString(property.Raw().(string))
-	case core.TypeInteger:
+	case spec.TypeInteger:
 		s.appendInteger(property.Raw().(int64))
-	case core.TypeDecimal:
+	case spec.TypeDecimal:
 		s.appendFloat(property.Raw().(float64))
-	case core.TypeBoolean:
+	case spec.TypeBoolean:
 		s.appendBoolean(property.Raw().(bool))
 	default:
 		panic("invalid type")
@@ -163,12 +163,12 @@ func (s *serializer) Visit(property core.Property) (err error) {
 	return
 }
 
-func (s *serializer) BeginChildren(container core.Container) {
+func (s *serializer) BeginChildren(container prop.Container) {
 	switch {
 	case container.Attribute().MultiValued():
 		_ = s.WriteByte('[')
 		s.push(containerArray)
-	case container.Attribute().Type() == core.TypeComplex:
+	case container.Attribute().Type() == spec.TypeComplex:
 		_ = s.WriteByte('{')
 		s.push(containerObject)
 	default:
@@ -176,11 +176,11 @@ func (s *serializer) BeginChildren(container core.Container) {
 	}
 }
 
-func (s *serializer) EndChildren(container core.Container) {
+func (s *serializer) EndChildren(container prop.Container) {
 	switch {
 	case container.Attribute().MultiValued():
 		_ = s.WriteByte(']')
-	case container.Attribute().Type() == core.TypeComplex:
+	case container.Attribute().Type() == spec.TypeComplex:
 		_ = s.WriteByte('}')
 	default:
 		panic("unknown container")
@@ -192,7 +192,7 @@ func (s *serializer) EndChildren(container core.Container) {
 
 }
 
-func (s *serializer) appendPropertyName(attribute *core.Attribute) {
+func (s *serializer) appendPropertyName(attribute *spec.Attribute) {
 	_ = s.WriteByte('"')
 	_, _ = s.WriteString(attribute.Name())
 	_ = s.WriteByte('"')

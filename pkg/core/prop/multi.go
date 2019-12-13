@@ -2,92 +2,26 @@ package prop
 
 import (
 	"encoding/binary"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/annotations"
 	"github.com/imulab/go-scim/pkg/core/errors"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"hash/fnv"
 )
 
-// Create a new unassigned multiValued property. The method will panic if
-// given attribute is not multiValued type.
-func NewMulti(attr *core.Attribute, parent core.Container) core.Property {
-	if !attr.MultiValued() {
-		panic("invalid attribute for multiValued property")
-	}
-	p := &multiValuedProperty{
-		parent:      parent,
-		attr:        attr,
-		elements:    make([]core.Property, 0),
-		subscribers: []core.Subscriber{},
-	}
-	subscribeWithAnnotation(p)
-	return p
-}
-
-// Create a new multiValued property with given value. The method will panic if
-// given attribute is not multiValued type. The property will be
-// marked dirty at the start.
-func NewMultiOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
-	p := NewMulti(attr, parent)
-	if err := p.Add(value); err != nil {
-		panic(err)
-	}
-	return p
-}
-
-var (
-	_ core.Property  = (*multiValuedProperty)(nil)
-	_ core.Container = (*multiValuedProperty)(nil)
-)
-
 type multiValuedProperty struct {
-	parent      core.Container
-	attr        *core.Attribute
-	elements    []core.Property
-	touched     bool
-	subscribers []core.Subscriber
+	parent      Container
+	attr        *spec.Attribute
+	elements    []Property
+	dirty       bool
+	subscribers []Subscriber
 }
 
-func (p *multiValuedProperty) Clone(parent core.Container) core.Property {
-	c := &multiValuedProperty{
-		parent:      parent,
-		attr:        p.attr,
-		elements:    make([]core.Property, 0),
-		touched:     p.touched,
-		subscribers: p.subscribers,
-	}
-	for _, elem := range p.elements {
-		c.elements = append(c.elements, elem.Clone(parent))
-	}
-	return c
-}
-
-func (p *multiValuedProperty) Parent() core.Container {
-	return p.parent
-}
-
-func (p *multiValuedProperty) Subscribe(subscriber core.Subscriber) {
-	p.subscribers = append(p.subscribers, subscriber)
-}
-
-func (p *multiValuedProperty) Propagate(e *core.Event) error {
-	if len(p.subscribers) > 0 {
-		for _, subscriber := range p.subscribers {
-			if err := subscriber.Notify(p, e); err != nil {
-				return err
-			}
-		}
-	}
-	if p.parent != nil && e.WillPropagate() {
-		if err := p.parent.Propagate(e); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (p *multiValuedProperty) Attribute() *core.Attribute {
+func (p *multiValuedProperty) Attribute() *spec.Attribute {
 	return p.attr
+}
+
+func (p *multiValuedProperty) Parent() Container {
+	return p.parent
 }
 
 func (p *multiValuedProperty) Raw() interface{} {
@@ -105,11 +39,7 @@ func (p *multiValuedProperty) IsUnassigned() bool {
 	return len(p.elements) == 0
 }
 
-func (p *multiValuedProperty) ModCount() int {
-	return 0 // multiValued property is just a container
-}
-
-func (p *multiValuedProperty) Matches(another core.Property) bool {
+func (p *multiValuedProperty) Matches(another Property) bool {
 	if !p.Attribute().Equals(another.Attribute()) {
 		return false
 	}
@@ -127,7 +57,7 @@ func (p *multiValuedProperty) Hash() uint64 {
 	}
 
 	hashes := make([]uint64, 0)
-	_ = p.ForEachChild(func(index int, child core.Property) error {
+	_ = p.ForEachChild(func(index int, child Property) error {
 		if child.IsUnassigned() {
 			return nil
 		}
@@ -204,8 +134,8 @@ func (p *multiValuedProperty) Add(value interface{}) error {
 
 	// transform value into properties to add
 	var (
-		toAdd = make([]core.Property, 0)
-		p0    core.Property
+		toAdd = make([]Property, 0)
+		p0    Property
 		err   error
 	)
 	{
@@ -245,7 +175,7 @@ func (p *multiValuedProperty) Add(value interface{}) error {
 		}
 		if !match {
 			p.elements = append(p.elements, eachToAdd)
-			p.touched = true
+			p.dirty = true
 		}
 	}
 
@@ -273,19 +203,33 @@ func (p *multiValuedProperty) Replace(value interface{}) (err error) {
 }
 
 func (p *multiValuedProperty) Delete() error {
-	p.elements = make([]core.Property, 0)
-	p.touched = true
+	p.elements = make([]Property, 0)
+	p.dirty = true
 	return nil
 }
 
-func (p *multiValuedProperty) Touched() bool {
-	return p.touched
+func (p *multiValuedProperty) Dirty() bool {
+	return p.dirty
+}
+
+func (p *multiValuedProperty) Clone(parent Container) Property {
+	c := &multiValuedProperty{
+		parent:      parent,
+		attr:        p.attr,
+		elements:    make([]Property, 0),
+		dirty:       p.dirty,
+		subscribers: p.subscribers,
+	}
+	for _, elem := range p.elements {
+		c.elements = append(c.elements, elem.Clone(c))
+	}
+	return c
 }
 
 func (p *multiValuedProperty) NewChild() int {
 	c, err := p.newElementProperty(nil)
 	if err != nil {
-		return -1
+		return childNotCreated
 	}
 	p.elements = append(p.elements, c)
 	return len(p.elements) - 1
@@ -295,7 +239,7 @@ func (p *multiValuedProperty) CountChildren() int {
 	return len(p.elements)
 }
 
-func (p *multiValuedProperty) ChildAtIndex(index interface{}) core.Property {
+func (p *multiValuedProperty) ChildAtIndex(index interface{}) Property {
 	i, ok := index.(int)
 	if !ok {
 		return nil
@@ -308,13 +252,17 @@ func (p *multiValuedProperty) ChildAtIndex(index interface{}) core.Property {
 	return p.elements[i]
 }
 
-func (p *multiValuedProperty) ForEachChild(callback func(index int, child core.Property) error) error {
+func (p *multiValuedProperty) ForEachChild(callback func(index int, child Property) error) error {
 	for i, elem := range p.elements {
 		if err := callback(i, elem); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (p *multiValuedProperty) Subscribe(subscriber Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
 }
 
 func (p *multiValuedProperty) Compact() {
@@ -336,7 +284,23 @@ func (p *multiValuedProperty) Compact() {
 	}
 }
 
-func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop core.Property, err error) {
+func (p *multiValuedProperty) Propagate(e *Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(p, e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop Property, err error) {
 	defer func() {
 		if r := recover(); r != nil && r != "invalid type" {
 			prop = nil
@@ -345,30 +309,28 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 	}()
 
 	switch p.Attribute().Type() {
-	case core.TypeString:
+	case spec.TypeString:
 		prop = NewString(p.Attribute().NewElementAttribute(), p)
-	case core.TypeInteger:
+	case spec.TypeInteger:
 		prop = NewInteger(p.Attribute().NewElementAttribute(), p)
-	case core.TypeDecimal:
+	case spec.TypeDecimal:
 		prop = NewDecimal(p.Attribute().NewElementAttribute(), p)
-	case core.TypeBoolean:
+	case spec.TypeBoolean:
 		prop = NewBoolean(p.Attribute().NewElementAttribute(), p)
-	case core.TypeReference:
+	case spec.TypeReference:
 		prop = NewReference(p.Attribute().NewElementAttribute(), p)
-	case core.TypeBinary:
+	case spec.TypeBinary:
 		prop = NewBinary(p.Attribute().NewElementAttribute(), p)
-	case core.TypeDateTime:
+	case spec.TypeDateTime:
 		prop = NewDateTime(p.Attribute().NewElementAttribute(), p)
-	case core.TypeComplex:
+	case spec.TypeComplex:
 		prop = NewComplex(p.Attribute().NewElementAttribute(annotations.StateSummary), p)
 	default:
 		panic("invalid type")
 	}
-
 	if singleValue != nil {
 		err = prop.Replace(singleValue)
 	}
-
 	return
 }
 
@@ -379,3 +341,8 @@ func (p *multiValuedProperty) errIncompatibleValue(value interface{}) error {
 func (p *multiValuedProperty) errIncompatibleOp() error {
 	return errors.Internal("incompatible operation")
 }
+
+var (
+	_ Property  = (*multiValuedProperty)(nil)
+	_ Container = (*multiValuedProperty)(nil)
+)

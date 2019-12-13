@@ -2,8 +2,8 @@ package json
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
@@ -26,13 +26,13 @@ type JSONDeserializeTestSuite struct {
 func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 	tests := []struct {
 		name        string
-		getProperty func(t *testing.T) core.Property
+		getProperty func(t *testing.T) prop.Property
 		json        string
-		expect      func(t *testing.T, property core.Property, err error)
+		expect      func(t *testing.T, property prop.Property, err error)
 	}{
 		{
 			name: "deserialize string property",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewString(s.mustAttribute(`
 {
 	"id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
@@ -42,14 +42,14 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `"imulab"`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "imulab", property.Raw())
 			},
 		},
 		{
 			name: "deserialize integer property",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewInteger(s.mustAttribute(`
 {
 	"name": "age",
@@ -58,14 +58,14 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `18`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, int64(18), property.Raw())
 			},
 		},
 		{
 			name: "deserialize decimal property",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewDecimal(s.mustAttribute(`
 {
 	"name": "score",
@@ -74,14 +74,14 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `123.123`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, 123.123, property.Raw())
 			},
 		},
 		{
 			name: "deserialize boolean property",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewBoolean(s.mustAttribute(`
 {
 	"name": "active",
@@ -90,14 +90,14 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `true`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, true, property.Raw())
 			},
 		},
 		{
 			name: "deserialize dateTime property",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewDateTime(s.mustAttribute(`
 {
 	"name": "lastModified",
@@ -106,14 +106,14 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `"2019-12-04T13:10:00"`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "2019-12-04T13:10:00", property.Raw())
 			},
 		},
 		{
 			name: "deserialize reference property",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewReference(s.mustAttribute(`
 {
 	"name": "link",
@@ -122,14 +122,14 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `"http://imulab.io"`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "http://imulab.io", property.Raw())
 			},
 		},
 		{
 			name: "deserialize binary property",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewBinary(s.mustAttribute(`
 {
 	"name": "certificate",
@@ -138,14 +138,14 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `"aGVsbG8K"`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, "aGVsbG8K", property.Raw())
 			},
 		},
 		{
 			name: "deserialize complex property",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewComplex(s.mustAttribute(`
 {
  	"id": "urn:ietf:params:scim:schemas:core:2.0:User:name",
@@ -173,7 +173,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 	"familyName": "Qiu",
 	"givenName": "David"
 }`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				v := property.Raw()
 				assert.IsType(t, map[string]interface{}{}, v)
@@ -183,7 +183,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 		},
 		{
 			name: "deserialize multiValued property containing simple properties",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewMulti(s.mustAttribute(`
 {
  	"name": "collection",
@@ -193,7 +193,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `["A", "B", "C"]`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				v := property.Raw()
 				assert.IsType(t, []interface{}{}, v)
@@ -204,7 +204,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 		},
 		{
 			name: "deserialize multiValued property containing complex properties",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewMulti(s.mustAttribute(`
 {
   	"name": "emails",
@@ -233,7 +233,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 		"type": "home"
 	}
 ]`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				v := property.Raw()
 				assert.IsType(t, []interface{}{}, v)
@@ -253,7 +253,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 		},
 		{
 			name: "deserialize multiValued property with an element",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewMulti(s.mustAttribute(`
 {
  	"name": "collection",
@@ -263,7 +263,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 `), nil)
 			},
 			json: `"A"`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				v := property.Raw()
 				assert.IsType(t, []interface{}{}, v)
@@ -273,7 +273,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 		},
 		{
 			name: "deserialize complex multiValued property with an element",
-			getProperty: func(t *testing.T) core.Property {
+			getProperty: func(t *testing.T) prop.Property {
 				return prop.NewMulti(s.mustAttribute(`
 {
   	"name": "emails",
@@ -296,7 +296,7 @@ func (s *JSONDeserializeTestSuite) TestDeserializeProperty() {
 	"value": "foo@bar.com",
 	"type": "work"
 }`,
-			expect: func(t *testing.T, property core.Property, err error) {
+			expect: func(t *testing.T, property prop.Property, err error) {
 				assert.Nil(t, err)
 				v := property.Raw()
 				assert.IsType(t, []interface{}{}, v)
@@ -615,7 +615,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 				nav := resource.NewNavigator()
 				_, _ = nav.FocusName("id")
 				assert.Nil(t, nav.Current().Raw())
-				assert.False(t, nav.Current().Touched())
+				assert.False(t, nav.Current().Dirty())
 			},
 		},
 		{
@@ -643,7 +643,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 				{
 					_, _ = nav.FocusName("id")
 					assert.Nil(t, nav.Current().Raw())
-					assert.True(t, nav.Current().Touched())
+					assert.True(t, nav.Current().Dirty())
 					nav.Retract()
 				}
 				{
@@ -651,7 +651,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 					{
 						_, _ = nav.FocusName("givenName")
 						assert.Nil(t, nav.Current().Raw())
-						assert.True(t, nav.Current().Touched())
+						assert.True(t, nav.Current().Dirty())
 						nav.Retract()
 					}
 					nav.Retract()
@@ -663,7 +663,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 						{
 							_, _ = nav.FocusName("value")
 							assert.Nil(t, nav.Current().Raw())
-							assert.True(t, nav.Current().Touched())
+							assert.True(t, nav.Current().Dirty())
 							nav.Retract()
 						}
 						nav.Retract()
@@ -674,7 +674,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 					// in contrast, other fields was not touched
 					_, _ = nav.FocusName("userName")
 					assert.Nil(t, nav.Current().Raw())
-					assert.False(t, nav.Current().Touched())
+					assert.False(t, nav.Current().Dirty())
 					nav.Retract()
 				}
 			},
@@ -690,41 +690,41 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 	}
 }
 
-func (s *JSONDeserializeTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *JSONDeserializeTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *JSONDeserializeTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *JSONDeserializeTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }
 
-func (s *JSONDeserializeTestSuite) mustAttribute(attrJSON string) *core.Attribute {
+func (s *JSONDeserializeTestSuite) mustAttribute(attrJSON string) *spec.Attribute {
 	raw, err := ioutil.ReadAll(strings.NewReader(attrJSON))
 	s.Require().Nil(err)
 
-	attr := new(core.Attribute)
+	attr := new(spec.Attribute)
 	err = json.Unmarshal(raw, attr)
 	s.Require().Nil(err)
 

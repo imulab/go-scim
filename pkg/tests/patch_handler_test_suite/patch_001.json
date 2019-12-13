@@ -1,0 +1,24 @@
+{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+  "Operations": [
+    {
+      "op": "replace",
+      "path": "userName",
+      "value": "davidiamyou"
+    },
+    {
+      "op": "replace",
+      "path": "name.givenName",
+      "value": "David"
+    },
+    {
+      "op": "add",
+      "path": "emails[value eq \"imulab@bar.com\"].primary",
+      "value": true
+    },
+    {
+      "op": "remove",
+      "path": "phoneNumbers[value eq \"123-45679\"]"
+    }
+  ]
+}

@@ -3,7 +3,10 @@ package services
 import (
 	"context"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
+	"github.com/imulab/go-scim/pkg/protocol/db"
+	"github.com/imulab/go-scim/pkg/protocol/event"
+	"github.com/imulab/go-scim/pkg/protocol/log"
+	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 )
 
 type (
@@ -16,34 +19,33 @@ type (
 		Version  string
 	}
 	CreateService struct {
-		Logger      protocol.LogProvider
-		Filters     []protocol.ResourceFilter
-		Persistence protocol.PersistenceProvider
-		Events      protocol.EventPublisher
+		Logger   log.Logger
+		Filters  []filter.ForResource
+		Database db.DB
+		Event    event.Publisher
 	}
 )
 
 func (s *CreateService) CreateResource(ctx context.Context, request *CreateRequest) (cr *CreateResponse, err error) {
 	s.Logger.Debug("received create request")
 
-	fctx := protocol.NewFilterContext(ctx)
-	for _, filter := range s.Filters {
-		err = filter.Filter(fctx, request.Payload)
+	for _, f := range s.Filters {
+		err = f.Filter(ctx, request.Payload)
 		if err != nil {
 			s.Logger.Error("create request encounter error during filter: %s", err.Error())
 			return
 		}
 	}
 
-	err = s.Persistence.Insert(ctx, request.Payload)
+	err = s.Database.Insert(ctx, request.Payload)
 	if err != nil {
 		s.Logger.Error("resource [id=%s] failed to insert into persistence: %s", request.Payload.ID(), err.Error())
 		return
 	}
 	s.Logger.Debug("resource [id=%s] inserted into persistence", request.Payload.ID())
 
-	if s.Events != nil {
-		s.Events.ResourceCreated(ctx, request.Payload)
+	if s.Event != nil {
+		s.Event.ResourceCreated(ctx, request.Payload)
 	}
 
 	cr = &CreateResponse{

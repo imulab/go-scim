@@ -2,9 +2,9 @@ package json
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -316,7 +316,6 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
       "urn:ietf:params:scim:schemas:core:2.0:User"
    ],
    "id":"3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-   "externalId":null,
    "meta":{
       "resourceType":"User",
       "created":"2019-11-20T13:09:00",
@@ -329,14 +328,10 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
       "formatted":"Mr. Weinan Qiu",
       "familyName":"Qiu",
       "givenName":"Weinan",
-      "middleName":null,
-      "honorificPrefix":"Mr.",
-      "honorificSuffix":null
+      "honorificPrefix":"Mr."
    },
    "displayName":"Weinan",
-   "nickName":null,
    "profileUrl":"https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-   "title":null,
    "userType":"Employee",
    "preferredLanguage":"zh_CN",
    "locale":"zh_CN",
@@ -365,32 +360,32 @@ func (s *JSONSerializeTestSuite) TestSerialize() {
 	}
 }
 
-func (s *JSONSerializeTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *JSONSerializeTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *JSONSerializeTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *JSONSerializeTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }

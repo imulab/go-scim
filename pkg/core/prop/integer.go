@@ -2,69 +2,23 @@ package prop
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
-)
-
-// Create a new unassigned integer property. The method will panic if
-// given attribute is not singular integer type.
-func NewInteger(attr *core.Attribute, parent core.Container) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeInteger {
-		panic("invalid attribute for integer property")
-	}
-	p := &integerProperty{
-		parent:      parent,
-		attr:        attr,
-		value:       nil,
-		subscribers: []core.Subscriber{},
-	}
-	subscribeWithAnnotation(p)
-	return p
-}
-
-// Create a new integer property with given value. The method will panic if
-// given attribute is not singular integer type. The property will be
-// marked dirty at the start.
-func NewIntegerOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
-	p := NewInteger(attr, parent)
-	if err := p.Replace(value); err != nil {
-		panic(err)
-	}
-	return p
-}
-
-var (
-	_ core.Property = (*integerProperty)(nil)
+	"github.com/imulab/go-scim/pkg/core/spec"
 )
 
 type integerProperty struct {
-	parent      core.Container
-	attr        *core.Attribute
+	parent      Container
+	attr        *spec.Attribute
 	value       *int64
 	touched     bool
-	subscribers []core.Subscriber
+	subscribers []Subscriber
 }
 
-func (p *integerProperty) Clone(parent core.Container) core.Property {
-	c := &integerProperty{
-		parent:      parent,
-		attr:        p.attr,
-		value:       nil,
-		touched:     p.touched,
-		subscribers: p.subscribers,
-	}
-	if p.value != nil {
-		v := *(p.value)
-		p.value = &v
-	}
-	return c
-}
-
-func (p *integerProperty) Attribute() *core.Attribute {
+func (p *integerProperty) Attribute() *spec.Attribute {
 	return p.attr
 }
 
-func (p *integerProperty) Parent() core.Container {
+func (p *integerProperty) Parent() Container {
 	return p.parent
 }
 
@@ -79,13 +33,7 @@ func (p *integerProperty) IsUnassigned() bool {
 	return p.value == nil
 }
 
-func (p *integerProperty) CountChildren() int {
-	return 0
-}
-
-func (p *integerProperty) ForEachChild(callback func(index int, child core.Property)) {}
-
-func (p *integerProperty) Matches(another core.Property) bool {
+func (p *integerProperty) Matches(another Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
@@ -181,7 +129,7 @@ func (p *integerProperty) Replace(value interface{}) error {
 		p.touched = true
 		if eq, _ := p.EqualsTo(i64); !eq {
 			p.value = &i64
-			if err := p.publish(core.EventAssigned); err != nil {
+			if err := p.publish(EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -193,14 +141,14 @@ func (p *integerProperty) Delete() error {
 	p.touched = true
 	if p.value != nil {
 		p.value = nil
-		if err := p.publish(core.EventUnassigned); err != nil {
+		if err := p.publish(EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *integerProperty) publish(t core.EventType) error {
+func (p *integerProperty) publish(t EventType) error {
 	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
@@ -217,12 +165,27 @@ func (p *integerProperty) publish(t core.EventType) error {
 	return nil
 }
 
-func (p *integerProperty) Touched() bool {
+func (p *integerProperty) Dirty() bool {
 	return p.touched
 }
 
-func (p *integerProperty) Subscribe(subscriber core.Subscriber) {
+func (p *integerProperty) Subscribe(subscriber Subscriber) {
 	p.subscribers = append(p.subscribers, subscriber)
+}
+
+func (p *integerProperty) Clone(parent Container) Property {
+	c := &integerProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		touched:     p.touched,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		p.value = &v
+	}
+	return c
 }
 
 func (p *integerProperty) String() string {
@@ -259,3 +222,7 @@ func (p *integerProperty) tryInt64(value interface{}) (int64, error) {
 func (p *integerProperty) errIncompatibleOp() error {
 	return errors.Internal("incompatible operation")
 }
+
+var (
+	_ Property = (*integerProperty)(nil)
+)

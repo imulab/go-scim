@@ -3,12 +3,13 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
 	scimJSON "github.com/imulab/go-scim/pkg/core/json"
 	"github.com/imulab/go-scim/pkg/core/prop"
-	"github.com/imulab/go-scim/pkg/protocol"
-	"github.com/imulab/go-scim/pkg/protocol/filters"
-	"github.com/imulab/go-scim/pkg/protocol/persistence"
+	"github.com/imulab/go-scim/pkg/core/spec"
+	"github.com/imulab/go-scim/pkg/protocol/db"
+	"github.com/imulab/go-scim/pkg/protocol/lock"
+	"github.com/imulab/go-scim/pkg/protocol/log"
+	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -41,22 +42,22 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 		{
 			name: "replace an updated resource",
 			setup: func(t *testing.T) *ReplaceService {
-				memoryPersistence := persistence.Memory()
-				require.Nil(t, memoryPersistence.Insert(
+				memoryDB := db.Memory()
+				require.Nil(t, memoryDB.Insert(
 					context.Background(),
 					s.mustResource("/user_000.json", resourceType)),
 				)
 				return &ReplaceService{
-					Logger: protocol.NoOpLogger(),
-					Lock:   protocol.DefaultLock(),
-					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(),
-						filters.NewCopyReadOnlyResourceFilter(),
-						filters.NewPasswordResourceFilter(10),
-						filters.NewValidationResourceFilter(memoryPersistence),
-						filters.NewMetaResourceFilter(),
+					Logger: log.None(),
+					Lock:   lock.Default(),
+					Filters: []filter.ForResource{
+						filter.ClearReadOnly(),
+						filter.CopyReadOnly(),
+						filter.Password(10),
+						filter.Validation(memoryDB),
+						filter.Meta(),
 					},
-					Persistence: memoryPersistence,
+					Database: memoryDB,
 				}
 			},
 			getRequest: func() *ReplaceRequest {
@@ -76,22 +77,22 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 		{
 			name: "replace an identical resource",
 			setup: func(t *testing.T) *ReplaceService {
-				memoryPersistence := persistence.Memory()
-				require.Nil(t, memoryPersistence.Insert(
+				memoryDB := db.Memory()
+				require.Nil(t, memoryDB.Insert(
 					context.Background(),
 					s.mustResource("/user_000.json", resourceType)),
 				)
 				return &ReplaceService{
-					Logger: protocol.NoOpLogger(),
-					Lock:   protocol.DefaultLock(),
-					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(),
-						filters.NewCopyReadOnlyResourceFilter(),
-						filters.NewPasswordResourceFilter(10),
-						filters.NewValidationResourceFilter(memoryPersistence),
-						filters.NewMetaResourceFilter(),
+					Logger: log.None(),
+					Lock:   lock.Default(),
+					Filters: []filter.ForResource{
+						filter.ClearReadOnly(),
+						filter.CopyReadOnly(),
+						filter.Password(10),
+						filter.Validation(memoryDB),
+						filter.Meta(),
 					},
-					Persistence: memoryPersistence,
+					Database: memoryDB,
 				}
 			},
 			getRequest: func() *ReplaceRequest {
@@ -111,22 +112,22 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 		{
 			name: "replace an invalid resource",
 			setup: func(t *testing.T) *ReplaceService {
-				memoryPersistence := persistence.Memory()
-				require.Nil(t, memoryPersistence.Insert(
+				memoryDB := db.Memory()
+				require.Nil(t, memoryDB.Insert(
 					context.Background(),
 					s.mustResource("/user_000.json", resourceType)),
 				)
 				return &ReplaceService{
-					Logger: protocol.NoOpLogger(),
-					Lock:   protocol.DefaultLock(),
-					Filters: []protocol.ResourceFilter{
-						filters.NewClearReadOnlyResourceFilter(),
-						filters.NewCopyReadOnlyResourceFilter(),
-						filters.NewPasswordResourceFilter(10),
-						filters.NewValidationResourceFilter(memoryPersistence),
-						filters.NewMetaResourceFilter(),
+					Logger: log.None(),
+					Lock:   lock.Default(),
+					Filters: []filter.ForResource{
+						filter.ClearReadOnly(),
+						filter.CopyReadOnly(),
+						filter.Password(10),
+						filter.Validation(memoryDB),
+						filter.Meta(),
 					},
-					Persistence: memoryPersistence,
+					Database: memoryDB,
 				}
 			},
 			getRequest: func() *ReplaceRequest {
@@ -152,7 +153,7 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 	}
 }
 
-func (s *ReplaceServiceTestSuite) mustResource(filePath string, resourceType *core.ResourceType) *prop.Resource {
+func (s *ReplaceServiceTestSuite) mustResource(filePath string, resourceType *spec.ResourceType) *prop.Resource {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
@@ -166,32 +167,32 @@ func (s *ReplaceServiceTestSuite) mustResource(filePath string, resourceType *co
 	return resource
 }
 
-func (s *ReplaceServiceTestSuite) mustResourceType(filePath string) *core.ResourceType {
+func (s *ReplaceServiceTestSuite) mustResourceType(filePath string) *spec.ResourceType {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	rt := new(core.ResourceType)
+	rt := new(spec.ResourceType)
 	err = json.Unmarshal(raw, rt)
 	s.Require().Nil(err)
 
 	return rt
 }
 
-func (s *ReplaceServiceTestSuite) mustSchema(filePath string) *core.Schema {
+func (s *ReplaceServiceTestSuite) mustSchema(filePath string) *spec.Schema {
 	f, err := os.Open(s.resourceBase + filePath)
 	s.Require().Nil(err)
 
 	raw, err := ioutil.ReadAll(f)
 	s.Require().Nil(err)
 
-	sch := new(core.Schema)
+	sch := new(spec.Schema)
 	err = json.Unmarshal(raw, sch)
 	s.Require().Nil(err)
 
-	core.SchemaHub.Put(sch)
+	spec.SchemaHub.Put(sch)
 
 	return sch
 }

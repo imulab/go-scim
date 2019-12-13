@@ -1,39 +1,39 @@
 package crud
 
 import (
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"strconv"
 	"strings"
 )
 
 // Evaluate if the property meets the compiled SCIM filter.
-func evaluate(property core.Property, filter *expr.Expression) (bool, error) {
+func Evaluate(property prop.Property, filter *expr.Expression) (bool, error) {
 	if filter == nil {
 		return false, errors.InvalidFilter("filter is invalid")
 	}
 
 	switch filter.Token() {
 	case expr.And:
-		if left, err := evaluate(property, filter.Left()); err != nil {
+		if left, err := Evaluate(property, filter.Left()); err != nil {
 			return false, err
 		} else if !left {
 			return false, nil
 		} else {
-			return evaluate(property, filter.Right())
+			return Evaluate(property, filter.Right())
 		}
 	case expr.Or:
-		if left, err := evaluate(property, filter.Left()); err != nil {
+		if left, err := Evaluate(property, filter.Left()); err != nil {
 			return false, err
 		} else if left {
 			return true, nil
 		} else {
-			return evaluate(property, filter.Right())
+			return Evaluate(property, filter.Right())
 		}
 	case expr.Not:
-		if left, err := evaluate(property, filter.Left()); err != nil {
+		if left, err := Evaluate(property, filter.Left()); err != nil {
 			return false, err
 		} else {
 			return !left, nil
@@ -47,7 +47,7 @@ func evaluate(property core.Property, filter *expr.Expression) (bool, error) {
 	var (
 		result bool
 	)
-	if err := traverse(prop.NewNavigator(property), filter.Left(), func(target core.Property) (fe error) {
+	if err := traverse(prop.NewNavigator(property), filter.Left(), func(target prop.Property) (fe error) {
 		var value interface{}
 		if filter.Token() != expr.Pr {
 			value, fe = normalize(target.Attribute(), filter.Right().Token())
@@ -117,9 +117,9 @@ func evaluate(property core.Property, filter *expr.Expression) (bool, error) {
 }
 
 // Take the raw string presentation of a value and normalize it to corresponding types according to the attribute.
-func normalize(attr *core.Attribute, token string) (interface{}, error) {
+func normalize(attr *spec.Attribute, token string) (interface{}, error) {
 	switch attr.Type() {
-	case core.TypeString, core.TypeDateTime, core.TypeBinary, core.TypeReference:
+	case spec.TypeString, spec.TypeDateTime, spec.TypeBinary, spec.TypeReference:
 		if strings.HasPrefix(token, "\"") && strings.HasSuffix(token, "\"") {
 			token = strings.TrimPrefix(token, "\"")
 			token = strings.TrimSuffix(token, "\"")
@@ -127,19 +127,19 @@ func normalize(attr *core.Attribute, token string) (interface{}, error) {
 		} else {
 			return nil, errors.InvalidFilter("'%s' expects string value, but value was unquoted", attr.Path())
 		}
-	case core.TypeInteger:
+	case spec.TypeInteger:
 		if i64, err := strconv.ParseInt(token, 10, 64); err != nil {
 			return nil, errors.InvalidFilter("'%s' expects integer value", attr.Path())
 		} else {
 			return i64, nil
 		}
-	case core.TypeDecimal:
+	case spec.TypeDecimal:
 		if f64, err := strconv.ParseFloat(token, 64); err != nil {
 			return nil, errors.InvalidFilter("'%s' expects decimal value", attr.Path())
 		} else {
 			return f64, nil
 		}
-	case core.TypeBoolean:
+	case spec.TypeBoolean:
 		if b, err := strconv.ParseBool(token); err != nil {
 			return nil, errors.InvalidFilter("'%s' expects boolean value", attr.Path())
 		} else {

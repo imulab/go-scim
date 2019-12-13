@@ -1,15 +1,17 @@
 package expr
 
-import "github.com/imulab/go-scim/pkg/core"
+import (
+	"github.com/imulab/go-scim/pkg/core/spec"
+)
 
 var urnsCache = &urns{}
 
 // Register the resource type to correctly use expression package's compiler capability. This method
 // caches all schema urn ids available in a resource type, so they can be recognized later when an
 // expression that contains one is passed in as an argument to compiler.
-func Register(resourceType *core.ResourceType) {
+func Register(resourceType *spec.ResourceType) {
 	register(resourceType.Schema().ID())
-	resourceType.ForEachExtension(func(extension *core.Schema, _ bool) {
+	resourceType.ForEachExtension(func(extension *spec.Schema, _ bool) {
 		register(extension.ID())
 	})
 }

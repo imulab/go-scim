@@ -2,132 +2,32 @@ package prop
 
 import (
 	"encoding/binary"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"hash/fnv"
 	"strings"
 )
 
-// Create a new unassigned complex property. The method will panic if
-// given attribute is not singular complex type.
-func NewComplex(attr *core.Attribute, parent core.Container) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeComplex {
-		panic("invalid attribute for complex property")
-	}
-
-	var (
-		p = &complexProperty{
-			parent:    parent,
-			attr:      attr,
-			subProps:  make([]core.Property, 0, attr.CountSubAttributes()),
-			nameIndex: make(map[string]int),
-		}
-	)
-	{
-		subscribeWithAnnotation(p)
-		attr.ForEachSubAttribute(func(subAttribute *core.Attribute) {
-			if subAttribute.MultiValued() {
-				p.subProps = append(p.subProps, NewMulti(subAttribute, p))
-			} else {
-				switch subAttribute.Type() {
-				case core.TypeString:
-					p.subProps = append(p.subProps, NewString(subAttribute, p))
-				case core.TypeInteger:
-					p.subProps = append(p.subProps, NewInteger(subAttribute, p))
-				case core.TypeDecimal:
-					p.subProps = append(p.subProps, NewDecimal(subAttribute, p))
-				case core.TypeBoolean:
-					p.subProps = append(p.subProps, NewBoolean(subAttribute, p))
-				case core.TypeDateTime:
-					p.subProps = append(p.subProps, NewDateTime(subAttribute, p))
-				case core.TypeReference:
-					p.subProps = append(p.subProps, NewReference(subAttribute, p))
-				case core.TypeBinary:
-					p.subProps = append(p.subProps, NewBinary(subAttribute, p))
-				case core.TypeComplex:
-					p.subProps = append(p.subProps, NewComplex(subAttribute, p))
-				default:
-					panic("invalid type")
-				}
-			}
-			p.nameIndex[strings.ToLower(subAttribute.Name())] = len(p.subProps) - 1
-		})
-	}
-
-	return p
-}
-
-// Create a new complex property with given value. The method will panic if
-// given attribute is not singular complex type. The property will be
-// marked dirty at the start unless value is empty
-func NewComplexOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
-	p := NewComplex(attr, parent)
-	if err := p.Add(value); err != nil {
-		panic(err)
-	}
-	return p
-}
-
-var (
-	_ core.Property  = (*complexProperty)(nil)
-	_ core.Container = (*complexProperty)(nil)
-)
-
 type complexProperty struct {
-	parent      core.Container
-	attr        *core.Attribute
-	subProps    []core.Property // array of sub properties to maintain determinate iteration order
-	nameIndex   map[string]int  // attribute's name (to lower case) to index in subProps to allow fast access
-	subscribers []core.Subscriber
+	parent      Container
+	attr        *spec.Attribute
+	subProps    []Property     // array of sub properties to maintain determinate iteration order
+	nameIndex   map[string]int // attribute's name (to lower case) to index in subProps to allow fast access
+	subscribers []Subscriber
 }
 
-func (p *complexProperty) Clone(parent core.Container) core.Property {
-	c := &complexProperty{
-		parent:      parent,
-		attr:        p.attr,
-		subProps:    make([]core.Property, 0, len(p.subProps)),
-		nameIndex:   make(map[string]int),
-		subscribers: p.subscribers,
-	}
-	for i, sp := range p.subProps {
-		c.subProps = append(c.subProps, sp.Clone(c))
-		c.nameIndex[strings.ToLower(sp.Attribute().Name())] = i
-	}
-	return c
-}
-
-func (p *complexProperty) Parent() core.Container {
-	return p.parent
-}
-
-func (p *complexProperty) Subscribe(subscriber core.Subscriber) {
-	p.subscribers = append(p.subscribers, subscriber)
-}
-
-func (p *complexProperty) Propagate(e *core.Event) error {
-	if len(p.subscribers) > 0 {
-		for _, subscriber := range p.subscribers {
-			if err := subscriber.Notify(p, e); err != nil {
-				return err
-			}
-		}
-	}
-	if p.parent != nil && e.WillPropagate() {
-		if err := p.parent.Propagate(e); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (p *complexProperty) Attribute() *core.Attribute {
+func (p *complexProperty) Attribute() *spec.Attribute {
 	return p.attr
+}
+
+func (p *complexProperty) Parent() Container {
+	return p.parent
 }
 
 // Caution: slow operation
 func (p *complexProperty) Raw() interface{} {
 	values := make(map[string]interface{})
-	_ = p.ForEachChild(func(_ int, child core.Property) error {
+	_ = p.ForEachChild(func(_ int, child Property) error {
 		values[child.Attribute().Name()] = child.Raw()
 		return nil
 	})
@@ -143,13 +43,13 @@ func (p *complexProperty) IsUnassigned() bool {
 	return true
 }
 
-func (p *complexProperty) Matches(another core.Property) bool {
+func (p *complexProperty) Matches(another Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
 
 	// Usually this won't happen, but still check it to be sure.
-	if p.CountChildren() != another.(core.Container).CountChildren() {
+	if p.CountChildren() != another.(Container).CountChildren() {
 		return false
 	}
 
@@ -164,7 +64,7 @@ func (p *complexProperty) Hash() uint64 {
 	h := fnv.New64a()
 
 	hasIdentity := p.attr.HasIdentitySubAttributes()
-	err := p.ForEachChild(func(_ int, child core.Property) error {
+	err := p.ForEachChild(func(_ int, child Property) error {
 		// Include fields in the computation if
 		// - no sub attributes are marked as identity
 		// - this sub attribute is marked identity
@@ -283,20 +183,39 @@ func (p *complexProperty) Delete() error {
 	return nil
 }
 
-func (p *complexProperty) Touched() bool {
+func (p *complexProperty) Dirty() bool {
 	for _, subProp := range p.subProps {
-		if subProp.Touched() {
+		if subProp.Dirty() {
 			return true
 		}
 	}
 	return false
 }
 
+func (p *complexProperty) Clone(parent Container) Property {
+	c := &complexProperty{
+		parent:      parent,
+		attr:        p.attr,
+		subProps:    make([]Property, 0, len(p.subProps)),
+		nameIndex:   make(map[string]int),
+		subscribers: p.subscribers,
+	}
+	for i, sp := range p.subProps {
+		c.subProps = append(c.subProps, sp.Clone(c))
+		c.nameIndex[strings.ToLower(sp.Attribute().Name())] = i
+	}
+	return c
+}
+
+func (p *complexProperty) Subscribe(subscriber Subscriber) {
+	p.subscribers = append(p.subscribers, subscriber)
+}
+
 func (p *complexProperty) CountChildren() int {
 	return len(p.subProps)
 }
 
-func (p *complexProperty) ForEachChild(callback func(index int, child core.Property) error) error {
+func (p *complexProperty) ForEachChild(callback func(index int, child Property) error) error {
 	for i, prop := range p.subProps {
 		if err := callback(i, prop); err != nil {
 			return err
@@ -306,10 +225,10 @@ func (p *complexProperty) ForEachChild(callback func(index int, child core.Prope
 }
 
 func (p *complexProperty) NewChild() int {
-	return -1
+	return childNotCreated
 }
 
-func (p *complexProperty) ChildAtIndex(index interface{}) core.Property {
+func (p *complexProperty) ChildAtIndex(index interface{}) Property {
 	name, ok := index.(string)
 	if !ok {
 		return nil
@@ -325,6 +244,22 @@ func (p *complexProperty) ChildAtIndex(index interface{}) core.Property {
 
 func (p *complexProperty) Compact() {}
 
+func (p *complexProperty) Propagate(e *Event) error {
+	if len(p.subscribers) > 0 {
+		for _, subscriber := range p.subscribers {
+			if err := subscriber.Notify(p, e); err != nil {
+				return err
+			}
+		}
+	}
+	if p.parent != nil && e.WillPropagate() {
+		if err := p.parent.Propagate(e); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (p *complexProperty) errIncompatibleValue(value interface{}) error {
 	return errors.InvalidValue("value of type %T is incompatible with attribute '%s'", value, p.attr.Path())
 }
@@ -332,3 +267,8 @@ func (p *complexProperty) errIncompatibleValue(value interface{}) error {
 func (p *complexProperty) errIncompatibleOp() error {
 	return errors.Internal("incompatible operation")
 }
+
+var (
+	_ Property  = (*complexProperty)(nil)
+	_ Container = (*complexProperty)(nil)
+)

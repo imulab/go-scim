@@ -2,7 +2,7 @@ package prop
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim/pkg/core"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -19,7 +19,7 @@ type StringPropertyTestSuite struct {
 func (s *StringPropertyTestSuite) TestRaw() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		expect func(t *testing.T, value interface{})
 	}{
 		{
@@ -58,12 +58,12 @@ func (s *StringPropertyTestSuite) TestRaw() {
 func (s *StringPropertyTestSuite) TestUnassigned() {
 	tests := []struct {
 		name    string
-		getProp func() core.Property
+		getProp func() Property
 		expect  func(t *testing.T, unassigned bool)
 	}{
 		{
 			name: "unassigned property returns true for unassigned, and false for dirty",
-			getProp: func() core.Property {
+			getProp: func() Property {
 				return NewString(s.mustAttribute(`
 {
 	"name": "userName",
@@ -77,7 +77,7 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 		},
 		{
 			name: "explicitly unassigned property returns true for unassigned, and true for dirty",
-			getProp: func() core.Property {
+			getProp: func() Property {
 				prop := NewString(s.mustAttribute(`
 {
 	"name": "userName",
@@ -93,7 +93,7 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 		},
 		{
 			name: "assigned property returns false for unassigned, and true for dirty",
-			getProp: func() core.Property {
+			getProp: func() Property {
 				prop := NewStringOf(s.mustAttribute(`
 {
 	"name": "userName",
@@ -118,8 +118,8 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 func (s *StringPropertyTestSuite) TestMatches() {
 	tests := []struct {
 		name   string
-		p1     core.Property
-		p2     core.Property
+		p1     Property
+		p2     Property
 		expect func(t *testing.T, match bool)
 	}{
 		{
@@ -194,7 +194,7 @@ func (s *StringPropertyTestSuite) TestMatches() {
 func (s *StringPropertyTestSuite) TestEqualsTo() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, equal bool, err error)
 	}{
@@ -283,7 +283,7 @@ func (s *StringPropertyTestSuite) TestEqualsTo() {
 func (s *StringPropertyTestSuite) TestStartsWith() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      string
 		expect func(t *testing.T, startsWith bool, err error)
 	}{
@@ -359,7 +359,7 @@ func (s *StringPropertyTestSuite) TestStartsWith() {
 func (s *StringPropertyTestSuite) TestEndsWith() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      string
 		expect func(t *testing.T, contains bool, err error)
 	}{
@@ -435,7 +435,7 @@ func (s *StringPropertyTestSuite) TestEndsWith() {
 func (s *StringPropertyTestSuite) TestContains() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      string
 		expect func(t *testing.T, contains bool, err error)
 	}{
@@ -511,7 +511,7 @@ func (s *StringPropertyTestSuite) TestContains() {
 func (s *StringPropertyTestSuite) TestGreaterThan() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, greaterThan bool, err error)
 	}{
@@ -586,7 +586,7 @@ func (s *StringPropertyTestSuite) TestGreaterThan() {
 func (s *StringPropertyTestSuite) TestLessThan() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, lessThan bool, err error)
 	}{
@@ -661,7 +661,7 @@ func (s *StringPropertyTestSuite) TestLessThan() {
 func (s *StringPropertyTestSuite) TestPresent() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		expect func(t *testing.T, present bool)
 	}{
 		{
@@ -700,7 +700,7 @@ func (s *StringPropertyTestSuite) TestPresent() {
 func (s *StringPropertyTestSuite) TestAdd() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, raw interface{}, err error)
 	}{
@@ -759,7 +759,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 func (s *StringPropertyTestSuite) TestReplace() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		v      interface{}
 		expect func(t *testing.T, raw interface{}, err error)
 	}{
@@ -818,7 +818,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 func (s *StringPropertyTestSuite) TestDelete() {
 	tests := []struct {
 		name   string
-		prop   core.Property
+		prop   Property
 		expect func(t *testing.T, raw interface{}, err error)
 	}{
 		{
@@ -861,8 +861,8 @@ func (s *StringPropertyTestSuite) TestDelete() {
 func (s *StringPropertyTestSuite) TestHash() {
 	tests := []struct {
 		name   string
-		p1     core.Property
-		p2     core.Property
+		p1     Property
+		p2     Property
 		expect func(t *testing.T, h1 uint64, h2 uint64)
 	}{
 		{
@@ -932,8 +932,8 @@ func (s *StringPropertyTestSuite) TestHash() {
 	}
 }
 
-func (s *StringPropertyTestSuite) mustAttribute(jsonValue string) *core.Attribute {
-	attr := new(core.Attribute)
+func (s *StringPropertyTestSuite) mustAttribute(jsonValue string) *spec.Attribute {
+	attr := new(spec.Attribute)
 	err := json.Unmarshal([]byte(jsonValue), attr)
 	s.Require().Nil(err)
 	return attr

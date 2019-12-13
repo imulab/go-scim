@@ -2,74 +2,27 @@ package prop
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"hash/fnv"
 	"strings"
 )
 
-// Create a new unassigned string property. The method will panic if
-// given attribute is not singular string type.
-func NewString(attr *core.Attribute, parent core.Container) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeString {
-		panic("invalid attribute for string property")
-	}
-	p := &stringProperty{
-		parent:      parent,
-		attr:        attr,
-		value:       nil,
-		subscribers: []core.Subscriber{},
-	}
-	subscribeWithAnnotation(p)
-	return p
-}
-
-// Create a new string property with given value. The method will panic if
-// given attribute is not singular string type. The property will be
-// marked dirty at the start.
-func NewStringOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
-	p := NewString(attr, parent)
-	if err := p.Replace(value); err != nil {
-		panic(err)
-	}
-	return p
-}
-
-var (
-	_ core.Property = (*stringProperty)(nil)
-)
-
 type stringProperty struct {
-	parent      core.Container
-	attr        *core.Attribute
+	parent      Container
+	attr        *spec.Attribute
 	value       *string
 	hash        uint64
-	touched     bool
-	subscribers []core.Subscriber
+	dirty       bool
+	subscribers []Subscriber
 }
 
-func (p *stringProperty) Clone(parent core.Container) core.Property {
-	c := &stringProperty{
-		parent:      parent,
-		attr:        p.attr,
-		value:       nil,
-		hash:        p.hash,
-		touched:     p.touched,
-		subscribers: p.subscribers,
-	}
-	if p.value != nil {
-		v := *(p.value)
-		c.value = &v
-	}
-	return c
-}
-
-func (p *stringProperty) Parent() core.Container {
-	return p.parent
-}
-
-func (p *stringProperty) Attribute() *core.Attribute {
+func (p *stringProperty) Attribute() *spec.Attribute {
 	return p.attr
+}
+
+func (p *stringProperty) Parent() Container {
+	return p.parent
 }
 
 func (p *stringProperty) Raw() interface{} {
@@ -83,26 +36,31 @@ func (p *stringProperty) IsUnassigned() bool {
 	return p.value == nil
 }
 
-func (p *stringProperty) CountChildren() int {
-	return 0
-}
-
-func (p *stringProperty) ForEachChild(callback func(index int, child core.Property)) {}
-
-func (p *stringProperty) Matches(another core.Property) bool {
+func (p *stringProperty) Matches(another Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
-
 	if p.IsUnassigned() {
 		return another.IsUnassigned()
 	}
-
 	return p.Hash() == another.Hash()
 }
 
 func (p *stringProperty) Hash() uint64 {
 	return p.hash
+}
+
+func (p *stringProperty) computeHash() {
+	if p.value == nil {
+		p.hash = 0
+	} else {
+		h := fnv.New64a()
+		_, err := h.Write([]byte(p.formatCase(*(p.value))))
+		if err != nil {
+			panic("error computing hash")
+		}
+		p.hash = h.Sum64()
+	}
 }
 
 func (p *stringProperty) EqualsTo(value interface{}) (bool, error) {
@@ -187,11 +145,11 @@ func (p *stringProperty) Replace(value interface{}) error {
 	if s, ok := value.(string); !ok {
 		return p.errIncompatibleValue(value)
 	} else {
-		p.touched = true
+		p.dirty = true
 		if eq, _ := p.EqualsTo(s); !eq {
 			p.value = &s
 			p.computeHash()
-			if err := p.publish(core.EventAssigned); err != nil {
+			if err := p.publish(EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -200,18 +158,18 @@ func (p *stringProperty) Replace(value interface{}) error {
 }
 
 func (p *stringProperty) Delete() error {
-	p.touched = true
+	p.dirty = true
 	if p.value != nil {
 		p.value = nil
 		p.computeHash()
-		if err := p.publish(core.EventUnassigned); err != nil {
+		if err := p.publish(EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *stringProperty) publish(t core.EventType) error {
+func (p *stringProperty) publish(t EventType) error {
 	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
@@ -228,30 +186,32 @@ func (p *stringProperty) publish(t core.EventType) error {
 	return nil
 }
 
-func (p *stringProperty) Touched() bool {
-	return p.touched
+func (p *stringProperty) Dirty() bool {
+	return p.dirty
 }
 
-func (p *stringProperty) Subscribe(subscriber core.Subscriber) {
+func (p *stringProperty) Subscribe(subscriber Subscriber) {
 	p.subscribers = append(p.subscribers, subscriber)
+}
+
+func (p *stringProperty) Clone(parent Container) Property {
+	c := &stringProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		hash:        p.hash,
+		dirty:       p.dirty,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		c.value = &v
+	}
+	return c
 }
 
 func (p *stringProperty) String() string {
 	return fmt.Sprintf("[%s] %v", p.attr.String(), p.Raw())
-}
-
-// Calculate the hash value of the property value
-func (p *stringProperty) computeHash() {
-	if p.value == nil {
-		p.hash = 0
-	} else {
-		h := fnv.New64a()
-		_, err := h.Write([]byte(p.formatCase(*(p.value))))
-		if err != nil {
-			panic("error computing hash")
-		}
-		p.hash = h.Sum64()
-	}
 }
 
 // Return a case appropriate version of the given value, based on attribute's caseExact setting.
@@ -266,3 +226,7 @@ func (p *stringProperty) formatCase(value string) string {
 func (p *stringProperty) errIncompatibleValue(value interface{}) error {
 	return errors.InvalidValue("%v is incompatible with attribute '%s'", value, p.attr.Path())
 }
+
+var (
+	_ Property = (*stringProperty)(nil)
+)

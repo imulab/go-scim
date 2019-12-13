@@ -2,69 +2,23 @@ package prop
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/core"
 	"github.com/imulab/go-scim/pkg/core/errors"
-)
-
-// Create a new unassigned decimal property. The method will panic if
-// given attribute is not singular decimal type.
-func NewDecimal(attr *core.Attribute, parent core.Container) core.Property {
-	if !attr.SingleValued() || attr.Type() != core.TypeDecimal {
-		panic("invalid attribute for integer property")
-	}
-	p := &decimalProperty{
-		parent:      parent,
-		attr:        attr,
-		value:       nil,
-		subscribers: []core.Subscriber{},
-	}
-	subscribeWithAnnotation(p)
-	return p
-}
-
-// Create a new decimal property with given value. The method will panic if
-// given attribute is not singular decimal type. The property will be
-// marked dirty at the start.
-func NewDecimalOf(attr *core.Attribute, parent core.Container, value interface{}) core.Property {
-	p := NewDecimal(attr, parent)
-	if err := p.Replace(value); err != nil {
-		panic(err)
-	}
-	return p
-}
-
-var (
-	_ core.Property = (*decimalProperty)(nil)
+	"github.com/imulab/go-scim/pkg/core/spec"
 )
 
 type decimalProperty struct {
-	parent      core.Container
-	attr        *core.Attribute
+	parent      Container
+	attr        *spec.Attribute
 	value       *float64
-	touched     bool
-	subscribers []core.Subscriber
+	dirty       bool
+	subscribers []Subscriber
 }
 
-func (p *decimalProperty) Clone(parent core.Container) core.Property {
-	c := &decimalProperty{
-		parent:      parent,
-		attr:        p.attr,
-		value:       nil,
-		touched:     p.touched,
-		subscribers: p.subscribers,
-	}
-	if p.value != nil {
-		v := *(p.value)
-		c.value = &v
-	}
-	return c
-}
-
-func (p *decimalProperty) Attribute() *core.Attribute {
+func (p *decimalProperty) Attribute() *spec.Attribute {
 	return p.attr
 }
 
-func (p *decimalProperty) Parent() core.Container {
+func (p *decimalProperty) Parent() Container {
 	return p.parent
 }
 
@@ -79,13 +33,7 @@ func (p *decimalProperty) IsUnassigned() bool {
 	return p.value == nil
 }
 
-func (p *decimalProperty) CountChildren() int {
-	return 0
-}
-
-func (p *decimalProperty) ForEachChild(callback func(index int, child core.Property)) {}
-
-func (p *decimalProperty) Matches(another core.Property) bool {
+func (p *decimalProperty) Matches(another Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
@@ -177,10 +125,10 @@ func (p *decimalProperty) Replace(value interface{}) error {
 	if f64, err := p.tryFloat64(value); err != nil {
 		return err
 	} else {
-		p.touched = true
+		p.dirty = true
 		if eq, _ := p.EqualsTo(f64); !eq {
 			p.value = &f64
-			if err := p.publish(core.EventAssigned); err != nil {
+			if err := p.publish(EventAssigned); err != nil {
 				return err
 			}
 		}
@@ -189,17 +137,17 @@ func (p *decimalProperty) Replace(value interface{}) error {
 }
 
 func (p *decimalProperty) Delete() error {
-	p.touched = true
+	p.dirty = true
 	if p.value != nil {
 		p.value = nil
-		if err := p.publish(core.EventUnassigned); err != nil {
+		if err := p.publish(EventUnassigned); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *decimalProperty) publish(t core.EventType) error {
+func (p *decimalProperty) publish(t EventType) error {
 	e := t.NewFrom(p)
 	if len(p.subscribers) > 0 {
 		for _, subscriber := range p.subscribers {
@@ -216,12 +164,27 @@ func (p *decimalProperty) publish(t core.EventType) error {
 	return nil
 }
 
-func (p *decimalProperty) Touched() bool {
-	return p.touched
+func (p *decimalProperty) Dirty() bool {
+	return p.dirty
 }
 
-func (p *decimalProperty) Subscribe(subscriber core.Subscriber) {
+func (p *decimalProperty) Subscribe(subscriber Subscriber) {
 	p.subscribers = append(p.subscribers, subscriber)
+}
+
+func (p *decimalProperty) Clone(parent Container) Property {
+	c := &decimalProperty{
+		parent:      parent,
+		attr:        p.attr,
+		value:       nil,
+		dirty:       p.dirty,
+		subscribers: p.subscribers,
+	}
+	if p.value != nil {
+		v := *(p.value)
+		c.value = &v
+	}
+	return c
 }
 
 func (p *decimalProperty) String() string {
@@ -242,3 +205,7 @@ func (p *decimalProperty) tryFloat64(value interface{}) (float64, error) {
 func (p *decimalProperty) errIncompatibleOp() error {
 	return errors.Internal("incompatible operation")
 }
+
+var (
+	_ Property = (*decimalProperty)(nil)
+)
