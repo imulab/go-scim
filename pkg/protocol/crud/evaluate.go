@@ -44,11 +44,42 @@ func Evaluate(property prop.Property, filter *expr.Expression) (bool, error) {
 		return false, errors.InvalidFilter("nested filter is not allowed")
 	}
 
-	var (
-		result bool
-	)
+	// Normally, we are expecting a single boolean result. For instance, conventional filters like
+	//
+	//		userName eq "imulab"
+	// 		name.givenName co "W"
+	//
+	// produces a single boolean result. These filters lead to only one comparison.
+	//
+	// However, the path of a filter may split the traversal when it visits a multiValued property, leading
+	// to many comparison, producing multiple boolean results. In this case, we need to collect all boolean
+	// results and return true as long as one of the result was true. For instance, given partial resource
+	//
+	//		{
+	//			"schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+	//			"id": "C6AE8285-59C0-4E13-9C44-CE50C3F63DDC",
+	//			"emails": [
+	//				{
+	//					"value": "user1@foo.com",
+	//					"primary": true
+	//				},
+	//				{
+	//					"value": "user2@foo.com"
+	//				}
+	//			]
+	//		}
+	//
+	// 		and a filter: emails.value sw "user1"
+	//
+	// This filter leads to two comparisons of "user1@foo.com" sw "user1", and "user2@foo.com" sw "user1" respectively,
+	// which produces "true" and "false". As a result, this resource should pass the filter.
+	var results = make([]bool, 0)
 	if err := traverse(prop.NewNavigator(property), filter.Left(), func(target prop.Property) (fe error) {
-		var value interface{}
+		var (
+			value  interface{}
+			result bool
+		)
+
 		if filter.Token() != expr.Pr {
 			value, fe = normalize(target.Attribute(), filter.Right().Token())
 			if fe != nil {
@@ -108,12 +139,19 @@ func Evaluate(property prop.Property, filter *expr.Expression) (bool, error) {
 		default:
 			panic("invalid operator")
 		}
+
+		results = append(results, result)
 		return
 	}); err != nil {
 		return false, errors.InvalidFilter(err.Error())
 	}
 
-	return result, nil
+	for _, r := range results {
+		if r {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // Take the raw string presentation of a value and normalize it to corresponding types according to the attribute.

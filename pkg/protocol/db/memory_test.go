@@ -206,6 +206,60 @@ func (s *MemoryDBTestSuite) TestCount() {
 				assert.Equal(t, 2, count)
 			},
 		},
+		{
+			name: "find by predicate within multiValued",
+			getDB: func(t *testing.T) DB {
+				db := Memory()
+				for _, f := range []string{
+					"/user_001.json",
+					"/user_002.json",
+					"/user_003.json",
+					"/user_004.json",
+					"/user_005.json",
+					"/user_006.json",
+					"/user_007.json",
+					"/user_008.json",
+					"/user_009.json",
+					"/user_010.json",
+				} {
+					err := db.Insert(context.Background(), s.mustResource(f, resourceType))
+					require.Nil(t, err)
+				}
+				return db
+			},
+			filter: "emails.value eq \"imulab@foo.com\"",
+			expect: func(t *testing.T, count int, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, 10, count)
+			},
+		},
+		{
+			name: "find by predicate within multiValued 2",
+			getDB: func(t *testing.T) DB {
+				db := Memory()
+				for _, f := range []string{
+					"/user_001.json",
+					"/user_002.json",
+					"/user_003.json",
+					"/user_004.json",
+					"/user_005.json",
+					"/user_006.json",
+					"/user_007.json",
+					"/user_008.json",
+					"/user_009.json",
+					"/user_010.json",
+				} {
+					err := db.Insert(context.Background(), s.mustResource(f, resourceType))
+					require.Nil(t, err)
+				}
+				return db
+			},
+			filter: "emails.value eq \"foobar\"",
+			expect: func(t *testing.T, count int, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, 0, count)
+			},
+		},
 	}
 
 	for _, test := range tests {
