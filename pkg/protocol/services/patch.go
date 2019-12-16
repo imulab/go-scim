@@ -44,16 +44,28 @@ type (
 		NewVersion string
 	}
 	PatchService struct {
-		Logger           log.Logger
-		Lock             lock.Lock
-		PrePatchFilters  []filter.ForResource
-		PostPatchFilters []filter.ForResource
-		Database         db.DB
-		Event            event.Publisher
+		Logger                log.Logger
+		Lock                  lock.Lock
+		PrePatchFilters       []filter.ForResource
+		PostPatchFilters      []filter.ForResource
+		Database              db.DB
+		ServiceProviderConfig *spec.ServiceProviderConfig
+		Event                 event.Publisher
 	}
 )
 
+func (s *PatchService) checkSupport() error {
+	if !s.ServiceProviderConfig.Patch.Supported {
+		return errors.InvalidRequest("patch is not supported")
+	}
+	return nil
+}
+
 func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest) (*PatchResponse, error) {
+	if err := s.checkSupport(); err != nil {
+		return nil, err
+	}
+
 	s.Logger.Debug("received patch request [id=%s]", request.ResourceID)
 
 	if err := request.Validate(); err != nil {
@@ -64,8 +76,11 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 	ref, err := s.Database.Get(ctx, request.ResourceID, nil)
 	if err != nil {
 		return nil, err
-	} else if request.MatchCriteria != nil && !request.MatchCriteria(ref) {
-		return nil, errors.PreConditionFailed("resource [id=%s] does not meet pre condition", request.ResourceID)
+	}
+	if s.ServiceProviderConfig.ETag.Supported && request.MatchCriteria != nil {
+		if !request.MatchCriteria(ref) {
+			return nil, errors.PreConditionFailed("resource [id=%s] does not meet pre condition", request.ResourceID)
+		}
 	}
 
 	defer s.Lock.Unlock(ctx, ref)

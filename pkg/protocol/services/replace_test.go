@@ -32,6 +32,7 @@ type ReplaceServiceTestSuite struct {
 func (s *ReplaceServiceTestSuite) TestReplace() {
 	_ = s.mustSchema("/user_schema.json")
 	resourceType := s.mustResourceType("/user_resource_type.json")
+	spc := s.mustServiceProviderConfig("/service_provider_config.json")
 
 	tests := []struct {
 		name       string
@@ -58,6 +59,7 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 						filter.Meta(),
 					},
 					Database: memoryDB,
+					ServiceProviderConfig:spc,
 				}
 			},
 			getRequest: func() *ReplaceRequest {
@@ -93,6 +95,7 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 						filter.Meta(),
 					},
 					Database: memoryDB,
+					ServiceProviderConfig:spc,
 				}
 			},
 			getRequest: func() *ReplaceRequest {
@@ -128,6 +131,7 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 						filter.Meta(),
 					},
 					Database: memoryDB,
+					ServiceProviderConfig:spc,
 				}
 			},
 			getRequest: func() *ReplaceRequest {
@@ -195,4 +199,18 @@ func (s *ReplaceServiceTestSuite) mustSchema(filePath string) *spec.Schema {
 	spec.SchemaHub.Put(sch)
 
 	return sch
+}
+
+func (s *ReplaceServiceTestSuite) mustServiceProviderConfig(filePath string) *spec.ServiceProviderConfig {
+	f, err := os.Open(s.resourceBase + filePath)
+	s.Require().Nil(err)
+
+	raw, err := ioutil.ReadAll(f)
+	s.Require().Nil(err)
+
+	spc := new(spec.ServiceProviderConfig)
+	err = json.Unmarshal(raw, spc)
+	s.Require().Nil(err)
+
+	return spc
 }
