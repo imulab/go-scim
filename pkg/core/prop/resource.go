@@ -52,6 +52,11 @@ func (r *Resource) NewNavigator() *Navigator {
 	return NewNavigator(r.data)
 }
 
+// Adapting constructor method to return a new fluent navigator for the top level property of the resource.
+func (r *Resource) NewFluentNavigator() *FluentNavigator {
+	return NewFluentNavigator(r.data)
+}
+
 // Convenience method to return the ID of the resource. If id does not exist, return empty string.
 func (r *Resource) ID() string {
 	if p, err := r.NewNavigator().FocusName(id); err != nil {
