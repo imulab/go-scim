@@ -34,6 +34,7 @@ func (s *PatchServiceTestSuite) TestPatchService() {
 	_ = s.mustSchema("/user_schema.json")
 	resourceType := s.mustResourceType("/user_resource_type.json")
 	expr.Register(resourceType)
+	spc := s.mustServiceProviderConfig("/service_provider_config.json")
 
 	tests := []struct{
 		name		string
@@ -60,6 +61,7 @@ func (s *PatchServiceTestSuite) TestPatchService() {
 						filter.Meta(),
 					},
 					Database: memoryDB,
+					ServiceProviderConfig: spc,
 				}
 			},
 			getRequest: func(t *testing.T) *PatchRequest {
@@ -136,6 +138,7 @@ func (s *PatchServiceTestSuite) TestPatchService() {
 						filter.Meta(),
 					},
 					Database: memoryDB,
+					ServiceProviderConfig: spc,
 				}
 			},
 			getRequest: func(t *testing.T) *PatchRequest {
@@ -364,6 +367,20 @@ func (s *PatchServiceTestSuite) TestParsePayload() {
 			test.expect(t, pr)
 		})
 	}
+}
+
+func (s *PatchServiceTestSuite) mustServiceProviderConfig(filePath string) *spec.ServiceProviderConfig {
+	f, err := os.Open(s.resourceBase + filePath)
+	s.Require().Nil(err)
+
+	raw, err := ioutil.ReadAll(f)
+	s.Require().Nil(err)
+
+	spc := new(spec.ServiceProviderConfig)
+	err = json.Unmarshal(raw, spc)
+	s.Require().Nil(err)
+
+	return spc
 }
 
 func (s *PatchServiceTestSuite) mustResource(filePath string, resourceType *spec.ResourceType) *prop.Resource {

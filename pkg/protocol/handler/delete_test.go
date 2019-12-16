@@ -34,6 +34,7 @@ type DeleteHandlerTestSuite struct {
 func (s *DeleteHandlerTestSuite) TestDelete() {
 	_ = s.mustSchema("/user_schema.json")
 	resourceType := s.mustResourceType("/user_resource_type.json")
+	spc := s.mustServiceProviderConfig("/service_provider_config.json")
 
 	tests := []struct{
 		name		string
@@ -54,6 +55,7 @@ func (s *DeleteHandlerTestSuite) TestDelete() {
 						Logger:   log.None(),
 						Lock:     lock.Default(),
 						Database: database,
+						ServiceProviderConfig: spc,
 					},
 				}
 			},
@@ -77,6 +79,7 @@ func (s *DeleteHandlerTestSuite) TestDelete() {
 						Logger:   log.None(),
 						Lock:     lock.Default(),
 						Database: db.Memory(),
+						ServiceProviderConfig: spc,
 					},
 				}
 			},
@@ -144,4 +147,18 @@ func (s *DeleteHandlerTestSuite) mustSchema(filePath string) *spec.Schema {
 	spec.SchemaHub.Put(sch)
 
 	return sch
+}
+
+func (s *DeleteHandlerTestSuite) mustServiceProviderConfig(filePath string) *spec.ServiceProviderConfig {
+	f, err := os.Open(s.resourceBase + filePath)
+	s.Require().Nil(err)
+
+	raw, err := ioutil.ReadAll(f)
+	s.Require().Nil(err)
+
+	spc := new(spec.ServiceProviderConfig)
+	err = json.Unmarshal(raw, spc)
+	s.Require().Nil(err)
+
+	return spc
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/event"
 	"github.com/imulab/go-scim/pkg/protocol/lock"
@@ -16,10 +17,11 @@ type (
 		MatchCriteria func(resource *prop.Resource) bool
 	}
 	DeleteService struct {
-		Logger   log.Logger
-		Lock     lock.Lock
-		Database db.DB
-		Event    event.Publisher
+		Logger                log.Logger
+		Lock                  lock.Lock
+		Database              db.DB
+		Event                 event.Publisher
+		ServiceProviderConfig *spec.ServiceProviderConfig
 	}
 )
 
@@ -29,8 +31,11 @@ func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteReque
 	resource, err := s.Database.Get(ctx, request.ResourceID, nil)
 	if err != nil {
 		return err
-	} else if request.MatchCriteria != nil && !request.MatchCriteria(resource) {
-		return errors.PreConditionFailed("resource [id=%s] does not meet pre condition", request.ResourceID)
+	}
+	if s.ServiceProviderConfig.ETag.Supported && request.MatchCriteria != nil {
+		if !request.MatchCriteria(resource) {
+			return errors.PreConditionFailed("resource [id=%s] does not meet pre condition", request.ResourceID)
+		}
 	}
 
 	defer s.Lock.Unlock(ctx, resource)

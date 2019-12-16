@@ -5,6 +5,7 @@ import (
 	"github.com/imulab/go-scim/pkg/core/errors"
 	"github.com/imulab/go-scim/pkg/core/expr"
 	"github.com/imulab/go-scim/pkg/core/prop"
+	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/crud"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/log"
@@ -24,13 +25,32 @@ type (
 		Resources    []*prop.Resource
 	}
 	QueryService struct {
-		Logger           log.Logger
-		Database         db.DB
-		TooManyThreshold int
+		Logger                log.Logger
+		Database              db.DB
+		ServiceProviderConfig *spec.ServiceProviderConfig
 	}
 )
 
+func (s *QueryService) checkSupport(request *QueryRequest) error {
+	if !s.ServiceProviderConfig.Filter.Supported {
+		if len(request.Filter) > 0 {
+			return errors.InvalidRequest("filter is not supported")
+		}
+	}
+	if !s.ServiceProviderConfig.Sort.Supported {
+		if request.Sort != nil && len(request.Sort.By) > 0 {
+			return errors.InvalidRequest("sort is not supported")
+		}
+	}
+	return nil
+}
+
 func (s *QueryService) QueryResource(ctx context.Context, request *QueryRequest) (resp *QueryResponse, err error) {
+	err = s.checkSupport(request)
+	if err != nil {
+		return
+	}
+
 	err = request.ValidateAndDefault()
 	if err != nil {
 		return
@@ -48,8 +68,8 @@ func (s *QueryService) QueryResource(ctx context.Context, request *QueryRequest)
 		return
 	}
 
-	if (request.Pagination == nil && resp.TotalResults > s.TooManyThreshold) ||
-		(request.Pagination != nil && request.Pagination.Count > s.TooManyThreshold) {
+	if (request.Pagination == nil && resp.TotalResults > s.ServiceProviderConfig.Filter.MaxResults) ||
+		(request.Pagination != nil && request.Pagination.Count > s.ServiceProviderConfig.Filter.MaxResults) {
 		err = errors.TooMany("request would return too many results")
 		return
 	}

@@ -31,6 +31,7 @@ type QueryServiceTestSuite struct {
 func (s *QueryServiceTestSuite) TestQuery() {
 	_ = s.mustSchema("/user_schema.json")
 	resourceType := s.mustResourceType("/user_resource_type.json")
+	spc := s.mustServiceProviderConfig("/service_provider_config.json")
 
 	tests := []struct {
 		name       string
@@ -58,9 +59,9 @@ func (s *QueryServiceTestSuite) TestQuery() {
 					require.Nil(t, err)
 				}
 				return &QueryService{
-					Logger:           log.None(),
-					Database:         database,
-					TooManyThreshold: 100,
+					Logger:                log.None(),
+					Database:              database,
+					ServiceProviderConfig: spc,
 				}
 			},
 			request: &QueryRequest{
@@ -96,9 +97,9 @@ func (s *QueryServiceTestSuite) TestQuery() {
 					require.Nil(t, err)
 				}
 				return &QueryService{
-					Logger:           log.None(),
-					Database:         database,
-					TooManyThreshold: 100,
+					Logger:                log.None(),
+					Database:              database,
+					ServiceProviderConfig: spc,
 				}
 			},
 			request: &QueryRequest{
@@ -132,7 +133,7 @@ func (s *QueryServiceTestSuite) TestQuery() {
 				return &QueryService{
 					Logger:           log.None(),
 					Database:         database,
-					TooManyThreshold: 100,
+					ServiceProviderConfig: spc,
 				}
 			},
 			request: &QueryRequest{
@@ -186,7 +187,7 @@ func (s *QueryServiceTestSuite) TestQuery() {
 				return &QueryService{
 					Logger:           log.None(),
 					Database:         database,
-					TooManyThreshold: 100,
+					ServiceProviderConfig: spc,
 				}
 			},
 			request: &QueryRequest{
@@ -233,10 +234,12 @@ func (s *QueryServiceTestSuite) TestQuery() {
 					err := database.Insert(context.Background(), s.mustResource(f, resourceType))
 					require.Nil(t, err)
 				}
+				limitedSPC := s.mustServiceProviderConfig("/service_provider_config.json")
+				limitedSPC.Filter.MaxResults = 5
 				return &QueryService{
 					Logger:           log.None(),
 					Database:         database,
-					TooManyThreshold: 5,
+					ServiceProviderConfig: limitedSPC,
 				}
 			},
 			request: &QueryRequest{
@@ -303,4 +306,18 @@ func (s *QueryServiceTestSuite) mustSchema(filePath string) *spec.Schema {
 	spec.SchemaHub.Put(sch)
 
 	return sch
+}
+
+func (s *QueryServiceTestSuite) mustServiceProviderConfig(filePath string) *spec.ServiceProviderConfig {
+	f, err := os.Open(s.resourceBase + filePath)
+	s.Require().Nil(err)
+
+	raw, err := ioutil.ReadAll(f)
+	s.Require().Nil(err)
+
+	spc := new(spec.ServiceProviderConfig)
+	err = json.Unmarshal(raw, spc)
+	s.Require().Nil(err)
+
+	return spc
 }
