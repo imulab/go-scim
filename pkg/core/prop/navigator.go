@@ -116,3 +116,60 @@ func (n *Navigator) errNoTargetByIndex(container Property, index int) error {
 func (n *Navigator) errNoTargetByCriteria(container Property) error {
 	return errors.NoTarget("property '%s' has no element meeting the given criteria", container.Attribute().Path())
 }
+
+// Create a fluent navigator.
+func NewFluentNavigator(source Property) *FluentNavigator {
+	return &FluentNavigator{
+		nav: NewNavigator(source),
+	}
+}
+
+// FluentNavigator is wrapper around Navigator. It exposes the same API as Navigator, but
+// in a fluent way. In addition, any intermediate error caused by FocusXXX methods are cached
+// internally and turns further FocusXXX methods into a no-op.
+type FluentNavigator struct {
+	nav 	*Navigator
+	err 	error
+}
+
+func (n *FluentNavigator) Error() error {
+	return n.err
+}
+
+func (n *FluentNavigator) FocusName(name string) *FluentNavigator {
+	if n.err == nil {
+		_, n.err = n.nav.FocusName(name)
+	}
+	return n
+}
+
+func (n *FluentNavigator) FocusIndex(index int) *FluentNavigator {
+	if n.err == nil {
+		_, n.err = n.nav.FocusIndex(index)
+	}
+	return n
+}
+
+func (n *FluentNavigator) FocusCriteria(criteria func(child Property) bool) *FluentNavigator {
+	if n.err == nil {
+		_, n.err = n.nav.FocusCriteria(criteria)
+	}
+	return n
+}
+
+func (n *FluentNavigator) Depth() int {
+	return n.nav.Depth()
+}
+
+func (n *FluentNavigator) Current() Property {
+	return n.nav.Current()
+}
+
+func (n *FluentNavigator) CurrentAsContainer() Container {
+	return n.Current().(Container)
+}
+
+func (n *FluentNavigator) Retract() *FluentNavigator {
+	n.nav.Retract()
+	return n
+}

@@ -396,8 +396,8 @@ type (
 		ReferenceTypes  []string                `json:"referenceTypes"`
 		Index           int                     `json:"_index"`
 		Path            string                  `json:"_path"`
-		Primary         bool                    `json:"_primary"`
-		Identity        bool                    `json:"_identity"`
+		Primary         bool                    `json:"_primary"`		// deprecated
+		Identity        bool                    `json:"_identity"`		// deprecated
 		Annotations     []string                `json:"_annotations"`
 	}
 )
