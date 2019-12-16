@@ -171,4 +171,5 @@ func (n *FluentNavigator) CurrentAsContainer() Container {
 
 func (n *FluentNavigator) Retract() *FluentNavigator {
 	n.nav.Retract()
+	return n
 }

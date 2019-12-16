@@ -59,48 +59,28 @@ func (r *Resource) NewFluentNavigator() *FluentNavigator {
 
 // Convenience method to return the ID of the resource. If id does not exist, return empty string.
 func (r *Resource) ID() string {
-	if p, err := r.NewNavigator().FocusName(id); err != nil {
+	p := r.data.ChildAtIndex("id")
+	if p == nil || p.IsUnassigned() {
 		return ""
-	} else if p.IsUnassigned() {
-		return ""
-	} else if id, ok := p.Raw().(string); !ok {
-		return ""
-	} else {
-		return id
 	}
+	return p.Raw().(string)
 }
 
 // Convenience method to return the meta.location field of the resource, or empty string if it does not exist.
 func (r *Resource) Location() string {
-	nav := r.NewNavigator()
-	if _, err := nav.FocusName(meta); err != nil {
-		return ""
-	}
-	if p, err := nav.FocusName(location); err != nil {
-		return ""
-	} else if p.IsUnassigned() {
-		return ""
-	} else if location, ok := p.Raw().(string); !ok {
+	if nav := r.NewFluentNavigator().FocusName("meta").FocusName("location"); nav.Error() != nil {
 		return ""
 	} else {
-		return location
+		return nav.Current().Raw().(string)
 	}
 }
 
 // Convenience method to return the meta.version field of the resource, or empty string if it does not exist
 func (r *Resource) Version() string {
-	nav := r.NewNavigator()
-	if _, err := nav.FocusName(meta); err != nil {
-		return ""
-	}
-	if p, err := nav.FocusName(version); err != nil {
-		return ""
-	} else if p.IsUnassigned() {
-		return ""
-	} else if version, ok := p.Raw().(string); !ok {
+	if nav := r.NewFluentNavigator().FocusName("meta").FocusName("version"); nav.Error() != nil {
 		return ""
 	} else {
-		return version
+		return nav.Current().Raw().(string)
 	}
 }
 

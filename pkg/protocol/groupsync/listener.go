@@ -143,7 +143,7 @@ func (l *membershipListener) fillGroup(gs *prop.Resource, group *prop.Resource) 
 	}
 	var displayName interface{}
 	{
-		if p, err := group.NewNavigator().FocusName(fieldDisplayName); err != nil {
+		if p, err := group.NewNavigator().FocusName("displayName"); err != nil {
 			return err
 		} else {
 			displayName = p.Raw()
