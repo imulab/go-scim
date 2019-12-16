@@ -8,7 +8,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/http"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"github.com/imulab/go-scim/pkg/protocol/services"
 	filters "github.com/imulab/go-scim/pkg/protocol/services/filter"
@@ -54,7 +53,6 @@ func (s *PatchHandlerTestSuite) TestPatch() {
 					ResourceIDPathParam: "userId",
 					Service: &services.PatchService{
 						Logger:          log.None(),
-						Lock:            lock.Default(),
 						Database:        database,
 						PrePatchFilters: []filters.ForResource{},
 						PostPatchFilters: []filters.ForResource{
@@ -132,7 +130,6 @@ func (s *PatchHandlerTestSuite) TestPatch() {
 					ResourceIDPathParam: "userId",
 					Service: &services.PatchService{
 						Logger:          log.None(),
-						Lock:            lock.Default(),
 						Database:        database,
 						PrePatchFilters: []filters.ForResource{},
 						PostPatchFilters: []filters.ForResource{
@@ -166,7 +163,6 @@ func (s *PatchHandlerTestSuite) TestPatch() {
 					ResourceIDPathParam: "userId",
 					Service: &services.PatchService{
 						Logger:          log.None(),
-						Lock:            lock.Default(),
 						Database:        database,
 						PrePatchFilters: []filters.ForResource{},
 						PostPatchFilters: []filters.ForResource{

@@ -8,7 +8,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/prop"
 	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 	"github.com/stretchr/testify/assert"
@@ -52,7 +51,6 @@ func (s *PatchServiceTestSuite) TestPatchService() {
 				)
 				return &PatchService{
 					Logger:           log.None(),
-					Lock:             lock.Default(),
 					PrePatchFilters: []filter.ForResource{},
 					PostPatchFilters: []filter.ForResource{
 						filter.CopyReadOnly(),
@@ -129,7 +127,6 @@ func (s *PatchServiceTestSuite) TestPatchService() {
 				)
 				return &PatchService{
 					Logger:           log.None(),
-					Lock:             lock.Default(),
 					PrePatchFilters: []filter.ForResource{},
 					PostPatchFilters: []filter.ForResource{
 						filter.CopyReadOnly(),

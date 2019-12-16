@@ -8,7 +8,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/http"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"github.com/imulab/go-scim/pkg/protocol/services"
 	filters "github.com/imulab/go-scim/pkg/protocol/services/filter"
@@ -55,7 +54,6 @@ func (s *ReplaceHandlerTestSuite) TestReplace() {
 					ResourceType:        resourceType,
 					Service: &services.ReplaceService{
 						Logger:   log.None(),
-						Lock:     lock.Default(),
 						Database: database,
 						Filters: []filters.ForResource{
 							filters.ClearReadOnly(),
@@ -95,7 +93,6 @@ func (s *ReplaceHandlerTestSuite) TestReplace() {
 					ResourceType:        resourceType,
 					Service: &services.ReplaceService{
 						Logger:   log.None(),
-						Lock:     lock.Default(),
 						Database: database,
 						Filters: []filters.ForResource{
 							filters.ClearReadOnly(),
@@ -131,7 +128,6 @@ func (s *ReplaceHandlerTestSuite) TestReplace() {
 					ResourceType:        resourceType,
 					Service: &services.ReplaceService{
 						Logger:   log.None(),
-						Lock:     lock.Default(),
 						Database: database,
 						Filters: []filters.ForResource{
 							filters.ClearReadOnly(),

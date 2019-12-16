@@ -7,7 +7,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/prop"
 	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,7 +46,6 @@ func (s *DeleteServiceTestSuite) TestDelete() {
 				require.Nil(t, err)
 				return &DeleteService{
 					Logger:   log.None(),
-					Lock:     lock.Default(),
 					Database: database,
 					ServiceProviderConfig: spc,
 				}
@@ -67,7 +65,6 @@ func (s *DeleteServiceTestSuite) TestDelete() {
 				require.Nil(t, err)
 				return &DeleteService{
 					Logger:   log.None(),
-					Lock:     lock.Default(),
 					Database: database,
 					ServiceProviderConfig: spc,
 				}

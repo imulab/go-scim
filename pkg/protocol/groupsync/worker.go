@@ -7,7 +7,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/prop"
 	"github.com/imulab/go-scim/pkg/protocol/crud"
 	"github.com/imulab/go-scim/pkg/protocol/db"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"time"
 )
@@ -16,7 +15,6 @@ type worker struct {
 	userDB      db.DB
 	groupDB     db.DB
 	groupSyncDB db.DB
-	lock        lock.Lock
 	log         log.Logger
 	errChan     chan error
 	doneChan    chan struct{}
@@ -31,17 +29,6 @@ func (w *worker) Stop() {
 	w.doneChan <- struct{}{}
 }
 
-func (w *worker) withLock(resource *prop.Resource, f func() error) {
-	defer w.lock.Unlock(context.Background(), resource)
-	if err := w.lock.Lock(context.Background(), resource); err != nil {
-		w.errChan <- err
-		return
-	}
-	if err := f(); err != nil {
-		w.errChan <- err
-	}
-}
-
 func (w *worker) start() {
 	for {
 		select {
@@ -50,11 +37,8 @@ func (w *worker) start() {
 		default:
 			sync := w.nextSync()
 			if sync != nil {
-				w.withLock(sync, func() error {
-					for w.syncTop(sync) {
-					}
-					return nil
-				})
+				for w.syncTop(sync) {
+				}
 			}
 			w.sleep(5)
 		}
@@ -166,23 +150,23 @@ func (w *worker) syncDirect(sync *prop.Resource, diff prop.Container) error {
 		return err
 	}
 
-	w.withLock(user, func() error {
-		nav := user.NewFluentNavigator().FocusName("groups")
-		if nav.Error() != nil {
-			return nav.Error()
+	nav := user.NewFluentNavigator().FocusName("groups")
+	if nav.Error() != nil {
+		return nav.Error()
+	}
+	switch status {
+	case joined:
+		if err := nav.Current().Add(groupData); err != nil {
+			return err
 		}
-		switch status {
-		case joined:
-			if err := nav.Current().Add(groupData); err != nil {
-				return err
-			}
-		case left:
-			if err := crud.Delete(user, fmt.Sprintf("groups[value eq \"%s\"]", groupData["id"])); err != nil {
-				return err
-			}
+	case left:
+		if err := crud.Delete(user, fmt.Sprintf("groups[value eq \"%s\"]", groupData["id"])); err != nil {
+			return err
 		}
-		return w.userDB.Replace(context.Background(), user)
-	})
+	}
+	if err := w.userDB.Replace(context.Background(), user); err != nil {
+		return err
+	}
 
 	return diff.Delete()
 }

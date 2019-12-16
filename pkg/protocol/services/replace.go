@@ -7,7 +7,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/event"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 )
@@ -26,7 +25,6 @@ type (
 	}
 	ReplaceService struct {
 		Logger                log.Logger
-		Lock                  lock.Lock
 		Filters               []filter.ForResource
 		Database              db.DB
 		ServiceProviderConfig *spec.ServiceProviderConfig
@@ -45,12 +43,6 @@ func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRe
 		if !request.MatchCriteria(ref) {
 			return nil, errors.PreConditionFailed("resource [id=%s] does not meet pre condition", request.ResourceID)
 		}
-	}
-
-	defer s.Lock.Unlock(ctx, ref)
-	if err := s.Lock.Lock(ctx, ref); err != nil {
-		s.Logger.Error("failed to obtain lock for resource [id=%s]: %s", request.ResourceID, err.Error())
-		return nil, err
 	}
 
 	for _, f := range s.Filters {
