@@ -7,7 +7,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/event"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 )
 
@@ -18,7 +17,6 @@ type (
 	}
 	DeleteService struct {
 		Logger                log.Logger
-		Lock                  lock.Lock
 		Database              db.DB
 		Event                 event.Publisher
 		ServiceProviderConfig *spec.ServiceProviderConfig
@@ -36,12 +34,6 @@ func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteReque
 		if !request.MatchCriteria(resource) {
 			return errors.PreConditionFailed("resource [id=%s] does not meet pre condition", request.ResourceID)
 		}
-	}
-
-	defer s.Lock.Unlock(ctx, resource)
-	if err := s.Lock.Lock(ctx, resource); err != nil {
-		s.Logger.Error("failed to obtain lock for resource [id=%s]: %s", request.ResourceID, err.Error())
-		return err
 	}
 
 	err = s.Database.Delete(ctx, request.ResourceID)

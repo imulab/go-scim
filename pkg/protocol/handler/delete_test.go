@@ -8,7 +8,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/http"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"github.com/imulab/go-scim/pkg/protocol/services"
 	"github.com/stretchr/testify/assert"
@@ -53,7 +52,6 @@ func (s *DeleteHandlerTestSuite) TestDelete() {
 					ResourceIDPathParam: "userId",
 					Service:             &services.DeleteService{
 						Logger:   log.None(),
-						Lock:     lock.Default(),
 						Database: database,
 						ServiceProviderConfig: spc,
 					},
@@ -77,7 +75,6 @@ func (s *DeleteHandlerTestSuite) TestDelete() {
 					ResourceIDPathParam: "userId",
 					Service:             &services.DeleteService{
 						Logger:   log.None(),
-						Lock:     lock.Default(),
 						Database: db.Memory(),
 						ServiceProviderConfig: spc,
 					},

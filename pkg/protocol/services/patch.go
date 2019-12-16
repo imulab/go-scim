@@ -11,7 +11,6 @@ import (
 	"github.com/imulab/go-scim/pkg/protocol/crud"
 	"github.com/imulab/go-scim/pkg/protocol/db"
 	"github.com/imulab/go-scim/pkg/protocol/event"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 )
@@ -45,7 +44,6 @@ type (
 	}
 	PatchService struct {
 		Logger                log.Logger
-		Lock                  lock.Lock
 		PrePatchFilters       []filter.ForResource
 		PostPatchFilters      []filter.ForResource
 		Database              db.DB
@@ -81,12 +79,6 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 		if !request.MatchCriteria(ref) {
 			return nil, errors.PreConditionFailed("resource [id=%s] does not meet pre condition", request.ResourceID)
 		}
-	}
-
-	defer s.Lock.Unlock(ctx, ref)
-	if err := s.Lock.Lock(ctx, ref); err != nil {
-		s.Logger.Error("failed to obtain lock for resource [id=%s]: %s", request.ResourceID, err.Error())
-		return nil, err
 	}
 
 	resource := ref.Clone()

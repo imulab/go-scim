@@ -7,7 +7,6 @@ import (
 	"github.com/imulab/go-scim/pkg/core/prop"
 	"github.com/imulab/go-scim/pkg/core/spec"
 	"github.com/imulab/go-scim/pkg/protocol/db"
-	"github.com/imulab/go-scim/pkg/protocol/lock"
 	"github.com/imulab/go-scim/pkg/protocol/log"
 	"github.com/imulab/go-scim/pkg/protocol/services/filter"
 	"github.com/stretchr/testify/assert"
@@ -50,7 +49,6 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 				)
 				return &ReplaceService{
 					Logger: log.None(),
-					Lock:   lock.Default(),
 					Filters: []filter.ForResource{
 						filter.ClearReadOnly(),
 						filter.CopyReadOnly(),
@@ -86,7 +84,6 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 				)
 				return &ReplaceService{
 					Logger: log.None(),
-					Lock:   lock.Default(),
 					Filters: []filter.ForResource{
 						filter.ClearReadOnly(),
 						filter.CopyReadOnly(),
@@ -122,7 +119,6 @@ func (s *ReplaceServiceTestSuite) TestReplace() {
 				)
 				return &ReplaceService{
 					Logger: log.None(),
-					Lock:   lock.Default(),
 					Filters: []filter.ForResource{
 						filter.ClearReadOnly(),
 						filter.CopyReadOnly(),
