@@ -22,7 +22,7 @@ func RootQueryHandler(r shared.WebRequest, server ScimServer, ctx context.Contex
 	ErrorCheck(err)
 
 	repo := server.Repository("")
-	lr, err := repo.Search(sr)
+	lr, err := repo.Search(sr, ctx)
 	ErrorCheck(err)
 
 	jsonBytes, err := server.MarshalJSON(lr, sch, attributes, excludedAttributes)

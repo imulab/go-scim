@@ -49,7 +49,7 @@ func (uv *uniquenessValidator) validateUniquenessWithReflection(v reflect.Value,
 		switch attr.Uniqueness {
 		case Server, Global:
 			query := fmt.Sprintf("%s eq \"%v\"", attr.Assist.Path, v0.Interface())
-			count, err := repo.Count(query)
+			count, err := repo.Count(query, ctx)
 			if err != nil {
 				uv.throw(err, ctx)
 			} else if count > 0 {
@@ -60,7 +60,7 @@ func (uv *uniquenessValidator) validateUniquenessWithReflection(v reflect.Value,
 						uv.throw(Error.Duplicate(attr.Assist.Path, v0.Interface()), ctx)
 					} else {
 						resourceId := ctx.Value(ResourceId{}).(string)
-						lr, err := repo.Search(SearchRequest{Filter: query, StartIndex: 1})
+						lr, err := repo.Search(SearchRequest{Filter: query, StartIndex: 1}, ctx)
 						if err != nil {
 							uv.throw(Error.Text("Cannot verify uniqueness: %s", err.Error()), ctx)
 						}

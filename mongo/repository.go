@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"context"
 	"fmt"
 	. "github.com/parsable/go-scim/shared"
 	"gopkg.in/mgo.v2"
@@ -95,14 +96,14 @@ func (r *repository) handleError(err error, args ...interface{}) error {
 	}
 }
 
-func (r *repository) Create(provider DataProvider) error {
+func (r *repository) Create(provider DataProvider, ctx context.Context) error {
 	c, cleanUp := r.getCollection()
 	defer cleanUp()
 
 	return r.handleError(c.Insert(provider.GetData()))
 }
 
-func (r *repository) Get(id, version string) (DataProvider, error) {
+func (r *repository) Get(id, version string, ctx context.Context) (DataProvider, error) {
 	c, cleanUp := r.getCollection()
 	defer cleanUp()
 
@@ -122,11 +123,11 @@ func (r *repository) Get(id, version string) (DataProvider, error) {
 	return r.construct(Complex(data)), nil
 }
 
-func (r *repository) GetAll() ([]Complex, error) {
+func (r *repository) GetAll(ctx context.Context) ([]Complex, error) {
 	panic("not supported")
 }
 
-func (r *repository) Count(query string) (int, error) {
+func (r *repository) Count(query string, ctx context.Context) (int, error) {
 	q, err := convertToMongoQuery(query, r.schema)
 	if err != nil {
 		return 0, r.handleError(err)
@@ -139,7 +140,7 @@ func (r *repository) Count(query string) (int, error) {
 	return count, r.handleError(err)
 }
 
-func (r *repository) Update(id, version string, provider DataProvider) error {
+func (r *repository) Update(id, version string, provider DataProvider, ctx context.Context) error {
 	c, cleanUp := r.getCollection()
 	defer cleanUp()
 
@@ -153,7 +154,7 @@ func (r *repository) Update(id, version string, provider DataProvider) error {
 	return r.handleError(err, provider.GetId())
 }
 
-func (r *repository) Delete(id, version string) error {
+func (r *repository) Delete(id, version string, ctx context.Context) error {
 	c, cleanUp := r.getCollection()
 	defer cleanUp()
 
@@ -167,7 +168,7 @@ func (r *repository) Delete(id, version string) error {
 	return r.handleError(err, id)
 }
 
-func (r *repository) Search(payload SearchRequest) (*ListResponse, error) {
+func (r *repository) Search(payload SearchRequest, ctx context.Context) (*ListResponse, error) {
 	c, cleanUp := r.getCollection()
 	defer cleanUp()
 
