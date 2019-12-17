@@ -9,15 +9,20 @@ import (
 	"github.com/imulab/go-scim/protocol/log"
 	"github.com/imulab/go-scim/protocol/services"
 	"github.com/imulab/go-scim/protocol/services/filter"
+	"github.com/imulab/go-scim/server/groupsync"
+	"github.com/imulab/go-scim/server/logger"
+	"github.com/nats-io/nats.go"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type appContext struct {
 	serviceProviderConfig        *spec.ServiceProviderConfig
 	serviceProviderConfigHandler *handler.ServiceProviderConfig
+	natConn                      *nats.Conn
 	logger                       log.Logger
 
 	// user related
@@ -65,12 +70,15 @@ func (c *appContext) initialize(args *args) error {
 	if err := c.loadSchemasInFolder(args.schemasFolderPath); err != nil {
 		return err
 	}
+	if err := c.loadNatsConnection(args); err != nil {
+		return err
+	}
 
 	// user related
 	if err := c.loadResourceType(args.userResourceTypePath, c.userResourceType); err != nil {
 		return err
 	}
-	if err := c.loadDatabase(args.memoryDB, c.userDatabase); err != nil {
+	if err := c.loadUserDatabase(args); err != nil {
 		return err
 	}
 	if err := c.loadUserServices(); err != nil {
@@ -84,7 +92,7 @@ func (c *appContext) initialize(args *args) error {
 	if err := c.loadResourceType(args.groupResourceTypePath, c.groupResourceType); err != nil {
 		return err
 	}
-	if err := c.loadDatabase(args.memoryDB, c.groupDatabase); err != nil {
+	if err := c.loadGroupDatabase(args); err != nil {
 		return err
 	}
 	if err := c.loadGroupServices(); err != nil {
@@ -219,6 +227,10 @@ func (c *appContext) loadUserServices() error {
 }
 
 func (c *appContext) loadGroupServices() error {
+	syncSender, _, err := groupsync.Sender(c.natConn, c.logger)
+	if err != nil {
+		return err
+	}
 	c.groupCreateService = &services.CreateService{
 		Logger:   c.logger,
 		Database: c.groupDatabase,
@@ -228,7 +240,7 @@ func (c *appContext) loadGroupServices() error {
 			filter.Meta(),
 			filter.Validation(c.groupDatabase),
 		},
-		Event: nil, // todo sync
+		Event: syncSender,
 	}
 	c.groupReplaceService = &services.ReplaceService{
 		Logger:                c.logger,
@@ -240,7 +252,7 @@ func (c *appContext) loadGroupServices() error {
 			filter.Validation(c.groupDatabase),
 			filter.Meta(),
 		},
-		Event: nil, // todo sync
+		Event: syncSender,
 	}
 	c.groupPatchService = &services.PatchService{
 		Logger:                c.logger,
@@ -252,13 +264,13 @@ func (c *appContext) loadGroupServices() error {
 			filter.Validation(c.groupDatabase),
 			filter.Meta(),
 		},
-		Event: nil, // todo sync
+		Event: syncSender,
 	}
 	c.groupDeleteService = &services.DeleteService{
 		Logger:                c.logger,
 		Database:              c.groupDatabase,
 		ServiceProviderConfig: c.serviceProviderConfig,
-		Event:                 nil, // todo sync
+		Event: syncSender,
 	}
 	c.groupGetService = &services.GetService{
 		Logger:   c.logger,
@@ -272,12 +284,13 @@ func (c *appContext) loadGroupServices() error {
 	return nil
 }
 
-func (c *appContext) loadDatabase(memory bool, dest db.DB) error {
-	if memory {
-		dest = db.Memory()
-	} else {
-		panic("not supported yet")
-	}
+func (c *appContext) loadUserDatabase(args *args) error {
+	c.userDatabase = db.Memory()
+	return nil
+}
+
+func (c *appContext) loadGroupDatabase(args *args) error {
+	c.groupDatabase = db.Memory()
 	return nil
 }
 
@@ -317,7 +330,7 @@ func (c *appContext) loadSchemasInFolder(folder string) error {
 }
 
 func (c *appContext) loadLogger() error {
-	c.logger = newLogger()
+	c.logger = logger.Zero()
 	return nil
 }
 
@@ -335,6 +348,11 @@ func (c *appContext) loadServiceProviderConfig(path string, dest *spec.ServicePr
 		SPC: dest,
 	}
 	return nil
+}
+
+func (c *appContext) loadNatsConnection(args *args) (err error) {
+	c.natConn, err = nats.Connect(args.natsServers, nats.Timeout(10*time.Second), nats.PingInterval(10*time.Second))
+	return
 }
 
 func (c *appContext) readFile(path string) ([]byte, error) {

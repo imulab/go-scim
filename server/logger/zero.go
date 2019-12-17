@@ -1,4 +1,4 @@
-package api
+package logger
 
 import (
 	"github.com/imulab/go-scim/protocol/log"
@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func newLogger() log.Logger {
+func Zero() log.Logger {
 	return &zeroLogger{
 		logger: zerolog.New(os.Stderr).With().Timestamp().Logger(),
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/imulab/go-scim/server/api"
+	"github.com/imulab/go-scim/server/groupsync"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -13,6 +14,7 @@ func main() {
 		Usage: "Simple Cloud Identity Management",
 		Commands: []*cli.Command{
 			api.Command(),
+			groupsync.Command(),
 		},
 		HideVersion: true,
 		Authors: []*cli.Author{
