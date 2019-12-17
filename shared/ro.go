@@ -31,10 +31,7 @@ type ReadOnlyAssignment interface {
 type idAssignment struct{}
 
 func (ro *idAssignment) AssignValue(r *Resource, ctx context.Context) error {
-	uuid, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
+	uuid := uuid.NewV4()
 	r.Complex["id"] = uuid.String()
 	return nil
 }
