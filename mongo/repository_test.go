@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"fmt"
-	. "github.com/davidiamyou/go-scim/shared"
+	. "github.com/parsable/go-scim/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/mgo.v2"

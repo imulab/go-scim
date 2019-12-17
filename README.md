@@ -4,14 +4,14 @@ GoSCIM is the LEGO blocks for building a custom [SCIM v2](http://www.simplecloud
 
 ## What is included?
 
-Functionalities like validation, read-only attributes assignment, query resolution, persistence and JSON serialization are included. In addition, a [sample server](https://github.com/davidiamyou/go-scim/tree/development/example) is included with the project just to demonstrate how easy it is to put together these components into a functioning SCIM API Server.
+Functionalities like validation, read-only attributes assignment, query resolution, persistence and JSON serialization are included. In addition, a [sample server](https://github.com/parsable/go-scim/tree/development/example) is included with the project just to demonstrate how easy it is to put together these components into a functioning SCIM API Server.
 
 ## How to Run?
 
 GoSCIM does not compile to a runnable artifact. Instead, it enables building one. If you want to quickly have a preview of an example server that has been already built:
 
 ```
-cd $GOPATH/src/github.com/davidiamyou/go-scim/example
+cd $GOPATH/src/github.com/parsable/go-scim/example
 go run server.go
 ```
 
