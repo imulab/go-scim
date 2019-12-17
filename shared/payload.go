@@ -122,6 +122,21 @@ type Patch struct {
 	Value interface{} `json:"value"`
 }
 
+func (p Patch) ToLowerCaseOp() {
+	p.Op = strings.ToLower(p.Op)
+}
+
+func (p Patch) ToLowerCasePath() {
+	if !strings.HasPrefix(p.Path, "/") {
+		var sb strings.Builder
+
+		sb.WriteRune('/')
+		sb.WriteString(p.Path)
+
+		p.Path = sb.String()
+	}
+}
+
 func (m Modification) Validate() error {
 	if len(m.Schemas) != 1 && m.Schemas[0] != PatchOpUrn {
 		return Error.InvalidParam("schemas", PatchOpUrn, fmt.Sprintf("%+v", m.Schemas))
@@ -132,6 +147,7 @@ func (m Modification) Validate() error {
 	}
 
 	for _, patch := range m.Ops {
+		patch.ToLowerCaseOp()
 		switch patch.Op {
 		case Add:
 			if patch.Value == nil {
@@ -141,19 +157,21 @@ func (m Modification) Validate() error {
 					return Error.InvalidParam("value of add op", "to be complex (for implicit path)", "non-complex")
 				}
 			}
+			patch.ToLowerCasePath()
 		case Replace:
 			if patch.Value == nil {
 				return Error.InvalidParam("value of replace op", "to be present", "nil")
 			} else if len(patch.Path) == 0 {
 				return Error.InvalidParam("path", "to be present", "empty")
 			}
+			patch.ToLowerCasePath()
 		case Remove:
 			if patch.Value != nil {
 				return Error.InvalidParam("value of remove op", "to be nil", "non-nil")
 			} else if len(patch.Path) == 0 {
 				return Error.InvalidParam("path", "to be present", "empty")
 			}
-
+			patch.ToLowerCasePath()
 		default:
 			return Error.InvalidParam("Op", "one of [add|remove|replace]", patch.Op)
 		}
