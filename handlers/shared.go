@@ -191,10 +191,10 @@ func Endpoint(next EndpointHandler, server ScimServer) http.HandlerFunc {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		ctx := context.Background()
 		resp := next(server.WebRequest(req), server, ctx)
-		rw.WriteHeader(resp.statusCode)
 		for k, v := range resp.headers {
 			rw.Header().Set(k, v)
 		}
+		rw.WriteHeader(resp.statusCode)
 		rw.Write(resp.responseBody)
 	})
 }
