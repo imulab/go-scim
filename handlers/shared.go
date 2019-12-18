@@ -162,6 +162,8 @@ func ErrorRecovery(next EndpointHandler) EndpointHandler {
 							"uniqueness",
 							r.(error).Error()),
 					))
+				case *UnauthorizedError:
+					info.Status(http.StatusUnauthorized)
 
 				default:
 					info.Status(http.StatusInternalServerError)

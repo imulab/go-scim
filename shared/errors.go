@@ -27,6 +27,7 @@ type ErrorFactory interface {
 	ResourceNotFound(id, version string) error
 	Duplicate(path string, value interface{}) error
 	Text(template string, args ...interface{}) error
+	Unauthorized() error
 }
 
 type errorFactory struct{}
@@ -172,4 +173,14 @@ type DuplicateError struct {
 
 func (e DuplicateError) Error() string {
 	return fmt.Sprintf("Resource has duplicate value '%v' at path '%s'", e.Value, e.Path)
+}
+
+type UnauthorizedError struct {}
+
+func (e UnauthorizedError) Error() string {
+	return fmt.Sprintf("Unauthorized")
+}
+
+func (f *errorFactory) Unauthorized() error {
+	return &UnauthorizedError{}
 }
