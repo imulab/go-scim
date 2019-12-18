@@ -27,22 +27,27 @@ type (
 )
 
 func (s *CreateService) CreateResource(ctx context.Context, request *CreateRequest) (cr *CreateResponse, err error) {
-	s.Logger.Debug("received create request")
-
 	for _, f := range s.Filters {
 		err = f.Filter(ctx, request.Payload)
 		if err != nil {
-			s.Logger.Error("create request encounter error during filter: %s", err.Error())
+			s.Logger.Error("create request encounter error during filter.", log.Args{
+				"error": err,
+			})
 			return
 		}
 	}
 
 	err = s.Database.Insert(ctx, request.Payload)
 	if err != nil {
-		s.Logger.Error("resource [id=%s] failed to insert into persistence: %s", request.Payload.ID(), err.Error())
+		s.Logger.Error("failed to insert into persistence", log.Args{
+			"resourceId": request.Payload.ID(),
+			"error":      err,
+		})
 		return
 	}
-	s.Logger.Debug("resource [id=%s] inserted into persistence", request.Payload.ID())
+	s.Logger.Debug("inserted into persistence", log.Args{
+		"resourceId": request.Payload.ID(),
+	})
 
 	if s.Event != nil {
 		s.Event.ResourceCreated(ctx, request.Payload)

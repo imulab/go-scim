@@ -131,7 +131,10 @@ func (l *membershipListener) dumpErrorToLog(before *prop.Resource, after *prop.R
 			groupID = after.ID()
 		}
 	}
-	l.log.Error("failed to create group sync job [id=%s]: %s", groupID, err.Error())
+	l.log.Error("failed to create group sync job", log.Args{
+		"groupId": groupID,
+		"error":   err,
+	})
 }
 
 func (l *membershipListener) fillGroup(gs *prop.Resource, group *prop.Resource) error {

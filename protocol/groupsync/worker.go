@@ -216,7 +216,9 @@ func (w *worker) nextSync() *prop.Resource {
 }
 
 func (w *worker) sleep(seconds int) {
-	w.log.Info("sleeping for %d seconds before continue.", seconds)
+	w.log.Info("sleeping before continue.", log.Args{
+		"seconds": seconds,
+	})
 	timer := time.NewTimer(time.Duration(seconds) * time.Second)
 	<-timer.C
 }

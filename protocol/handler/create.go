@@ -17,13 +17,15 @@ type Create struct {
 }
 
 func (h *Create) Handle(request http.Request, response http.Response) {
-	h.Log.Info("request to create resource")
+	h.Log.Info("request to create resource", log.Args{})
 
 	var payload *prop.Resource
 	{
 		raw, err := request.Body()
 		if err != nil {
-			h.Log.Error("failed to read request body: %s", err.Error())
+			h.Log.Error("failed to read request body", log.Args{
+				"error": err,
+			})
 			WriteError(response, errors.Internal("failed to read request body"))
 			return
 		}
@@ -31,7 +33,9 @@ func (h *Create) Handle(request http.Request, response http.Response) {
 		payload = prop.NewResource(h.ResourceType)
 		err = json.Deserialize(raw, payload)
 		if err != nil {
-			h.Log.Error("failed to parse request body: %s", err.Error())
+			h.Log.Error("failed to parse request body", log.Args{
+				"error": err,
+			})
 			WriteError(response, err)
 			return
 		}

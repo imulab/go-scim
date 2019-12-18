@@ -14,7 +14,7 @@ type ServiceProviderConfig struct {
 }
 
 func (h *ServiceProviderConfig) Handle(_ http.Request, response http.Response) {
-	h.Log.Info("get service provider config")
+	h.Log.Info("get service provider config", log.Args{})
 
 	if len(h.cache) == 0 {
 		if raw, err := json.Marshal(h.SPC); err != nil {

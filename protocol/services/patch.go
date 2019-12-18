@@ -64,10 +64,11 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 		return nil, err
 	}
 
-	s.Logger.Debug("received patch request [id=%s]", request.ResourceID)
-
 	if err := request.Validate(); err != nil {
-		s.Logger.Error("patch request for [id=%s] is invalid: %s", request.ResourceID, err.Error())
+		s.Logger.Error("patch request is invalid", log.Args{
+			"resourceId": request.ResourceID,
+			"error":      err,
+		})
 		return nil, err
 	}
 
@@ -84,7 +85,10 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 	resource := ref.Clone()
 	for _, f := range s.PrePatchFilters {
 		if err := f.FilterRef(ctx, resource, ref); err != nil {
-			s.Logger.Error("patch request encounter error during filter for resource [id=%s]: %s", request.ResourceID, err.Error())
+			s.Logger.Error("patch request encounter error during filter for resource", log.Args{
+				"resourceId": request.ResourceID,
+				"error":      err,
+			})
 			return nil, err
 		}
 	}
@@ -112,7 +116,10 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 
 	for _, f := range s.PostPatchFilters {
 		if err := f.FilterRef(ctx, resource, ref); err != nil {
-			s.Logger.Error("patch request encounter error during filter for resource [id=%s]: %s", request.ResourceID, err.Error())
+			s.Logger.Error("patch request encounter error during filter for resource", log.Args{
+				"resourceId": request.ResourceID,
+				"error":      err,
+			})
 			return nil, err
 		}
 	}
@@ -121,10 +128,15 @@ func (s *PatchService) PatchResource(ctx context.Context, request *PatchRequest)
 	if resource.Version() != ref.Version() {
 		err = s.Database.Replace(ctx, resource)
 		if err != nil {
-			s.Logger.Error("resource [id=%s] failed to save into persistence: %s", request.ResourceID, err.Error())
+			s.Logger.Error("failed to save to persistence", log.Args{
+				"resourceId": request.ResourceID,
+				"error":      err,
+			})
 			return nil, err
 		}
-		s.Logger.Debug("resource [id=%s] saved in persistence", request.ResourceID)
+		s.Logger.Debug("saved in persistence", log.Args{
+			"resourceId": request.ResourceID,
+		})
 
 		if s.Event != nil {
 			s.Event.ResourceUpdated(ctx, resource, ref)

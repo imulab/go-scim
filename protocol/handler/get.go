@@ -24,7 +24,9 @@ func (h *Get) Handle(request http.Request, response http.Response) {
 	)
 	{
 		resourceIDParam = request.PathParam(h.ResourceIDPathParam)
-		h.Log.Info("request to get resource [id=%s]", resourceIDParam)
+		h.Log.Info("request to get resource.", log.Args{
+			"resourceId": resourceIDParam,
+		})
 		if len(resourceIDParam) == 0 {
 			WriteError(response, errors.InvalidRequest("missing resource id"))
 			return

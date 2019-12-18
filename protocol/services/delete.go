@@ -24,8 +24,6 @@ type (
 )
 
 func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteRequest) error {
-	s.Logger.Debug("received delete request [id=%s]", request.ResourceID)
-
 	resource, err := s.Database.Get(ctx, request.ResourceID, nil)
 	if err != nil {
 		return err
@@ -38,10 +36,15 @@ func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteReque
 
 	err = s.Database.Delete(ctx, request.ResourceID)
 	if err != nil {
-		s.Logger.Error("resource [id=%s] failed to delete from persistence: %s", request.ResourceID, err.Error())
+		s.Logger.Error("failed to delete from persistence", log.Args{
+			"resourceId": request.ResourceID,
+			"error":      err,
+		})
 		return err
 	}
-	s.Logger.Debug("resource [id=%s] deleted from persistence", request.ResourceID)
+	s.Logger.Debug("deleted from persistence", log.Args{
+		"resourceId": request.ResourceID,
+	})
 
 	if s.Event != nil {
 		s.Event.ResourceDeleted(ctx, resource)

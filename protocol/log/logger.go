@@ -3,13 +3,13 @@ package log
 // Service provider for logging.
 type Logger interface {
 	// Log message with INFO level.
-	Info(format string, args ...interface{})
+	Info(message string, args Args)
 	// Log message with DEBUG level.
-	Debug(format string, args ...interface{})
+	Debug(message string, args Args)
 	// Log message with ERROR level.
-	Error(format string, args ...interface{})
+	Error(message string, args Args)
 	// Log message with WARNING level.
-	Warning(format string, args ...interface{})
+	Warning(message string, args Args)
 	// Log message with FATAL level.
-	Fatal(format string, args ...interface{})
+	Fatal(message string, args Args)
 }

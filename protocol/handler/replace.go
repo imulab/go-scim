@@ -24,11 +24,16 @@ func (h *Replace) Handle(request http.Request, response http.Response) {
 	)
 	{
 		resourceIDParam = request.PathParam(h.ResourceIDPathParam)
-		h.Log.Info("request to replace resource [id=%s]", resourceIDParam)
+		h.Log.Info("request to replace resource", log.Args{
+			"resourceId": resourceIDParam,
+		})
 
 		raw, err := request.Body()
 		if err != nil {
-			h.Log.Error("failed to read request body for replacing resource [id=%s]: %s", resourceIDParam, err.Error())
+			h.Log.Error("failed to read request body for replacing resource", log.Args{
+				"resourceId": resourceIDParam,
+				"error": err,
+			})
 			WriteError(response, errors.Internal("failed to read request body"))
 			return
 		}
@@ -36,7 +41,10 @@ func (h *Replace) Handle(request http.Request, response http.Response) {
 		payload = prop.NewResource(h.ResourceType)
 		err = json.Deserialize(raw, payload)
 		if err != nil {
-			h.Log.Error("failed to parse request body for replacing resource [id=%s]: %s", resourceIDParam, err.Error())
+			h.Log.Error("failed to parse request body for replacing resource", log.Args{
+				"resourceId": resourceIDParam,
+				"error": err,
+			})
 			WriteError(response, err)
 			return
 		}

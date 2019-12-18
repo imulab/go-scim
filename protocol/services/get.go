@@ -25,11 +25,12 @@ type (
 )
 
 func (s *GetService) GetResource(ctx context.Context, request *GetRequest) (*GetResponse, error) {
-	s.Logger.Debug("received get request [id=%s]", request.ResourceID)
-
 	resource, err := s.Database.Get(ctx, request.ResourceID, request.Projection)
 	if err != nil {
-		s.Logger.Error("failed to get resource [id=%s] from persistence: %s", request.ResourceID, err.Error())
+		s.Logger.Error("failed to get resource from persistence", log.Args{
+			"resourceId": request.ResourceID,
+			"error": err,
+		})
 		return nil, err
 	}
 

@@ -33,8 +33,6 @@ type (
 )
 
 func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRequest) (*ReplaceResponse, error) {
-	s.Logger.Debug("received replace request [id=%s]", request.ResourceID)
-
 	ref, err := s.Database.Get(ctx, request.ResourceID, nil)
 	if err != nil {
 		return nil, err
@@ -47,7 +45,10 @@ func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRe
 
 	for _, f := range s.Filters {
 		if err := f.FilterRef(ctx, request.Payload, ref); err != nil {
-			s.Logger.Error("replace request encounter error during filter for resource [id=%s]: %s", request.ResourceID, err.Error())
+			s.Logger.Error("replace request encounter error during filter for resource", log.Args{
+				"resourceId": request.ResourceID,
+				"error": err,
+			})
 			return nil, err
 		}
 	}
@@ -56,10 +57,15 @@ func (s *ReplaceService) ReplaceResource(ctx context.Context, request *ReplaceRe
 	if request.Payload.Version() != ref.Version() {
 		err = s.Database.Replace(ctx, request.Payload)
 		if err != nil {
-			s.Logger.Error("resource [id=%s] failed to save into persistence: %s", request.ResourceID, err.Error())
+			s.Logger.Error("failed to save into persistence", log.Args{
+				"resourceId": request.ResourceID,
+				"error": err,
+			})
 			return nil, err
 		}
-		s.Logger.Debug("resource [id=%s] saved in persistence", request.ResourceID)
+		s.Logger.Debug("saved in persistence", log.Args{
+			"resourceId": request.ResourceID,
+		})
 
 		if s.Event != nil {
 			s.Event.ResourceUpdated(ctx, request.Payload, ref)

@@ -20,7 +20,9 @@ type Query struct {
 func (h *Query) Handle(request http.Request, response http.Response) {
 	qr, err := h.parseRequest(request)
 	if err != nil {
-		h.Log.Error("failed to parse query request: %s", err.Error())
+		h.Log.Error("failed to parse query request", log.Args{
+			"error": err,
+		})
 		WriteError(response, err)
 		return
 	}

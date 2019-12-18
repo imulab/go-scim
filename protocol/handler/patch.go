@@ -25,12 +25,18 @@ func (h *Patch) Handle(request http.Request, response http.Response) {
 
 		raw, err := request.Body()
 		if err != nil {
-			h.Log.Error("failed to read request body for patching resource [id=%s]: %s", payload.ResourceID, err.Error())
+			h.Log.Error("failed to read request body for patching resource", log.Args{
+				"resourceId": payload.ResourceID,
+				"error": err,
+			})
 			WriteError(response, errors.Internal("failed to read request body"))
 			return
 		}
 		if err := json.Unmarshal(raw, payload); err != nil {
-			h.Log.Error("failed to parse request body for patching resource [id=%s]: %s", payload.ResourceID, err.Error())
+			h.Log.Error("failed to parse request body for patching resource", log.Args{
+				"resourceId": payload.ResourceID,
+				"error": err,
+			})
 			WriteError(response, err)
 			return
 		}

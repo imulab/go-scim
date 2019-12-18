@@ -13,22 +13,22 @@ func Default() Logger {
 
 type defaultLogger struct{}
 
-func (d defaultLogger) Info(format string, args ...interface{}) {
-	log.Printf("[INFO] %s - "+format+"\n", append([]interface{}{time.Now().Format(time.RFC3339)}, args...))
+func (d defaultLogger) Info(message string, args Args) {
+	log.Printf("[INFO] %s - %s %s\n", time.Now().Format(time.RFC3339), message, args.String())
 }
 
-func (d defaultLogger) Debug(format string, args ...interface{}) {
-	log.Printf("[DEBUG] %s - "+format+"\n", append([]interface{}{time.Now().Format(time.RFC3339)}, args...))
+func (d defaultLogger) Debug(message string, args Args) {
+	log.Printf("[DEBUG] %s - %s %s\n", time.Now().Format(time.RFC3339), message, args.String())
 }
 
-func (d defaultLogger) Error(format string, args ...interface{}) {
-	log.Printf("[ERROR] %s - "+format+"\n", append([]interface{}{time.Now().Format(time.RFC3339)}, args...))
+func (d defaultLogger) Error(message string, args Args) {
+	log.Printf("[ERROR] %s - %s %s\n", time.Now().Format(time.RFC3339), message, args.String())
 }
 
-func (d defaultLogger) Warning(format string, args ...interface{}) {
-	log.Printf("[WARNING] %s - "+format+"\n", append([]interface{}{time.Now().Format(time.RFC3339)}, args...))
+func (d defaultLogger) Warning(message string, args Args) {
+	log.Printf("[WARNING] %s - %s %s\n", time.Now().Format(time.RFC3339), message, args.String())
 }
 
-func (d defaultLogger) Fatal(format string, args ...interface{}) {
-	log.Fatalf("[FATAL] %s - "+format+"\n", append([]interface{}{time.Now().Format(time.RFC3339)}, args...))
+func (d defaultLogger) Fatal(message string, args Args) {
+	log.Fatalf("[FATAL] %s - %s %s\n", time.Now().Format(time.RFC3339), message, args.String())
 }

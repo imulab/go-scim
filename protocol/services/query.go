@@ -76,7 +76,9 @@ func (s *QueryService) QueryResource(ctx context.Context, request *QueryRequest)
 
 	resp.Resources, err = s.Database.Query(ctx, request.Filter, request.Sort, request.Pagination, request.Projection)
 	if err != nil {
-		s.Logger.Error("failed to query resource: %s", err.Error())
+		s.Logger.Error("failed to query resource", log.Args{
+			"error": err,
+		})
 		return
 	}
 	resp.ItemsPerPage = len(resp.Resources)
