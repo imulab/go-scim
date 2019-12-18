@@ -157,24 +157,22 @@ func (m Modification) Validate() error {
 					return Error.InvalidParam("value of add op", "to be complex (for implicit path)", "non-complex")
 				}
 			}
-			patch.ToLowerCasePath()
 		case Replace:
 			if patch.Value == nil {
 				return Error.InvalidParam("value of replace op", "to be present", "nil")
 			} else if len(patch.Path) == 0 {
 				return Error.InvalidParam("path", "to be present", "empty")
 			}
-			patch.ToLowerCasePath()
 		case Remove:
 			if patch.Value != nil {
 				return Error.InvalidParam("value of remove op", "to be nil", "non-nil")
 			} else if len(patch.Path) == 0 {
 				return Error.InvalidParam("path", "to be present", "empty")
 			}
-			patch.ToLowerCasePath()
 		default:
 			return Error.InvalidParam("Op", "one of [add|remove|replace]", patch.Op)
 		}
+		patch.ToLowerCasePath()
 	}
 
 	return nil
