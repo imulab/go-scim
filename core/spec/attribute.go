@@ -225,6 +225,16 @@ func (attr *Attribute) SubAttributeForName(name string) *Attribute {
 	return nil
 }
 
+// Find the sub attribute that matches the criteria, or nil
+func (attr *Attribute) FindSubAttribute(criteria func(subAttr *Attribute) bool) *Attribute {
+	for _, eachSubAttribute := range attr.subAttributes {
+		if criteria(eachSubAttribute) {
+			return eachSubAttribute
+		}
+	}
+	return nil
+}
+
 // Return true if one or more of this attribute's sub attributes is marked as identity
 func (attr *Attribute) HasIdentitySubAttributes() bool {
 	for _, subAttr := range attr.subAttributes {
