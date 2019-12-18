@@ -92,4 +92,3 @@ func (s *MongoSerializerTestSuite) mustSchema(filePath string) *spec.Schema {
 
 	return sch
 }
-
