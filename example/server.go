@@ -301,16 +301,16 @@ type mongoRootQueryRepository struct {
 	repos []scim.Repository
 }
 
-func (m *mongoRootQueryRepository) Create(provider scim.DataProvider) error { panic("not implemented") }
-func (m *mongoRootQueryRepository) Get(id, version string) (scim.DataProvider, error) {
+func (m *mongoRootQueryRepository) Create(provider scim.DataProvider, ctx context.Context) error { panic("not implemented") }
+func (m *mongoRootQueryRepository) Get(id, version string, ctx context.Context) (scim.DataProvider, error) {
 	panic("not implemented")
 }
-func (m *mongoRootQueryRepository) GetAll() ([]scim.Complex, error) { panic("not implemented") }
-func (m *mongoRootQueryRepository) Count(query string) (int, error) { panic("not implemented") }
-func (m *mongoRootQueryRepository) Update(id, version string, provider scim.DataProvider) error {
+func (m *mongoRootQueryRepository) GetAll(context.Context) ([]scim.Complex, error) { panic("not implemented") }
+func (m *mongoRootQueryRepository) Count(query string, ctx context.Context) (int, error) { panic("not implemented") }
+func (m *mongoRootQueryRepository) Update(id, version string, provider scim.DataProvider, ctx context.Context) error {
 	panic("not implemented")
 }
-func (m *mongoRootQueryRepository) Delete(id, version string) error { panic("not implemented") }
-func (m *mongoRootQueryRepository) Search(payload scim.SearchRequest) (*scim.ListResponse, error) {
-	return scim.CompositeSearchFunc(m.repos...)(payload)
+func (m *mongoRootQueryRepository) Delete(id, version string, ctx context.Context) error { panic("not implemented") }
+func (m *mongoRootQueryRepository) Search(payload scim.SearchRequest, ctx context.Context) (*scim.ListResponse, error) {
+	return scim.CompositeSearchFunc(m.repos...)(payload, ctx)
 }

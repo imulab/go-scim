@@ -30,7 +30,7 @@ func CreateGroupHandler(r shared.WebRequest, server ScimServer, ctx context.Cont
 	err = server.AssignReadOnlyValue(resource, ctx)
 	ErrorCheck(err)
 
-	err = repo.Create(resource)
+	err = repo.Create(resource, ctx)
 	ErrorCheck(err)
 
 	json, err := server.MarshalJSON(resource, sch, []string{}, []string{})
@@ -59,7 +59,7 @@ func PatchGroupHandler(r shared.WebRequest, server ScimServer, ctx context.Conte
 	id, version := ParseIdAndVersion(r)
 	ctx = context.WithValue(ctx, shared.ResourceId{}, id)
 
-	resource, err := repo.Get(id, version)
+	resource, err := repo.Get(id, version, ctx)
 	ErrorCheck(err)
 
 	mod, err := ParseModification(r)
@@ -72,7 +72,7 @@ func PatchGroupHandler(r shared.WebRequest, server ScimServer, ctx context.Conte
 		ErrorCheck(err)
 	}
 
-	reference, err := repo.Get(id, version)
+	reference, err := repo.Get(id, version, ctx)
 	ErrorCheck(err)
 
 	err = server.ValidateType(resource.(*shared.Resource), sch, ctx)
@@ -93,7 +93,7 @@ func PatchGroupHandler(r shared.WebRequest, server ScimServer, ctx context.Conte
 	err = server.AssignReadOnlyValue(resource.(*shared.Resource), ctx)
 	ErrorCheck(err)
 
-	err = repo.Update(id, version, resource)
+	err = repo.Update(id, version, resource, ctx)
 	ErrorCheck(err)
 
 	json, err := server.MarshalJSON(resource, sch, []string{}, []string{})
@@ -124,7 +124,7 @@ func ReplaceGroupHandler(r shared.WebRequest, server ScimServer, ctx context.Con
 
 	id, version := ParseIdAndVersion(r)
 	ctx = context.WithValue(ctx, shared.ResourceId{}, id)
-	reference, err := repo.Get(id, version)
+	reference, err := repo.Get(id, version, ctx)
 	ErrorCheck(err)
 
 	err = server.ValidateType(resource, sch, ctx)
@@ -145,7 +145,7 @@ func ReplaceGroupHandler(r shared.WebRequest, server ScimServer, ctx context.Con
 	err = server.AssignReadOnlyValue(resource, ctx)
 	ErrorCheck(err)
 
-	err = repo.Update(id, version, resource)
+	err = repo.Update(id, version, resource, ctx)
 	ErrorCheck(err)
 
 	json, err := server.MarshalJSON(resource, sch, []string{}, []string{})
@@ -179,7 +179,7 @@ func QueryGroupHandler(r shared.WebRequest, server ScimServer, ctx context.Conte
 	ErrorCheck(err)
 
 	repo := server.Repository(shared.GroupResourceType)
-	lr, err := repo.Search(sr)
+	lr, err := repo.Search(sr, ctx)
 	ErrorCheck(err)
 
 	json, err := server.MarshalJSON(lr, sch, attributes, excludedAttributes)
@@ -197,7 +197,7 @@ func DeleteGroupByIdHandler(r shared.WebRequest, server ScimServer, ctx context.
 	id, version := ParseIdAndVersion(r)
 	repo := server.Repository(shared.GroupResourceType)
 
-	err := repo.Delete(id, version)
+	err := repo.Delete(id, version, ctx)
 	ErrorCheck(err)
 
 	ri.Status(http.StatusNoContent)
@@ -211,9 +211,7 @@ func GetGroupByIdHandler(r shared.WebRequest, server ScimServer, ctx context.Con
 	id, version := ParseIdAndVersion(r)
 
 	if len(version) > 0 {
-		count, err := server.Repository(shared.GroupResourceType).Count(
-			fmt.Sprintf("id eq \"%s\" and meta.version eq \"%s\"", id, version),
-		)
+		count, err := server.Repository(shared.GroupResourceType).Count(fmt.Sprintf("id eq \"%s\" and meta.version eq \"%s\"", id, version), ctx, )
 		if err == nil && count > 0 {
 			ri.Status(http.StatusNotModified)
 			return
@@ -222,7 +220,7 @@ func GetGroupByIdHandler(r shared.WebRequest, server ScimServer, ctx context.Con
 
 	attributes, excludedAttributes := ParseInclusionAndExclusionAttributes(r)
 
-	dp, err := server.Repository(shared.GroupResourceType).Get(id, version)
+	dp, err := server.Repository(shared.GroupResourceType).Get(id, version, ctx)
 	ErrorCheck(err)
 	location := dp.GetData()["meta"].(map[string]interface{})["location"].(string)
 

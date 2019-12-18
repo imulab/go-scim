@@ -31,10 +31,7 @@ type ReadOnlyAssignment interface {
 type idAssignment struct{}
 
 func (ro *idAssignment) AssignValue(r *Resource, ctx context.Context) error {
-	uuid, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
+	uuid := uuid.NewV4()
 	r.Complex["id"] = uuid.String()
 	return nil
 }
@@ -115,7 +112,7 @@ func (ro *groupAssignment) AssignValue(r *Resource, ctx context.Context) error {
 
 	for memberIdsToSearch.Size() > 0 {
 		id := memberIdsToSearch.Poll().(string)
-		groups, err := ro.searchGroups(id)
+		groups, err := ro.searchGroups(id, ctx)
 		if err != nil {
 			return err
 		}
@@ -138,12 +135,12 @@ func (ro *groupAssignment) AssignValue(r *Resource, ctx context.Context) error {
 	return nil
 }
 
-func (ro *groupAssignment) searchGroups(memberId string) ([]DataProvider, error) {
+func (ro *groupAssignment) searchGroups(memberId string, ctx context.Context) ([]DataProvider, error) {
 	list, err := ro.groupRepo.Search(SearchRequest{
 		Filter:     fmt.Sprintf("members.value eq \"%s\"", memberId),
 		Count:      math.MaxInt32,
 		StartIndex: 1,
-	})
+	}, ctx)
 	if err != nil {
 		return nil, Error.Text("Failed to calculate group: %s", err.Error())
 	} else {

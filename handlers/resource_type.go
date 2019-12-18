@@ -10,9 +10,9 @@ func GetAllResourceTypeHandler(r shared.WebRequest, server ScimServer, ctx conte
 	ri = newResponse()
 
 	repo := server.Repository(shared.ResourceTypeResourceType)
-	userResourceType, err := repo.Get(shared.UserResourceType, "")
+	userResourceType, err := repo.Get(shared.UserResourceType, "", ctx)
 	ErrorCheck(err)
-	groupResourceType, err := repo.Get(shared.GroupResourceType, "")
+	groupResourceType, err := repo.Get(shared.GroupResourceType, "", ctx)
 	ErrorCheck(err)
 
 	jsonBytes, err := server.MarshalJSON([]interface{}{

@@ -10,7 +10,7 @@ func GetServiceProviderConfigHandler(r shared.WebRequest, server ScimServer, ctx
 	ri = newResponse()
 
 	repo := server.Repository(shared.ServiceProviderConfigResourceType)
-	spConfig, err := repo.Get("", "")
+	spConfig, err := repo.Get("", "", ctx)
 	ErrorCheck(err)
 	jsonBytes, err := server.MarshalJSON(spConfig.GetData(), nil, nil, nil)
 	ErrorCheck(err)

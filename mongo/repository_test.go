@@ -56,7 +56,7 @@ func TestRepository_Create(t *testing.T) {
 	require.Nil(t, err)
 
 	repo := getTestRepository(sch)
-	repo.Create(r)
+	repo.Create(r, ctx)
 
 	count, err := testSession.Copy().DB(dbName).C(collectionName).Count()
 	assert.Nil(t, err)
@@ -119,7 +119,7 @@ func TestRepository_Get(t *testing.T) {
 			},
 		},
 	} {
-		test.assertion(repo.Get(test.id, test.version))
+		test.assertion(repo.Get(test.id, test.version, ctx))
 	}
 }
 
@@ -134,12 +134,12 @@ func TestRepository_Count(t *testing.T) {
 
 	repo := getTestRepository(sch)
 
-	count, err := repo.Count("id pr")
+	count, err := repo.Count("id pr", ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, count)
 
 	testSession.Copy().DB(dbName).C(collectionName).Insert(r.Complex)
-	count, err = repo.Count("id pr")
+	count, err = repo.Count("id pr", ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, count)
 }
@@ -159,9 +159,9 @@ func TestRepository_Update(t *testing.T) {
 
 	r.Complex["userName"] = "foo"
 	version := r.GetData()["meta"].(map[string]interface{})["version"].(string)
-	repo.Update(r.GetId(), version, r)
+	repo.Update(r.GetId(), version, r, ctx)
 
-	r0, err := repo.Get(r.GetId(), "")
+	r0, err := repo.Get(r.GetId(), "", ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, r.GetId(), r0.GetId())
 	assert.Equal(t, "foo", r0.GetData()["userName"])
@@ -177,12 +177,12 @@ func TestRepository_Delete(t *testing.T) {
 	require.Nil(t, err)
 
 	repo := getTestRepository(sch)
-	err = repo.Delete(r.GetId(), "")
+	err = repo.Delete(r.GetId(), "", ctx)
 	assert.NotNil(t, err)
 	assert.IsType(t, &ResourceNotFoundError{}, err)
 
 	testSession.Copy().DB(dbName).C(collectionName).Insert(r.Complex)
-	err = repo.Delete(r.GetId(), "")
+	err = repo.Delete(r.GetId(), "", ctx)
 	assert.Nil(t, err)
 
 	count, err := testSession.Copy().DB(dbName).C(collectionName).Count()
@@ -243,7 +243,7 @@ func TestRepository_Search(t *testing.T) {
 			},
 		},
 	} {
-		test.assertion(repo.Search(test.payload))
+		test.assertion(repo.Search(test.payload, ctx))
 	}
 }
 

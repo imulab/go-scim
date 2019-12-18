@@ -1,24 +1,26 @@
 package shared
 
+import "context"
+
 type DataProvider interface {
 	GetId() string
 	GetData() Complex
 }
 
 type Repository interface {
-	Create(provider DataProvider) error
+	Create(provider DataProvider, ctx context.Context) error
 
-	Get(id, version string) (DataProvider, error)
+	Get(id, version string, ctx context.Context) (DataProvider, error)
 
-	GetAll() ([]Complex, error)
+	GetAll(ctx context.Context) ([]Complex, error)
 
-	Count(query string) (int, error)
+	Count(query string, ctx context.Context) (int, error)
 
-	Update(id, version string, provider DataProvider) error
+	Update(id, version string, provider DataProvider, ctx context.Context) error
 
-	Delete(id, version string) error
+	Delete(id, version string, ctx context.Context) error
 
-	Search(payload SearchRequest) (*ListResponse, error)
+	Search(payload SearchRequest, ctx context.Context) (*ListResponse, error)
 }
 
 // An simple in memory database fit for test use and read only production use
@@ -30,12 +32,12 @@ type mapRepository struct {
 	data map[string]DataProvider
 }
 
-func (r *mapRepository) Create(provider DataProvider) error {
+func (r *mapRepository) Create(provider DataProvider, ctx context.Context) error {
 	r.data[provider.GetId()] = provider
 	return nil
 }
 
-func (r *mapRepository) Get(id, version string) (DataProvider, error) {
+func (r *mapRepository) Get(id, version string, ctx context.Context) (DataProvider, error) {
 	if dp, ok := r.data[id]; !ok {
 		return nil, Error.ResourceNotFound(id, version)
 	} else {
@@ -43,7 +45,7 @@ func (r *mapRepository) Get(id, version string) (DataProvider, error) {
 	}
 }
 
-func (r *mapRepository) GetAll() ([]Complex, error) {
+func (r *mapRepository) GetAll(context.Context) ([]Complex, error) {
 	all := make([]Complex, 0)
 	for _, v := range r.data {
 		all = append(all, v.GetData())
@@ -51,11 +53,11 @@ func (r *mapRepository) GetAll() ([]Complex, error) {
 	return all, nil
 }
 
-func (r *mapRepository) Count(query string) (int, error) {
+func (r *mapRepository) Count(query string, ctx context.Context) (int, error) {
 	return 0, Error.Text("not implemented")
 }
 
-func (r *mapRepository) Update(id, version string, provider DataProvider) error {
+func (r *mapRepository) Update(id, version string, provider DataProvider, ctx context.Context) error {
 	if _, ok := r.data[id]; !ok {
 		return Error.ResourceNotFound(id, version)
 	} else {
@@ -64,7 +66,7 @@ func (r *mapRepository) Update(id, version string, provider DataProvider) error 
 	}
 }
 
-func (r *mapRepository) Delete(id, version string) error {
+func (r *mapRepository) Delete(id, version string, ctx context.Context) error {
 	if _, ok := r.data[id]; !ok {
 		return Error.ResourceNotFound(id, version)
 	} else {
@@ -73,7 +75,7 @@ func (r *mapRepository) Delete(id, version string) error {
 	}
 }
 
-func (r *mapRepository) Search(payload SearchRequest) (*ListResponse, error) {
+func (r *mapRepository) Search(payload SearchRequest, ctx context.Context) (*ListResponse, error) {
 	return nil, Error.Text("not implemented")
 }
 
@@ -90,8 +92,8 @@ func NewMapRepository(initialData map[string]DataProvider) Repository {
 // several repositories, useful when implementing root query functions
 func CompositeSearchFunc(
 	repositories ...Repository,
-) func(payload SearchRequest) (*ListResponse, error) {
-	return func(payload SearchRequest) (*ListResponse, error) {
+) func(payload SearchRequest, ctx context.Context) (*ListResponse, error) {
+	return func(payload SearchRequest, ctx context.Context) (*ListResponse, error) {
 		// prepare plans
 		skipQuota, limitQuota := 0, 0
 		grandListResponse := &ListResponse{
@@ -121,7 +123,7 @@ func CompositeSearchFunc(
 			plans = append(plans, &queryExecutionPlan{repo: n})
 		}
 		for _, plan := range plans {
-			count, err := plan.repo.Count(payload.Filter)
+			count, err := plan.repo.Count(payload.Filter, ctx)
 			if err != nil {
 				plan.skipAll = true
 			} else {
@@ -198,7 +200,7 @@ func CompositeSearchFunc(
 				sr.Count = 0
 			}
 
-			listResp, err := plan.repo.Search(sr)
+			listResp, err := plan.repo.Search(sr, ctx)
 			if err != nil {
 				return nil, err
 			}

@@ -54,13 +54,13 @@ func TestValidateUniqueness(t *testing.T) {
 // If the query contains "foo", returns 1, else
 type mockRepository struct{}
 
-func (r *mockRepository) Create(provider DataProvider) error                     { return nil }
-func (r *mockRepository) Get(id, version string) (DataProvider, error)           { return nil, nil }
-func (r *mockRepository) GetAll() ([]Complex, error)                             { return nil, nil }
-func (r *mockRepository) Update(id, version string, provider DataProvider) error { return nil }
-func (r *mockRepository) Delete(id, version string) error                        { return nil }
-func (r *mockRepository) Search(payload SearchRequest) (*ListResponse, error)    { return nil, nil }
-func (r *mockRepository) Count(query string) (int, error) {
+func (r *mockRepository) Create(provider DataProvider, ctx context.Context) error { return nil }
+func (r *mockRepository) Get(id, version string, ctx context.Context) (DataProvider, error) { return nil, nil }
+func (r *mockRepository) GetAll(context.Context) ([]Complex, error)               { return nil, nil }
+func (r *mockRepository) Update(id, version string, provider DataProvider, ctx context.Context) error { return nil }
+func (r *mockRepository) Delete(id, version string, ctx context.Context) error    { return nil }
+func (r *mockRepository) Search(payload SearchRequest, ctx context.Context) (*ListResponse, error) { return nil, nil }
+func (r *mockRepository) Count(query string, ctx context.Context) (int, error) {
 	if strings.Contains(query, "foo") {
 		return 1, nil
 	} else {
