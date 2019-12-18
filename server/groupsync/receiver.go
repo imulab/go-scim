@@ -68,7 +68,9 @@ func (r *receiver) syncOrExpand(msg *message) {
 		return
 	}
 
-	r.logger.Debug("member %s is neither group nor user", msg.MemberID)
+	r.logger.Debug("member is neither group nor user", log.Args{
+		"member": msg.MemberID,
+	})
 }
 
 func (r *receiver) syncUser(user *prop.Resource, msg *message) {
@@ -80,7 +82,9 @@ func (r *receiver) syncUser(user *prop.Resource, msg *message) {
 		r.logErrorAndReturn(err, msg)
 		return
 	}
-	r.logger.Debug("synced group for user resource [id=%s]")
+	r.logger.Debug("synced group for user resource", log.Args{
+		"user": msg.MemberID,
+	})
 }
 
 func (r *receiver) expandGroup(group *prop.Resource, msg *message) {
@@ -97,23 +101,29 @@ func (r *receiver) expandGroup(group *prop.Resource, msg *message) {
 			}
 			return nil
 		})
-		r.logger.Debug("added more sync tasks for group resource [id=%s]")
+		r.logger.Debug("added more sync tasks for group resource", log.Args{
+			"group": msg.MemberID,
+		})
 	}
 }
 
 func (r *receiver) logErrorAndReturn(err error, msg *message) {
-	r.logger.Error(err.Error())
+	r.logger.Error("sync encountered error", log.Args{
+		"error": err,
+	})
 	if msg.Trial >= r.maxAttempt {
-		r.logger.Error("sync task %s exceeded max attempt, will discard message", msg.String())
+		r.logger.Debug("exceeded max attempt, will discard message", log.Args{})
 	} else {
-		r.logger.Error("sync task %s encountered error, will return message", msg.String())
+		r.logger.Debug("will return message", log.Args{})
 		r.returnMessage(msg)
 	}
 }
 
 func (r *receiver) logErrorAndDiscard(err error, msg *message) {
-	r.logger.Error(err.Error())
-	r.logger.Error("sync task %s encountered error, will discard message", msg.String())
+	r.logger.Error("sync encountered error", log.Args{
+		"error": err,
+	})
+	r.logger.Debug("will discard message", log.Args{})
 }
 
 func (r *receiver) returnMessage(msg *message) {

@@ -16,15 +16,30 @@ type message struct {
 }
 
 func (m *message) logSent(logger log.Logger) {
-	logger.Info("sent %s message for group [id=%s] and member [id=%s]", subject, m.GroupID, m.MemberID)
+	logger.Info("sent group sync message", log.Args{
+		"subject": subject,
+		"group":   m.GroupID,
+		"member":  m.MemberID,
+		"trail":   m.Trial,
+	})
 }
 
 func (m *message) logReturned(logger log.Logger) {
-	logger.Info("returned %s message for group [id=%s] and member [id=%s]", subject, m.GroupID, m.MemberID)
+	logger.Info("returned group sync message", log.Args{
+		"subject": subject,
+		"group":   m.GroupID,
+		"member":  m.MemberID,
+		"trail":   m.Trial,
+	})
 }
 
 func (m *message) logFailed(logger log.Logger) {
-	logger.Error("failed to send %s message for group [id=%s] and member [id=%s]", subject, m.GroupID, m.MemberID)
+	logger.Info("failed to send group sync message", log.Args{
+		"subject": subject,
+		"group":   m.GroupID,
+		"member":  m.MemberID,
+		"trail":   m.Trial,
+	})
 }
 
 func (m *message) String() string {

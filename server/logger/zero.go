@@ -16,22 +16,22 @@ type zeroLogger struct {
 	logger 	zerolog.Logger
 }
 
-func (l *zeroLogger) Info(format string, args ...interface{}) {
-	l.logger.Info().Msgf(format, args...)
+func (l *zeroLogger) Info(message string, args log.Args) {
+	l.logger.Info().Fields(args).Msg(message)
 }
 
-func (l *zeroLogger) Debug(format string, args ...interface{}) {
-	l.logger.Debug().Msgf(format, args...)
+func (l *zeroLogger) Debug(message string, args log.Args) {
+	l.logger.Debug().Fields(args).Msg(message)
 }
 
-func (l *zeroLogger) Error(format string, args ...interface{}) {
-	l.logger.Error().Msgf(format, args...)
+func (l *zeroLogger) Error(message string, args log.Args) {
+	l.logger.Error().Fields(args).Msg(message)
 }
 
-func (l *zeroLogger) Warning(format string, args ...interface{}) {
-	l.logger.Warn().Msgf(format, args...)
+func (l *zeroLogger) Warning(message string, args log.Args) {
+	l.logger.Warn().Fields(args).Msg(message)
 }
 
-func (l *zeroLogger) Fatal(format string, args ...interface{}) {
-	l.logger.Fatal().Msgf(format, args...)
+func (l *zeroLogger) Fatal(message string, args log.Args) {
+	l.logger.Fatal().Fields(args).Msg(message)
 }

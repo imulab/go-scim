@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/imulab/go-scim/protocol/log"
 	"github.com/julienschmidt/httprouter"
 	"github.com/urfave/cli/v2"
 	"net/http"
@@ -87,7 +88,7 @@ func Command() *cli.Command {
 				if err := appCtx.initialize(args); err != nil {
 					return err
 				}
-				appCtx.logger.Info("application appContext initialized")
+				appCtx.logger.Info("application appContext initialized", log.Args{})
 			}
 
 			var router = httprouter.New()
@@ -109,7 +110,9 @@ func Command() *cli.Command {
 				router.DELETE("/Groups/:id", routeHandler(appCtx.groupDeleteHandler.Handle))
 			}
 
-			appCtx.logger.Info("listening on port %d", args.httpPort)
+			appCtx.logger.Info("listening for incoming requests", log.Args{
+				"port": args.httpPort,
+			})
 			return http.ListenAndServe(fmt.Sprintf(":%d", args.httpPort), router)
 		},
 	}
