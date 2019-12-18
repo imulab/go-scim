@@ -5,6 +5,7 @@ import (
 	"github.com/imulab/go-scim/core/expr"
 	"github.com/imulab/go-scim/core/spec"
 	"github.com/imulab/go-scim/protocol/db"
+	"github.com/imulab/go-scim/protocol/event"
 	"github.com/imulab/go-scim/protocol/handler"
 	"github.com/imulab/go-scim/protocol/log"
 	"github.com/imulab/go-scim/protocol/services"
@@ -239,7 +240,7 @@ func (c *appContext) loadGroupServices() error {
 			filter.Meta(),
 			filter.Validation(c.groupDatabase),
 		},
-		Event: syncSender,
+		Event: event.Of(syncSender),
 	}
 	c.groupReplaceService = &services.ReplaceService{
 		Logger:                c.logger,
@@ -251,7 +252,7 @@ func (c *appContext) loadGroupServices() error {
 			filter.Validation(c.groupDatabase),
 			filter.Meta(),
 		},
-		Event: syncSender,
+		Event: event.Of(syncSender),
 	}
 	c.groupPatchService = &services.PatchService{
 		Logger:                c.logger,
@@ -263,7 +264,7 @@ func (c *appContext) loadGroupServices() error {
 			filter.Validation(c.groupDatabase),
 			filter.Meta(),
 		},
-		Event: syncSender,
+		Event: event.Of(syncSender),
 	}
 	c.groupDeleteService = &services.DeleteService{
 		Logger:                c.logger,
