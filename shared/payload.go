@@ -122,21 +122,6 @@ type Patch struct {
 	Value interface{} `json:"value"`
 }
 
-func (p Patch) ToLowerCaseOp() {
-	p.Op = strings.ToLower(p.Op)
-}
-
-func (p Patch) ToLowerCasePath() {
-	if !strings.HasPrefix(p.Path, "/") {
-		var sb strings.Builder
-
-		sb.WriteRune('/')
-		sb.WriteString(p.Path)
-
-		p.Path = sb.String()
-	}
-}
-
 func (m Modification) Validate() error {
 	if len(m.Schemas) != 1 && m.Schemas[0] != PatchOpUrn {
 		return Error.InvalidParam("schemas", PatchOpUrn, fmt.Sprintf("%+v", m.Schemas))
@@ -146,33 +131,36 @@ func (m Modification) Validate() error {
 		return Error.InvalidParam("Operations", "at least one patch operation", "none")
 	}
 
-	for _, patch := range m.Ops {
-		patch.ToLowerCaseOp()
-		switch patch.Op {
+	for i := 0; i < len(m.Ops); i++ {
+		m.Ops[i].Op = strings.ToLower(m.Ops[i].Op)
+		switch m.Ops[i].Op {
 		case Add:
-			if patch.Value == nil {
+			if m.Ops[i].Value == nil {
 				return Error.InvalidParam("value of add op", "to be present", "nil")
-			} else if len(patch.Path) == 0 {
-				if _, ok := patch.Value.(map[string]interface{}); !ok {
+			} else if len(m.Ops[i].Path) == 0 {
+				if _, ok := m.Ops[i].Value.(map[string]interface{}); !ok {
 					return Error.InvalidParam("value of add op", "to be complex (for implicit path)", "non-complex")
 				}
 			}
 		case Replace:
-			if patch.Value == nil {
+			if m.Ops[i].Value == nil {
 				return Error.InvalidParam("value of replace op", "to be present", "nil")
-			} else if len(patch.Path) == 0 {
+			} else if len(m.Ops[i].Path) == 0 {
 				return Error.InvalidParam("path", "to be present", "empty")
 			}
 		case Remove:
-			if patch.Value != nil {
+			if m.Ops[i].Value != nil {
 				return Error.InvalidParam("value of remove op", "to be nil", "non-nil")
-			} else if len(patch.Path) == 0 {
+			} else if len(m.Ops[i].Path) == 0 {
 				return Error.InvalidParam("path", "to be present", "empty")
 			}
 		default:
-			return Error.InvalidParam("Op", "one of [add|remove|replace]", patch.Op)
+			return Error.InvalidParam("Op", "one of [add|remove|replace]", m.Ops[i].Op)
 		}
-		patch.ToLowerCasePath()
+		m.Ops[i].Path = strings.ToLower(m.Ops[i].Path)
+		if strings.HasPrefix(m.Ops[i].Path, "/") {
+			m.Ops[i].Path = m.Ops[i].Path[1:]
+		}
 	}
 
 	return nil
