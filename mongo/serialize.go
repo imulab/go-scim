@@ -211,8 +211,10 @@ func (s *serializer) addName(kind byte, attr *spec.Attribute) {
 		case mArray:
 			name = strconv.Itoa(s.current().index)
 		case mObject, mTop:
-			// todo introduce mongo db metadata, use name for now
 			name = attr.Name()
+			if md, ok := metadataHub[attr.ID()]; ok {
+				name = md.MongoName
+			}
 		}
 	}
 
