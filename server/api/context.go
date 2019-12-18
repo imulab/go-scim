@@ -11,18 +11,17 @@ import (
 	"github.com/imulab/go-scim/protocol/services/filter"
 	"github.com/imulab/go-scim/server/groupsync"
 	"github.com/imulab/go-scim/server/logger"
-	"github.com/nats-io/nats.go"
+	"github.com/streadway/amqp"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 type appContext struct {
 	serviceProviderConfig        *spec.ServiceProviderConfig
 	serviceProviderConfigHandler *handler.ServiceProviderConfig
-	natConn                      *nats.Conn
+	rabbitMqCh                   *amqp.Channel
 	logger                       log.Logger
 
 	// user related
@@ -70,7 +69,7 @@ func (c *appContext) initialize(args *args) error {
 	if err := c.loadSchemasInFolder(args.schemasFolderPath); err != nil {
 		return err
 	}
-	if err := c.loadNatsConnection(args); err != nil {
+	if err := c.loadRabbitMqChannel(args); err != nil {
 		return err
 	}
 
@@ -227,7 +226,7 @@ func (c *appContext) loadUserServices() error {
 }
 
 func (c *appContext) loadGroupServices() error {
-	syncSender, _, err := groupsync.Sender(c.natConn, c.logger)
+	syncSender, err := groupsync.Sender(c.rabbitMqCh, c.logger)
 	if err != nil {
 		return err
 	}
@@ -270,7 +269,7 @@ func (c *appContext) loadGroupServices() error {
 		Logger:                c.logger,
 		Database:              c.groupDatabase,
 		ServiceProviderConfig: c.serviceProviderConfig,
-		Event: syncSender,
+		Event:                 syncSender,
 	}
 	c.groupGetService = &services.GetService{
 		Logger:   c.logger,
@@ -350,8 +349,16 @@ func (c *appContext) loadServiceProviderConfig(path string, dest *spec.ServicePr
 	return nil
 }
 
-func (c *appContext) loadNatsConnection(args *args) (err error) {
-	c.natConn, err = nats.Connect(args.natsServers, nats.Timeout(10*time.Second), nats.PingInterval(10*time.Second))
+func (c *appContext) loadRabbitMqChannel(args *args) (err error) {
+	conn, err := amqp.Dial(args.rabbitMqAddress)
+	if err != nil {
+		return err
+	}
+	ch, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	c.rabbitMqCh = ch
 	return
 }
 

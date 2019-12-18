@@ -15,7 +15,7 @@ type args struct {
 	schemasFolderPath         string
 	memoryDB                  bool
 	httpPort                  int
-	natsServers               string
+	rabbitMqAddress               string
 }
 
 func Command() *cli.Command {
@@ -64,13 +64,12 @@ func Command() *cli.Command {
 				Destination: &args.memoryDB,
 			},
 			&cli.StringFlag{
-				Name:        "nats-url",
-				Aliases:     []string{"n"},
-				Usage:       "comma delimited URLs to the NATS servers",
-				EnvVars:     []string{"NATS_SERVERS"},
+				Name:        "rabbit-address",
+				Usage:       "AMQP connection string to RabbitMQ",
+				EnvVars:     []string{"RABBIT_ADDRESS"},
 				Required:    true,
-				Value:       "nats://localhost:4222",
-				Destination: &args.natsServers,
+				Value:       "amqp://guest:guest@localhost:5672/",
+				Destination: &args.rabbitMqAddress,
 			},
 			&cli.IntFlag{
 				Name:        "port",

@@ -2,67 +2,90 @@ package groupsync
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/imulab/go-scim/core/prop"
 	"github.com/imulab/go-scim/protocol/event"
 	"github.com/imulab/go-scim/protocol/groupsync"
 	"github.com/imulab/go-scim/protocol/log"
-	"github.com/nats-io/nats.go"
+	uuid "github.com/satori/go.uuid"
+	"github.com/streadway/amqp"
+	"time"
 )
 
-func Sender(nc *nats.Conn, logger log.Logger) (pub event.Publisher, closer func(), err error) {
-	ec, err := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
-	if err != nil {
-		return
+// Create a new sender that listens to membership changes and publishes group sync messages.
+func Sender(ch *amqp.Channel, logger log.Logger) (event.Publisher, error) {
+	if err := declareRabbitQueue(ch, logger); err != nil {
+		return nil, err
 	}
-
-	pub = &sender{
-		ec:     ec,
+	return &sender{
+		ch:     ch,
 		logger: logger,
-	}
-	closer = func() {
-		ec.Close()
-	}
-	return
+	}, nil
 }
 
 type sender struct {
-	ec     *nats.EncodedConn
+	ch     *amqp.Channel
 	logger log.Logger
 }
 
-func (l *sender) ResourceCreated(_ context.Context, created *prop.Resource) {
-	go l.notify(created, groupsync.Compare(nil, created))
+func (s *sender) ResourceCreated(ctx context.Context, created *prop.Resource) {
+	go s.notify(created, groupsync.Compare(nil, created))
 }
 
-func (l *sender) ResourceUpdated(_ context.Context, updated *prop.Resource, original *prop.Resource) {
-	go l.notify(updated, groupsync.Compare(original, updated))
+func (s *sender) ResourceUpdated(ctx context.Context, updated *prop.Resource, original *prop.Resource) {
+	go s.notify(updated, groupsync.Compare(original, updated))
 }
 
-func (l *sender) ResourceDeleted(_ context.Context, deleted *prop.Resource) {
-	go l.notify(deleted, groupsync.Compare(deleted, nil))
+func (s *sender) ResourceDeleted(ctx context.Context, deleted *prop.Resource) {
+	go s.notify(deleted, groupsync.Compare(deleted, nil))
 }
 
-func (l *sender) notify(group *prop.Resource, diff *groupsync.Diff) {
+func (s *sender) notify(group *prop.Resource, diff *groupsync.Diff) {
 	if diff.CountJoined()+diff.CountLeft() == 0 {
 		return
 	}
-	groupId := group.ID()
-	diff.ForEachLeft(func(id string) {
-		l.sendMessage(groupId, id)
-	})
 	diff.ForEachJoined(func(id string) {
-		l.sendMessage(groupId, id)
+		s.submitMessage(group, id)
+	})
+	diff.ForEachLeft(func(id string) {
+		s.submitMessage(group, id)
 	})
 }
 
-func (l *sender) sendMessage(groupId string, memberId string) {
+func (s *sender) submitMessage(group *prop.Resource, memberId string) {
 	msg := &message{
-		GroupID:  groupId,
+		GroupID:  group.ID(),
 		MemberID: memberId,
+		Trial:    1,
 	}
-	if err := l.ec.Publish(subject, msg); err != nil {
-		msg.logFailed(l.logger)
-	} else {
-		msg.logSent(l.logger)
+
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		s.logger.Error("failed to render message to json", log.Args{
+			"error":    err,
+			"groupId":  group.ID(),
+			"memberId": memberId,
+		})
+		return
+	}
+
+	err = s.ch.Publish(
+		exchangeName,
+		queueName,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
+			MessageId:   uuid.NewV4().String(),
+			Timestamp:   time.Now(),
+			Body:        raw,
+		},
+	)
+	if err != nil {
+		s.logger.Error("failed to send message to rabbit", log.Args{
+			"error":    err,
+			"message": fmt.Sprintf("%+v", msg),
+		})
 	}
 }

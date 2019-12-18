@@ -4,15 +4,14 @@ import (
 	"github.com/imulab/go-scim/protocol/db"
 	"github.com/imulab/go-scim/protocol/log"
 	"github.com/imulab/go-scim/server/logger"
-	"github.com/nats-io/nats.go"
-	"time"
+	"github.com/streadway/amqp"
 )
 
 type appContext struct {
-	logger  log.Logger
-	userDB  db.DB
-	groupDB db.DB
-	natConn *nats.Conn
+	logger   log.Logger
+	userDB   db.DB
+	groupDB  db.DB
+	rabbitCh *amqp.Channel
 }
 
 func (c *appContext) initialize(args *args) error {
@@ -25,7 +24,7 @@ func (c *appContext) initialize(args *args) error {
 	if err := c.loadGroupDatabase(args); err != nil {
 		return err
 	}
-	if err := c.loadNatsConnection(args); err != nil {
+	if err := c.loadRabbitMqChannel(args); err != nil {
 		return err
 	}
 	return nil
@@ -46,7 +45,15 @@ func (c *appContext) loadGroupDatabase(args *args) error {
 	return nil
 }
 
-func (c *appContext) loadNatsConnection(args *args) (err error) {
-	c.natConn, err = nats.Connect(args.natsServers, nats.Timeout(10*time.Second), nats.PingInterval(10*time.Second))
-	return
+func (c *appContext) loadRabbitMqChannel(args *args) error {
+	conn, err := amqp.Dial(args.rabbitMqAddress)
+	if err != nil {
+		return err
+	}
+	ch, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	c.rabbitCh = ch
+	return nil
 }

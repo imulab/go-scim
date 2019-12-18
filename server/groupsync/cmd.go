@@ -1,6 +1,8 @@
 package groupsync
 
 import (
+	"context"
+	"github.com/imulab/go-scim/protocol/log"
 	"github.com/urfave/cli/v2"
 	"os"
 	"os/signal"
@@ -13,7 +15,8 @@ type args struct {
 	//groupResourceTypePath     string
 	//schemasFolderPath         string
 	//memoryDB    bool
-	natsServers string
+	requeueLimit int
+	rabbitMqAddress string
 }
 
 func Command() *cli.Command {
@@ -24,13 +27,12 @@ func Command() *cli.Command {
 		Description: "Asynchronously refresh user resource for group membership changes",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "nats-urls",
-				Aliases:     []string{"n"},
-				Usage:       "comma delimited URLs to the NATS servers",
-				EnvVars:     []string{"NATS_SERVERS"},
-				Destination: &args.natsServers,
+				Name:        "rabbit-address",
+				Usage:       "AMQP connection string to RabbitMQ",
+				EnvVars:     []string{"RABBIT_ADDRESS"},
+				Destination: &args.rabbitMqAddress,
 				Required:    true,
-				Value:       "nats://localhost:4222",
+				Value:       "amqp://guest:guest@localhost:5672/",
 			},
 		},
 		Action: func(cliContext *cli.Context) error {
@@ -38,17 +40,22 @@ func Command() *cli.Command {
 			if err := appCtx.initialize(args); err != nil {
 				return err
 			}
-			defer appCtx.natConn.Close()
+			defer func() {
+				_ = appCtx.rabbitCh.Close()
+			}()
 
-			r, err := Receiver(appCtx.natConn, appCtx.userDB, appCtx.groupDB, appCtx.logger)
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			safeExit, err := StartConsumer(ctx, appCtx, args)
 			if err != nil {
 				return err
 			}
-			defer r.Close()
 
 			term := make(chan os.Signal)
 			signal.Notify(term, syscall.SIGINT, syscall.SIGTERM)
 			<-term
+			appCtx.logger.Info("received terminate signal, waiting to abort", log.Args{})
+			cancelFunc()
+			<-safeExit
 
 			return nil
 		},
