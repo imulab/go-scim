@@ -79,8 +79,8 @@ func (m *memoryDB) Replace(ctx context.Context, resource *prop.Resource) error {
 	return nil
 }
 
-func (m *memoryDB) Delete(ctx context.Context, id string) error {
-	delete(m.db, id)
+func (m *memoryDB) Delete(ctx context.Context, resource *prop.Resource) error {
+	delete(m.db, resource.ID())
 	return nil
 }
 

@@ -73,7 +73,7 @@ func (s *GetHandlerTestSuite) TestHandle() {
     "created": "2019-11-20T13:09:00",
     "lastModified": "2019-11-20T13:09:00",
     "location": "https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-    "version": "W/\\\"1\\\""
+    "version": "W/\"1\""
   },
   "userName": "user001",
   "name": {
@@ -230,7 +230,7 @@ func (s *GetHandlerTestSuite) TestHandle() {
     "created": "2019-11-20T13:09:00",
     "lastModified": "2019-11-20T13:09:00",
     "location": "https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-    "version": "W/\\\"1\\\""
+    "version": "W/\"1\""
   },
   "userName": "user001",
   "name": {

@@ -1,0 +1,54 @@
+{
+  "metadata": [
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+      "mongoName": "urn_ietf_params_scim_schemas_extension_enterprise_20_User",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber",
+      "mongoName": "employeeNumber",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.employeeNumber"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:costCenter",
+      "mongoName": "costCenter",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.costCenter"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:organization",
+      "mongoName": "organization",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.organization"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:division",
+      "mongoName": "division",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.division"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department",
+      "mongoName": "department",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.department"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager",
+      "mongoName": "manager",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.manager"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager.value",
+      "mongoName": "value",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.manager.value"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager.$ref",
+      "mongoName": "ref",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.manager.ref"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager.displayName",
+      "mongoName": "displayName",
+      "mongoPath": "urn_ietf_params_scim_schemas_extension_enterprise_20_User.manager.displayName"
+    }
+  ]
+}

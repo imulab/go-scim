@@ -318,40 +318,6 @@ func (s *MemoryDBTestSuite) TestReplace() {
 	}
 }
 
-func (s *MemoryDBTestSuite) TestDelete() {
-	_ = s.mustSchema("/user_schema.json")
-	resourceType := s.mustResourceType("/user_resource_type.json")
-
-	tests := []struct {
-		name   string
-		getDB  func(t *testing.T) DB
-		id     string
-		expect func(t *testing.T, db DB, err error)
-	}{
-		{
-			name: "delete existing",
-			getDB: func(t *testing.T) DB {
-				db := Memory()
-				err := db.Insert(context.Background(), s.mustResource("/user_001.json", resourceType))
-				require.Nil(t, err)
-				return db
-			},
-			id: "a5866759-32ca-4e2a-9808-a0fe74f94b18",
-			expect: func(t *testing.T, db DB, err error) {
-				assert.Nil(t, err)
-			},
-		},
-	}
-
-	for _, test := range tests {
-		s.T().Run(test.name, func(t *testing.T) {
-			db := test.getDB(t)
-			err := db.Delete(context.Background(), test.id)
-			test.expect(t, db, err)
-		})
-	}
-}
-
 func (s *MemoryDBTestSuite) TestQuery() {
 	_ = s.mustSchema("/user_schema.json")
 	resourceType := s.mustResourceType("/user_resource_type.json")

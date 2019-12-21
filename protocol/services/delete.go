@@ -34,7 +34,7 @@ func (s *DeleteService) DeleteResource(ctx context.Context, request *DeleteReque
 		}
 	}
 
-	err = s.Database.Delete(ctx, request.ResourceID)
+	err = s.Database.Delete(ctx, resource)
 	if err != nil {
 		s.Logger.Error("failed to delete from persistence", log.Args{
 			"resourceId": request.ResourceID,

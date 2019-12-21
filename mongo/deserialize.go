@@ -67,6 +67,15 @@ func (d *deserializer) deserializeComplex(vr bsonrw.ValueReader, isTopLevel bool
 			return d.errReadDoc(err)
 		}
 
+		// special case, skip over the MongoDB internal id
+		if name == "_id" {
+			_, err = evr.ReadObjectID()
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
 		var subProp prop.Property
 		{
 			// first try to directly focus with the name from MongoDB.

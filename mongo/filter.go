@@ -6,7 +6,8 @@ import (
 	"github.com/imulab/go-scim/core/expr"
 	"github.com/imulab/go-scim/core/prop"
 	"github.com/imulab/go-scim/core/spec"
-	"go.mongodb.org/mongo-driver/x/bsonx"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
 	"strings"
 	"time"
@@ -23,10 +24,10 @@ import (
 
 // Compile and transform a SCIM filter string to a bsonx.Val that contains the original
 // filter in MongoDB compatible format.
-func TransformFilter(scimFilter string, resourceType *spec.ResourceType) (bsonx.Val, error) {
+func TransformFilter(scimFilter string, resourceType *spec.ResourceType) (bson.D, error) {
 	root, err := expr.CompileFilter(scimFilter)
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
 	return TransformCompiledFilter(root, resourceType)
 }
@@ -34,7 +35,7 @@ func TransformFilter(scimFilter string, resourceType *spec.ResourceType) (bsonx.
 // Compile and transform a compiled SCIM filter to bsonx.Val that contains the original
 // filter in MongoDB compatible format. This slight optimization allow the caller to pre-compile
 // frequently used queries and save the trip to the filter parser and compiler.
-func TransformCompiledFilter(root *expr.Expression, resourceType *spec.ResourceType) (bsonx.Val, error) {
+func TransformCompiledFilter(root *expr.Expression, resourceType *spec.ResourceType) (bson.D, error) {
 	return newTransformer(resourceType).transform(root)
 }
 
@@ -49,7 +50,7 @@ type transformer struct {
 }
 
 // Transform the filter which is represented by the root to bsonx.Val.
-func (t *transformer) transform(root *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) transform(root *expr.Expression) (bson.D, error) {
 	switch root.Token() {
 	case expr.And:
 		return t.transformAnd(root)
@@ -62,45 +63,45 @@ func (t *transformer) transform(root *expr.Expression) (bsonx.Val, error) {
 	}
 }
 
-func (t *transformer) transformAnd(root *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) transformAnd(root *expr.Expression) (bson.D, error) {
 	left, err := t.transform(root.Left())
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
 	right, err := t.transform(root.Right())
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
-	return bsonx.Document(bsonx.MDoc{
-		mongoAnd: bsonx.Array(bsonx.Arr{left, right}),
-	}), nil
+	return bson.D{
+		{Key: mongoAnd, Value: bson.A{left, right}},
+	}, nil
 }
 
-func (t *transformer) transformOr(root *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) transformOr(root *expr.Expression) (bson.D, error) {
 	left, err := t.transform(root.Left())
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
 	right, err := t.transform(root.Right())
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
-	return bsonx.Document(bsonx.MDoc{
-		mongoOr: bsonx.Array(bsonx.Arr{left, right}),
-	}), nil
+	return bson.D{
+		{Key: mongoOr, Value: bson.A{left, right}},
+	}, nil
 }
 
-func (t *transformer) transformNot(root *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) transformNot(root *expr.Expression) (bson.D, error) {
 	left, err := t.transform(root.Left())
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
-	return bsonx.Document(bsonx.MDoc{
-		mongoNot: bsonx.Array(bsonx.Arr{left}),
-	}), nil
+	return bson.D{
+		{Key: mongoNot, Value: bson.A{left}},
+	}, nil
 }
 
-func (t *transformer) transformRelational(containerAttr *spec.Attribute, path *expr.Expression, op *expr.Expression, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) transformRelational(containerAttr *spec.Attribute, path *expr.Expression, op *expr.Expression, value *expr.Expression) (bson.D, error) {
 	var (
 		cursorAttr = containerAttr
 		pathNames  = make([]string, 0)
@@ -109,7 +110,7 @@ func (t *transformer) transformRelational(containerAttr *spec.Attribute, path *e
 		for path != nil && cursorAttr.SingleValued() {
 			cursorAttr = cursorAttr.SubAttributeForName(path.Token())
 			if cursorAttr == nil {
-				return bsonx.Null(), errors.InvalidFilter("no such path in filter")
+				return nil, errors.InvalidFilter("no such path in filter")
 			}
 
 			pathName := cursorAttr.Name()
@@ -122,7 +123,7 @@ func (t *transformer) transformRelational(containerAttr *spec.Attribute, path *e
 		}
 	}
 
-	var nextDoc bsonx.Val
+	var nextDoc interface{}
 	{
 		var err error
 		if path == nil {
@@ -131,7 +132,7 @@ func (t *transformer) transformRelational(containerAttr *spec.Attribute, path *e
 			nextDoc, err = t.transformRelational(cursorAttr.NewElementAttribute(), path, op, value)
 		}
 		if err != nil {
-			return bsonx.Null(), err
+			return nil, err
 		}
 	}
 
@@ -141,92 +142,159 @@ func (t *transformer) transformRelational(containerAttr *spec.Attribute, path *e
 		// 		i.e. emails.value
 		// 2. the operator is not a pr
 		// 		i.e. schemas eq "foobar"
-		return bsonx.Document(bsonx.MDoc{
-			strings.Join(pathNames, "."): bsonx.Document(bsonx.MDoc{
-				mongoElementMatch: nextDoc,
-			}),
-		}), nil
+		return bson.D{
+			{Key: strings.Join(pathNames, "."), Value: bson.D{
+				{Key: mongoElementMatch, Value: nextDoc},
+			}},
+		}, nil
 	} else {
-		return bsonx.Document(bsonx.MDoc{
-			strings.Join(pathNames, "."): nextDoc,
-		}), nil
+		q := bson.D{{Key: strings.Join(pathNames, "."), Value: nextDoc}}
+		if op.Token() != expr.Pr {
+			return q, nil
+		}
+		return t.rearrangeForPr(q), nil
 	}
 }
 
-func (t *transformer) eqValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+// rearrange query in the form of "{ <field> : { $and : [ <criteria1>, <criteria2> , ... , <criteriaN>] }}", into
+// { $and : [ { <field> : <criteria1> }, { <field> : <criteria2> }, ..., { <field> : <criteriaN> } ] }
+func (t *transformer) rearrangeForPr(doc bson.D) bson.D {
+	if len(doc) != 1 {
+		return doc
+	}
+
+	field := doc[0].Key
+	if len(field) == 0 {
+		return doc
+	}
+
+	if _, ok := doc[0].Value.(bson.D); !ok {
+		return doc
+	} else if len(doc[0].Value.(bson.D)) != 1 {
+		return doc
+	} else if doc[0].Value.(bson.D)[0].Key != mongoAnd {
+		return doc
+	} else if _, ok := doc[0].Value.(bson.D)[0].Value.(bson.A); !ok {
+		return doc
+	}
+
+	criterion := doc[0].Value.(bson.D)[0].Value.(bson.A)
+
+	newCriterion := bson.A{}
+	for _, c := range criterion {
+		newCriterion = append(newCriterion, bson.D{{Key: field, Value: c}})
+	}
+
+	return bson.D{{Key: mongoAnd, Value: newCriterion}}
+}
+
+func (t *transformer) eqValue(attr *spec.Attribute, value *expr.Expression) interface{} {
 	if attr.Type() != spec.TypeString && attr.CaseExact() {
-		return bsonx.Document(bsonx.MDoc{mongoEq: bsonx.String(unquote(value.Token()))}), nil
+		return bson.D{
+			{Key: mongoEq, Value: unquote(value.Token())},
+		}
 	} else {
-		return bsonx.Regex(fmt.Sprintf("^%s$", unquote(value.Token())), "i"), nil
+		return primitive.Regex{
+			Pattern: fmt.Sprintf("^%s$", unquote(value.Token())),
+			Options: "i",
+		}
 	}
 }
 
-func (t *transformer) neValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) neValue(attr *spec.Attribute, value *expr.Expression) interface{} {
 	if attr.Type() != spec.TypeString || attr.CaseExact() {
-		return bsonx.Document(bsonx.MDoc{mongoNe: bsonx.String(unquote(value.Token()))}), nil
+		return bson.D{
+			{Key: mongoNe, Value: unquote(value.Token())},
+		}
 	} else {
-		return bsonx.Regex(fmt.Sprintf("^((?!%s$).)", unquote(value.Token())), "i"), nil
+		return primitive.Regex{
+			Pattern: fmt.Sprintf("^((?!%s$).)", unquote(value.Token())),
+			Options: "i",
+		}
 	}
 }
 
-func (t *transformer) swValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) swValue(attr *spec.Attribute, value *expr.Expression) primitive.Regex {
 	if attr.CaseExact() {
-		return bsonx.Regex(fmt.Sprintf("^%s", unquote(value.Token())), ""), nil
+		return primitive.Regex{
+			Pattern: fmt.Sprintf("^%s", unquote(value.Token())),
+		}
 	} else {
-		return bsonx.Regex(fmt.Sprintf("^%s", unquote(value.Token())), "i"), nil
+		return primitive.Regex{
+			Pattern: fmt.Sprintf("^%s", unquote(value.Token())),
+			Options: "i",
+		}
 	}
 }
 
-func (t *transformer) ewValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) ewValue(attr *spec.Attribute, value *expr.Expression) primitive.Regex {
 	if attr.CaseExact() {
-		return bsonx.Regex(fmt.Sprintf("%s$", unquote(value.Token())), ""), nil
+		return primitive.Regex{
+			Pattern: fmt.Sprintf("%s$", unquote(value.Token())),
+		}
 	} else {
-		return bsonx.Regex(fmt.Sprintf("%s$", unquote(value.Token())), "i"), nil
+		return primitive.Regex{
+			Pattern: fmt.Sprintf("%s$", unquote(value.Token())),
+			Options: "i",
+		}
 	}
 }
 
-func (t *transformer) coValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) coValue(attr *spec.Attribute, value *expr.Expression) primitive.Regex {
 	if attr.CaseExact() {
-		return bsonx.Regex(unquote(value.Token()), ""), nil
+		return primitive.Regex{
+			Pattern: unquote(value.Token()),
+		}
 	} else {
-		return bsonx.Regex(unquote(value.Token()), "i"), nil
+		return primitive.Regex{
+			Pattern: "unquote(value.Token())",
+			Options: "i",
+		}
 	}
 }
 
-func (t *transformer) gtValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) gtValue(attr *spec.Attribute, value *expr.Expression) (bson.D, error) {
 	v, err := t.parseValue(value.Token(), attr)
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
-	return bsonx.Document(bsonx.MDoc{mongoGt: v}), nil
+	return bson.D{
+		{Key: mongoGt, Value: v},
+	}, nil
 }
 
-func (t *transformer) geValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) geValue(attr *spec.Attribute, value *expr.Expression) (bson.D, error) {
 	v, err := t.parseValue(value.Token(), attr)
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
-	return bsonx.Document(bsonx.MDoc{mongoGe: v}), nil
+	return bson.D{
+		{Key: mongoGe, Value: v},
+	}, nil
 }
 
-func (t *transformer) ltValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) ltValue(attr *spec.Attribute, value *expr.Expression) (bson.D, error) {
 	v, err := t.parseValue(value.Token(), attr)
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
-	return bsonx.Document(bsonx.MDoc{mongoLt: v}), nil
+	return bson.D{
+		{Key: mongoLt, Value: v},
+	}, nil
 }
 
-func (t *transformer) leValue(attr *spec.Attribute, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) leValue(attr *spec.Attribute, value *expr.Expression) (bson.D, error) {
 	v, err := t.parseValue(value.Token(), attr)
 	if err != nil {
-		return bsonx.Null(), err
+		return nil, err
 	}
-	return bsonx.Document(bsonx.MDoc{mongoLe: v}), nil
+	return bson.D{
+		{Key: mongoLe, Value: v},
+	}, nil
 }
 
-func (t *transformer) prDoc(attr *spec.Attribute) (bsonx.Val, error) {
-	criterion := make([]bsonx.Val, 0)
+func (t *transformer) prDoc(attr *spec.Attribute) bson.D {
+	criterion := bson.A{}
 	criterion = append(criterion, existsCriteria, nullCriteria)
 	if attr.MultiValued() {
 		criterion = append(criterion, emptyArrayCriteria)
@@ -238,23 +306,21 @@ func (t *transformer) prDoc(attr *spec.Attribute) (bsonx.Val, error) {
 			criterion = append(criterion, emptyObjectCriteria)
 		}
 	}
-	return bsonx.Document(bsonx.MDoc{
-		mongoAnd: bsonx.Array(criterion),
-	}), nil
+	return bson.D{{Key: mongoAnd, Value: criterion}}
 }
 
-func (t *transformer) transformValue(attr *spec.Attribute, op *expr.Expression, value *expr.Expression) (bsonx.Val, error) {
+func (t *transformer) transformValue(attr *spec.Attribute, op *expr.Expression, value *expr.Expression) (interface{}, error) {
 	switch op.Token() {
 	case expr.Eq:
-		return t.eqValue(attr, value)
+		return t.eqValue(attr, value), nil
 	case expr.Ne:
-		return t.neValue(attr, value)
+		return t.neValue(attr, value), nil
 	case expr.Sw:
-		return t.swValue(attr, value)
+		return t.swValue(attr, value), nil
 	case expr.Ew:
-		return t.ewValue(attr, value)
+		return t.ewValue(attr, value), nil
 	case expr.Co:
-		return t.coValue(attr, value)
+		return t.coValue(attr, value), nil
 	case expr.Gt:
 		return t.gtValue(attr, value)
 	case expr.Ge:
@@ -264,69 +330,69 @@ func (t *transformer) transformValue(attr *spec.Attribute, op *expr.Expression, 
 	case expr.Le:
 		return t.leValue(attr, value)
 	case expr.Pr:
-		return t.prDoc(attr)
+		return t.prDoc(attr), nil
 	default:
 		panic("invalid relational operator")
 	}
 }
 
-// Parse the given raw value to the corresponding bsonx.Val according to the type information in attribute.
+// Parse the given raw value to the appropriate data type according to the type information in attribute.
 // The attribute will be treated as singleValued even if it is multiValued.
-func (t transformer) parseValue(raw string, attr *spec.Attribute) (bsonx.Val, error) {
+func (t transformer) parseValue(raw string, attr *spec.Attribute) (interface{}, error) {
 	if attr.Type() == spec.TypeComplex {
-		return bsonx.Null(), errors.InvalidFilter("incompatible complex property")
+		return nil, errors.InvalidFilter("incompatible complex property")
 	}
-
 	switch attr.Type() {
 	case spec.TypeString, spec.TypeReference, spec.TypeBinary:
-
-		return bsonx.String(unquote(raw)), nil
+		return unquote(raw), nil
 	case spec.TypeDateTime:
 		t, err := time.Parse(prop.ISO8601, unquote(raw))
 		if err != nil {
-			return bsonx.Null(), errors.InvalidFilter("invalid value: expects '%s' to be a dateTime", raw)
+			return nil, errors.InvalidFilter("invalid value: expects '%s' to be a dateTime", raw)
 		}
-		return bsonx.Time(t), nil
+		return primitive.NewDateTimeFromTime(t), nil
 	case spec.TypeBoolean:
 		b, err := strconv.ParseBool(raw)
 		if err != nil {
-			return bsonx.Null(), errors.InvalidFilter("invalid value: expects '%s' to be a boolean", raw)
+			return nil, errors.InvalidFilter("invalid value: expects '%s' to be a boolean", raw)
 		}
-		return bsonx.Boolean(b), nil
+		return b, nil
 	case spec.TypeInteger:
 		i, err := strconv.ParseInt(raw, 10, 64)
 		if err != nil {
-			return bsonx.Null(), errors.InvalidFilter("invalid value: expects '%s' to be an integer", raw)
+			return nil, errors.InvalidFilter("invalid value: expects '%s' to be an integer", raw)
 		}
-		return bsonx.Int64(i), nil
+		return i, nil
 	case spec.TypeDecimal:
 		f, err := strconv.ParseFloat(raw, 64)
 		if err != nil {
-			return bsonx.Null(), errors.InvalidFilter("invalid value: expects '%s' to be a decimal", raw)
+			return nil, errors.InvalidFilter("invalid value: expects '%s' to be a decimal", raw)
 		}
-		return bsonx.Double(f), nil
+		return f, nil
 	default:
 		panic("impossible type")
 	}
 }
 
 func unquote(raw string) string {
-	raw = strings.TrimPrefix(raw, "\"")
-	raw = strings.TrimSuffix(raw, "\"")
-	return raw
+	uq, err := strconv.Unquote(raw)
+	if err != nil {
+		return raw
+	}
+	return uq
 }
 
 // pre compiled criteria
 var (
-	existsCriteria      = bsonx.Document(bsonx.MDoc{mongoExists: bsonx.Boolean(true)})
-	nullCriteria        = bsonx.Document(bsonx.MDoc{mongoNe: bsonx.Null()})
-	emptyStringCriteria = bsonx.Document(bsonx.MDoc{mongoNe: bsonx.String("")})
-	emptyObjectCriteria = bsonx.Document(bsonx.MDoc{mongoNe: bsonx.Document(bsonx.MDoc{})})
-	emptyArrayCriteria  = bsonx.Document(bsonx.MDoc{
-		mongoNot: bsonx.Array(bsonx.Arr{
-			bsonx.Document(bsonx.MDoc{mongoSize: bsonx.Int32(0)}),
-		}),
-	})
+	existsCriteria      = bson.D{{Key: mongoExists, Value: true}}
+	nullCriteria        = bson.D{{Key: mongoNe, Value: primitive.Null{}}}
+	emptyStringCriteria = bson.D{{Key: mongoNe, Value: ""}}
+	emptyObjectCriteria = bson.D{{Key: mongoNe, Value: bson.M{}}}
+	emptyArrayCriteria  = bson.D{
+		{Key: mongoNot, Value: bson.A{
+			bson.D{{Key: mongoSize, Value: 0}},
+		}},
+	}
 )
 
 const (

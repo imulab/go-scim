@@ -58,7 +58,7 @@ func (w *worker) syncTop(sync *prop.Resource) bool {
 	// Whatever the processing result, save or delete the group sync resource.
 	defer func() {
 		if diffs.CountChildren() == 0 {
-			if err := w.groupSyncDB.Delete(context.Background(), sync.ID()); err != nil {
+			if err := w.groupSyncDB.Delete(context.Background(), sync); err != nil {
 				w.errChan <- err
 			}
 		} else if beforeHash != sync.Hash() {

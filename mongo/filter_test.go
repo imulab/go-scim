@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/x/bsonx"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -30,138 +29,114 @@ func (s *TransformFilterTestSuite) TestTransform() {
 	tests := []struct {
 		name   string
 		filter string
-		expect func(t *testing.T, doc bsonx.Val, err error)
+		expect func(t *testing.T, extJson string, err error)
 	}{
 		{
 			name:   "top level string property pr",
 			filter: "userName pr",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
-				assert.Nil(t, err)
-				expect := `{"userName":{"$and":[{"$exists":true},{"$ne":null},{"$ne":""}]}}`
-				assert.JSONEq(t, expect, string(raw))
+				expect := `{"$and":[{"userName":{"$exists":true}},{"userName":{"$ne":null}},{"userName":{"$ne":""}}]}`
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "second level string property pr",
 			filter: "name.familyName pr",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
-				assert.Nil(t, err)
-				expect := `{"name.familyName":{"$and":[{"$exists":true},{"$ne":null},{"$ne":""}]}}`
-				assert.JSONEq(t, expect, string(raw))
+				expect := `{"$and":[{"name.familyName":{"$exists":true}},{"name.familyName":{"$ne":null}},{"name.familyName":{"$ne":""}}]}`
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "multiValued pr",
 			filter: "emails pr",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
-				assert.Nil(t, err)
-				expect := `{"emails":{"$and":[{"$exists":true},{"$ne":null},{"$nor":[{"$size":{"$numberInt":"0"}}]}]}}`
-				assert.JSONEq(t, expect, string(raw))
+				expect := `{"$and":[{"emails":{"$exists":true}},{"emails":{"$ne":null}},{"emails":{"$nor":[{"$size":{"$numberInt":"0"}}]}}]}`
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "multiValued second level pr",
 			filter: "emails.value pr",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
-				assert.Nil(t, err)
-				expect := `{"emails":{"$elemMatch":{"value":{"$and":[{"$exists":true},{"$ne":null},{"$ne":""}]}}}}`
-				assert.JSONEq(t, expect, string(raw))
+				expect := `{"emails":{"$elemMatch":{"$and":[{"value":{"$exists":true}},{"value":{"$ne":null}},{"value":{"$ne":""}}]}}}`
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "multiValued eq",
 			filter: "schemas eq \"foobar\"",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
-				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
 				expect := `{"schemas":{"$elemMatch":{"$eq":"foobar"}}}`
-				assert.JSONEq(t, expect, string(raw))
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "multiValued second level eq",
 			filter: "emails.value eq \"foo@bar.com\"",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
-				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
 				expect := `{"emails":{"$elemMatch":{"value":{"$regularExpression":{"pattern":"^foo@bar.com$","options":"i"}}}}}`
-				assert.JSONEq(t, expect, string(raw))
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "top level ne",
 			filter: "userName ne \"imulab\"",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
-				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
 				expect := `{"userName":{"$regularExpression":{"pattern":"^((?!imulab$).)","options":"i"}}}`
-				assert.JSONEq(t, expect, string(raw))
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "second level ne",
 			filter: "name.familyName ne \"Q\"",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
-				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
 				expect := `{"name.familyName":{"$regularExpression":{"pattern":"^((?!Q$).)","options":"i"}}}`
-				assert.JSONEq(t, expect, string(raw))
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "multiValued ne",
 			filter: "schemas ne \"foobar\"",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
-				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
 				expect := `{"schemas":{"$elemMatch":{"$ne":"foobar"}}}`
-				assert.JSONEq(t, expect, string(raw))
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "multiValued second level ne",
 			filter: "emails.value ne \"foo@bar.com\"",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
-				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
 				expect := `{"emails":{"$elemMatch":{"value":{"$regularExpression":{"pattern":"^((?!foo@bar.com$).)","options":"i"}}}}}`
-				assert.JSONEq(t, expect, string(raw))
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "dateTime gt",
 			filter: "meta.created gt \"2019-12-20T04:40:00\"",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
-				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
 				expect := `{"meta.created":{"$gt":{"$date":{"$numberLong":"1576816800000"}}}}`
-				assert.JSONEq(t, expect, string(raw))
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 		{
 			name:   "logical operator",
 			filter: "(userName eq \"imulab\") and (meta.created gt \"2019-12-20T04:40:00\")",
-			expect: func(t *testing.T, doc bsonx.Val, err error) {
-				assert.Nil(t, err)
-				raw, err := bson.MarshalExtJSON(doc, true, false)
+			expect: func(t *testing.T, extJson string, err error) {
 				assert.Nil(t, err)
 				expect := `{"$and":[{"userName":{"$regularExpression":{"pattern":"^imulab$","options":"i"}}},{"meta.created":{"$gt":{"$date":{"$numberLong":"1576816800000"}}}}]}`
-				assert.JSONEq(t, expect, string(raw))
+				assert.JSONEq(t, expect, extJson)
 			},
 		},
 	}
@@ -169,7 +144,10 @@ func (s *TransformFilterTestSuite) TestTransform() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			v, err := TransformFilter(test.filter, resourceType)
-			test.expect(t, v, err)
+			assert.Nil(t, err)
+			raw, err := bson.MarshalExtJSON(v, true, false)
+			assert.Nil(t, err)
+			test.expect(t, string(raw), err)
 		})
 	}
 }
