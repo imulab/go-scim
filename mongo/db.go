@@ -19,11 +19,16 @@ import (
 // Create a db.DB implementation that persists data in MongoDB. This implementation supports one-to-one correspondence
 // of a SCIM resource type to a MongoDB collection.
 //
-// Note that this implementation has limited capability of correctly performing field projection according to the
-// specification. It dumbly treats the *crud.Projection parameter as it is without performing any sanitation. As a
-// result, if any returned=always field is excluded, it will not be returned; similarly, if any returned=never field
-// is included, it will be returned. It is expected by downstream calls to perform a pre-sanitation on the parameters
-// or perform a post-guard operation to ensure no sensitive information is leaked.
+// The database will attempt to create MongoDB indexes on attributes whose uniqueness is global or server, or that has
+// been annotated with "@MongoIndex". For unique attributes, a unique MongoDB index will be created, otherwise, it is
+// just an ordinary index. Any index creation error are treated as non-error and simply logged as warning. Successful
+// index creation will be logged as info.
+//
+// This implementation has limited capability of correctly performing field projection according to the specification.
+// It dumbly treats the *crud.Projection parameter as it is without performing any sanitation. As a result, if any
+// returned=always field is excluded, it will not be returned; similarly, if any returned=never field is included,
+// it will be returned. It is expected by downstream calls to perform a pre-sanitation on the parameters or perform
+// a post-guard operation to ensure no sensitive information is leaked.
 //
 // The "github.com/imulab/go-scim/core/json" provides a post-guard operation in its serialization function to ensure
 // returned=never parameters are never leaked. When used with this database, the only situation needs to be worried
@@ -51,7 +56,7 @@ import (
 // The only reason that id and version failed to match would then because another process modified the resource concurrently.
 // Therefore, preCondition seems to be a reasonable error code.
 func DB(resourceType *spec.ResourceType, logger log.Logger, coll *mongo.Collection, opt *DBOptions) db.DB {
-	return &mongoDB{
+	d := &mongoDB{
 		resourceType: resourceType,
 		superAttr:    resourceType.SuperAttribute(true),
 		coll:         coll,
@@ -59,6 +64,8 @@ func DB(resourceType *spec.ResourceType, logger log.Logger, coll *mongo.Collecti
 		logger:       logger,
 		opt:          opt,
 	}
+	d.ensureIndex()
+	return d
 }
 
 type mongoDB struct {

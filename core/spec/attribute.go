@@ -235,6 +235,14 @@ func (attr *Attribute) FindSubAttribute(criteria func(subAttr *Attribute) bool) 
 	return nil
 }
 
+// Perform a depth-first-traversal on the given attribute.
+func (attr *Attribute) DFS(callback func(a *Attribute)) {
+	callback(attr)
+	for _, each := range attr.subAttributes {
+		each.DFS(callback)
+	}
+}
+
 // Return true if one or more of this attribute's sub attributes is marked as identity
 func (attr *Attribute) HasIdentitySubAttributes() bool {
 	for _, subAttr := range attr.subAttributes {
