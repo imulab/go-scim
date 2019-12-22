@@ -17,12 +17,12 @@ import (
 // context can be used to notify the consumer that it should abort. However, the consumer only checks for this signal
 // before processing each message and hence may not immediately abort. The returned safe exit channel can be received
 // by the caller process when the consumer is truly ready to exit.
-func StartConsumer(ctx context.Context, appCtx *appContext, args *args) (safeExit chan struct{}, err error) {
-	if err := declareRabbitQueue(appCtx.rabbitCh, appCtx.logger); err != nil {
+func StartConsumer(ctx context.Context, appCtx *appContext, args *arguments) (safeExit chan struct{}, err error) {
+	if err := declareRabbitQueue(appCtx.rabbitChannel, appCtx.logger); err != nil {
 		return nil, err
 	}
 	c := &consumer{
-		ch:         appCtx.rabbitCh,
+		ch:         appCtx.rabbitChannel,
 		userDB:     appCtx.userDB,
 		groupDB:    appCtx.groupDB,
 		trialLimit: args.requeueLimit,

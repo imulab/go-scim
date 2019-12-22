@@ -430,7 +430,7 @@ func (s *JSONDeserializeTestSuite) TestDeserialize() {
 					}
 					{
 						_, _ = nav.FocusName("version")
-						assert.Equal(t, "W/\\\"1\\\"", nav.Current().Raw())
+						assert.Equal(t, "W/\"1\"", nav.Current().Raw())
 						nav.Retract()
 					}
 					nav.Retract()

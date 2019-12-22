@@ -9,43 +9,26 @@ import (
 	"syscall"
 )
 
-type args struct {
-	//serviceProviderConfigPath string
-	//userResourceTypePath      string
-	//groupResourceTypePath     string
-	//schemasFolderPath         string
-	//memoryDB    bool
-	requeueLimit int
-	rabbitMqAddress string
-}
-
+// Return a command that starts a process to synchronize group membership of user resources.
 func Command() *cli.Command {
-	args := new(args)
+	ag := new(arguments)
 	return &cli.Command{
 		Name:        "group-sync",
 		Aliases:     []string{"gs", "sync"},
 		Description: "Asynchronously refresh user resource for group membership changes",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "rabbit-address",
-				Usage:       "AMQP connection string to RabbitMQ",
-				EnvVars:     []string{"RABBIT_ADDRESS"},
-				Destination: &args.rabbitMqAddress,
-				Required:    true,
-				Value:       "amqp://guest:guest@localhost:5672/",
-			},
-		},
+		Flags: ag.Flags(),
 		Action: func(cliContext *cli.Context) error {
 			appCtx := new(appContext)
-			if err := appCtx.initialize(args); err != nil {
+			if err := appCtx.initialize(ag); err != nil {
 				return err
 			}
 			defer func() {
-				_ = appCtx.rabbitCh.Close()
+				_ = appCtx.rabbitChannel.Close()
+				_ = appCtx.mongoClient.Disconnect(context.Background())
 			}()
 
 			ctx, cancelFunc := context.WithCancel(context.Background())
-			safeExit, err := StartConsumer(ctx, appCtx, args)
+			safeExit, err := StartConsumer(ctx, appCtx, ag)
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"github.com/imulab/go-scim/protocol/log"
 	"github.com/julienschmidt/httprouter"
@@ -8,87 +9,27 @@ import (
 	"net/http"
 )
 
-type args struct {
-	serviceProviderConfigPath string
-	userResourceTypePath      string
-	groupResourceTypePath     string
-	schemasFolderPath         string
-	memoryDB                  bool
-	httpPort                  int
-	rabbitMqAddress               string
-}
-
+// Return a command to start a process of serving SCIM HTTP API.
 func Command() *cli.Command {
-	args := new(args)
+	ag := new(arguments)
 	return &cli.Command{
 		Name:        "api",
 		Usage:       "Serves API for SCIM (Simple Cloud Identity Management) protocol",
 		Description: "Manage state of resources defined in the SCIM (Simple Cloud Identity Management) protocol",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "user",
-				Aliases:     []string{"u"},
-				Usage:       "Absolute file path to User resource type JSON definition",
-				EnvVars:     []string{"USER_RESOURCE_TYPE"},
-				Required:    true,
-				Destination: &args.userResourceTypePath,
-			},
-			&cli.StringFlag{
-				Name:        "group",
-				Aliases:     []string{"g"},
-				Usage:       "Absolute file path to Group resource type JSON definition",
-				EnvVars:     []string{"GROUP_RESOURCE_TYPE"},
-				Required:    true,
-				Destination: &args.groupResourceTypePath,
-			},
-			&cli.StringFlag{
-				Name:        "schemas",
-				Aliases:     []string{"s"},
-				Usage:       "Absolute path to the folder containing all schema JSON definitions",
-				EnvVars:     []string{"SCHEMAS"},
-				Required:    true,
-				Destination: &args.schemasFolderPath,
-			},
-			&cli.StringFlag{
-				Name:        "spc",
-				Aliases:     []string{"c"},
-				Usage:       "Absolute path to Service Provider Config JSON definition",
-				EnvVars:     []string{"SERVICE_PROVIDER_CONFIG"},
-				Required:    true,
-				Destination: &args.serviceProviderConfigPath,
-			},
-			&cli.BoolFlag{
-				Name:        "memory",
-				Usage:       "Use in memory database",
-				Value:       false,
-				Destination: &args.memoryDB,
-			},
-			&cli.StringFlag{
-				Name:        "rabbit-address",
-				Usage:       "AMQP connection string to RabbitMQ",
-				EnvVars:     []string{"RABBIT_ADDRESS"},
-				Required:    true,
-				Value:       "amqp://guest:guest@localhost:5672/",
-				Destination: &args.rabbitMqAddress,
-			},
-			&cli.IntFlag{
-				Name:        "port",
-				Aliases:     []string{"p"},
-				Usage:       "HTTP port that the server listens on",
-				EnvVars:     []string{"HTTP_PORT"},
-				Value:       8080,
-				Destination: &args.httpPort,
-			},
-		},
-		Action: func(context *cli.Context) error {
+		Flags: ag.Flags(),
+		Action: func(cliContext *cli.Context) error {
 			var appCtx *appContext
 			{
 				appCtx = new(appContext)
-				if err := appCtx.initialize(args); err != nil {
+				if err := appCtx.initialize(ag); err != nil {
 					return err
 				}
 				appCtx.logger.Info("application appContext initialized", log.Args{})
 			}
+			defer func() {
+				_ = appCtx.rabbitChannel.Close()
+				_ = appCtx.mongoClient.Disconnect(context.Background())
+			}()
 
 			var router = httprouter.New()
 			{
@@ -110,9 +51,10 @@ func Command() *cli.Command {
 			}
 
 			appCtx.logger.Info("listening for incoming requests", log.Args{
-				"port": args.httpPort,
+				"port": ag.httpPort,
 			})
-			return http.ListenAndServe(fmt.Sprintf(":%d", args.httpPort), router)
+			return http.ListenAndServe(fmt.Sprintf(":%d", ag.httpPort), router)
 		},
 	}
 }
+
