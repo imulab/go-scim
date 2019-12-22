@@ -1,9 +1,9 @@
 package api
 
 import (
-	"encoding/json"
 	"github.com/imulab/go-scim/core/expr"
 	"github.com/imulab/go-scim/core/spec"
+	scimmongo "github.com/imulab/go-scim/mongo"
 	"github.com/imulab/go-scim/protocol/db"
 	"github.com/imulab/go-scim/protocol/event"
 	"github.com/imulab/go-scim/protocol/handler"
@@ -11,18 +11,16 @@ import (
 	"github.com/imulab/go-scim/protocol/services"
 	"github.com/imulab/go-scim/protocol/services/filter"
 	"github.com/imulab/go-scim/server/groupsync"
-	"github.com/imulab/go-scim/server/logger"
 	"github.com/streadway/amqp"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type appContext struct {
 	serviceProviderConfig        *spec.ServiceProviderConfig
 	serviceProviderConfigHandler *handler.ServiceProviderConfig
-	rabbitMqCh                   *amqp.Channel
+	rabbitChannel                *amqp.Channel
+	mongoClient                  *mongo.Client
 	logger                       log.Logger
 
 	// user related
@@ -60,52 +58,76 @@ type appContext struct {
 	// todo root related: bulk, root query
 }
 
-func (c *appContext) initialize(args *args) error {
-	if err := c.loadLogger(); err != nil {
-		return err
+func (c *appContext) initialize(args *arguments) (err error) {
+	// logger
+	c.logger = args.Logger()
+
+	// service provider config
+	if c.serviceProviderConfig, err = args.ParseServiceProviderConfig(); err != nil {
+		return
+	} else {
+		c.serviceProviderConfigHandler = &handler.ServiceProviderConfig{
+			Log: c.logger,
+			SPC: c.serviceProviderConfig,
+		}
 	}
-	if err := c.loadServiceProviderConfig(args.serviceProviderConfigPath, c.serviceProviderConfig); err != nil {
+
+	// schemas
+	if schemas, err := args.ParseSchemas(); err != nil {
 		return err
+	} else {
+		for _, sch := range schemas {
+			spec.SchemaHub.Put(sch)
+		}
 	}
-	if err := c.loadSchemasInFolder(args.schemasFolderPath); err != nil {
-		return err
+
+	// resource type
+	if c.userResourceType, err = args.ParseUserResourceType(); err != nil {
+		return
+	} else if c.groupResourceType, err = args.ParseGroupResourceType(); err != nil {
+		return
+	} else {
+		expr.Register(c.userResourceType)
+		expr.Register(c.groupResourceType)
 	}
-	if err := c.loadRabbitMqChannel(args); err != nil {
-		return err
+
+	// rabbit
+	if c.rabbitChannel, err = args.Rabbit.Connect(); err != nil {
+		return
+	}
+
+	// mongo
+	if !args.MemoryDB {
+		if c.mongoClient, err = args.Mongo.Connect(); err != nil {
+			return
+		}
+		if mdBytes, err := args.Mongo.ReadMetadataBytes(); err != nil {
+			return err
+		} else {
+			for _, md := range mdBytes {
+				if err := scimmongo.ReadMetadata(md); err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	// user related
-	if err := c.loadResourceType(args.userResourceTypePath, c.userResourceType); err != nil {
-		return err
-	}
-	if err := c.loadUserDatabase(args); err != nil {
-		return err
-	}
-	if err := c.loadUserServices(); err != nil {
-		return err
-	}
-	if err := c.loadUserHandlers(); err != nil {
-		return err
-	}
+	c.loadUserDatabase(args)
+	c.loadUserServices()
+	c.loadUserHandlers()
 
 	// group related
-	if err := c.loadResourceType(args.groupResourceTypePath, c.groupResourceType); err != nil {
-		return err
+	c.loadGroupDatabase(args)
+	if err = c.loadGroupServices(); err != nil {
+		return
 	}
-	if err := c.loadGroupDatabase(args); err != nil {
-		return err
-	}
-	if err := c.loadGroupServices(); err != nil {
-		return err
-	}
-	if err := c.loadGroupHandlers(); err != nil {
-		return err
-	}
+	c.loadGroupHandlers()
 
-	return nil
+	return
 }
 
-func (c *appContext) loadUserHandlers() error {
+func (c *appContext) loadUserHandlers() {
 	c.userCreateHandler = &handler.Create{
 		Log:          c.logger,
 		Service:      c.userCreateService,
@@ -136,10 +158,9 @@ func (c *appContext) loadUserHandlers() error {
 		Log:     c.logger,
 		Service: c.userQueryService,
 	}
-	return nil
 }
 
-func (c *appContext) loadGroupHandlers() error {
+func (c *appContext) loadGroupHandlers() {
 	c.groupCreateHandler = &handler.Create{
 		Log:          c.logger,
 		Service:      c.groupCreateService,
@@ -170,10 +191,9 @@ func (c *appContext) loadGroupHandlers() error {
 		Log:     c.logger,
 		Service: c.groupQueryService,
 	}
-	return nil
 }
 
-func (c *appContext) loadUserServices() error {
+func (c *appContext) loadUserServices() {
 	c.userCreateService = &services.CreateService{
 		Logger:   c.logger,
 		Database: c.userDatabase,
@@ -223,11 +243,10 @@ func (c *appContext) loadUserServices() error {
 		Database:              c.userDatabase,
 		ServiceProviderConfig: c.serviceProviderConfig,
 	}
-	return nil
 }
 
 func (c *appContext) loadGroupServices() error {
-	syncSender, err := groupsync.Sender(c.rabbitMqCh, c.logger)
+	syncSender, err := groupsync.Sender(c.rabbitChannel, c.logger)
 	if err != nil {
 		return err
 	}
@@ -284,93 +303,20 @@ func (c *appContext) loadGroupServices() error {
 	return nil
 }
 
-func (c *appContext) loadUserDatabase(args *args) error {
-	c.userDatabase = db.Memory()
-	return nil
+func (c *appContext) loadUserDatabase(args *arguments) {
+	if args.MemoryDB {
+		c.userDatabase = db.Memory()
+	} else {
+		coll := c.mongoClient.Database(args.Mongo.Database, options.Database()).Collection(c.userResourceType.Name(), options.Collection())
+		c.userDatabase = scimmongo.DB(c.userResourceType, c.logger, coll, scimmongo.Options())
+	}
 }
 
-func (c *appContext) loadGroupDatabase(args *args) error {
-	c.groupDatabase = db.Memory()
-	return nil
-}
-
-func (c *appContext) loadResourceType(path string, dest *spec.ResourceType) error {
-	raw, err := c.readFile(path)
-	if err != nil {
-		return err
+func (c *appContext) loadGroupDatabase(args *arguments) {
+	if args.MemoryDB {
+		c.groupDatabase = db.Memory()
+	} else {
+		coll := c.mongoClient.Database(args.Mongo.Database, options.Database()).Collection(c.groupResourceType.Name(), options.Collection())
+		c.userDatabase = scimmongo.DB(c.groupResourceType, c.logger, coll, scimmongo.Options())
 	}
-	dest = new(spec.ResourceType)
-	err = json.Unmarshal(raw, dest)
-	if err != nil {
-		return err
-	}
-	expr.Register(dest)
-	return nil
-}
-
-func (c *appContext) loadSchemasInFolder(folder string) error {
-	return filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if strings.HasSuffix(info.Name(), ".json") {
-			raw, err := c.readFile(path)
-			if err != nil {
-				return err
-			}
-			schema := new(spec.Schema)
-			err = json.Unmarshal(raw, schema)
-			if err != nil {
-				return err
-			}
-			spec.SchemaHub.Put(schema)
-		}
-		return nil
-	})
-}
-
-func (c *appContext) loadLogger() error {
-	c.logger = logger.Zero()
-	return nil
-}
-
-func (c *appContext) loadServiceProviderConfig(path string, dest *spec.ServiceProviderConfig) error {
-	raw, err := c.readFile(path)
-	if err != nil {
-		return err
-	}
-	dest = new(spec.ServiceProviderConfig)
-	if err = json.Unmarshal(raw, dest); err != nil {
-		return err
-	}
-	c.serviceProviderConfigHandler = &handler.ServiceProviderConfig{
-		Log: c.logger,
-		SPC: dest,
-	}
-	return nil
-}
-
-func (c *appContext) loadRabbitMqChannel(args *args) (err error) {
-	conn, err := amqp.Dial(args.rabbitMqAddress)
-	if err != nil {
-		return err
-	}
-	ch, err := conn.Channel()
-	if err != nil {
-		return err
-	}
-	c.rabbitMqCh = ch
-	return
-}
-
-func (c *appContext) readFile(path string) ([]byte, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	raw, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-	return raw, nil
 }

@@ -1,32 +1,80 @@
 package groupsync
 
 import (
+	"github.com/imulab/go-scim/core/expr"
+	"github.com/imulab/go-scim/core/spec"
+	scimmongo "github.com/imulab/go-scim/mongo"
 	"github.com/imulab/go-scim/protocol/db"
 	"github.com/imulab/go-scim/protocol/log"
 	"github.com/imulab/go-scim/server/logger"
 	"github.com/streadway/amqp"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type appContext struct {
-	logger   log.Logger
-	userDB   db.DB
-	groupDB  db.DB
-	rabbitCh *amqp.Channel
+	serviceProviderConfig *spec.ServiceProviderConfig
+	rabbitChannel         *amqp.Channel
+	mongoClient           *mongo.Client
+	logger                log.Logger
+	userResourceType      *spec.ResourceType
+	groupResourceType     *spec.ResourceType
+	userDB                db.DB
+	groupDB               db.DB
 }
 
-func (c *appContext) initialize(args *args) error {
-	if err := c.loadLogger(); err != nil {
-		return err
+func (c *appContext) initialize(args *arguments) (err error) {
+	// logger
+	c.logger = args.Logger()
+
+	// service provider config
+	if c.serviceProviderConfig, err = args.ParseServiceProviderConfig(); err != nil {
+		return
 	}
-	if err := c.loadUserDatabase(args); err != nil {
+
+	// schemas
+	if schemas, err := args.ParseSchemas(); err != nil {
 		return err
+	} else {
+		for _, sch := range schemas {
+			spec.SchemaHub.Put(sch)
+		}
 	}
-	if err := c.loadGroupDatabase(args); err != nil {
-		return err
+
+	// resource type
+	if c.userResourceType, err = args.ParseUserResourceType(); err != nil {
+		return
+	} else if c.groupResourceType, err = args.ParseGroupResourceType(); err != nil {
+		return
+	} else {
+		expr.Register(c.userResourceType)
+		expr.Register(c.groupResourceType)
 	}
-	if err := c.loadRabbitMqChannel(args); err != nil {
-		return err
+
+	// rabbit
+	if c.rabbitChannel, err = args.Rabbit.Connect(); err != nil {
+		return
 	}
+
+	// mongo
+	if !args.MemoryDB {
+		if c.mongoClient, err = args.Mongo.Connect(); err != nil {
+			return
+		}
+		if mdBytes, err := args.Mongo.ReadMetadataBytes(); err != nil {
+			return err
+		} else {
+			for _, md := range mdBytes {
+				if err := scimmongo.ReadMetadata(md); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	c.loadUserDatabase(args)
+	c.loadGroupDatabase(args)
+
 	return nil
 }
 
@@ -35,25 +83,20 @@ func (c *appContext) loadLogger() error {
 	return nil
 }
 
-func (c *appContext) loadUserDatabase(args *args) error {
-	c.userDB = db.Memory()
-	return nil
+func (c *appContext) loadUserDatabase(args *arguments) {
+	if args.MemoryDB {
+		c.userDB = db.Memory()
+	} else {
+		coll := c.mongoClient.Database(args.Mongo.Database, options.Database()).Collection(c.userResourceType.Name(), options.Collection())
+		c.userDB = scimmongo.DB(c.userResourceType, c.logger, coll, scimmongo.Options())
+	}
 }
 
-func (c *appContext) loadGroupDatabase(args *args) error {
-	c.groupDB = db.Memory()
-	return nil
-}
-
-func (c *appContext) loadRabbitMqChannel(args *args) error {
-	conn, err := amqp.Dial(args.rabbitMqAddress)
-	if err != nil {
-		return err
+func (c *appContext) loadGroupDatabase(args *arguments) {
+	if args.MemoryDB {
+		c.userDB = db.Memory()
+	} else {
+		coll := c.mongoClient.Database(args.Mongo.Database, options.Database()).Collection(c.groupResourceType.Name(), options.Collection())
+		c.userDB = scimmongo.DB(c.groupResourceType, c.logger, coll, scimmongo.Options())
 	}
-	ch, err := conn.Channel()
-	if err != nil {
-		return err
-	}
-	c.rabbitCh = ch
-	return nil
 }

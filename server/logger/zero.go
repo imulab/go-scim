@@ -7,13 +7,30 @@ import (
 )
 
 func Zero() log.Logger {
-	return &zeroLogger{
-		logger: zerolog.New(os.Stderr).With().Timestamp().Logger(),
+	return ZeroL(log.LevelInfo)
+}
+
+func ZeroL(lvl log.Level) log.Logger {
+	l := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	switch lvl {
+	case log.LevelInfo:
+		l = l.Level(zerolog.InfoLevel)
+	case log.LevelDebug:
+		l = l.Level(zerolog.DebugLevel)
+	case log.LevelError:
+		l = l.Level(zerolog.ErrorLevel)
+	case log.LevelWarning:
+		l = l.Level(zerolog.WarnLevel)
+	case log.LevelFatal:
+		l = l.Level(zerolog.FatalLevel)
+	default:
+		l = l.Level(zerolog.InfoLevel)
 	}
+	return &zeroLogger{logger: l}
 }
 
 type zeroLogger struct {
-	logger 	zerolog.Logger
+	logger zerolog.Logger
 }
 
 func (l *zeroLogger) Info(message string, args log.Args) {
