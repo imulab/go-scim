@@ -70,14 +70,15 @@ func (s *Schema) GetAttribute(p Path, recursive bool) *Attribute {
 			switch attr.Name {
 			case "schemas", "id", "externalId", "meta":
 			case "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User":
-				basePath := strings.SplitAfter(p.Base(), ":")
-				subAttribute := strings.ToLower(basePath[len(basePath)-1])
+				slicePath := strings.SplitAfter(p.Base(), ":")
+				subAttribute := strings.ToLower(slicePath[len(slicePath)-1])
+
 				for i := 0; i < len(attr.SubAttributes); i++ {
 					if strings.ToLower(attr.SubAttributes[i].Name) == subAttribute {
 						if recursive {
-							return attr.GetAttribute(p.Next(), recursive)
+							return attr.SubAttributes[i].GetAttribute(p.Next(), recursive)
 						} else {
-							return attr
+							return attr.SubAttributes[i]
 						}
 					}
 				}
