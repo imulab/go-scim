@@ -211,7 +211,7 @@ func (a *Attribute) TypeExpectation() string {
 
 func (a *Attribute) ExpectsString() bool {
 	switch a.Type {
-	case TypeString, TypeDateTime, TypeReference, TypeBinary, TypeBoolean:
+	case TypeString, TypeDateTime, TypeReference, TypeBinary:
 		return !a.MultiValued
 	default:
 		return false
