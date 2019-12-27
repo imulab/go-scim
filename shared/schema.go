@@ -263,7 +263,7 @@ func (a *Attribute) GetAttribute(p Path, recursive bool) *Attribute {
 			} else {
 				return subAttr
 			}
-		} else if subAttr.SubAttributes != nil && len(subAttr.SubAttributes) == 0 {
+		} else if subAttr.SubAttributes != nil && len(subAttr.SubAttributes) != 0 {
 			for i := 0; i < len(subAttr.SubAttributes); i++ {
 				return subAttr.SubAttributes[i].GetAttribute(p, recursive)
 			}
