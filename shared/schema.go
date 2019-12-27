@@ -257,13 +257,16 @@ func (a *Attribute) GetAttribute(p Path, recursive bool) *Attribute {
 	}
 
 	for _, subAttr := range a.SubAttributes {
-		if strings.ToLower(subAttr.Name) == strings.ToLower(p.Base()) {
+		if (strings.ToLower(subAttr.Name) == strings.ToLower(p.Base())) || (subAttr.Assist != nil && strings.ToLower(subAttr.Assist.FullPath) == strings.ToLower(p.Base())) {
 			if recursive {
 				return subAttr.GetAttribute(p.Next(), recursive)
 			} else {
 				return subAttr
 			}
-
+		} else if subAttr.SubAttributes != nil && len(subAttr.SubAttributes) == 0 {
+			for i := 0; i < len(subAttr.SubAttributes); i++ {
+				return subAttr.SubAttributes[i].GetAttribute(p, recursive)
+			}
 		}
 	}
 
