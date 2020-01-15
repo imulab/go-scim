@@ -184,7 +184,7 @@ func (attr *Attribute) IsElementAttributeOf(other *Attribute) bool {
 // DeriveElementAttribute create an element attribute of this attribute. This method is only meaningful when invoked
 // on a multiValued attribute. The derived element attribute will inherit most properties from this attribute except
 // a few things: the id will be suffixed "$elem"; multiValued will be set to false; annotations will be derived from
-// "@AnnotationElementAnnotations" from this attribute.
+// "@ElementAnnotations" from this attribute.
 func (attr *Attribute) DeriveElementAttribute() *Attribute {
 	elemAttr := Attribute{
 		name:            attr.name,
@@ -205,7 +205,7 @@ func (attr *Attribute) DeriveElementAttribute() *Attribute {
 		annotations:     map[string]map[string]interface{}{},
 	}
 
-	if param, ok := attr.Annotation(internal.AnnotationElementAnnotations); ok {
+	if param, ok := attr.Annotation(internal.ElementAnnotations); ok {
 		for k, v := range param {
 			if rv := reflect.ValueOf(v); rv.Kind() != reflect.Map {
 				continue

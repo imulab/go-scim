@@ -85,6 +85,14 @@ func (r *schemaRegistry) Get(schemaId string) (schema *Schema, ok bool) {
 	return
 }
 
+func (r *schemaRegistry) mustGet(schemaId string) *Schema {
+	schema, ok := r.Get(schemaId)
+	if !ok {
+		panic("schema " + schemaId + " was not registered")
+	}
+	return schema
+}
+
 // Schemas return the schema registry that holds all registered schemas. Use Get and Register to operate the registry.
 func Schemas() *schemaRegistry {
 	schemaRegistryOnce.Do(func() {
