@@ -65,7 +65,7 @@ func (n *Navigator) At(index int) *Navigator {
 
 	child, err := n.Current().childAtIndex(index)
 	if err != nil {
-		n.err = fmt.Errorf("%w: no target at index '%s' from '%s'", spec.ErrNoTarget, index, n.Current().Attribute().Path())
+		n.err = fmt.Errorf("%w: no target at index '%d' from '%s'", spec.ErrNoTarget, index, n.Current().Attribute().Path())
 		return n
 	}
 

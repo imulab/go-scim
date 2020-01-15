@@ -1,7 +1,7 @@
 package prop
 
 import (
-	"github.com/elvsn/scim.go/prop/internal"
+	"github.com/elvsn/scim.go/internal/annotation"
 	"github.com/elvsn/scim.go/spec"
 	"sync"
 )
@@ -82,7 +82,7 @@ func (s *exclusivePrimarySubscriber) findPrimaryAssignedToTrueEvent(events []*Ev
 		if ev.typ != EventAssigned {
 			continue
 		}
-		if _, ok := ev.source.Attribute().Annotation(internal.Primary); !ok {
+		if _, ok := ev.source.Attribute().Annotation(annotation.Primary); !ok {
 			continue
 		}
 		if ev.source.Raw() != true {
@@ -101,7 +101,7 @@ func (s *exclusivePrimarySubscriber) findPrimaryAssignedToTrueEvent(events []*Ev
 
 func init() {
 	epSub := exclusivePrimarySubscriber{}
-	SubscriberFactory().Register(internal.ExclusivePrimary, func(params map[string]interface{}) Subscriber {
+	SubscriberFactory().Register(annotation.ExclusivePrimary, func(params map[string]interface{}) Subscriber {
 		return &epSub
 	})
 }

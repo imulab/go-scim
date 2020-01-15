@@ -3,6 +3,7 @@ package spec
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/elvsn/scim.go/internal/annotation"
 	"github.com/elvsn/scim.go/spec/internal"
 	"reflect"
 	"sort"
@@ -212,7 +213,7 @@ func (attr *Attribute) DeriveElementAttribute() *Attribute {
 		annotations:     map[string]map[string]interface{}{},
 	}
 
-	if param, ok := attr.Annotation(internal.ElementAnnotations); ok {
+	if param, ok := attr.Annotation(annotation.ElementAnnotations); ok {
 		for k, v := range param {
 			if rv := reflect.ValueOf(v); rv.Kind() != reflect.Map {
 				continue

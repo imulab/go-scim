@@ -2,6 +2,7 @@ package spec
 
 import (
 	"encoding/json"
+	"github.com/elvsn/scim.go/internal/annotation"
 	"github.com/elvsn/scim.go/spec/internal"
 )
 
@@ -105,7 +106,7 @@ func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 
 	if includeCore {
 		super.subAttributes = append(super.subAttributes, Schemas().mustGet(internal.CoreSchemaId).attributes...)
-		super.annotations[internal.SyncSchema] = map[string]interface{}{}
+		super.annotations[annotation.SyncSchema] = map[string]interface{}{}
 	}
 
 	super.subAttributes = append(super.subAttributes, t.schema.attributes...)
@@ -125,8 +126,8 @@ func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 			index:         i,
 			path:          extension.id,
 			annotations: map[string]map[string]interface{}{
-				internal.StateSummary:        {},
-				internal.SchemaExtensionRoot: {},
+				annotation.StateSummary:        {},
+				annotation.SchemaExtensionRoot: {},
 			},
 		})
 		i++
