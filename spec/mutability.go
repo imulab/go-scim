@@ -1,0 +1,52 @@
+package spec
+
+import "encoding/json"
+
+// SCIM mutability definition
+type Mutability int
+
+const (
+	// SCIM mutability attribute defined in RFC7643
+	MutabilityReadWrite Mutability = iota
+	MutabilityReadOnly
+	MutabilityWriteOnly
+	MutabilityImmutable
+)
+
+func mustParseMutability(value string) Mutability {
+	switch value {
+	case "readWrite", "":
+		return MutabilityReadWrite
+	case "readOnly":
+		return MutabilityReadOnly
+	case "immutable":
+		return MutabilityImmutable
+	case "writeOnly":
+		return MutabilityWriteOnly
+	default:
+		panic("invalid mutability value")
+	}
+}
+
+func (m Mutability) String() string {
+	switch m {
+	case MutabilityReadWrite:
+		return "readWrite"
+	case MutabilityReadOnly:
+		return "readOnly"
+	case MutabilityImmutable:
+		return "immutable"
+	case MutabilityWriteOnly:
+		return "writeOnly"
+	default:
+		panic("invalid mutability")
+	}
+}
+
+func (m Mutability) MarshalJSON() ([]byte, error) {
+	return []byte(m.String()), nil
+}
+
+var (
+	_ json.Marshaler = (Mutability)(0)
+)
