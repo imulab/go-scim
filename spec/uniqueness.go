@@ -1,7 +1,5 @@
 package spec
 
-import "encoding/json"
-
 // SCIM uniqueness definition
 type Uniqueness int
 
@@ -37,11 +35,3 @@ func (u Uniqueness) String() string {
 		panic("invalid uniqueness")
 	}
 }
-
-func (u Uniqueness) MarshalJSON() ([]byte, error) {
-	return []byte(u.String()), nil
-}
-
-var (
-	_ json.Marshaler = (Uniqueness)(0)
-)

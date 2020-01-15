@@ -1,7 +1,5 @@
 package spec
 
-import "encoding/json"
-
 // SCIM returned definition
 type Returned int
 
@@ -42,11 +40,3 @@ func (r Returned) String() string {
 		panic("invalid return-ability")
 	}
 }
-
-func (r Returned) MarshalJSON() ([]byte, error) {
-	return []byte(r.String()), nil
-}
-
-var (
-	_ json.Marshaler = (Returned)(0)
-)

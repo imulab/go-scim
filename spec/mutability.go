@@ -1,7 +1,5 @@
 package spec
 
-import "encoding/json"
-
 // SCIM mutability definition
 type Mutability int
 
@@ -42,11 +40,3 @@ func (m Mutability) String() string {
 		panic("invalid mutability")
 	}
 }
-
-func (m Mutability) MarshalJSON() ([]byte, error) {
-	return []byte(m.String()), nil
-}
-
-var (
-	_ json.Marshaler = (Mutability)(0)
-)

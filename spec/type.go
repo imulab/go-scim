@@ -1,7 +1,5 @@
 package spec
 
-import "encoding/json"
-
 // A SCIM data type
 type Type int
 
@@ -40,7 +38,6 @@ func mustParseType(value string) Type {
 	}
 }
 
-// Return the standard string representation of this type
 func (t Type) String() string {
 	switch t {
 	case TypeString:
@@ -63,11 +60,3 @@ func (t Type) String() string {
 		panic("invalid type")
 	}
 }
-
-func (t Type) MarshalJSON() ([]byte, error) {
-	return []byte(t.String()), nil
-}
-
-var (
-	_ json.Marshaler = (Type)(0)
-)
