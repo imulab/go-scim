@@ -1,6 +1,8 @@
 package prop
 
-import "github.com/elvsn/scim.go/spec"
+import (
+	"github.com/elvsn/scim.go/spec"
+)
 
 // Property holds a piece of data and is describe by an Attribute.
 type Property interface {

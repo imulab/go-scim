@@ -176,6 +176,13 @@ func (attr *Attribute) Annotation(name string) (params map[string]interface{}, o
 	return
 }
 
+// ForEachAnnotation iterates through annotations and invoke callback.
+func (attr *Attribute) ForEachAnnotation(callback func(annotation string, params map[string]interface{})) {
+	for k, v := range attr.annotations {
+		callback(k, v)
+	}
+}
+
 // IsElementAttributeOf returns true if this attribute is the derived element attribute of the other attribute.
 func (attr *Attribute) IsElementAttributeOf(other *Attribute) bool {
 	return fmt.Sprintf("%s%s", other.ID(), elemSuffix) == attr.ID()

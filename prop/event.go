@@ -23,10 +23,3 @@ const (
 	// when it was in an "assigned" state, otherwise, no event would be emitted.
 	EventUnassigned
 )
-
-// A subscriber to the event.
-type Subscriber interface {
-	// Be notified and react to the a series of events. Subscriber is allowed to modify the events list in order to
-	// affect downstream subscribers.
-	Notify(publisher Property, events []*Event) error
-}

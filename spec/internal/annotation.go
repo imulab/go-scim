@@ -5,11 +5,11 @@ const (
 	SyncSchema          = "@SyncSchema"
 	StateSummary        = "@StateSummary"
 	SchemaExtensionRoot = "@SchemaExtensionRoot"
-	ExclusivePrimary    = "@ExclusivePrimary"
-	AutoCompact         = "@AutoCompact"
-	Primary             = "@Primary"
-	Identity            = "@Identity"
-	CopyReadOnly        = "@CopyReadOnly"
+
+	AutoCompact = "@AutoCompact"
+
+	Identity     = "@Identity"
+	CopyReadOnly = "@CopyReadOnly"
 	// Annotation to contain other annotations intended for the derived element annotations
 	ElementAnnotations = "@ElementAnnotations"
 )
