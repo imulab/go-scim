@@ -23,6 +23,7 @@ func TestStringProperty(t *testing.T) {
 type StringPropertyTestSuite struct {
 	suite.Suite
 	PropertyTestSuite
+	OperatorTestSuite
 	standardAttr *spec.Attribute
 }
 
@@ -407,6 +408,369 @@ func (s *StringPropertyTestSuite) TestDelete() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			s.testDelete(t, test.prop, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestEqualTo() {
+	tests := []struct {
+		name   string
+		prop   Property
+		v      interface{}
+		expect bool
+	}{
+		{
+			name:   "equal value",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "foobar",
+			expect: true,
+		},
+		{
+			name:   "equal value case insensitive",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "FOOBAR",
+			expect: true,
+		},
+		{
+			name:   "unequal value",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "random",
+			expect: false,
+		},
+		{
+			name:   "unassigned does not equal",
+			prop:   NewString(s.standardAttr),
+			v:      "random",
+			expect: false,
+		},
+		{
+			name:   "incompatible does not equal",
+			prop:   NewString(s.standardAttr),
+			v:      123,
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testEqualTo(t, test.prop, test.v, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestStartsWith() {
+	tests := []struct {
+		name   string
+		prop   Property
+		v      string
+		expect bool
+	}{
+		{
+			name:   "starts with prefix",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "foo",
+			expect: true,
+		},
+		{
+			name:   "starts with prefix case insensitive",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "FOO",
+			expect: true,
+		},
+		{
+			name:   "does not start with",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "random",
+			expect: false,
+		},
+		{
+			name:   "unassigned",
+			prop:   NewString(s.standardAttr),
+			v:      "random",
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testStartsWith(t, test.prop, test.v, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestEndsWith() {
+	tests := []struct {
+		name   string
+		prop   Property
+		v      string
+		expect bool
+	}{
+		{
+			name:   "ends with suffix",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "bar",
+			expect: true,
+		},
+		{
+			name:   "ends with suffix case insensitive",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "BAR",
+			expect: true,
+		},
+		{
+			name:   "does not end with",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "random",
+			expect: false,
+		},
+		{
+			name:   "unassigned",
+			prop:   NewString(s.standardAttr),
+			v:      "random",
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testEndsWith(t, test.prop, test.v, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestContains() {
+	tests := []struct {
+		name   string
+		prop   Property
+		v      string
+		expect bool
+	}{
+		{
+			name:   "contains",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "oo",
+			expect: true,
+		},
+		{
+			name:   "contains case insensitive",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "Oo",
+			expect: true,
+		},
+		{
+			name:   "does not contain",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			v:      "random",
+			expect: false,
+		},
+		{
+			name:   "unassigned",
+			prop:   NewString(s.standardAttr),
+			v:      "random",
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testContains(t, test.prop, test.v, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestGreaterThan() {
+	tests := []struct {
+		name   string
+		prop   Property
+		value  interface{}
+		expect bool
+	}{
+		{
+			name:   "greater than",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "a",
+			expect: true,
+		},
+		{
+			name:   "greater than case insensitive",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "A",
+			expect: true,
+		},
+		{
+			name:   "not greater than",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "z",
+			expect: false,
+		},
+		{
+			name:   "incompatible",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  123,
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testGreaterThan(t, test.prop, test.value, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestGreaterThanOrEqualTo() {
+	tests := []struct {
+		name   string
+		prop   Property
+		value  interface{}
+		expect bool
+	}{
+		{
+			name:   "greater than",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "a",
+			expect: true,
+		},
+		{
+			name:   "greater than case insensitive",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "A",
+			expect: true,
+		},
+		{
+			name:   "equal",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "m",
+			expect: true,
+		},
+		{
+			name:   "not greater than",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "z",
+			expect: false,
+		},
+		{
+			name:   "incompatible",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  123,
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testGreaterThanOrEqualTo(t, test.prop, test.value, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestLessThan() {
+	tests := []struct {
+		name   string
+		prop   Property
+		value  interface{}
+		expect bool
+	}{
+		{
+			name:   "less than",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "z",
+			expect: true,
+		},
+		{
+			name:   "less than case insensitive",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "Z",
+			expect: true,
+		},
+		{
+			name:   "not less than",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "a",
+			expect: false,
+		},
+		{
+			name:   "incompatible",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  123,
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testLessThan(t, test.prop, test.value, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestLessThanOrEqualTo() {
+	tests := []struct {
+		name   string
+		prop   Property
+		value  interface{}
+		expect bool
+	}{
+		{
+			name:   "less than",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "z",
+			expect: true,
+		},
+		{
+			name:   "less than case insensitive",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "Z",
+			expect: true,
+		},
+		{
+			name:   "equal",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "m",
+			expect: true,
+		},
+		{
+			name:   "not less than",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  "a",
+			expect: false,
+		},
+		{
+			name:   "incompatible",
+			prop:   NewStringOf(s.standardAttr, "m"),
+			value:  123,
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testLessThanOrEqualTo(t, test.prop, test.value, test.expect)
+		})
+	}
+}
+
+func (s *StringPropertyTestSuite) TestPresent() {
+	tests := []struct {
+		name   string
+		prop   Property
+		expect bool
+	}{
+		{
+			name:   "assigned is present",
+			prop:   NewStringOf(s.standardAttr, "foobar"),
+			expect: true,
+		},
+		{
+			name:   "unassigned is not present",
+			prop:   NewString(s.standardAttr),
+			expect: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			s.testPresent(t, test.prop, test.expect)
 		})
 	}
 }
