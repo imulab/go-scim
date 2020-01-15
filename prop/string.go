@@ -19,7 +19,7 @@ func NewString(attr *spec.Attribute) Property {
 	return &p
 }
 
-// NewString creates a new string property of given value associated with attribute.
+// NewStringOf creates a new string property of given value associated with attribute.
 func NewStringOf(attr *spec.Attribute, value string) Property {
 	p := NewString(attr)
 	_, err := p.Replace(value)

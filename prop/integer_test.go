@@ -9,42 +9,42 @@ import (
 	"testing"
 )
 
-func TestStringProperty(t *testing.T) {
-	s := new(StringPropertyTestSuite)
+func TestIntegerProperty(t *testing.T) {
+	s := new(IntegerPropertyTestSuite)
 
-	s.NewFunc = NewString
+	s.NewFunc = NewInteger
 	s.NewOfFunc = func(attr *spec.Attribute, v interface{}) Property {
-		return NewStringOf(attr, v.(string))
+		return NewIntegerOf(attr, v.(int64))
 	}
 
 	suite.Run(t, s)
 }
 
-type StringPropertyTestSuite struct {
+type IntegerPropertyTestSuite struct {
 	suite.Suite
 	PropertyTestSuite
 	OperatorTestSuite
 	standardAttr *spec.Attribute
 }
 
-func (s *StringPropertyTestSuite) SetupSuite() {
+func (s *IntegerPropertyTestSuite) SetupSuite() {
 	s.standardAttr = s.mustAttribute(s.T(), strings.NewReader(`
 {
-  "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
-  "name": "userName",
-  "type": "string",
+  "id": "urn:ietf:params:scim:schemas:extension:test:2.0:User:age",
+  "name": "age",
+  "type": "integer",
   "multiValued": false,
-  "required": true,
+  "required": false,
   "caseExact": false,
   "mutability": "readWrite",
   "returned": "default",
   "uniqueness": "none",
-  "_path": "userName",
-  "_index": 10
+  "_path": "age",
+  "_index": 100
 }`))
 }
 
-func (s *StringPropertyTestSuite) TestNew() {
+func (s *IntegerPropertyTestSuite) TestNew() {
 	tests := []struct {
 		name        string
 		description string
@@ -53,32 +53,19 @@ func (s *StringPropertyTestSuite) TestNew() {
 		expect      func(t *testing.T, p Property)
 	}{
 		{
-			name: "new string of string attribute",
-			attr: s.mustAttribute(s.T(), strings.NewReader(`
-{
-  "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
-  "name": "userName",
-  "type": "string",
-  "multiValued": false,
-  "required": true,
-  "caseExact": false,
-  "mutability": "readWrite",
-  "returned": "default",
-  "uniqueness": "none",
-  "_path": "userName",
-  "_index": 10
-}`)),
+			name: "new integer of integer attribute",
+			attr: s.standardAttr,
 			expect: func(t *testing.T, p Property) {
-				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User:userName", p.Attribute().ID())
-				assert.Equal(t, spec.TypeString, p.Attribute().Type())
+				assert.Equal(t, "urn:ietf:params:scim:schemas:extension:test:2.0:User:age", p.Attribute().ID())
+				assert.Equal(t, spec.TypeInteger, p.Attribute().Type())
 				assert.True(t, p.IsUnassigned())
 			},
 		},
 		{
-			name: "new string auto load subscribers",
+			name: "new integer auto load subscribers",
 			description: `
 This test confirms the capability to automatically load registered subscribers associated with annotations in the
-attribute. StringPropertyTestSuite is a dummy implementation of Subscriber, which is registered to annotation @Test.
+attribute. IntegerPropertyTestSuite is a dummy implementation of Subscriber, which is registered to annotation @Test.
 `,
 			before: func() {
 				SubscriberFactory().Register("@Test", func(params map[string]interface{}) Subscriber {
@@ -87,26 +74,26 @@ attribute. StringPropertyTestSuite is a dummy implementation of Subscriber, whic
 			},
 			attr: s.mustAttribute(s.T(), strings.NewReader(`
 {
-  "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
-  "name": "userName",
-  "type": "string",
+  "id": "urn:ietf:params:scim:schemas:extension:test:2.0:User:age",
+  "name": "age",
+  "type": "integer",
   "multiValued": false,
-  "required": true,
+  "required": false,
   "caseExact": false,
   "mutability": "readWrite",
   "returned": "default",
   "uniqueness": "none",
-  "_path": "userName",
-  "_index": 10,
+  "_path": "age",
+  "_index": 100,
   "_annotations": {
     "@Test": {}
   }
 }`)),
 			expect: func(t *testing.T, p Property) {
-				assert.Equal(t, "urn:ietf:params:scim:schemas:core:2.0:User:userName", p.Attribute().ID())
-				assert.Equal(t, spec.TypeString, p.Attribute().Type())
+				assert.Equal(t, "urn:ietf:params:scim:schemas:extension:test:2.0:User:age", p.Attribute().ID())
+				assert.Equal(t, spec.TypeInteger, p.Attribute().Type())
 				assert.True(t, p.IsUnassigned())
-				assert.Len(t, p.(*stringProperty).subscribers, 1)
+				assert.Len(t, p.(*integerProperty).subscribers, 1)
 			},
 		},
 	}
@@ -118,17 +105,17 @@ attribute. StringPropertyTestSuite is a dummy implementation of Subscriber, whic
 	}
 }
 
-func (s *StringPropertyTestSuite) TestRaw() {
+func (s *IntegerPropertyTestSuite) TestRaw() {
 	tests := []struct {
 		name     string
 		attr     *spec.Attribute
-		getValue func() *string
+		getValue func() *int64
 		expect   func(t *testing.T, raw interface{})
 	}{
 		{
 			name: "unassigned returns nil",
 			attr: s.standardAttr,
-			getValue: func() *string {
+			getValue: func() *int64 {
 				return nil
 			},
 			expect: func(t *testing.T, raw interface{}) {
@@ -138,12 +125,12 @@ func (s *StringPropertyTestSuite) TestRaw() {
 		{
 			name: "assigned returns string",
 			attr: s.standardAttr,
-			getValue: func() *string {
-				str := "foobar"
-				return &str
+			getValue: func() *int64 {
+				i := int64(64)
+				return &i
 			},
 			expect: func(t *testing.T, raw interface{}) {
-				assert.Equal(t, "foobar", raw)
+				assert.Equal(t, int64(64), raw)
 			},
 		},
 	}
@@ -160,17 +147,17 @@ func (s *StringPropertyTestSuite) TestRaw() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestUnassigned() {
+func (s *IntegerPropertyTestSuite) TestUnassigned() {
 	tests := []struct {
 		name     string
 		attr     *spec.Attribute
-		getValue func() *string
+		getValue func() *int64
 		expect   func(t *testing.T, unassigned bool)
 	}{
 		{
 			name: "unassigned returns true",
 			attr: s.standardAttr,
-			getValue: func() *string {
+			getValue: func() *int64 {
 				return nil
 			},
 			expect: func(t *testing.T, unassigned bool) {
@@ -180,9 +167,9 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 		{
 			name: "assigned returns false",
 			attr: s.standardAttr,
-			getValue: func() *string {
-				str := "foobar"
-				return &str
+			getValue: func() *int64 {
+				i := int64(64)
+				return &i
 			},
 			expect: func(t *testing.T, unassigned bool) {
 				assert.False(t, unassigned)
@@ -202,7 +189,7 @@ func (s *StringPropertyTestSuite) TestUnassigned() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestMatches() {
+func (s *IntegerPropertyTestSuite) TestMatches() {
 	tests := []struct {
 		name   string
 		getA   func(t *testing.T) Property
@@ -212,10 +199,10 @@ func (s *StringPropertyTestSuite) TestMatches() {
 		{
 			name: "unassigned property of same attribute matches",
 			getA: func(t *testing.T) Property {
-				return NewString(s.standardAttr)
+				return NewInteger(s.standardAttr)
 			},
 			getB: func(t *testing.T) Property {
-				return NewString(s.standardAttr)
+				return NewInteger(s.standardAttr)
 			},
 			expect: func(t *testing.T, match bool) {
 				assert.True(t, match)
@@ -224,10 +211,10 @@ func (s *StringPropertyTestSuite) TestMatches() {
 		{
 			name: "assigned property of same attribute and value matches",
 			getA: func(t *testing.T) Property {
-				return NewStringOf(s.standardAttr, "foobar")
+				return NewIntegerOf(s.standardAttr, 64)
 			},
 			getB: func(t *testing.T) Property {
-				return NewStringOf(s.standardAttr, "foobar")
+				return NewIntegerOf(s.standardAttr, 64)
 			},
 			expect: func(t *testing.T, match bool) {
 				assert.True(t, match)
@@ -236,10 +223,10 @@ func (s *StringPropertyTestSuite) TestMatches() {
 		{
 			name: "assigned property of same attribute but different value does not match",
 			getA: func(t *testing.T) Property {
-				return NewStringOf(s.standardAttr, "foo")
+				return NewIntegerOf(s.standardAttr, 64)
 			},
 			getB: func(t *testing.T) Property {
-				return NewStringOf(s.standardAttr, "bar")
+				return NewIntegerOf(s.standardAttr, 32)
 			},
 			expect: func(t *testing.T, match bool) {
 				assert.False(t, match)
@@ -248,10 +235,10 @@ func (s *StringPropertyTestSuite) TestMatches() {
 		{
 			name: "assigned property does not match with unassigned property",
 			getA: func(t *testing.T) Property {
-				return NewStringOf(s.standardAttr, "foo")
+				return NewIntegerOf(s.standardAttr, 64)
 			},
 			getB: func(t *testing.T) Property {
-				return NewString(s.standardAttr)
+				return NewInteger(s.standardAttr)
 			},
 			expect: func(t *testing.T, match bool) {
 				assert.False(t, match)
@@ -260,15 +247,15 @@ func (s *StringPropertyTestSuite) TestMatches() {
 		{
 			name: "different attribute does not match",
 			getA: func(t *testing.T) Property {
-				return NewStringOf(s.standardAttr, "foo")
+				return NewIntegerOf(s.standardAttr, 64)
 			},
 			getB: func(t *testing.T) Property {
-				return NewString(s.mustAttribute(s.T(), strings.NewReader(`
+				return NewInteger(s.mustAttribute(s.T(), strings.NewReader(`
 {
-  "id": "urn:ietf:params:scim:schemas:core:2.0:User:displayName",
-  "name": "displayName",
-  "type": "string",
-  "_path": "displayName",
+  "id": "urn:ietf:params:scim:schemas:core:2.0:User:someNumber",
+  "name": "someNumber",
+  "type": "integer",
+  "_path": "someNumber",
   "_index": 10
 }`)))
 			},
@@ -285,18 +272,18 @@ func (s *StringPropertyTestSuite) TestMatches() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestClone() {
+func (s *IntegerPropertyTestSuite) TestClone() {
 	tests := []struct {
 		name string
 		prop Property
 	}{
 		{
 			name: "clone unassigned property",
-			prop: NewString(s.standardAttr),
+			prop: NewInteger(s.standardAttr),
 		},
 		{
 			name: "clone assigned property",
-			prop: NewStringOf(s.standardAttr, "foobar"),
+			prop: NewIntegerOf(s.standardAttr, 64),
 		},
 	}
 
@@ -307,7 +294,7 @@ func (s *StringPropertyTestSuite) TestClone() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestAdd() {
+func (s *IntegerPropertyTestSuite) TestAdd() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -316,26 +303,26 @@ func (s *StringPropertyTestSuite) TestAdd() {
 	}{
 		{
 			name:  "add to unassigned",
-			prop:  NewString(s.standardAttr),
-			value: "foobar",
+			prop:  NewInteger(s.standardAttr),
+			value: int64(64),
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
-				assert.Equal(t, "foobar", raw)
+				assert.Equal(t, int64(64), raw)
 			},
 		},
 		{
 			name:  "add to assigned",
-			prop:  NewStringOf(s.standardAttr, "foo"),
-			value: "bar",
+			prop:  NewIntegerOf(s.standardAttr, 64),
+			value: int64(128),
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
-				assert.Equal(t, "bar", raw)
+				assert.Equal(t, int64(128), raw)
 			},
 		},
 		{
 			name:  "add incompatible value",
-			prop:  NewString(s.standardAttr),
-			value: 123,
+			prop:  NewIntegerOf(s.standardAttr, 64),
+			value: "123",
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.NotNil(t, err)
 				assert.Equal(t, spec.ErrInvalidValue, errors.Unwrap(err))
@@ -350,7 +337,7 @@ func (s *StringPropertyTestSuite) TestAdd() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestReplace() {
+func (s *IntegerPropertyTestSuite) TestReplace() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -359,26 +346,26 @@ func (s *StringPropertyTestSuite) TestReplace() {
 	}{
 		{
 			name:  "replace unassigned",
-			prop:  NewString(s.standardAttr),
-			value: "foobar",
+			prop:  NewInteger(s.standardAttr),
+			value: int64(64),
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
-				assert.Equal(t, "foobar", raw)
+				assert.Equal(t, int64(64), raw)
 			},
 		},
 		{
 			name:  "replace assigned",
-			prop:  NewStringOf(s.standardAttr, "foo"),
-			value: "bar",
+			prop:  NewIntegerOf(s.standardAttr, int64(64)),
+			value: int64(128),
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
-				assert.Equal(t, "bar", raw)
+				assert.Equal(t, int64(128), raw)
 			},
 		},
 		{
 			name:  "replace incompatible value",
-			prop:  NewString(s.standardAttr),
-			value: 123,
+			prop:  NewInteger(s.standardAttr),
+			value: "123",
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.NotNil(t, err)
 				assert.Equal(t, spec.ErrInvalidValue, errors.Unwrap(err))
@@ -393,7 +380,7 @@ func (s *StringPropertyTestSuite) TestReplace() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestDelete() {
+func (s *IntegerPropertyTestSuite) TestDelete() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -401,14 +388,14 @@ func (s *StringPropertyTestSuite) TestDelete() {
 	}{
 		{
 			name: "delete unassigned",
-			prop: NewString(s.standardAttr),
+			prop: NewInteger(s.standardAttr),
 			expect: func(t *testing.T, err error) {
 				assert.Nil(t, err)
 			},
 		},
 		{
 			name: "delete assigned",
-			prop: NewStringOf(s.standardAttr, "foo"),
+			prop: NewIntegerOf(s.standardAttr, 64),
 			expect: func(t *testing.T, err error) {
 				assert.Nil(t, err)
 			},
@@ -422,7 +409,7 @@ func (s *StringPropertyTestSuite) TestDelete() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestEqualTo() {
+func (s *IntegerPropertyTestSuite) TestEqualTo() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -431,32 +418,26 @@ func (s *StringPropertyTestSuite) TestEqualTo() {
 	}{
 		{
 			name:   "equal value",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "foobar",
-			expect: true,
-		},
-		{
-			name:   "equal value case insensitive",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "FOOBAR",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			v:      64,
 			expect: true,
 		},
 		{
 			name:   "unequal value",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "random",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			v:      128,
 			expect: false,
 		},
 		{
 			name:   "unassigned does not equal",
-			prop:   NewString(s.standardAttr),
-			v:      "random",
+			prop:   NewInteger(s.standardAttr),
+			v:      64,
 			expect: false,
 		},
 		{
 			name:   "incompatible does not equal",
-			prop:   NewString(s.standardAttr),
-			v:      123,
+			prop:   NewInteger(s.standardAttr),
+			v:      "123",
 			expect: false,
 		},
 	}
@@ -468,127 +449,7 @@ func (s *StringPropertyTestSuite) TestEqualTo() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestStartsWith() {
-	tests := []struct {
-		name   string
-		prop   Property
-		v      string
-		expect bool
-	}{
-		{
-			name:   "starts with prefix",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "foo",
-			expect: true,
-		},
-		{
-			name:   "starts with prefix case insensitive",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "FOO",
-			expect: true,
-		},
-		{
-			name:   "does not start with",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "random",
-			expect: false,
-		},
-		{
-			name:   "unassigned",
-			prop:   NewString(s.standardAttr),
-			v:      "random",
-			expect: false,
-		},
-	}
-
-	for _, test := range tests {
-		s.T().Run(test.name, func(t *testing.T) {
-			s.testStartsWith(t, test.prop, test.v, test.expect)
-		})
-	}
-}
-
-func (s *StringPropertyTestSuite) TestEndsWith() {
-	tests := []struct {
-		name   string
-		prop   Property
-		v      string
-		expect bool
-	}{
-		{
-			name:   "ends with suffix",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "bar",
-			expect: true,
-		},
-		{
-			name:   "ends with suffix case insensitive",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "BAR",
-			expect: true,
-		},
-		{
-			name:   "does not end with",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "random",
-			expect: false,
-		},
-		{
-			name:   "unassigned",
-			prop:   NewString(s.standardAttr),
-			v:      "random",
-			expect: false,
-		},
-	}
-
-	for _, test := range tests {
-		s.T().Run(test.name, func(t *testing.T) {
-			s.testEndsWith(t, test.prop, test.v, test.expect)
-		})
-	}
-}
-
-func (s *StringPropertyTestSuite) TestContains() {
-	tests := []struct {
-		name   string
-		prop   Property
-		v      string
-		expect bool
-	}{
-		{
-			name:   "contains",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "oo",
-			expect: true,
-		},
-		{
-			name:   "contains case insensitive",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "Oo",
-			expect: true,
-		},
-		{
-			name:   "does not contain",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
-			v:      "random",
-			expect: false,
-		},
-		{
-			name:   "unassigned",
-			prop:   NewString(s.standardAttr),
-			v:      "random",
-			expect: false,
-		},
-	}
-
-	for _, test := range tests {
-		s.T().Run(test.name, func(t *testing.T) {
-			s.testContains(t, test.prop, test.v, test.expect)
-		})
-	}
-}
-
-func (s *StringPropertyTestSuite) TestGreaterThan() {
+func (s *IntegerPropertyTestSuite) TestGreaterThan() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -597,26 +458,20 @@ func (s *StringPropertyTestSuite) TestGreaterThan() {
 	}{
 		{
 			name:   "greater than",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "a",
-			expect: true,
-		},
-		{
-			name:   "greater than case insensitive",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "A",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  32,
 			expect: true,
 		},
 		{
 			name:   "not greater than",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "z",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  128,
 			expect: false,
 		},
 		{
 			name:   "incompatible",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  123,
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  "123",
 			expect: false,
 		},
 	}
@@ -628,7 +483,7 @@ func (s *StringPropertyTestSuite) TestGreaterThan() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestGreaterThanOrEqualTo() {
+func (s *IntegerPropertyTestSuite) TestGreaterThanOrEqualTo() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -637,32 +492,26 @@ func (s *StringPropertyTestSuite) TestGreaterThanOrEqualTo() {
 	}{
 		{
 			name:   "greater than",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "a",
-			expect: true,
-		},
-		{
-			name:   "greater than case insensitive",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "A",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  32,
 			expect: true,
 		},
 		{
 			name:   "equal",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "m",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  64,
 			expect: true,
 		},
 		{
 			name:   "not greater than",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "z",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  128,
 			expect: false,
 		},
 		{
 			name:   "incompatible",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  123,
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  "123",
 			expect: false,
 		},
 	}
@@ -674,7 +523,7 @@ func (s *StringPropertyTestSuite) TestGreaterThanOrEqualTo() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestLessThan() {
+func (s *IntegerPropertyTestSuite) TestLessThan() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -683,26 +532,20 @@ func (s *StringPropertyTestSuite) TestLessThan() {
 	}{
 		{
 			name:   "less than",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "z",
-			expect: true,
-		},
-		{
-			name:   "less than case insensitive",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "Z",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  128,
 			expect: true,
 		},
 		{
 			name:   "not less than",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "a",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  32,
 			expect: false,
 		},
 		{
 			name:   "incompatible",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  123,
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  "123",
 			expect: false,
 		},
 	}
@@ -714,7 +557,7 @@ func (s *StringPropertyTestSuite) TestLessThan() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestLessThanOrEqualTo() {
+func (s *IntegerPropertyTestSuite) TestLessThanOrEqualTo() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -723,32 +566,26 @@ func (s *StringPropertyTestSuite) TestLessThanOrEqualTo() {
 	}{
 		{
 			name:   "less than",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "z",
-			expect: true,
-		},
-		{
-			name:   "less than case insensitive",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "Z",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  128,
 			expect: true,
 		},
 		{
 			name:   "equal",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "m",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  64,
 			expect: true,
 		},
 		{
 			name:   "not less than",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  "a",
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  32,
 			expect: false,
 		},
 		{
 			name:   "incompatible",
-			prop:   NewStringOf(s.standardAttr, "m"),
-			value:  123,
+			prop:   NewIntegerOf(s.standardAttr, 64),
+			value:  "123",
 			expect: false,
 		},
 	}
@@ -760,7 +597,7 @@ func (s *StringPropertyTestSuite) TestLessThanOrEqualTo() {
 	}
 }
 
-func (s *StringPropertyTestSuite) TestPresent() {
+func (s *IntegerPropertyTestSuite) TestPresent() {
 	tests := []struct {
 		name   string
 		prop   Property
@@ -768,12 +605,12 @@ func (s *StringPropertyTestSuite) TestPresent() {
 	}{
 		{
 			name:   "assigned is present",
-			prop:   NewStringOf(s.standardAttr, "foobar"),
+			prop:   NewIntegerOf(s.standardAttr, 64),
 			expect: true,
 		},
 		{
 			name:   "unassigned is not present",
-			prop:   NewString(s.standardAttr),
+			prop:   NewInteger(s.standardAttr),
 			expect: false,
 		},
 	}
@@ -785,10 +622,10 @@ func (s *StringPropertyTestSuite) TestPresent() {
 	}
 }
 
-func (s *StringPropertyTestSuite) Notify(_ Property, _ []*Event) error {
+func (s *IntegerPropertyTestSuite) Notify(_ Property, _ []*Event) error {
 	return nil
 }
 
 var (
-	_ Subscriber = (*StringPropertyTestSuite)(nil)
+	_ Subscriber = (*IntegerPropertyTestSuite)(nil)
 )

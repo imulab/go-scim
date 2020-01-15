@@ -31,14 +31,14 @@ func (s *PropertyTestSuite) testNew(
 func (s *PropertyTestSuite) testRaw(
 	t *testing.T,
 	attr *spec.Attribute,
-	value *string,
+	value interface{},
 	expect func(t *testing.T, raw interface{}),
 ) {
 	var p Property
 	if value == nil {
 		p = s.NewFunc(attr)
 	} else {
-		p = s.NewOfFunc(attr, *value)
+		p = s.NewOfFunc(attr, value)
 	}
 	expect(t, p.Raw())
 }
@@ -46,14 +46,14 @@ func (s *PropertyTestSuite) testRaw(
 func (s *PropertyTestSuite) testUnassigned(
 	t *testing.T,
 	attr *spec.Attribute,
-	value *string,
+	value interface{},
 	expect func(t *testing.T, unassigned bool),
 ) {
 	var p Property
 	if value == nil {
 		p = s.NewFunc(attr)
 	} else {
-		p = s.NewOfFunc(attr, *value)
+		p = s.NewOfFunc(attr, value)
 	}
 	expect(t, p.IsUnassigned())
 }
