@@ -5,7 +5,6 @@ import (
 	"github.com/elvsn/scim.go/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 	"io"
 	"io/ioutil"
 	"testing"
@@ -13,7 +12,6 @@ import (
 
 // A common test suite for properties
 type PropertyTestSuite struct {
-	suite.Suite
 	NewFunc   func(attr *spec.Attribute) Property
 	NewOfFunc func(attr *spec.Attribute, v interface{}) Property
 }
@@ -121,13 +119,13 @@ func (s *PropertyTestSuite) testDelete(
 	expect(t, err)
 }
 
-func (s *PropertyTestSuite) mustAttribute(reader io.Reader) *spec.Attribute {
+func (s *PropertyTestSuite) mustAttribute(t *testing.T, reader io.Reader) *spec.Attribute {
 	raw, err := ioutil.ReadAll(reader)
-	require.Nil(s.T(), err)
+	require.Nil(t, err)
 
 	attr := new(spec.Attribute)
 	err = json.Unmarshal(raw, attr)
-	require.Nil(s.T(), err)
+	require.Nil(t, err)
 
 	return attr
 }

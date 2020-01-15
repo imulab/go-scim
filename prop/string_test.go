@@ -21,12 +21,13 @@ func TestStringProperty(t *testing.T) {
 }
 
 type StringPropertyTestSuite struct {
+	suite.Suite
 	PropertyTestSuite
 	standardAttr *spec.Attribute
 }
 
 func (s *StringPropertyTestSuite) SetupSuite() {
-	s.standardAttr = s.mustAttribute(strings.NewReader(`
+	s.standardAttr = s.mustAttribute(s.T(), strings.NewReader(`
 {
   "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
   "name": "userName",
@@ -52,7 +53,7 @@ func (s *StringPropertyTestSuite) TestNew() {
 	}{
 		{
 			name: "new string of string attribute",
-			attr: s.mustAttribute(strings.NewReader(`
+			attr: s.mustAttribute(s.T(), strings.NewReader(`
 {
   "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
   "name": "userName",
@@ -83,7 +84,7 @@ attribute. StringPropertyTestSuite is a dummy implementation of Subscriber, whic
 					return s
 				})
 			},
-			attr: s.mustAttribute(strings.NewReader(`
+			attr: s.mustAttribute(s.T(), strings.NewReader(`
 {
   "id": "urn:ietf:params:scim:schemas:core:2.0:User:userName",
   "name": "userName",
@@ -251,7 +252,7 @@ func (s *StringPropertyTestSuite) TestMatches() {
 				return NewStringOf(s.standardAttr, "foo")
 			},
 			getB: func(t *testing.T) Property {
-				return NewString(s.mustAttribute(strings.NewReader(`
+				return NewString(s.mustAttribute(s.T(), strings.NewReader(`
 {
   "id": "urn:ietf:params:scim:schemas:core:2.0:User:displayName",
   "name": "displayName",
