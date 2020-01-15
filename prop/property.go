@@ -54,8 +54,11 @@ type Property interface {
 	// Delete value from this property and emit an event describing the change.
 	// If the property is already unassigned, deleting it again has no effect.
 	Delete() (*Event, error)
-	// CountChildren return the number of children properties.
-	CountChildren() int
-	// ForEachChild iterate through all children properties and invoke the callback function sequentially.
-	ForEachChild(callback func(index int, child Property) error) error
+	// Notify all subscribers of this property of the events.
+	Notify(events []*Event) error
+
+	countChildren() int
+	forEachChild(callback func(index int, child Property) error) error
+	findChild(criteria func(child Property) bool) Property
+	childAtIndex(index interface{}) (Property, error)
 }
