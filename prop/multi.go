@@ -260,7 +260,7 @@ func (p *multiValuedProperty) newElementProperty(singleValue interface{}) (prop 
 		}
 	}()
 
-	prop = New(p.attr.DeriveElementAttribute())
+	prop = NewProperty(p.attr.DeriveElementAttribute())
 	if singleValue != nil {
 		_, err = prop.Replace(singleValue)
 	}

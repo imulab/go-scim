@@ -24,7 +24,7 @@ func NewComplex(attr *spec.Attribute) Property {
 		}
 	})
 	attr.ForEachSubAttribute(func(subAttribute *spec.Attribute) {
-		p.subProps = append(p.subProps, New(subAttribute))
+		p.subProps = append(p.subProps, NewProperty(subAttribute))
 		p.nameIndex[strings.ToLower(subAttribute.Name())] = len(p.subProps) - 1
 	})
 	return &p

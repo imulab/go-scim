@@ -2,8 +2,8 @@ package prop
 
 import "github.com/elvsn/scim.go/spec"
 
-// Create a new property of any legal SCIM type
-func New(attr *spec.Attribute) Property {
+// NewProperty creates a new property of any legal SCIM type
+func NewProperty(attr *spec.Attribute) Property {
 	if attr.MultiValued() {
 		return NewMulti(attr)
 	}
