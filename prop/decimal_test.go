@@ -68,7 +68,7 @@ This test confirms the capability to automatically load registered subscribers a
 attribute. DecimalPropertyTestSuite is a dummy implementation of Subscriber, which is registered to annotation @Test.
 `,
 			before: func() {
-				SubscriberFactory().Register("@Test", func(params map[string]interface{}) Subscriber {
+				SubscriberFactory().Register("@Test", func(_ Property, _ map[string]interface{}) Subscriber {
 					return s
 				})
 			},
@@ -622,7 +622,7 @@ func (s *DecimalPropertyTestSuite) TestPresent() {
 	}
 }
 
-func (s *DecimalPropertyTestSuite) Notify(_ Property, _ []*Event) error {
+func (s *DecimalPropertyTestSuite) Notify(_ Property, _ *Events) error {
 	return nil
 }
 

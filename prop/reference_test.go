@@ -63,7 +63,7 @@ This test confirms the capability to automatically load registered subscribers a
 attribute. ReferencePropertyTestSuite is a dummy implementation of Subscriber, which is registered to annotation @Test.
 `,
 			before: func() {
-				SubscriberFactory().Register("@Test", func(params map[string]interface{}) Subscriber {
+				SubscriberFactory().Register("@Test", func(_ Property, _ map[string]interface{}) Subscriber {
 					return s
 				})
 			},
@@ -566,7 +566,7 @@ func (s *ReferencePropertyTestSuite) TestPresent() {
 	}
 }
 
-func (s *ReferencePropertyTestSuite) Notify(_ Property, _ []*Event) error {
+func (s *ReferencePropertyTestSuite) Notify(_ Property, _ *Events) error {
 	return nil
 }
 

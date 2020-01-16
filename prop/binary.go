@@ -12,7 +12,7 @@ func NewBinary(attr *spec.Attribute) Property {
 	ensureSingularBinaryType(attr)
 	p := binaryProperty{attr: attr, subscribers: []Subscriber{}}
 	attr.ForEachAnnotation(func(annotation string, params map[string]interface{}) {
-		if subscriber, ok := SubscriberFactory().Create(annotation, params); ok {
+		if subscriber, ok := SubscriberFactory().Create(annotation, &p, params); ok {
 			p.subscribers = append(p.subscribers, subscriber)
 		}
 	})
@@ -142,7 +142,7 @@ func (p *binaryProperty) Delete() (*Event, error) {
 	return &ev, nil
 }
 
-func (p *binaryProperty) Notify(events []*Event) error {
+func (p *binaryProperty) Notify(events *Events) error {
 	for _, sub := range p.subscribers {
 		if err := sub.Notify(p, events); err != nil {
 			return err

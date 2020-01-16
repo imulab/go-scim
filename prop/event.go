@@ -7,8 +7,29 @@ type Event struct {
 	pre    interface{} // property value prior to event
 }
 
+func (e Event) Type() EventType {
+	return e.typ
+}
+
+func (e Event) Source() Property {
+	return e.source
+}
+
+func (e Event) PreModData() interface{} {
+	return e.pre
+}
+
+func (e *Event) ToEvents() *Events {
+	return &Events{events: []*Event{e}}
+}
+
 // Type of an event
 type EventType int
+
+func (et EventType) NewFrom(source Property, pre interface{}) *Event {
+	ev := Event{typ: et, source: source, pre: pre}
+	return &ev
+}
 
 const (
 	_ EventType = iota
@@ -23,3 +44,33 @@ const (
 	// when it was in an "assigned" state, otherwise, no event would be emitted.
 	EventUnassigned
 )
+
+type Events struct {
+	events []*Event
+}
+
+func (e *Events) Count() int {
+	return len(e.events)
+}
+
+func (e *Events) ForEachEvent(callback func(ev *Event) error) error {
+	for _, ev := range e.events {
+		if err := callback(ev); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *Events) FindEvent(criteria func(ev *Event) bool) *Event {
+	for _, ev := range e.events {
+		if criteria(ev) {
+			return ev
+		}
+	}
+	return nil
+}
+
+func (e *Events) Append(ev *Event) {
+	e.events = append(e.events, ev)
+}

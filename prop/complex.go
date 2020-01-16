@@ -19,7 +19,7 @@ func NewComplex(attr *spec.Attribute) Property {
 		subscribers: []Subscriber{},
 	}
 	attr.ForEachAnnotation(func(annotation string, params map[string]interface{}) {
-		if subscriber, ok := SubscriberFactory().Create(annotation, params); ok {
+		if subscriber, ok := SubscriberFactory().Create(annotation, &p, params); ok {
 			p.subscribers = append(p.subscribers, subscriber)
 		}
 	})
@@ -166,6 +166,8 @@ func (p *complexProperty) Add(value interface{}) (*Event, error) {
 		return nil, fmt.Errorf("%w: value is incompatible with '%s'", spec.ErrInvalidValue, p.attr.Path())
 	}
 
+	wasUnassigned := p.IsUnassigned()
+
 	for k, v := range m {
 		i, ok := p.nameIndex[strings.ToLower(k)]
 		if !ok {
@@ -176,6 +178,12 @@ func (p *complexProperty) Add(value interface{}) (*Event, error) {
 		}
 	}
 
+	if wasUnassigned && !p.IsUnassigned() {
+		return EventAssigned.NewFrom(p, nil), nil
+	} else if !wasUnassigned && p.IsUnassigned() {
+		return EventUnassigned.NewFrom(p, nil), nil
+	}
+
 	return nil, nil
 }
 
@@ -183,6 +191,8 @@ func (p *complexProperty) Replace(value interface{}) (*Event, error) {
 	if value == nil {
 		return nil, nil
 	}
+
+	wasUnassigned := p.IsUnassigned()
 
 	if _, err := p.Delete(); err != nil {
 		return nil, err
@@ -192,19 +202,30 @@ func (p *complexProperty) Replace(value interface{}) (*Event, error) {
 		return nil, err
 	}
 
+	if wasUnassigned && !p.IsUnassigned() {
+		return EventAssigned.NewFrom(p, nil), nil
+	} else if !wasUnassigned && p.IsUnassigned() {
+		return EventUnassigned.NewFrom(p, nil), nil
+	}
+
 	return nil, nil
 }
 
 func (p *complexProperty) Delete() (*Event, error) {
+	if p.IsUnassigned() {
+		return nil, nil
+	}
+
 	for _, sp := range p.subProps {
 		if _, err := sp.Delete(); err != nil {
 			return nil, err
 		}
 	}
-	return nil, nil
+
+	return EventUnassigned.NewFrom(p, nil), nil
 }
 
-func (p *complexProperty) Notify(events []*Event) error {
+func (p *complexProperty) Notify(events *Events) error {
 	for _, sub := range p.subscribers {
 		if err := sub.Notify(p, events); err != nil {
 			return err

@@ -121,7 +121,7 @@ func (n *Navigator) delegateMod(mod func() (*Event, error)) error {
 	}
 
 	if ev != nil {
-		events := []*Event{ev}
+		events := ev.ToEvents()
 		for i := len(n.stack) - 1; i >= 0; i-- {
 			if err := n.stack[i].Notify(events); err != nil {
 				return err

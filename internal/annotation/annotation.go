@@ -1,19 +1,36 @@
 package annotation
 
 const (
-	Primary          = "@Primary"
+	// @Primary annotates a boolean property which is considered a primary property.
+	// Among the sub properties of a multiValued complex property, only one primary property
+	// can hold the value true.
+	Primary = "@Primary"
+	// @ExclusivePrimary annotates a multiValued complex property, who wishes to have its
+	// @Primary sub property regulated
 	ExclusivePrimary = "@ExclusivePrimary"
-
-	// Annotation to sync core schema attribute
-	SyncSchema          = "@SyncSchema"
-	StateSummary        = "@StateSummary"
+	// @Root annotates the derived super attribute from a resource type. It is where all propagated events end
+	Root = "@Root"
+	// @SyncSchema load the SyncSchemaSubscriber to keep the schema property up to date in the assigned and unassigned
+	// events of schema extension attributes. It must be annotated on the @Root attribute.
+	SyncSchema = "@SyncSchema"
+	// @StateSummary load the ComplexStateSummarySubscriber to summarize complex property state changes. It must be
+	// annotated on a singular complex property.
+	StateSummary = "@StateSummary"
+	// @SchemaExtensionRoot annotates the derived complex attribute of a schema extension. It denotes the root of
+	// the schema extension attribute. Together with @StateSummary, it provides information whether a schema extension
+	// sub property is assigned or unassigned. @SyncSchema can use this information to update the schemas property.
 	SchemaExtensionRoot = "@SchemaExtensionRoot"
-
+	// @AutoCompact loads a AutoCompactSubscriber to automatically compact the multiValued property in case its element
+	// becomes unassigned. It must be annotated on a multiValued property.
 	AutoCompact = "@AutoCompact"
-
-	Identity     = "@Identity"
-	CopyReadOnly = "@CopyReadOnly"
-
-	// Annotation to contain other annotations intended for the derived element annotations
+	// @Identity annotates sub attributes of a complex attribute which wishes to participate in equality comparison.
+	// When one or more sub attributes are annotated with @Identity, they form the identity of the complex attribute.
+	// If none of the sub attributes are annotated with @Identity, all sub attribute form the identity of the complex attribute.
+	Identity = "@Identity"
+	// @ElementAnnotations annotates additional annotations in its parameters which will be assigned as annotations for
+	// the derived element attribute. This gives user explicit control as to what annotations will be loaded as a
+	// multiValued property element.
 	ElementAnnotations = "@ElementAnnotations"
+
+	//CopyReadOnly = "@CopyReadOnly"
 )

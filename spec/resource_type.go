@@ -101,7 +101,9 @@ func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 		mutability:    MutabilityReadWrite,
 		returned:      ReturnedDefault,
 		uniqueness:    UniquenessNone,
-		annotations:   map[string]map[string]interface{}{},
+		annotations: map[string]map[string]interface{}{
+			annotation.Root: {},
+		},
 	}
 
 	if includeCore {

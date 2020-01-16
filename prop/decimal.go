@@ -10,7 +10,7 @@ func NewDecimal(attr *spec.Attribute) Property {
 	ensureSingularDecimalType(attr)
 	p := decimalProperty{attr: attr, subscribers: []Subscriber{}}
 	attr.ForEachAnnotation(func(annotation string, params map[string]interface{}) {
-		if subscriber, ok := SubscriberFactory().Create(annotation, params); ok {
+		if subscriber, ok := SubscriberFactory().Create(annotation, &p, params); ok {
 			p.subscribers = append(p.subscribers, subscriber)
 		}
 	})
@@ -130,7 +130,7 @@ func (p *decimalProperty) Delete() (*Event, error) {
 	return nil, nil
 }
 
-func (p *decimalProperty) Notify(events []*Event) error {
+func (p *decimalProperty) Notify(events *Events) error {
 	for _, sub := range p.subscribers {
 		if err := sub.Notify(p, events); err != nil {
 			return err

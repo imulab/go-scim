@@ -57,7 +57,7 @@ type Property interface {
 	// If the property is already unassigned, deleting it again has no effect.
 	Delete() (*Event, error)
 	// Notify all subscribers of this property of the events.
-	Notify(events []*Event) error
+	Notify(events *Events) error
 
 	countChildren() int
 	forEachChild(callback func(index int, child Property) error) error

@@ -12,7 +12,7 @@ func NewString(attr *spec.Attribute) Property {
 	ensureSingularStringType(attr)
 	p := stringProperty{attr: attr, subscribers: []Subscriber{}}
 	attr.ForEachAnnotation(func(annotation string, params map[string]interface{}) {
-		if subscriber, ok := SubscriberFactory().Create(annotation, params); ok {
+		if subscriber, ok := SubscriberFactory().Create(annotation, &p, params); ok {
 			p.subscribers = append(p.subscribers, subscriber)
 		}
 	})
@@ -141,7 +141,7 @@ func (p *stringProperty) Delete() (*Event, error) {
 	return nil, nil
 }
 
-func (p *stringProperty) Notify(events []*Event) error {
+func (p *stringProperty) Notify(events *Events) error {
 	for _, sub := range p.subscribers {
 		if err := sub.Notify(p, events); err != nil {
 			return err
