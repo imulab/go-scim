@@ -164,7 +164,7 @@ func (c *appContext) loadGroupHandlers() {
 	c.groupCreateHandler = &handler.Create{
 		Log:          c.logger,
 		Service:      c.groupCreateService,
-		ResourceType: c.userResourceType,
+		ResourceType: c.groupResourceType,
 	}
 	c.groupReplaceHandler = &handler.Replace{
 		Log:                 c.logger,
@@ -317,6 +317,6 @@ func (c *appContext) loadGroupDatabase(args *arguments) {
 		c.groupDatabase = db.Memory()
 	} else {
 		coll := c.mongoClient.Database(args.Mongo.Database, options.Database()).Collection(c.groupResourceType.Name(), options.Collection())
-		c.userDatabase = scimmongo.DB(c.groupResourceType, c.logger, coll, scimmongo.Options())
+		c.groupDatabase = scimmongo.DB(c.groupResourceType, c.logger, coll, scimmongo.Options())
 	}
 }

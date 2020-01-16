@@ -94,9 +94,9 @@ func (c *appContext) loadUserDatabase(args *arguments) {
 
 func (c *appContext) loadGroupDatabase(args *arguments) {
 	if args.MemoryDB {
-		c.userDB = db.Memory()
+		c.groupDB = db.Memory()
 	} else {
 		coll := c.mongoClient.Database(args.Mongo.Database, options.Database()).Collection(c.groupResourceType.Name(), options.Collection())
-		c.userDB = scimmongo.DB(c.groupResourceType, c.logger, coll, scimmongo.Options())
+		c.groupDB = scimmongo.DB(c.groupResourceType, c.logger, coll, scimmongo.Options())
 	}
 }
