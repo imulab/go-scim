@@ -55,6 +55,9 @@ func (h *Query) parseRequest(request http.Request) (qr *services.QueryRequest, e
 				Order: crud.SortOrder(request.QueryParam(sortOrder)),
 			}
 		}
+		if len(request.QueryParam(filter)) > 0 {
+			qr.Filter = request.QueryParam(filter)
+		}
 		if len(request.QueryParam(attributes)) > 0 || len(request.QueryParam(excludedAttributes)) > 0 {
 			qr.Projection = &crud.Projection{}
 			if v := strings.TrimSpace(request.QueryParam(attributes)); len(v) > 0 {
