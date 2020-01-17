@@ -25,6 +25,15 @@ The project is in the early stage of `v2.0.0`. As for now, to check out the func
 $ go test ./...
 ```
 
+To check out a functioning server, using the provided example configuration files:
+
+###### *Requirements:* [Docker](https://docs.docker.com/get-started/) and [Docker Compose](https://docs.docker.com/compose/gettingstarted/)
+
+```
+# cd into server
+$ docker-compose up --build
+```
+
 ## Migration to Go modules
 
 Since `v2.0.0-m3`, the project has migrated from [dep](https://golang.github.io/dep/) to [go modules](https://github.com/golang/go/wiki/Modules). This allows users to import the exact project modules separately as needed, and also allows their functions to evolve independently.
