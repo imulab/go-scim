@@ -1,0 +1,7 @@
+{
+  "id": "Group",
+  "name": "Group",
+  "endpoint": "/Groups",
+  "description": "Group resource type",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:Group"
+}

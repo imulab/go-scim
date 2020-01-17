@@ -1,0 +1,65 @@
+{
+  "id": "urn:ietf:params:scim:schemas:core:2.0:Group",
+  "name": "Group",
+  "description": "Defined attributes for the group schema",
+  "attributes": [
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:Group:displayName",
+      "name": "displayName",
+      "type": "string",
+      "required": true,
+      "uniqueness": "server",
+      "_index": 100,
+      "_path": "displayName"
+    },
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:Group:groups",
+      "name": "members",
+      "type": "complex",
+      "multiValued": true,
+      "mutability": "readOnly",
+      "subAttributes": [
+        {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:Group:members.value",
+          "name": "value",
+          "type": "string",
+          "mutability": "readOnly",
+          "_index": 0,
+          "_path": "members.value",
+          "_annotations": ["@Identity"]
+        },
+        {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:Group:members.$ref",
+          "name": "$ref",
+          "type": "reference",
+          "mutability": "readOnly",
+          "_index": 1,
+          "_path": "members.$ref",
+          "_annotations": ["@Identity"]
+        },
+        {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:Group:members.type",
+          "name": "type",
+          "type": "string",
+          "mutability": "readOnly",
+          "canonicalValues": [
+            "direct",
+            "indirect"
+          ],
+          "_index": 2,
+          "_path": "members.type"
+        },
+        {
+          "id": "urn:ietf:params:scim:schemas:core:2.0:Group:members.display",
+          "name": "display",
+          "type": "string",
+          "mutability": "readOnly",
+          "_index": 3,
+          "_path": "members.display"
+        }
+      ],
+      "_index": 101,
+      "_path": "members"
+    }
+  ]
+}
