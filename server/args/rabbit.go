@@ -1,7 +1,11 @@
 package args
 
 import (
+	"context"
 	"fmt"
+	"time"
+
+	"github.com/pkg/errors"
 	"github.com/streadway/amqp"
 	"github.com/urfave/cli/v2"
 )
@@ -38,10 +42,38 @@ func (arg *Rabbit) Url() string {
 }
 
 func (arg *Rabbit) Connect() (*amqp.Channel, error) {
-	conn, err := amqp.Dial(arg.Url())
+	var permErr error
+	var conn *amqp.Connection
+
+	retryFunc := Retry(time.Second*30, time.Second, func(ctx context.Context) error {
+		var err error
+		conn, err = amqp.Dial(arg.Url())
+		if err != nil {
+			switch err := err.(type) {
+			case *amqp.Error:
+				// We should not retry on this error.
+				// It is not a connection issue with the message broker server.
+				if !err.Recover {
+					permErr = err
+					return nil
+				}
+			}
+
+			return errors.Wrap(err, "could not connect to the message broker")
+		}
+
+		return nil
+	})
+
+	err := retryFunc(context.Background())
 	if err != nil {
 		return nil, err
 	}
+
+	if permErr != nil {
+		return nil, permErr
+	}
+
 	ch, err := conn.Channel()
 	if err != nil {
 		return nil, err
