@@ -1,4 +1,4 @@
-package internal
+package expr
 
 import (
 	"github.com/stretchr/testify/assert"

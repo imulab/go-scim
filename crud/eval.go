@@ -3,7 +3,7 @@ package crud
 import (
 	"errors"
 	"fmt"
-	"github.com/elvsn/scim.go/crud/internal"
+	"github.com/elvsn/scim.go/crud/expr"
 	"github.com/elvsn/scim.go/prop"
 	"github.com/elvsn/scim.go/spec"
 	"strconv"
@@ -11,7 +11,7 @@ import (
 )
 
 func Evaluate(resource *prop.Resource, filter string) (bool, error) {
-	cf, err := internal.CompileFilter(filter)
+	cf, err := expr.CompileFilter(filter)
 	if err != nil {
 		return false, err
 	}
@@ -23,20 +23,20 @@ func Evaluate(resource *prop.Resource, filter string) (bool, error) {
 
 type evaluator struct {
 	base   prop.Property
-	filter *internal.Expression
+	filter *expr.Expression
 }
 
 func (v evaluator) evaluate() (bool, error) {
 	return v.evalAny(v.base, v.filter)
 }
 
-func (v evaluator) evalAny(p prop.Property, op *internal.Expression) (bool, error) {
+func (v evaluator) evalAny(p prop.Property, op *expr.Expression) (bool, error) {
 	switch op.Token() {
-	case internal.And:
+	case expr.And:
 		return v.evalAnd(p, op)
-	case internal.Or:
+	case expr.Or:
 		return v.evalOr(p, op)
-	case internal.Not:
+	case expr.Not:
 		return v.evalNot(p, op)
 	}
 
@@ -78,25 +78,25 @@ func (v evaluator) evalAny(p prop.Property, op *internal.Expression) (bool, erro
 		var r bool
 
 		switch op.Token() {
-		case internal.Eq:
+		case expr.Eq:
 			r, fe = v.evalEq(nav.Current(), op)
-		case internal.Ne:
+		case expr.Ne:
 			r, fe = v.evalNe(nav.Current(), op)
-		case internal.Sw:
+		case expr.Sw:
 			r, fe = v.evalSw(nav.Current(), op)
-		case internal.Ew:
+		case expr.Ew:
 			r, fe = v.evalEw(nav.Current(), op)
-		case internal.Co:
+		case expr.Co:
 			r, fe = v.evalCo(nav.Current(), op)
-		case internal.Gt:
+		case expr.Gt:
 			r, fe = v.evalGt(nav.Current(), op)
-		case internal.Ge:
+		case expr.Ge:
 			r, fe = v.evalGe(nav.Current(), op)
-		case internal.Lt:
+		case expr.Lt:
 			r, fe = v.evalLt(nav.Current(), op)
-		case internal.Le:
+		case expr.Le:
 			r, fe = v.evalLe(nav.Current(), op)
-		case internal.Pr:
+		case expr.Pr:
 			r, fe = v.evalPr(nav.Current())
 		default:
 			panic("unsupported operator")
@@ -125,7 +125,7 @@ func (v evaluator) evalAny(p prop.Property, op *internal.Expression) (bool, erro
 	return false, nil
 }
 
-func (v evaluator) evalEq(target prop.Property, eq *internal.Expression) (bool, error) {
+func (v evaluator) evalEq(target prop.Property, eq *expr.Expression) (bool, error) {
 	eqTarget, ok := target.(prop.EqCapable)
 	if !ok {
 		return false, nil
@@ -139,7 +139,7 @@ func (v evaluator) evalEq(target prop.Property, eq *internal.Expression) (bool, 
 	return eqTarget.EqualsTo(value), nil
 }
 
-func (v evaluator) evalNe(target prop.Property, ne *internal.Expression) (bool, error) {
+func (v evaluator) evalNe(target prop.Property, ne *expr.Expression) (bool, error) {
 	r, err := v.evalEq(target, ne)
 	if err != nil {
 		return false, err
@@ -147,7 +147,7 @@ func (v evaluator) evalNe(target prop.Property, ne *internal.Expression) (bool, 
 	return !r, nil
 }
 
-func (v evaluator) evalSw(target prop.Property, sw *internal.Expression) (bool, error) {
+func (v evaluator) evalSw(target prop.Property, sw *expr.Expression) (bool, error) {
 	swTarget, ok := target.(prop.SwCapable)
 	if !ok {
 		return false, nil
@@ -165,7 +165,7 @@ func (v evaluator) evalSw(target prop.Property, sw *internal.Expression) (bool, 
 	}
 }
 
-func (v evaluator) evalEw(target prop.Property, ew *internal.Expression) (bool, error) {
+func (v evaluator) evalEw(target prop.Property, ew *expr.Expression) (bool, error) {
 	ewTarget, ok := target.(prop.EwCapable)
 	if !ok {
 		return false, nil
@@ -183,7 +183,7 @@ func (v evaluator) evalEw(target prop.Property, ew *internal.Expression) (bool, 
 	}
 }
 
-func (v evaluator) evalCo(target prop.Property, co *internal.Expression) (bool, error) {
+func (v evaluator) evalCo(target prop.Property, co *expr.Expression) (bool, error) {
 	coTarget, ok := target.(prop.CoCapable)
 	if !ok {
 		return false, nil
@@ -201,7 +201,7 @@ func (v evaluator) evalCo(target prop.Property, co *internal.Expression) (bool, 
 	}
 }
 
-func (v evaluator) evalGt(target prop.Property, gt *internal.Expression) (bool, error) {
+func (v evaluator) evalGt(target prop.Property, gt *expr.Expression) (bool, error) {
 	gtTarget, ok := target.(prop.GtCapable)
 	if !ok {
 		return false, nil
@@ -215,7 +215,7 @@ func (v evaluator) evalGt(target prop.Property, gt *internal.Expression) (bool, 
 	return gtTarget.GreaterThan(value), nil
 }
 
-func (v evaluator) evalGe(target prop.Property, ge *internal.Expression) (bool, error) {
+func (v evaluator) evalGe(target prop.Property, ge *expr.Expression) (bool, error) {
 	geTarget, ok := target.(prop.GeCapable)
 	if !ok {
 		return false, nil
@@ -229,7 +229,7 @@ func (v evaluator) evalGe(target prop.Property, ge *internal.Expression) (bool, 
 	return geTarget.GreaterThanOrEqualTo(value), nil
 }
 
-func (v evaluator) evalLt(target prop.Property, lt *internal.Expression) (bool, error) {
+func (v evaluator) evalLt(target prop.Property, lt *expr.Expression) (bool, error) {
 	ltTarget, ok := target.(prop.LtCapable)
 	if !ok {
 		return false, nil
@@ -243,7 +243,7 @@ func (v evaluator) evalLt(target prop.Property, lt *internal.Expression) (bool, 
 	return ltTarget.LessThan(value), nil
 }
 
-func (v evaluator) evalLe(target prop.Property, le *internal.Expression) (bool, error) {
+func (v evaluator) evalLe(target prop.Property, le *expr.Expression) (bool, error) {
 	leTarget, ok := target.(prop.LeCapable)
 	if !ok {
 		return false, nil
@@ -266,7 +266,7 @@ func (v evaluator) evalPr(target prop.Property) (bool, error) {
 	return prTarget.Present(), nil
 }
 
-func (v evaluator) evalAnd(p prop.Property, and *internal.Expression) (bool, error) {
+func (v evaluator) evalAnd(p prop.Property, and *expr.Expression) (bool, error) {
 	if left, err := v.evalAny(p, and.Left()); err != nil {
 		return false, err
 	} else if !left {
@@ -276,7 +276,7 @@ func (v evaluator) evalAnd(p prop.Property, and *internal.Expression) (bool, err
 	}
 }
 
-func (v evaluator) evalOr(p prop.Property, or *internal.Expression) (bool, error) {
+func (v evaluator) evalOr(p prop.Property, or *expr.Expression) (bool, error) {
 	if left, err := v.evalAny(p, or.Left()); err != nil {
 		return false, err
 	} else if left {
@@ -286,7 +286,7 @@ func (v evaluator) evalOr(p prop.Property, or *internal.Expression) (bool, error
 	}
 }
 
-func (v evaluator) evalNot(p prop.Property, not *internal.Expression) (bool, error) {
+func (v evaluator) evalNot(p prop.Property, not *expr.Expression) (bool, error) {
 	if left, err := v.evalAny(p, not.Left()); err != nil {
 		return false, err
 	} else {

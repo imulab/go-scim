@@ -1,4 +1,4 @@
-package internal
+package expr
 
 import (
 	"fmt"
@@ -32,32 +32,6 @@ func CompilePath(path string) (*Expression, error) {
 	head = cursor
 
 	return head, nil
-}
-
-// Create a new path expression list, composed of nodes from the paths arguments. This function simply
-// assembles the linked list and does not go through the compiler mechanism.
-func NewPath(paths ...string) *Expression {
-	if len(paths) == 0 {
-		return nil
-	}
-
-	var (
-		anchor = &Expression{}
-		cursor = anchor
-	)
-	for len(paths) > 0 {
-		cursor.next = &Expression{
-			token: paths[0],
-			typ:   path,
-		}
-		cursor = cursor.next
-		paths = paths[1:]
-	}
-
-	cursor = anchor.next
-	anchor = nil
-
-	return cursor
 }
 
 // Compiler that utilizes pathScanner to convert a string based path query to a linked list of steps, each representing

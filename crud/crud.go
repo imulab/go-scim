@@ -2,7 +2,7 @@ package crud
 
 import (
 	"fmt"
-	"github.com/elvsn/scim.go/crud/internal"
+	"github.com/elvsn/scim.go/crud/expr"
 	"github.com/elvsn/scim.go/prop"
 	"github.com/elvsn/scim.go/spec"
 )
@@ -15,7 +15,7 @@ func Add(resource *prop.Resource, path string, value interface{}) error {
 		return resource.Navigator().Add(value)
 	}
 
-	head, err := internal.CompilePath(path)
+	head, err := expr.CompilePath(path)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func Replace(resource *prop.Resource, path string, value interface{}) error {
 		return resource.Navigator().Replace(value)
 	}
 
-	head, err := internal.CompilePath(path)
+	head, err := expr.CompilePath(path)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func Delete(resource *prop.Resource, path string) error {
 		return fmt.Errorf("%w: path must be specified for delete operation", spec.ErrInvalidPath)
 	}
 
-	head, err := internal.CompilePath(path)
+	head, err := expr.CompilePath(path)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func Delete(resource *prop.Resource, path string) error {
 	})
 }
 
-func skipMainSchemaNamespace(resource *prop.Resource, query *internal.Expression) *internal.Expression {
+func skipMainSchemaNamespace(resource *prop.Resource, query *expr.Expression) *expr.Expression {
 	if query == nil {
 		return nil
 	}

@@ -3,7 +3,7 @@ package crud
 import (
 	"encoding/json"
 	"errors"
-	"github.com/elvsn/scim.go/crud/internal"
+	"github.com/elvsn/scim.go/crud/expr"
 	"github.com/elvsn/scim.go/prop"
 	"github.com/elvsn/scim.go/spec"
 	"github.com/stretchr/testify/assert"
@@ -141,7 +141,7 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 		s.T().Run(test.name, func(t *testing.T) {
 			r := test.getResource(t)
 
-			sortBy, err := internal.CompilePath(test.sortBy)
+			sortBy, err := expr.CompilePath(test.sortBy)
 			assert.Nil(t, err)
 
 			target, err := SeekSortTarget(r, sortBy)

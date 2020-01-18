@@ -1,7 +1,7 @@
 package crud
 
 import (
-	"github.com/elvsn/scim.go/crud/internal"
+	"github.com/elvsn/scim.go/crud/expr"
 	"github.com/elvsn/scim.go/prop"
 	"sort"
 )
@@ -38,7 +38,7 @@ func (s Sort) Sort(resources []*prop.Resource) error {
 		return nil
 	}
 
-	head, err := internal.CompilePath(s.By)
+	head, err := expr.CompilePath(s.By)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (s Sort) Sort(resources []*prop.Resource) error {
 }
 
 type sortWrapper struct {
-	by        *internal.Expression
+	by        *expr.Expression
 	dir       SortOrder
 	resources []*prop.Resource
 }

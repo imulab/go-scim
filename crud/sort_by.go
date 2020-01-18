@@ -2,7 +2,7 @@ package crud
 
 import (
 	"fmt"
-	"github.com/elvsn/scim.go/crud/internal"
+	"github.com/elvsn/scim.go/crud/expr"
 	"github.com/elvsn/scim.go/prop"
 	"github.com/elvsn/scim.go/spec"
 )
@@ -76,7 +76,7 @@ import (
 //
 // Other sortBy parameters that does not fall into the above three categories are considered to be invalid.
 //
-func SeekSortTarget(resource *prop.Resource, by *internal.Expression) (prop.Property, error) {
+func SeekSortTarget(resource *prop.Resource, by *expr.Expression) (prop.Property, error) {
 	if by.ContainsFilter() {
 		return nil, fmt.Errorf("%w: sortBy attribute cannot contain filter", spec.ErrInvalidPath)
 	}

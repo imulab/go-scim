@@ -3,12 +3,12 @@ package crud
 import (
 	"fmt"
 	"github.com/elvsn/scim.go/annotation"
-	"github.com/elvsn/scim.go/crud/internal"
+	"github.com/elvsn/scim.go/crud/expr"
 	"github.com/elvsn/scim.go/prop"
 	"github.com/elvsn/scim.go/spec"
 )
 
-func defaultTraverse(property prop.Property, query *internal.Expression, callback func(nav *prop.Navigator) error) error {
+func defaultTraverse(property prop.Property, query *expr.Expression, callback func(nav *prop.Navigator) error) error {
 	return traverser{
 		nav:             prop.Navigate(property),
 		callback:        callback,
@@ -16,7 +16,7 @@ func defaultTraverse(property prop.Property, query *internal.Expression, callbac
 	}.traverse(query)
 }
 
-func primaryOrFirstTraverse(property prop.Property, query *internal.Expression, callback func(nav *prop.Navigator) error) error {
+func primaryOrFirstTraverse(property prop.Property, query *expr.Expression, callback func(nav *prop.Navigator) error) error {
 	return traverser{
 		nav:             prop.Navigate(property),
 		callback:        callback,
@@ -30,7 +30,7 @@ type traverser struct {
 	elementStrategy elementStrategy                 // strategy to select element properties to traverse for multiValued properties
 }
 
-func (t traverser) traverse(query *internal.Expression) error {
+func (t traverser) traverse(query *expr.Expression) error {
 	if query == nil {
 		return t.callback(t.nav)
 	}
@@ -49,7 +49,7 @@ func (t traverser) traverse(query *internal.Expression) error {
 	return t.traverseNext(query)
 }
 
-func (t traverser) traverseNext(query *internal.Expression) error {
+func (t traverser) traverseNext(query *expr.Expression) error {
 	t.nav.Dot(query.Token())
 	if err := t.nav.Error(); err != nil {
 		return err
@@ -59,7 +59,7 @@ func (t traverser) traverseNext(query *internal.Expression) error {
 	return t.traverse(query.Next())
 }
 
-func (t traverser) traverseSelectedElements(query *internal.Expression) error {
+func (t traverser) traverseSelectedElements(query *expr.Expression) error {
 	selector := t.elementStrategy(t.nav.Current())
 
 	return t.nav.Current().ForEachChild(func(index int, child prop.Property) error {
@@ -77,7 +77,7 @@ func (t traverser) traverseSelectedElements(query *internal.Expression) error {
 	})
 }
 
-func (t traverser) traverseQualifiedElements(filter *internal.Expression) error {
+func (t traverser) traverseQualifiedElements(filter *expr.Expression) error {
 	return t.nav.ForEachChild(func(index int, child prop.Property) error {
 		t.nav.At(index)
 		if err := t.nav.Error(); err != nil {

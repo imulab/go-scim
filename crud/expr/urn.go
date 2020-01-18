@@ -1,4 +1,4 @@
-package internal
+package expr
 
 // Register saves the given urn into the lookup structure, so it could be referenced later.
 func RegisterURN(urn string) {
