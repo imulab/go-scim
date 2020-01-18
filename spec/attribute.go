@@ -3,7 +3,7 @@ package spec
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/elvsn/scim.go/internal/annotation"
+	"github.com/elvsn/scim.go/annotation"
 	"github.com/elvsn/scim.go/spec/internal"
 	"reflect"
 	"sort"

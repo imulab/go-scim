@@ -3,7 +3,7 @@ package prop
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/elvsn/scim.go/internal/annotation"
+	"github.com/elvsn/scim.go/annotation"
 	"github.com/elvsn/scim.go/spec"
 	"hash/fnv"
 	"strings"

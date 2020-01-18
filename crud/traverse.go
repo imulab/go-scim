@@ -2,8 +2,8 @@ package crud
 
 import (
 	"fmt"
+	"github.com/elvsn/scim.go/annotation"
 	"github.com/elvsn/scim.go/crud/internal"
-	"github.com/elvsn/scim.go/internal/annotation"
 	"github.com/elvsn/scim.go/prop"
 	"github.com/elvsn/scim.go/spec"
 )

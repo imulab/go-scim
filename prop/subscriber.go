@@ -2,7 +2,7 @@ package prop
 
 import (
 	"errors"
-	"github.com/elvsn/scim.go/internal/annotation"
+	"github.com/elvsn/scim.go/annotation"
 	"github.com/elvsn/scim.go/spec"
 	"sync"
 )

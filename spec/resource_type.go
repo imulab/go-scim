@@ -2,7 +2,7 @@ package spec
 
 import (
 	"encoding/json"
-	"github.com/elvsn/scim.go/internal/annotation"
+	"github.com/elvsn/scim.go/annotation"
 	"github.com/elvsn/scim.go/spec/internal"
 )
 
