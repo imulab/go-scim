@@ -1,5 +1,19 @@
 package crud
 
+import "testing"
+
+func TestAdd(t *testing.T) {
+
+}
+
+func TestReplace(t *testing.T) {
+
+}
+
+func TestDelete(t *testing.T) {
+
+}
+
 const (
 	testCoreSchema = `
 {
@@ -12,7 +26,10 @@ const (
       "type": "string",
       "multiValued": true,
       "_index": 0,
-      "_path": "schemas"
+      "_path": "schemas",
+      "_annotations": {
+        "@AutoCompact": {}
+      }
     },
     {
       "id": "id",
@@ -64,6 +81,7 @@ const (
       "_path": "emails",
       "_annotations": {
         "@ExclusivePrimary": {},
+        "@AutoCompact": {},
         "@ElementAnnotations": {
           "@StateSummary": {}
         }
