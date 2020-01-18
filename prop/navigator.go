@@ -49,7 +49,7 @@ func (n *Navigator) Dot(name string) *Navigator {
 
 	child, err := n.Current().ChildAtIndex(name)
 	if err != nil {
-		n.err = fmt.Errorf("%w: no target named '%s' from '%s'", spec.ErrNoTarget, name, n.Current().Attribute().Path())
+		n.err = fmt.Errorf("%w: no attribute named '%s' from '%s'", spec.ErrInvalidPath, name, n.Current().Attribute().Path())
 		return n
 	}
 

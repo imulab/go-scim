@@ -54,13 +54,9 @@ func (t traverser) traverseNext(query *internal.Expression) error {
 	if err := t.nav.Error(); err != nil {
 		return err
 	}
+	defer t.nav.Retract()
 
-	if err := t.traverse(query.Next()); err != nil {
-		return err
-	}
-
-	t.nav.Retract()
-	return nil
+	return t.traverse(query.Next())
 }
 
 func (t traverser) traverseSelectedElements(query *internal.Expression) error {
@@ -75,13 +71,9 @@ func (t traverser) traverseSelectedElements(query *internal.Expression) error {
 		if err := t.nav.Error(); err != nil {
 			return err
 		}
+		defer t.nav.Retract()
 
-		if err := t.traverse(query); err != nil {
-			return err
-		}
-
-		t.nav.Retract()
-		return nil
+		return t.traverse(query)
 	})
 }
 
@@ -91,6 +83,7 @@ func (t traverser) traverseQualifiedElements(filter *internal.Expression) error 
 		if err := t.nav.Error(); err != nil {
 			return err
 		}
+		defer t.nav.Retract()
 
 		r, err := evaluator{base: t.nav.Current(), filter: filter}.evaluate()
 		if err != nil {
@@ -99,12 +92,7 @@ func (t traverser) traverseQualifiedElements(filter *internal.Expression) error 
 			return nil
 		}
 
-		if err := t.traverse(filter.Next()); err != nil {
-			return err
-		}
-
-		t.nav.Retract()
-		return nil
+		return t.traverse(filter.Next())
 	})
 }
 

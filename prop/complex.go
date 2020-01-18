@@ -261,7 +261,7 @@ func (p *complexProperty) ChildAtIndex(index interface{}) (Property, error) {
 	case string:
 		ni, ok := p.nameIndex[strings.ToLower(i)]
 		if !ok {
-			return nil, fmt.Errorf("%w: '%s' does not have child '%s'", spec.ErrNoTarget, p.attr.Path(), i)
+			return nil, fmt.Errorf("%w: '%s' does not have child '%s'", spec.ErrInvalidPath, p.attr.Path(), i)
 		}
 		return p.subProps[ni], nil
 	default:
