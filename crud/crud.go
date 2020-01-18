@@ -12,7 +12,7 @@ import (
 // otherwise error will be returned.
 func Add(resource *prop.Resource, path string, value interface{}) error {
 	if len(path) == 0 {
-		return resource.Navigator().Add(value)
+		return resource.Navigator().Add(value).Error()
 	}
 
 	head, err := expr.CompilePath(path)
@@ -20,8 +20,8 @@ func Add(resource *prop.Resource, path string, value interface{}) error {
 		return err
 	}
 
-	return defaultTraverse(resource.RootProperty(), skipMainSchemaNamespace(resource, head), func(nav *prop.Navigator) error {
-		return nav.Add(value)
+	return defaultTraverse(resource.RootProperty(), skipMainSchemaNamespace(resource, head), func(nav prop.Navigator) error {
+		return nav.Add(value).Error()
 	})
 }
 
@@ -30,7 +30,7 @@ func Add(resource *prop.Resource, path string, value interface{}) error {
 // error will be returned.
 func Replace(resource *prop.Resource, path string, value interface{}) error {
 	if len(path) == 0 {
-		return resource.Navigator().Replace(value)
+		return resource.Navigator().Replace(value).Error()
 	}
 
 	head, err := expr.CompilePath(path)
@@ -38,8 +38,8 @@ func Replace(resource *prop.Resource, path string, value interface{}) error {
 		return err
 	}
 
-	return defaultTraverse(resource.RootProperty(), skipMainSchemaNamespace(resource, head), func(nav *prop.Navigator) error {
-		return nav.Replace(value)
+	return defaultTraverse(resource.RootProperty(), skipMainSchemaNamespace(resource, head), func(nav prop.Navigator) error {
+		return nav.Replace(value).Error()
 	})
 }
 
@@ -54,8 +54,8 @@ func Delete(resource *prop.Resource, path string) error {
 		return err
 	}
 
-	return defaultTraverse(resource.RootProperty(), skipMainSchemaNamespace(resource, head), func(nav *prop.Navigator) error {
-		return nav.Delete()
+	return defaultTraverse(resource.RootProperty(), skipMainSchemaNamespace(resource, head), func(nav prop.Navigator) error {
+		return nav.Delete().Error()
 	})
 }
 

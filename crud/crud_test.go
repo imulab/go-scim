@@ -101,7 +101,7 @@ func (s *CrudTestSuite) TestAdd() {
 			name: "add to every simple property inside a complex multiValued property",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value":   "foo",
 						"primary": true,
@@ -109,7 +109,7 @@ func (s *CrudTestSuite) TestAdd() {
 					map[string]interface{}{
 						"value": "bar",
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			path:  "emails.primary",
@@ -132,7 +132,7 @@ func (s *CrudTestSuite) TestAdd() {
 			name: "add to a selected few simple property inside a complex multiValued property",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value":   "foo",
 						"primary": true,
@@ -140,7 +140,7 @@ func (s *CrudTestSuite) TestAdd() {
 					map[string]interface{}{
 						"value": "bar",
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			path:  `emails[value eq "bar"].primary`,
@@ -218,7 +218,7 @@ func (s *CrudTestSuite) TestReplace() {
 			name: "replace single multiValued property element",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value":   "foo",
 						"primary": true,
@@ -226,7 +226,7 @@ func (s *CrudTestSuite) TestReplace() {
 					map[string]interface{}{
 						"value": "bar",
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			path: `emails[value eq "bar"]`,
@@ -251,7 +251,7 @@ func (s *CrudTestSuite) TestReplace() {
 			name: "replace multiValued property element field with filter",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value":   "foo",
 						"primary": true,
@@ -259,7 +259,7 @@ func (s *CrudTestSuite) TestReplace() {
 					map[string]interface{}{
 						"value": "bar",
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			path:  `emails[value eq "bar"].primary`,
@@ -311,7 +311,7 @@ func (s *CrudTestSuite) TestDelete() {
 			name: "delete simple property",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("id").Replace("foobar"))
+				assert.False(t, r.Navigator().Dot("id").Replace("foobar").HasError())
 				return r
 			},
 			path: "id",
@@ -324,7 +324,7 @@ func (s *CrudTestSuite) TestDelete() {
 			name: "delete nested simple property",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("meta").Dot("version").Replace("v1"))
+				assert.False(t, r.Navigator().Dot("meta").Dot("version").Replace("v1").HasError())
 				return r
 			},
 			path: "meta.version",
@@ -337,7 +337,7 @@ func (s *CrudTestSuite) TestDelete() {
 			name: "delete single multiValued property element",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value":   "foo",
 						"primary": true,
@@ -345,7 +345,7 @@ func (s *CrudTestSuite) TestDelete() {
 					map[string]interface{}{
 						"value": "bar",
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			path: `emails[value eq "bar"]`,
@@ -363,7 +363,7 @@ func (s *CrudTestSuite) TestDelete() {
 			name: "delete multiValued property element field with filter",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value":   "foo",
 						"primary": true,
@@ -371,7 +371,7 @@ func (s *CrudTestSuite) TestDelete() {
 					map[string]interface{}{
 						"value": "bar",
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			path: `emails[value eq "foo"].primary`,
@@ -393,7 +393,7 @@ func (s *CrudTestSuite) TestDelete() {
 			name: "delete all property element field with filter",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value":   "foo",
 						"primary": true,
@@ -402,7 +402,7 @@ func (s *CrudTestSuite) TestDelete() {
 						"value":   "bar",
 						"primary": false,
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			path: `emails.primary`,
@@ -424,7 +424,7 @@ func (s *CrudTestSuite) TestDelete() {
 			name: "delete empty path yields error",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value":   "foo",
 						"primary": true,
@@ -433,7 +433,7 @@ func (s *CrudTestSuite) TestDelete() {
 						"value":   "bar",
 						"primary": false,
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			path: "",

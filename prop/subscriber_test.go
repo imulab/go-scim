@@ -40,7 +40,7 @@ func TestAutoCompactSubscriber(t *testing.T) {
 				return NewMultiOf(attrFunc(t), []interface{}{"A", "B", "C"})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).At(1).Delete())
+				assert.False(t, Navigate(p).At(1).Delete().HasError())
 			},
 			expect: func(t *testing.T, raw interface{}) {
 				assert.Equal(t, []interface{}{"A", "C"}, raw)
@@ -118,7 +118,7 @@ func TestExclusivePrimarySubscriber(t *testing.T) {
 				})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).At(1).Dot("primary").Replace(true))
+				assert.False(t, Navigate(p).At(1).Dot("primary").Replace(true).HasError())
 			},
 			expect: func(t *testing.T, raw interface{}) {
 				assert.Equal(t, []interface{}{
@@ -147,7 +147,7 @@ func TestExclusivePrimarySubscriber(t *testing.T) {
 				})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).At(0).Dot("primary").Replace(true))
+				assert.False(t, Navigate(p).At(0).Dot("primary").Replace(true).HasError())
 			},
 			expect: func(t *testing.T, raw interface{}) {
 				assert.Equal(t, []interface{}{
@@ -176,7 +176,7 @@ func TestExclusivePrimarySubscriber(t *testing.T) {
 				})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).At(0).Dot("primary").Delete())
+				assert.False(t, Navigate(p).At(0).Dot("primary").Delete().HasError())
 			},
 			expect: func(t *testing.T, raw interface{}) {
 				assert.Equal(t, []interface{}{
@@ -205,7 +205,7 @@ func TestExclusivePrimarySubscriber(t *testing.T) {
 				})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).At(1).Dot("primary").Replace(false))
+				assert.False(t, Navigate(p).At(1).Dot("primary").Replace(false).HasError())
 			},
 			expect: func(t *testing.T, raw interface{}) {
 				assert.Equal(t, []interface{}{
@@ -321,7 +321,7 @@ func TestSchemaSyncSubscriber(t *testing.T) {
 				})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).Dot("extension").Dot("text").Replace("hello world"))
+				assert.False(t, Navigate(p).Dot("extension").Dot("text").Replace("hello world").HasError())
 			},
 			expect: func(t *testing.T, schemas interface{}) {
 				assert.Equal(t, []interface{}{"main", "extension"}, schemas)
@@ -339,9 +339,9 @@ func TestSchemaSyncSubscriber(t *testing.T) {
 				})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).Dot("extension").Replace(map[string]interface{}{
+				assert.False(t, Navigate(p).Dot("extension").Replace(map[string]interface{}{
 					"text": "see ya later",
-				}))
+				}).HasError())
 			},
 			expect: func(t *testing.T, schemas interface{}) {
 				assert.Equal(t, []interface{}{"main", "extension"}, schemas)
@@ -359,7 +359,7 @@ func TestSchemaSyncSubscriber(t *testing.T) {
 				})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).Dot("extension").Delete())
+				assert.False(t, Navigate(p).Dot("extension").Delete().HasError())
 			},
 			expect: func(t *testing.T, schemas interface{}) {
 				assert.Equal(t, []interface{}{"main"}, schemas)
@@ -375,7 +375,7 @@ func TestSchemaSyncSubscriber(t *testing.T) {
 				})
 			},
 			modFunc: func(t *testing.T, p Property) {
-				assert.Nil(t, Navigate(p).Dot("extension").Delete())
+				assert.False(t, Navigate(p).Dot("extension").Delete().HasError())
 			},
 			expect: func(t *testing.T, schemas interface{}) {
 				assert.Equal(t, []interface{}{"main"}, schemas)
@@ -439,9 +439,7 @@ func TestComplexStateSummarySubscriber(t *testing.T) {
 				return NewComplex(attrFunc(t))
 			},
 			modFunc: func(t *testing.T, p Property) {
-				nav := Navigate(p).Dot("givenName")
-				require.Nil(t, nav.Error())
-				assert.Nil(t, nav.Replace("David"))
+				assert.False(t, Navigate(p).Dot("givenName").Replace("David").HasError())
 			},
 			expect: func(t *testing.T, events *Events) {
 				assert.Equal(t, 2, events.Count())
@@ -455,17 +453,13 @@ func TestComplexStateSummarySubscriber(t *testing.T) {
 			name: "assign value to assigned complex property does not yield new event",
 			getProperty: func(t *testing.T) Property {
 				p := NewComplex(attrFunc(t))
-				err := Navigate(p).Add(map[string]interface{}{
+				assert.False(t, Navigate(p).Add(map[string]interface{}{
 					"givenName": "David",
-				})
-				assert.Nil(t, err)
+				}).HasError())
 				return p
 			},
 			modFunc: func(t *testing.T, p Property) {
-				// must use navigate to modify in order to trigger event propagation
-				nav := Navigate(p).Dot("familyName")
-				require.Nil(t, nav.Error())
-				assert.Nil(t, nav.Replace("Q"))
+				assert.False(t, Navigate(p).Dot("familyName").Replace("Q").HasError())
 			},
 			expect: func(t *testing.T, events *Events) {
 				assert.Equal(t, 1, events.Count())
@@ -479,15 +473,14 @@ func TestComplexStateSummarySubscriber(t *testing.T) {
 			name: "delete assigned complex property yield new event",
 			getProperty: func(t *testing.T) Property {
 				p := NewComplex(attrFunc(t))
-				err := Navigate(p).Add(map[string]interface{}{
+				assert.False(t, Navigate(p).Add(map[string]interface{}{
 					"givenName": "David",
-				})
-				assert.Nil(t, err)
+				}).HasError())
 				return p
 			},
 			modFunc: func(t *testing.T, p Property) {
 				// must use navigate to modify in order to trigger event propagation
-				assert.Nil(t, Navigate(p).Delete())
+				assert.False(t, Navigate(p).Delete().HasError())
 			},
 			expect: func(t *testing.T, events *Events) {
 				assert.Equal(t, 1, events.Count())
@@ -504,7 +497,7 @@ func TestComplexStateSummarySubscriber(t *testing.T) {
 			},
 			modFunc: func(t *testing.T, p Property) {
 				// must use navigate to modify in order to trigger event propagation
-				assert.Nil(t, Navigate(p).Delete())
+				assert.False(t, Navigate(p).Delete().HasError())
 			},
 			expect: func(t *testing.T, events *Events) {
 				assert.Nil(t, events)

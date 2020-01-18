@@ -33,7 +33,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[id eq "foobar"] evaluates to true against {"id":"foobar"}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("id").Replace("foobar"))
+				assert.False(t, r.Navigator().Dot("id").Replace("foobar").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("id eq %s", strconv.Quote("foobar")),
@@ -46,7 +46,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[id ne "foobar"] evaluates to false against {"id":"foobar"}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("id").Replace("foobar"))
+				assert.False(t, r.Navigator().Dot("id").Replace("foobar").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("id ne %s", strconv.Quote("foobar")),
@@ -59,7 +59,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[id sw "foo"] evaluates to true against {"id":"foobar"}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("id").Replace("foobar"))
+				assert.False(t, r.Navigator().Dot("id").Replace("foobar").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("id sw %s", strconv.Quote("foo")),
@@ -72,7 +72,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[id ew "bar"] evaluates to true against {"id":"foobar"}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("id").Replace("foobar"))
+				assert.False(t, r.Navigator().Dot("id").Replace("foobar").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("id ew %s", strconv.Quote("bar")),
@@ -85,7 +85,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[id co "xxx"] evaluates to false against {"id":"foobar"}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("id").Replace("foobar"))
+				assert.False(t, r.Navigator().Dot("id").Replace("foobar").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("id co %s", strconv.Quote("xxx")),
@@ -98,7 +98,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[meta.version gt "v1"] evaluates to true against {"meta":{"version":"v2"}}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("meta").Dot("version").Replace("v2"))
+				assert.False(t, r.Navigator().Dot("meta").Dot("version").Replace("v2").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("meta.version gt %s", strconv.Quote("v1")),
@@ -111,7 +111,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[meta.version ge "v1"] evaluates to true against {"meta":{"version":"v1"}}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("meta").Dot("version").Replace("v1"))
+				assert.False(t, r.Navigator().Dot("meta").Dot("version").Replace("v1").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("meta.version ge %s", strconv.Quote("v1")),
@@ -124,7 +124,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[meta.version lt "v1"] evaluates to false against {"meta":{"version":"v2"}}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("meta").Dot("version").Replace("v2"))
+				assert.False(t, r.Navigator().Dot("meta").Dot("version").Replace("v2").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("meta.version lt %s", strconv.Quote("v1")),
@@ -137,7 +137,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[meta.version le "v1"] evaluates to true against {"meta":{"version":"v0"}}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("meta").Dot("version").Replace("v0"))
+				assert.False(t, r.Navigator().Dot("meta").Dot("version").Replace("v0").HasError())
 				return r
 			},
 			filter: fmt.Sprintf("meta.version le %s", strconv.Quote("v1")),
@@ -161,7 +161,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[schemas pr] evaluates to true against {"schemas": ["A", "B"]}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("schemas").Replace([]interface{}{"A", "B"}))
+				assert.False(t, r.Navigator().Dot("schemas").Replace([]interface{}{"A", "B"}).HasError())
 				return r
 			},
 			filter: "schemas pr",
@@ -174,7 +174,7 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[schemas eq "B"] evaluates to true against {"schemas": ["A", "B"]}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("schemas").Replace([]interface{}{"A", "B"}))
+				assert.False(t, r.Navigator().Dot("schemas").Replace([]interface{}{"A", "B"}).HasError())
 				return r
 			},
 			filter: fmt.Sprintf("schemas eq %s", strconv.Quote("B")),
@@ -187,10 +187,10 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[emails.value eq "bar"] evaluates to true against {"emails": [{"value": "foo"}, {"value": "bar"}]}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Replace([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Replace([]interface{}{
 					map[string]interface{}{"value": "foo"},
 					map[string]interface{}{"value": "bar"},
-				}))
+				}).HasError())
 				return r
 			},
 			filter: fmt.Sprintf("emails.value eq %s", strconv.Quote("bar")),
@@ -203,9 +203,9 @@ func (s *EvaluateTestSuite) TestEvaluate() {
 			name: `[emails.value eq "bar"] evaluates to false against {"emails": [{"value": "foo"}]}`,
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Replace([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Replace([]interface{}{
 					map[string]interface{}{"value": "foo"},
-				}))
+				}).HasError())
 				return r
 			},
 			filter: fmt.Sprintf("emails.value eq %s", strconv.Quote("bar")),

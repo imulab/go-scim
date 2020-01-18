@@ -33,7 +33,7 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 			name: "simple target",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("id").Replace("foobar"))
+				assert.False(t, r.Navigator().Dot("id").Replace("foobar").HasError())
 				return r
 			},
 			sortBy: "id",
@@ -47,7 +47,7 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 			name: "nested target",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("meta").Dot("version").Replace("v1"))
+				assert.False(t, r.Navigator().Dot("meta").Dot("version").Replace("v1").HasError())
 				return r
 			},
 			sortBy: "meta.version",
@@ -61,7 +61,7 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 			name: "multiValued simple target returns first",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("schemas").Add([]interface{}{"A", "B"}))
+				assert.False(t, r.Navigator().Dot("schemas").Add([]interface{}{"A", "B"}).HasError())
 				return r
 			},
 			sortBy: "schemas",
@@ -75,14 +75,14 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 			name: "multiValued complex target with no true-primary returns first",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value": "foo",
 					},
 					map[string]interface{}{
 						"value": "bar",
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			sortBy: "emails.value",
@@ -96,7 +96,7 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 			name: "multiValued complex target with true-primary returns true-primary value",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value": "foo",
 					},
@@ -104,7 +104,7 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 						"value":   "bar",
 						"primary": true,
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			sortBy: "emails.value",
@@ -118,7 +118,7 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 			name: "invalid target",
 			getResource: func(t *testing.T) *prop.Resource {
 				r := prop.NewResource(s.resourceType)
-				assert.Nil(t, r.Navigator().Dot("emails").Add([]interface{}{
+				assert.False(t, r.Navigator().Dot("emails").Add([]interface{}{
 					map[string]interface{}{
 						"value": "foo",
 					},
@@ -126,7 +126,7 @@ func (s *SeekSortByTargetTestSuite) TestSeekSortTarget() {
 						"value":   "bar",
 						"primary": true,
 					},
-				}))
+				}).HasError())
 				return r
 			},
 			sortBy: "emails",

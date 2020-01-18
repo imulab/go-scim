@@ -8,7 +8,7 @@ import (
 	"github.com/elvsn/scim.go/spec"
 )
 
-func defaultTraverse(property prop.Property, query *expr.Expression, callback func(nav *prop.Navigator) error) error {
+func defaultTraverse(property prop.Property, query *expr.Expression, callback func(nav prop.Navigator) error) error {
 	return traverser{
 		nav:             prop.Navigate(property),
 		callback:        callback,
@@ -16,7 +16,7 @@ func defaultTraverse(property prop.Property, query *expr.Expression, callback fu
 	}.traverse(query)
 }
 
-func primaryOrFirstTraverse(property prop.Property, query *expr.Expression, callback func(nav *prop.Navigator) error) error {
+func primaryOrFirstTraverse(property prop.Property, query *expr.Expression, callback func(nav prop.Navigator) error) error {
 	return traverser{
 		nav:             prop.Navigate(property),
 		callback:        callback,
@@ -25,9 +25,9 @@ func primaryOrFirstTraverse(property prop.Property, query *expr.Expression, call
 }
 
 type traverser struct {
-	nav             *prop.Navigator                 // stateful navigator for the resource being traversed
-	callback        func(nav *prop.Navigator) error // callback function to be invoked when target is reached
-	elementStrategy elementStrategy                 // strategy to select element properties to traverse for multiValued properties
+	nav             prop.Navigator                 // stateful navigator for the resource being traversed
+	callback        func(nav prop.Navigator) error // callback function to be invoked when target is reached
+	elementStrategy elementStrategy                // strategy to select element properties to traverse for multiValued properties
 }
 
 func (t traverser) traverse(query *expr.Expression) error {

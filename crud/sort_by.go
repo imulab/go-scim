@@ -82,7 +82,7 @@ func SeekSortTarget(resource *prop.Resource, by *expr.Expression) (prop.Property
 	}
 
 	var candidates []prop.Property
-	if err := primaryOrFirstTraverse(resource.RootProperty(), by, func(nav *prop.Navigator) error {
+	if err := primaryOrFirstTraverse(resource.RootProperty(), by, func(nav prop.Navigator) error {
 		candidates = append(candidates, nav.Current())
 		return nil
 	}); err != nil {

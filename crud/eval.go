@@ -74,7 +74,7 @@ func (v evaluator) evalAny(p prop.Property, op *expr.Expression) (bool, error) {
 	// This filter leads to two comparisons of "user1@foo.com" sw "user1", and "user2@foo.com" sw "user1" respectively,
 	// which produces "true" and "false". As a result, this resource should pass the filter.
 	var results = make([]bool, 0)
-	if err := defaultTraverse(p, op.Left(), func(nav *prop.Navigator) (fe error) {
+	if err := defaultTraverse(p, op.Left(), func(nav prop.Navigator) (fe error) {
 		var r bool
 
 		switch op.Token() {

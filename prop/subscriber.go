@@ -1,7 +1,6 @@
 package prop
 
 import (
-	"errors"
 	"github.com/elvsn/scim.go/annotation"
 	"github.com/elvsn/scim.go/spec"
 	"sync"
@@ -125,38 +124,34 @@ func (s *ExclusivePrimarySubscriber) Notify(publisher Property, events *Events) 
 		return nil
 	}
 
-	var (
-		i   = 0
-		nav = Navigate(publisher)
-	)
-	for {
-		nav.At(i) // focus on i-th element
-		if err := nav.Error(); err != nil {
-			if errors.Unwrap(err) == spec.ErrNoTarget {
-				break
+	nav := Navigate(publisher)
+	return nav.ForEachChild(func(index int, child Property) error {
+		defer func() {
+			for nav.Current() != publisher {
+				nav.Retract()
 			}
+		}()
+
+		nav.At(index).Dot(ev.Source().Attribute().Name())
+		if nav.HasError() {
+			return nil
+		}
+
+		if nav.Current() == ev.Source() {
+			return nil
+		}
+
+		// Here we want to submit events to the same event propagation flow that triggered this subscriber, hence,
+		// we don't use nav.Delete() which triggers a new propagation flow. Rather, we append the individual
+		// delete event to the events in this exact flow.
+		dev, err := nav.Current().Delete()
+		if err != nil {
 			return err
 		}
+		events.Append(dev)
 
-		nav.Dot(ev.Source().Attribute().Name()) // focus on the primary attribute of i-th element
-		if nav.Error() == nil && nav.Current() != ev.Source() {
-			// Here we want to submit events to the same event propagation flow that triggered this subscriber, hence,
-			// we don't use nav.Delete() which triggers a new propagation flow. Rather, we append the individual
-			// delete event to the events in this exact flow.
-			dev, err := nav.Current().Delete()
-			if err != nil {
-				return err
-			}
-			events.Append(dev)
-		}
-
-		nav.Retract() // retract the Dot
-		nav.Retract() // retract the At
-
-		i++ // goto next element
-	}
-
-	return nil
+		return nil
+	})
 }
 
 func (s *ExclusivePrimarySubscriber) validPublisher(publisher Property) bool {
@@ -200,36 +195,36 @@ func (s *SchemaSyncSubscriber) Notify(publisher Property, events *Events) error 
 		}
 
 		nav := Navigate(publisher).Dot("schemas")
-		if err := nav.Error(); err != nil {
-			return err
+		if nav.HasError() {
+			return nav.Error()
 		}
 
 		schemaId := ev.Source().Attribute().Name()
 		switch ev.Type() {
 		case EventAssigned:
-			if err := nav.Add(schemaId); err != nil {
-				return err
+			if nav.Add(schemaId).HasError() {
+				return nav.Error()
 			}
 		case EventUnassigned:
-			i := 0
-			for {
-				nav.At(i) // focus on i-th schema
-				if err := nav.Error(); err != nil {
-					if errors.Unwrap(err) == spec.ErrNoTarget {
-						break
-					}
-					return err
+			mark := nav.Current() // ensure every callback retracts to this position
+			if err := nav.ForEachChild(func(index int, child Property) error {
+				if child.Raw() != schemaId {
+					return nil
 				}
 
-				if nav.Current().Raw() == schemaId {
-					if err := nav.Delete(); err != nil {
-						return err
+				defer func() {
+					for nav.Current() != mark {
+						nav.Retract()
 					}
-					break
+				}()
+
+				if nav.At(index).Delete().HasError() {
+					return nav.Error()
 				}
 
-				nav.Retract() // retract At
-				i++           // goto next schema
+				return nil
+			}); err != nil {
+				return err
 			}
 		}
 

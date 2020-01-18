@@ -38,7 +38,7 @@ func (r *Resource) Hash() uint64 {
 }
 
 // Navigator returns a navigator on the root property.
-func (r *Resource) Navigator() *Navigator {
+func (r *Resource) Navigator() Navigator {
 	return Navigate(r.data)
 }
 

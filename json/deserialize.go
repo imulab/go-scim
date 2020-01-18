@@ -99,7 +99,7 @@ type deserializeState struct {
 	off       int // next read offset in data
 	opCode    int // last read result
 	scan      scanner
-	navigator *prop.Navigator
+	navigator prop.Navigator
 }
 
 func (d *deserializeState) errInvalidSyntax(msg string, args ...interface{}) error {
