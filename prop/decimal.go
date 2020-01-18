@@ -139,19 +139,19 @@ func (p *decimalProperty) Notify(events *Events) error {
 	return nil
 }
 
-func (p *decimalProperty) countChildren() int {
+func (p *decimalProperty) CountChildren() int {
 	return 0
 }
 
-func (p *decimalProperty) forEachChild(_ func(index int, child Property) error) error {
+func (p *decimalProperty) ForEachChild(_ func(index int, child Property) error) error {
 	return nil
 }
 
-func (p *decimalProperty) findChild(_ func(child Property) bool) Property {
+func (p *decimalProperty) FindChild(_ func(child Property) bool) Property {
 	return nil
 }
 
-func (p *decimalProperty) childAtIndex(_ interface{}) (Property, error) {
+func (p *decimalProperty) ChildAtIndex(_ interface{}) (Property, error) {
 	return nil, nil
 }
 

@@ -60,7 +60,7 @@ func (p *complexProperty) Attribute() *spec.Attribute {
 // Caution: slow operation
 func (p *complexProperty) Raw() interface{} {
 	values := map[string]interface{}{}
-	_ = p.forEachChild(func(_ int, child Property) error {
+	_ = p.ForEachChild(func(_ int, child Property) error {
 		values[child.Attribute().Name()] = child.Raw()
 		return nil
 	})
@@ -105,7 +105,7 @@ func (p *complexProperty) Hash() uint64 {
 		h         = fnv.New64a()
 		idSubAttr = p.identitySubAttributes()
 	)
-	if err := p.forEachChild(func(_ int, child Property) error {
+	if err := p.ForEachChild(func(_ int, child Property) error {
 		if _, ok := idSubAttr[child.Attribute()]; !ok && len(idSubAttr) > 0 {
 			return nil // do not include in computation if complex has identity attributes but this is not one of them.
 		}
@@ -136,7 +136,7 @@ func (p *complexProperty) Matches(another Property) bool {
 	if !p.attr.Equals(another.Attribute()) {
 		return false
 	}
-	if p.countChildren() != another.countChildren() {
+	if p.CountChildren() != another.CountChildren() {
 		return false // Usually this won't happen, but still check it to be sure.
 	}
 	return p.Hash() == another.Hash()
@@ -234,11 +234,11 @@ func (p *complexProperty) Notify(events *Events) error {
 	return nil
 }
 
-func (p *complexProperty) countChildren() int {
+func (p *complexProperty) CountChildren() int {
 	return len(p.subProps)
 }
 
-func (p *complexProperty) forEachChild(callback func(index int, child Property) error) error {
+func (p *complexProperty) ForEachChild(callback func(index int, child Property) error) error {
 	for i, sp := range p.subProps {
 		if err := callback(i, sp); err != nil {
 			return err
@@ -247,7 +247,7 @@ func (p *complexProperty) forEachChild(callback func(index int, child Property) 
 	return nil
 }
 
-func (p *complexProperty) findChild(criteria func(child Property) bool) Property {
+func (p *complexProperty) FindChild(criteria func(child Property) bool) Property {
 	for _, sp := range p.subProps {
 		if criteria(sp) {
 			return sp
@@ -256,7 +256,7 @@ func (p *complexProperty) findChild(criteria func(child Property) bool) Property
 	return nil
 }
 
-func (p *complexProperty) childAtIndex(index interface{}) (Property, error) {
+func (p *complexProperty) ChildAtIndex(index interface{}) (Property, error) {
 	switch i := index.(type) {
 	case string:
 		ni, ok := p.nameIndex[strings.ToLower(i)]

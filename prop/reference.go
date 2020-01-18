@@ -153,19 +153,19 @@ func (p *referenceProperty) Notify(events *Events) error {
 	return nil
 }
 
-func (p *referenceProperty) countChildren() int {
+func (p *referenceProperty) CountChildren() int {
 	return 0
 }
 
-func (p *referenceProperty) forEachChild(_ func(index int, child Property) error) error {
+func (p *referenceProperty) ForEachChild(_ func(index int, child Property) error) error {
 	return nil
 }
 
-func (p *referenceProperty) findChild(_ func(child Property) bool) Property {
+func (p *referenceProperty) FindChild(_ func(child Property) bool) Property {
 	return nil
 }
 
-func (p *referenceProperty) childAtIndex(_ interface{}) (Property, error) {
+func (p *referenceProperty) ChildAtIndex(_ interface{}) (Property, error) {
 	return nil, nil
 }
 

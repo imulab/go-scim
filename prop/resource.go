@@ -27,6 +27,11 @@ func (r *Resource) RootAttribute() *spec.Attribute {
 	return r.data.Attribute()
 }
 
+// RootProperty returns the root property
+func (r *Resource) RootProperty() Property {
+	return r.data
+}
+
 // Hash returns the hash of this resource, which is same hash of the root property.
 func (r *Resource) Hash() uint64 {
 	return r.data.Hash()
@@ -52,7 +57,7 @@ func (r *Resource) Visit(visitor Visitor) error {
 // IdOrEmpty returns the id of the resource, defined in the core schema. If in any case the id is not available, (i.e.
 // unassigned, wrong type), empty string is returned.
 func (r *Resource) IdOrEmpty() string {
-	if p, err := r.data.childAtIndex("id"); err != nil || p.IsUnassigned() {
+	if p, err := r.data.ChildAtIndex("id"); err != nil || p.IsUnassigned() {
 		return ""
 	} else if s, ok := p.Raw().(string); !ok {
 		return ""
@@ -64,12 +69,12 @@ func (r *Resource) IdOrEmpty() string {
 // MetaLocationOrEmpty returns meta.location value of the resource, defined in the core schema. If in any case, the
 // meta.location value is not available (i.e. unassigned, wrong type), empty string is returned.
 func (r *Resource) MetaLocationOrEmpty() string {
-	meta, err := r.data.childAtIndex("meta")
+	meta, err := r.data.ChildAtIndex("meta")
 	if err != nil {
 		return ""
 	}
 
-	loc, err := meta.childAtIndex("location")
+	loc, err := meta.ChildAtIndex("location")
 	if err != nil {
 		return ""
 	}
@@ -86,12 +91,12 @@ func (r *Resource) MetaLocationOrEmpty() string {
 // MetaVersionOrEmpty returns meta.version value of the resource, defined in the core schema. If in any case, the
 // meta.version value is not available (i.e. unassigned, wrong type), empty string is returned.
 func (r *Resource) MetaVersionOrEmpty() string {
-	meta, err := r.data.childAtIndex("meta")
+	meta, err := r.data.ChildAtIndex("meta")
 	if err != nil {
 		return ""
 	}
 
-	loc, err := meta.childAtIndex("version")
+	loc, err := meta.ChildAtIndex("version")
 	if err != nil {
 		return ""
 	}

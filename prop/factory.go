@@ -1,6 +1,8 @@
 package prop
 
-import "github.com/elvsn/scim.go/spec"
+import (
+	"github.com/elvsn/scim.go/spec"
+)
 
 // NewProperty creates a new property of any legal SCIM type
 func NewProperty(attr *spec.Attribute) Property {

@@ -77,7 +77,7 @@ func (p *multiValuedProperty) Hash() uint64 {
 	}
 
 	var hashes []uint64
-	_ = p.forEachChild(func(index int, child Property) error {
+	_ = p.ForEachChild(func(index int, child Property) error {
 		if child.IsUnassigned() {
 			return nil
 		}
@@ -218,11 +218,11 @@ func (p *multiValuedProperty) Notify(events *Events) error {
 	return nil
 }
 
-func (p *multiValuedProperty) countChildren() int {
+func (p *multiValuedProperty) CountChildren() int {
 	return len(p.elements)
 }
 
-func (p *multiValuedProperty) forEachChild(callback func(index int, child Property) error) error {
+func (p *multiValuedProperty) ForEachChild(callback func(index int, child Property) error) error {
 	for i, elem := range p.elements {
 		if err := callback(i, elem); err != nil {
 			return err
@@ -231,7 +231,7 @@ func (p *multiValuedProperty) forEachChild(callback func(index int, child Proper
 	return nil
 }
 
-func (p *multiValuedProperty) findChild(criteria func(child Property) bool) Property {
+func (p *multiValuedProperty) FindChild(criteria func(child Property) bool) Property {
 	for _, elem := range p.elements {
 		if criteria(elem) {
 			return elem
@@ -240,7 +240,7 @@ func (p *multiValuedProperty) findChild(criteria func(child Property) bool) Prop
 	return nil
 }
 
-func (p *multiValuedProperty) childAtIndex(index interface{}) (Property, error) {
+func (p *multiValuedProperty) ChildAtIndex(index interface{}) (Property, error) {
 	switch i := index.(type) {
 	case int:
 		if i < 0 || i >= len(p.elements) {

@@ -144,19 +144,19 @@ func (p *dateTimeProperty) Notify(events *Events) error {
 	return nil
 }
 
-func (p *dateTimeProperty) countChildren() int {
+func (p *dateTimeProperty) CountChildren() int {
 	return 0
 }
 
-func (p *dateTimeProperty) forEachChild(_ func(index int, child Property) error) error {
+func (p *dateTimeProperty) ForEachChild(_ func(index int, child Property) error) error {
 	return nil
 }
 
-func (p *dateTimeProperty) findChild(_ func(child Property) bool) Property {
+func (p *dateTimeProperty) FindChild(_ func(child Property) bool) Property {
 	return nil
 }
 
-func (p *dateTimeProperty) childAtIndex(_ interface{}) (Property, error) {
+func (p *dateTimeProperty) ChildAtIndex(_ interface{}) (Property, error) {
 	return nil, nil
 }
 

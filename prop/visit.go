@@ -30,7 +30,7 @@ func Visit(property Property, visitor Visitor) error {
 
 	if property.Attribute().MultiValued() || property.Attribute().Type() == spec.TypeComplex {
 		visitor.BeginChildren(property)
-		if err := property.forEachChild(func(_ int, child Property) error {
+		if err := property.ForEachChild(func(_ int, child Property) error {
 			return Visit(child, visitor)
 		}); err != nil {
 			return err

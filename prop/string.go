@@ -150,19 +150,19 @@ func (p *stringProperty) Notify(events *Events) error {
 	return nil
 }
 
-func (p *stringProperty) countChildren() int {
+func (p *stringProperty) CountChildren() int {
 	return 0
 }
 
-func (p *stringProperty) forEachChild(_ func(index int, child Property) error) error {
+func (p *stringProperty) ForEachChild(_ func(index int, child Property) error) error {
 	return nil
 }
 
-func (p *stringProperty) findChild(_ func(child Property) bool) Property {
+func (p *stringProperty) FindChild(_ func(child Property) bool) Property {
 	return nil
 }
 
-func (p *stringProperty) childAtIndex(_ interface{}) (Property, error) {
+func (p *stringProperty) ChildAtIndex(_ interface{}) (Property, error) {
 	return nil, nil
 }
 

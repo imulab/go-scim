@@ -58,9 +58,13 @@ type Property interface {
 	Delete() (*Event, error)
 	// Notify all subscribers of this property of the events.
 	Notify(events *Events) error
-
-	countChildren() int
-	forEachChild(callback func(index int, child Property) error) error
-	findChild(criteria func(child Property) bool) Property
-	childAtIndex(index interface{}) (Property, error)
+	// CountChildren returns the number of children properties. Children properties are sub properties for complex
+	// properties and element properties for multiValued properties. Other properties have no children.
+	CountChildren() int
+	// ForEachChild iterates all children properties and invoke callback function.
+	ForEachChild(callback func(index int, child Property) error) error
+	// FindChild returns the first children property that satisfies the criteria, or nil if none satisfies.
+	FindChild(criteria func(child Property) bool) Property
+	// ChildAtIndex returns the children property at given index. The type of index vary across implementations.
+	ChildAtIndex(index interface{}) (Property, error)
 }

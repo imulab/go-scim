@@ -141,19 +141,19 @@ func (p *booleanProperty) Notify(events *Events) error {
 	return nil
 }
 
-func (p *booleanProperty) countChildren() int {
+func (p *booleanProperty) CountChildren() int {
 	return 0
 }
 
-func (p *booleanProperty) forEachChild(_ func(index int, child Property) error) error {
+func (p *booleanProperty) ForEachChild(_ func(index int, child Property) error) error {
 	return nil
 }
 
-func (p *booleanProperty) findChild(_ func(child Property) bool) Property {
+func (p *booleanProperty) FindChild(_ func(child Property) bool) Property {
 	return nil
 }
 
-func (p *booleanProperty) childAtIndex(_ interface{}) (Property, error) {
+func (p *booleanProperty) ChildAtIndex(_ interface{}) (Property, error) {
 	return nil, nil
 }
 

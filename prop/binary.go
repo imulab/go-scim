@@ -151,19 +151,19 @@ func (p *binaryProperty) Notify(events *Events) error {
 	return nil
 }
 
-func (p *binaryProperty) countChildren() int {
+func (p *binaryProperty) CountChildren() int {
 	return 0
 }
 
-func (p *binaryProperty) forEachChild(_ func(index int, child Property) error) error {
+func (p *binaryProperty) ForEachChild(_ func(index int, child Property) error) error {
 	return nil
 }
 
-func (p *binaryProperty) findChild(_ func(child Property) bool) Property {
+func (p *binaryProperty) FindChild(_ func(child Property) bool) Property {
 	return nil
 }
 
-func (p *binaryProperty) childAtIndex(_ interface{}) (Property, error) {
+func (p *binaryProperty) ChildAtIndex(_ interface{}) (Property, error) {
 	return nil, nil
 }
 
