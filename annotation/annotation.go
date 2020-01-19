@@ -34,6 +34,11 @@ const (
 	// @UUID annotates a string property. A uuid will be generated to replace the value of the annotated property
 	// if the property is in the unassigned state when processed.
 	UUID = "@UUID"
+	// @BCrypt annotates a string property or a binary property`. The value of the property will be bCrypt hashed and
+	// replace the original value. If the property is unassigned, no operation will be carried out. The annotation takes
+	// a integer parameter named "cost". This will determine the strength of the bCrypt hashing. If omitted, default
+	// cost is 10. The value replacement does not trigger event propagation, it is strictly local.
+	BCrypt = "@BCrypt"
 	// @ReadOnly annotates a readOnly property and indicates how filters should handle its value. Two options are
 	// available. The first a boolean named "reset": if true, filters shall delete the property value; The second
 	// is a boolean named "copy": if true, filters shall copy value from the reference property, if available.
