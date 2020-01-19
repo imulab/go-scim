@@ -28,10 +28,10 @@ type ByProperty interface {
 	Supports(attribute *spec.Attribute) bool
 	// Filter the given property with reference to the resource that contains this property. The property being filter
 	// is the Current property on the navigator. Any error returned shall cause the caller to abort subsequent operations.
-	Filter(ctx context.Context, nav prop.Navigator) error
+	Filter(ctx context.Context, resourceType *spec.ResourceType, nav prop.Navigator) error
 	// Filter the given property with reference to the resource that contains this property, another reference resource which
 	// potentially holds a reference property. The reference resource and property may serve as a guidance for the expected
 	// state of the property. The reference resource shall never be nil, whereas the reference property may be nil.
 	// Any error returned shall cause the caller to abort subsequent operations.
-	FilterRef(ctx context.Context, nav prop.Navigator, refNav prop.Navigator) error
+	FilterRef(ctx context.Context, resourceType *spec.ResourceType, nav prop.Navigator, refNav prop.Navigator) error
 }

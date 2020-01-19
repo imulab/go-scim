@@ -356,12 +356,12 @@ func (f *recordingPropertyFilter) Supports(_ *spec.Attribute) bool {
 	return true
 }
 
-func (f *recordingPropertyFilter) Filter(_ context.Context, nav prop.Navigator) error {
+func (f *recordingPropertyFilter) Filter(_ context.Context, _ *spec.ResourceType, nav prop.Navigator) error {
 	f.propHistory = append(f.propHistory, nav.Current())
 	return nil
 }
 
-func (f *recordingPropertyFilter) FilterRef(_ context.Context, nav prop.Navigator, refNav prop.Navigator) error {
+func (f *recordingPropertyFilter) FilterRef(_ context.Context, _ *spec.ResourceType, nav prop.Navigator, refNav prop.Navigator) error {
 	f.propHistory = append(f.propHistory, nav.Current())
 	f.refHistory = append(f.refHistory, refNav.Current())
 	return nil
