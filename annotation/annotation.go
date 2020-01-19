@@ -43,4 +43,8 @@ const (
 	// available. The first a boolean named "reset": if true, filters shall delete the property value; The second
 	// is a boolean named "copy": if true, filters shall copy value from the reference property, if available.
 	ReadOnly = "@ReadOnly"
+	// @Enum annotates attributes that has canonicalValues and enforces its values to the range of the defined
+	// canonicalValues. The defined values will be treated as strings and compared with respect to the caseExact
+	// setting.
+	Enum = "@Enum"
 )

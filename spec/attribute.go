@@ -108,6 +108,11 @@ func (attr *Attribute) ExistsCanonicalValue(criteria func(canonicalValue string)
 	return false
 }
 
+// CountCanonicalValues returns the total number of canonical values defined.
+func (attr *Attribute) CountCanonicalValues() int {
+	return len(attr.canonicalValues)
+}
+
 // ForEachReferenceTypes invokes callback function on each defined reference types
 func (attr *Attribute) ForEachReferenceTypes(callback func(referenceType string)) {
 	for _, rt := range attr.referenceTypes {
