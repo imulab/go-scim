@@ -7,7 +7,7 @@ import (
 )
 
 // Responsible of filtering a resource, like carrying out operations on a resource such as validation, modification, etc.
-type ResourceFilter interface {
+type ByResource interface {
 	// Filter the resource and return any error. If the error returned is not nil,
 	// the caller should immediately abort the operation and avoid executing the
 	// following filters.
@@ -21,7 +21,7 @@ type ResourceFilter interface {
 
 // Responsible of filtering on the level of a single property field. It provides more granular control than
 // a resource filter.
-type PropertyFilter interface {
+type ByProperty interface {
 	// Returns true if this filter supports the supplied attribute. The Filter method
 	// will only be called when this method returns true. This method is expected to be
 	// called at setup time.

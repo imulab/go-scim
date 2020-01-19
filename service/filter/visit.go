@@ -6,7 +6,7 @@ import (
 	"github.com/elvsn/scim.go/spec"
 )
 
-func Visit(ctx context.Context, resource *prop.Resource, filter PropertyFilter) error {
+func Visit(ctx context.Context, resource *prop.Resource, filter ByProperty) error {
 	n := flexNavigator{stack: []prop.Property{resource.RootProperty()}}
 	v := syncVisitor{
 		resourceNav: &n,
@@ -20,7 +20,7 @@ func Visit(ctx context.Context, resource *prop.Resource, filter PropertyFilter) 
 	return resource.Visit(&v)
 }
 
-func VisitWithRef(ctx context.Context, resource *prop.Resource, ref *prop.Resource, filter PropertyFilter) error {
+func VisitWithRef(ctx context.Context, resource *prop.Resource, ref *prop.Resource, filter ByProperty) error {
 	n := flexNavigator{stack: []prop.Property{resource.RootProperty()}}
 	f := flexNavigator{stack: []prop.Property{ref.RootProperty()}}
 	v := syncVisitor{
