@@ -28,7 +28,11 @@
       "_index": 1,
       "_path": "id",
       "_annotations": {
-        "@CopyReadOnly": {}
+        "@ReadOnly": {
+          "reset": true,
+          "copy": true
+        },
+        "@UUID": {}
       }
     },
     {
@@ -55,7 +59,10 @@
           "_index": 0,
           "_path": "meta.resourceType",
           "_annotations": {
-            "@CopyReadOnly": {}
+            "@ReadOnly": {
+              "reset": true,
+              "copy": true
+            }
           }
         },
         {
@@ -66,7 +73,10 @@
           "_index": 1,
           "_path": "meta.created",
           "_annotations": {
-            "@CopyReadOnly": {}
+            "@ReadOnly": {
+              "reset": true,
+              "copy": true
+            }
           }
         },
         {
@@ -77,7 +87,10 @@
           "_index": 2,
           "_path": "meta.lastModified",
           "_annotations": {
-            "@CopyReadOnly": {}
+            "@ReadOnly": {
+              "reset": true,
+              "copy": true
+            }
           }
         },
         {
@@ -89,7 +102,10 @@
           "_index": 3,
           "_path": "meta.location",
           "_annotations": {
-            "@CopyReadOnly": {}
+            "@ReadOnly": {
+              "reset": true,
+              "copy": true
+            }
           }
         },
         {
@@ -100,7 +116,10 @@
           "_index": 4,
           "_path": "meta.version",
           "_annotations": {
-            "@CopyReadOnly": {}
+            "@ReadOnly": {
+              "reset": true,
+              "copy": true
+            }
           }
         }
       ]

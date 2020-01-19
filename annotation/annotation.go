@@ -31,6 +31,11 @@ const (
 	// the derived element attribute. This gives user explicit control as to what annotations will be loaded as a
 	// multiValued property element.
 	ElementAnnotations = "@ElementAnnotations"
-
-	//CopyReadOnly = "@CopyReadOnly"
+	// @UUID annotates a string property. A uuid will be generated to replace the value of the annotated property
+	// if the property is in the unassigned state when processed.
+	UUID = "@UUID"
+	// @ReadOnly annotates a readOnly property and indicates how filters should handle its value. Two options are
+	// available. The first a boolean named "reset": if true, filters shall delete the property value; The second
+	// is a boolean named "copy": if true, filters shall copy value from the reference property, if available.
+	ReadOnly = "@ReadOnly"
 )

@@ -525,6 +525,14 @@
       "type": "complex",
       "multiValued": true,
       "mutability": "readOnly",
+      "_index": 117,
+      "_path": "groups",
+      "_annotations": {
+        "@ReadOnly": {
+          "reset": true,
+          "copy": true
+        }
+      },
       "subAttributes": [
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.value",
@@ -562,9 +570,7 @@
           "_index": 3,
           "_path": "groups.display"
         }
-      ],
-      "_index": 117,
-      "_path": "groups"
+      ]
     },
     {
       "id": "urn:ietf:params:scim:schemas:core:2.0:User:entitlements",
