@@ -6,31 +6,37 @@ import (
 	"github.com/elvsn/scim.go/spec"
 )
 
-func Visit(ctx context.Context, resource *prop.Resource, filter ByProperty) error {
+func Visit(ctx context.Context, resource *prop.Resource, filters ...ByProperty) error {
 	n := flexNavigator{stack: []prop.Property{resource.RootProperty()}}
 	v := syncVisitor{
 		resourceNav: &n,
 		visitFunc: func(resourceNav prop.Navigator, referenceNav prop.Navigator) error {
-			if !filter.Supports(resourceNav.Current().Attribute()) {
-				return nil
+			for _, filter := range filters {
+				if !filter.Supports(resourceNav.Current().Attribute()) {
+					return nil
+				}
+				return filter.Filter(ctx, resource.ResourceType(), resourceNav)
 			}
-			return filter.Filter(ctx, resource.ResourceType(), resourceNav)
+			return nil
 		},
 	}
 	return resource.Visit(&v)
 }
 
-func VisitWithRef(ctx context.Context, resource *prop.Resource, ref *prop.Resource, filter ByProperty) error {
+func VisitWithRef(ctx context.Context, resource *prop.Resource, ref *prop.Resource, filters ...ByProperty) error {
 	n := flexNavigator{stack: []prop.Property{resource.RootProperty()}}
 	f := flexNavigator{stack: []prop.Property{ref.RootProperty()}}
 	v := syncVisitor{
 		resourceNav:  &n,
 		referenceNav: &f,
 		visitFunc: func(resourceNav prop.Navigator, referenceNav prop.Navigator) error {
-			if !filter.Supports(resourceNav.Current().Attribute()) {
-				return nil
+			for _, filter := range filters {
+				if !filter.Supports(resourceNav.Current().Attribute()) {
+					return nil
+				}
+				return filter.FilterRef(ctx, resource.ResourceType(), resourceNav, referenceNav)
 			}
-			return filter.FilterRef(ctx, resource.ResourceType(), resourceNav, referenceNav)
+			return nil
 		},
 	}
 	return resource.Visit(&v)
