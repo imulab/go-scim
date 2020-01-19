@@ -7,6 +7,11 @@ import (
 	"github.com/elvsn/scim.go/spec"
 )
 
+// ReadOnlyFilter returns a ByProperty filter that supports resetting and copying values for readOnly properties that
+// was annotated with @ReadOnly. The annotation can specify two boolean parameters named "reset" and "copy". When "reset"
+// is set to true, the filter will delete the property value; When "copy" is set to true and a reference is available,
+// the filter will replace the property value with that of the reference. If any of these two parameters are not set, they
+// are treated as false. The value changes in this filter generates additional event propagation.
 func ReadOnlyFilter() ByProperty {
 	return readOnlyPropertyFilter{}
 }

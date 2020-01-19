@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// MetaFilter returns a ByResource filter that assigns and updates the meta core attribute.
 func MetaFilter() ByResource {
 	return metaFilter{}
 }
