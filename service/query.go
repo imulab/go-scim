@@ -62,10 +62,12 @@ func (s *queryService) Do(ctx context.Context, req *QueryRequest) (resp *QueryRe
 		return
 	}
 
-	if (req.Pagination == nil && resp.TotalResults > s.config.Filter.MaxResults) ||
-		(req.Pagination != nil && req.Pagination.Count > s.config.Filter.MaxResults) {
-		err = spec.ErrTooMany
-		return
+	if s.config.Filter.MaxResults > 0 {
+		if (req.Pagination == nil && resp.TotalResults > s.config.Filter.MaxResults) ||
+			(req.Pagination != nil && req.Pagination.Count > s.config.Filter.MaxResults) {
+			err = spec.ErrTooMany
+			return
+		}
 	}
 
 	if resp.Resources, err = s.database.Query(ctx, req.Filter, req.Sort, req.Pagination, req.Projection); err != nil {
