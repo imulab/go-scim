@@ -24,8 +24,8 @@ var (
 	ErrNotFound = &Error{Status: 404, Type: "notFound"}
 	// The specified request cannot be completed, due to the passing of sensitive information in a request URI.
 	ErrSensitive = &Error{Status: 400, Type: "sensitive"}
-	// The resource version specified by request does not match the latest version from persistence store.
-	ErrVersionMismatch = &Error{Status: 412, Type: "versionMismatch"}
+	// The resource is in conflict with some pre conditions.
+	ErrConflict = &Error{Status: 412, Type: "conflict"}
 	// Server encountered internal error.
 	ErrInternal = &Error{Status: 500, Type: "internal"}
 )

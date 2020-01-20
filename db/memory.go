@@ -75,7 +75,7 @@ func (m *memoryDB) Replace(_ context.Context, ref *prop.Resource, replacement *p
 
 	version := ref.MetaVersionOrEmpty()
 	if len(version) > 0 && m.db[id].MetaVersionOrEmpty() != version {
-		return spec.ErrVersionMismatch
+		return spec.ErrConflict
 	}
 
 	m.db[id] = replacement

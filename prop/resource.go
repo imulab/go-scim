@@ -37,6 +37,15 @@ func (r *Resource) Hash() uint64 {
 	return r.data.Hash()
 }
 
+// Return a clone of this resource. The clone will contain properties that share the same instance of attribute and
+// subscribers with the original property before the clone, but retain separate instance of values.
+func (r *Resource) Clone() *Resource {
+	return &Resource{
+		resourceType: r.resourceType,
+		data:         r.data.Clone().(*complexProperty),
+	}
+}
+
 // Navigator returns a navigator on the root property.
 func (r *Resource) Navigator() Navigator {
 	return Navigate(r.data)
