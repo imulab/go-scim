@@ -13,7 +13,7 @@ import (
 // it does allow for concurrent access through the use of RWMutex, it does not allow for high throughput usage.
 // It is intended for testing and showcasing purposes only. This implementation also ignores all the field projection
 // parameters that it always returned the full resource regardless of the request to include or exclude attributes.
-func MemoryDB() DB {
+func Memory() DB {
 	db := memoryDB{
 		RWMutex: sync.RWMutex{},
 		db:      make(map[string]*prop.Resource),

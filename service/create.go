@@ -26,7 +26,7 @@ type (
 		Do(ctx context.Context, req *CreateRequest) (resp *CreateResponse, err error)
 	}
 	CreateRequest struct {
-		PayloadSource io.ReadCloser
+		PayloadSource io.Reader
 	}
 	CreateResponse struct {
 		Resource *prop.Resource
@@ -68,9 +68,6 @@ func (s *createService) parseResource(req *CreateRequest) (*prop.Resource, error
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to read request body", spec.ErrInternal)
 	}
-	defer func() {
-		_ = req.PayloadSource.Close()
-	}()
 
 	resource := prop.NewResource(s.resourceType)
 	if err := json.Deserialize(raw, resource); err != nil {
