@@ -33,7 +33,7 @@ type (
 	}
 	ReplaceRequest struct {
 		ResourceID    string
-		PayloadSource io.ReadCloser
+		PayloadSource io.Reader
 		MatchCriteria func(resource *prop.Resource) bool
 	}
 	ReplaceResponse struct {
@@ -87,7 +87,7 @@ func (s *replaceService) Do(ctx context.Context, req *ReplaceRequest) (resp *Rep
 		return
 	}
 
-	if err = s.database.Replace(ctx, replacement, ref); err != nil {
+	if err = s.database.Replace(ctx, ref, replacement); err != nil {
 		return
 	}
 
@@ -108,9 +108,6 @@ func (s *replaceService) parseResource(req *ReplaceRequest) (*prop.Resource, err
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to read request body", spec.ErrInternal)
 	}
-	defer func() {
-		_ = req.PayloadSource.Close()
-	}()
 
 	resource := prop.NewResource(s.resourceType)
 	if err := json.Deserialize(raw, resource); err != nil {
