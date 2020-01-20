@@ -49,9 +49,9 @@ type (
 		PayloadSource io.Reader
 	}
 	PatchResponse struct {
-		Patched    bool
-		Resource   *prop.Resource
-		OldVersion string
+		Patched  bool
+		Ref      *prop.Resource
+		Resource *prop.Resource
 	}
 )
 
@@ -131,9 +131,8 @@ func (s *patchService) Do(ctx context.Context, req *PatchRequest) (resp *PatchRe
 	)
 	if newVersion == oldVersion {
 		resp = &PatchResponse{
-			Patched:    false,
-			Resource:   ref,
-			OldVersion: oldVersion,
+			Patched: false,
+			Ref:     ref,
 		}
 		return
 	}
@@ -143,9 +142,9 @@ func (s *patchService) Do(ctx context.Context, req *PatchRequest) (resp *PatchRe
 	}
 
 	resp = &PatchResponse{
-		Patched:    true,
-		Resource:   resource,
-		OldVersion: oldVersion,
+		Patched:  true,
+		Resource: resource,
+		Ref:      ref,
 	}
 	return
 }

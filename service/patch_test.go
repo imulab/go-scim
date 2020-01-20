@@ -90,7 +90,7 @@ func (s *PatchServiceTestSuite) TestDo() {
 				assert.Nil(t, err)
 				assert.True(t, resp.Patched)
 				assert.NotEmpty(t, resp.Resource.MetaVersionOrEmpty())
-				assert.NotEqual(t, resp.OldVersion, resp.Resource.MetaVersionOrEmpty())
+				assert.NotEqual(t, resp.Ref.MetaVersionOrEmpty(), resp.Resource.MetaVersionOrEmpty())
 				assert.Equal(t, "foobar", resp.Resource.Navigator().Dot("userName").Current().Raw())
 				assert.True(t, resp.Resource.Navigator().Dot("timezone").Current().IsUnassigned())
 				assert.Equal(t, "work", resp.Resource.Navigator().Dot("emails").At(0).Dot("type").Current().Raw())

@@ -37,9 +37,9 @@ type (
 		MatchCriteria func(resource *prop.Resource) bool
 	}
 	ReplaceResponse struct {
-		Replaced   bool
-		Resource   *prop.Resource
-		OldVersion string
+		Replaced bool
+		Ref      *prop.Resource
+		Resource *prop.Resource
 	}
 )
 
@@ -80,9 +80,8 @@ func (s *replaceService) Do(ctx context.Context, req *ReplaceRequest) (resp *Rep
 	)
 	if newVersion == oldVersion {
 		resp = &ReplaceResponse{
-			Replaced:   false,
-			Resource:   ref,
-			OldVersion: oldVersion,
+			Replaced: false,
+			Ref:      ref,
 		}
 		return
 	}
@@ -92,9 +91,9 @@ func (s *replaceService) Do(ctx context.Context, req *ReplaceRequest) (resp *Rep
 	}
 
 	resp = &ReplaceResponse{
-		Replaced:   true,
-		Resource:   replacement,
-		OldVersion: oldVersion,
+		Replaced: true,
+		Resource: replacement,
+		Ref:      ref,
 	}
 	return
 }
