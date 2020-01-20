@@ -46,7 +46,7 @@ type (
 	PatchRequest struct {
 		ResourceID    string
 		MatchCriteria func(resource *prop.Resource) bool
-		PayloadSource io.ReadCloser
+		PayloadSource io.Reader
 	}
 	PatchResponse struct {
 		Patched    bool
@@ -138,7 +138,7 @@ func (s *patchService) Do(ctx context.Context, req *PatchRequest) (resp *PatchRe
 		return
 	}
 
-	if err = s.database.Replace(ctx, resource, ref); err != nil {
+	if err = s.database.Replace(ctx, ref, resource); err != nil {
 		return
 	}
 
@@ -166,9 +166,6 @@ func (s *patchService) parseRequest(req *PatchRequest) (*PatchPayload, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to read request body", spec.ErrInternal)
 	}
-	defer func() {
-		_ = req.PayloadSource.Close()
-	}()
 
 	patch := new(PatchPayload)
 	if err := json.Unmarshal(raw, patch); err != nil {
