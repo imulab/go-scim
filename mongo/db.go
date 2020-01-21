@@ -3,13 +3,11 @@ package mongo
 import (
 	"context"
 	"fmt"
-	"github.com/imulab/go-scim/core/errors"
-	"github.com/imulab/go-scim/core/expr"
-	"github.com/imulab/go-scim/core/prop"
-	"github.com/imulab/go-scim/core/spec"
-	"github.com/imulab/go-scim/protocol/crud"
-	"github.com/imulab/go-scim/protocol/db"
-	"github.com/imulab/go-scim/protocol/log"
+	"github.com/imulab/go-scim/pkg/crud"
+	"github.com/imulab/go-scim/pkg/crud/expr"
+	"github.com/imulab/go-scim/pkg/db"
+	"github.com/imulab/go-scim/pkg/prop"
+	"github.com/imulab/go-scim/pkg/spec"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -55,13 +53,12 @@ import (
 // provided a resource as argument which was fetched from the database, hence, the resource by the id must have existed.
 // The only reason that id and version failed to match would then because another process modified the resource concurrently.
 // Therefore, preCondition seems to be a reasonable error code.
-func DB(resourceType *spec.ResourceType, logger log.Logger, coll *mongo.Collection, opt *DBOptions) db.DB {
+func DB(resourceType *spec.ResourceType, coll *mongo.Collection, opt *DBOptions) db.DB {
 	d := &mongoDB{
 		resourceType: resourceType,
 		superAttr:    resourceType.SuperAttribute(true),
 		coll:         coll,
 		t:            newTransformer(resourceType),
-		logger:       logger,
 		opt:          opt,
 	}
 	d.ensureIndex()
@@ -73,22 +70,13 @@ type mongoDB struct {
 	resourceType *spec.ResourceType
 	coll         *mongo.Collection
 	t            *transformer
-	logger       log.Logger
 	opt          *DBOptions
 }
 
 func (d *mongoDB) Insert(ctx context.Context, resource *prop.Resource) error {
-	ior, err := d.coll.InsertOne(ctx, newBsonAdapter(resource), options.InsertOne())
+	_, err := d.coll.InsertOne(ctx, newBsonAdapter(resource), options.InsertOne())
 	if err != nil {
-		d.logger.Error("failed to insert resource into mongo", log.Args{
-			"error": err,
-		})
-	}
-	if ior != nil {
-		d.logger.Debug("inserted resource into mongo", log.Args{
-			"resourceId": resource.ID(),
-			"insertId":   ior.InsertedID,
-		})
+		return fmt.Errorf("%w: %v", spec.ErrInternal, err)
 	}
 	return nil
 }
@@ -101,10 +89,7 @@ func (d *mongoDB) Count(ctx context.Context, filter string) (int, error) {
 
 	n, err := d.coll.CountDocuments(ctx, tf, options.Count())
 	if err != nil {
-		d.logger.Error("failed to count documents", log.Args{
-			"error":  err,
-			"filter": filter,
-		})
+		return 0, fmt.Errorf("%w: %v", spec.ErrInternal, err)
 	}
 
 	return int(n), nil
@@ -123,14 +108,10 @@ func (d *mongoDB) Get(ctx context.Context, id string, projection *crud.Projectio
 
 	sr := d.coll.FindOne(ctx, tf, opt)
 	if err := sr.Err(); err != nil {
-		d.logger.Error("failed to find resource in mongo", log.Args{
-			"error":      err,
-			"resourceId": id,
-		})
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.NotFound("resource by id [%s] does not exist", id)
+			return nil, fmt.Errorf("%w: resource not found by id '%s'", spec.ErrNotFound, id)
 		}
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", spec.ErrInternal, err)
 	}
 
 	w := newResourceUnmarshaler(d.resourceType)
@@ -141,10 +122,10 @@ func (d *mongoDB) Get(ctx context.Context, id string, projection *crud.Projectio
 	return w.Resource(), nil
 }
 
-func (d *mongoDB) Replace(ctx context.Context, resource *prop.Resource) error {
+func (d *mongoDB) Replace(ctx context.Context, ref *prop.Resource, resource *prop.Resource) error {
 	var (
-		id      = resource.ID()
-		version = resource.Version()
+		id      = ref.IdOrEmpty()
+		version = ref.MetaVersionOrEmpty()
 	)
 	tf, err := d.mongoFilter(fmt.Sprintf("(id eq %s) and (meta.version eq %s)", strconv.Quote(id), strconv.Quote(version)))
 	if err != nil {
@@ -153,13 +134,8 @@ func (d *mongoDB) Replace(ctx context.Context, resource *prop.Resource) error {
 
 	sr := d.coll.FindOneAndReplace(ctx, tf, newBsonAdapter(resource), options.FindOneAndReplace())
 	if err := sr.Err(); err != nil {
-		d.logger.Error("failed to replace resource in mongo", log.Args{
-			"error":           err,
-			"resourceId":      id,
-			"resourceVersion": version,
-		})
 		if err == mongo.ErrNoDocuments {
-			return d.errPrecondition(id)
+			return d.errNotFoundOrModified(id)
 		}
 		return err
 	}
@@ -169,8 +145,8 @@ func (d *mongoDB) Replace(ctx context.Context, resource *prop.Resource) error {
 
 func (d *mongoDB) Delete(ctx context.Context, resource *prop.Resource) error {
 	var (
-		id      = resource.ID()
-		version = resource.Version()
+		id      = resource.IdOrEmpty()
+		version = resource.MetaVersionOrEmpty()
 	)
 	tf, err := d.mongoFilter(fmt.Sprintf("(id eq %s) and (meta.version eq %s)", strconv.Quote(id), strconv.Quote(version)))
 	if err != nil {
@@ -179,15 +155,10 @@ func (d *mongoDB) Delete(ctx context.Context, resource *prop.Resource) error {
 
 	sr := d.coll.FindOneAndDelete(ctx, tf, options.FindOneAndDelete())
 	if err := sr.Err(); err != nil {
-		d.logger.Error("failed to delete resource from mongo", log.Args{
-			"error":           err,
-			"resourceId":      id,
-			"resourceVersion": version,
-		})
 		if err == mongo.ErrNoDocuments {
-			return d.errPrecondition(id)
+			return d.errNotFoundOrModified(id)
 		}
-		return err
+		return fmt.Errorf("%w: %v", spec.ErrInternal, err)
 	}
 
 	return nil
@@ -215,11 +186,7 @@ func (d *mongoDB) Query(ctx context.Context, filter string, sort *crud.Sort, pag
 
 	cursor, err := d.coll.Find(ctx, tf, opt)
 	if err != nil {
-		d.logger.Error("failed to find resources in mongo", log.Args{
-			"error":  err,
-			"filter": filter,
-		})
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", spec.ErrInternal, err)
 	}
 
 	defer func() {
@@ -356,8 +323,8 @@ func (d *mongoDB) mongoFilter(filter string) (bson.D, error) {
 	return tf, nil
 }
 
-func (d *mongoDB) errPrecondition(id string) error {
-	return errors.PreConditionFailed("resource by id [%s] does not exist, or another process has updated it since last read", id)
+func (d *mongoDB) errNotFoundOrModified(id string) error {
+	return fmt.Errorf("%w: resource by id '%s' was not found or was modified since by another request", spec.ErrConflict, id)
 }
 
 // DB options

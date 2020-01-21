@@ -1,8 +1,8 @@
 package mongo
 
 import (
-	"github.com/imulab/go-scim/core/prop"
-	"github.com/imulab/go-scim/core/spec"
+	"github.com/imulab/go-scim/pkg/prop"
+	"github.com/imulab/go-scim/pkg/spec"
 	"go.mongodb.org/mongo-driver/bson"
 	"math"
 	"strconv"
@@ -130,7 +130,7 @@ func (s *serializer) serializeDateTimeProperty(property prop.Property) {
 
 	s.addName(0x09, property.Attribute())
 	// mongodb stores milliseconds
-	t, _ := time.Parse(prop.ISO8601, property.Raw().(string))
+	t, _ := time.Parse(spec.ISO8601, property.Raw().(string))
 	s.addInt64(t.Unix()*1000 + int64(t.Nanosecond()/1e6))
 }
 
@@ -168,7 +168,7 @@ func (s *serializer) serializeBooleanProperty(property prop.Property) {
 	}
 }
 
-func (s *serializer) BeginChildren(container prop.Container) {
+func (s *serializer) BeginChildren(container prop.Property) {
 	if container.Attribute().MultiValued() {
 		s.push(mArray)
 		s.current().start = s.reserveInt32()
@@ -184,7 +184,7 @@ func (s *serializer) BeginChildren(container prop.Container) {
 	}
 }
 
-func (s *serializer) EndChildren(container prop.Container) {
+func (s *serializer) EndChildren(container prop.Property) {
 	if container.Attribute().MultiValued() {
 		s.addBytes(0)
 		start := s.current().start

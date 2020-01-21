@@ -2,8 +2,9 @@ package mongo
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim/core/spec"
+	"github.com/imulab/go-scim/pkg/spec"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
@@ -13,19 +14,15 @@ import (
 
 func TestTransformFilter(t *testing.T) {
 	s := new(TransformFilterTestSuite)
-	s.resourceBase = "./internal/transform_filter_test_suite"
 	suite.Run(t, s)
 }
 
 type TransformFilterTestSuite struct {
 	suite.Suite
-	resourceBase string
+	resourceType *spec.ResourceType
 }
 
 func (s *TransformFilterTestSuite) TestTransform() {
-	_ = s.mustSchema("/user_schema.json")
-	resourceType := s.mustResourceType("/user_resource_type.json")
-
 	tests := []struct {
 		name   string
 		filter string
@@ -143,7 +140,7 @@ func (s *TransformFilterTestSuite) TestTransform() {
 
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
-			v, err := TransformFilter(test.filter, resourceType)
+			v, err := TransformFilter(test.filter, s.resourceType)
 			assert.Nil(t, err)
 			raw, err := bson.MarshalExtJSON(v, true, false)
 			assert.Nil(t, err)
@@ -152,32 +149,45 @@ func (s *TransformFilterTestSuite) TestTransform() {
 	}
 }
 
-func (s *TransformFilterTestSuite) mustResourceType(filePath string) *spec.ResourceType {
-	f, err := os.Open(s.resourceBase + filePath)
-	s.Require().Nil(err)
+func (s *TransformFilterTestSuite) SetupSuite() {
+	for _, each := range []struct {
+		filepath  string
+		structure interface{}
+		post      func(parsed interface{})
+	}{
+		{
+			filepath:  "../stock/core_schema.json",
+			structure: new(spec.Schema),
+			post: func(parsed interface{}) {
+				spec.Schemas().Register(parsed.(*spec.Schema))
+			},
+		},
+		{
+			filepath:  "../stock/user_schema.json",
+			structure: new(spec.Schema),
+			post: func(parsed interface{}) {
+				spec.Schemas().Register(parsed.(*spec.Schema))
+			},
+		},
+		{
+			filepath:  "../stock/user_resource_type.json",
+			structure: new(spec.ResourceType),
+			post: func(parsed interface{}) {
+				s.resourceType = parsed.(*spec.ResourceType)
+			},
+		},
+	} {
+		f, err := os.Open(each.filepath)
+		require.Nil(s.T(), err)
 
-	raw, err := ioutil.ReadAll(f)
-	s.Require().Nil(err)
+		raw, err := ioutil.ReadAll(f)
+		require.Nil(s.T(), err)
 
-	rt := new(spec.ResourceType)
-	err = json.Unmarshal(raw, rt)
-	s.Require().Nil(err)
+		err = json.Unmarshal(raw, each.structure)
+		require.Nil(s.T(), err)
 
-	return rt
-}
-
-func (s *TransformFilterTestSuite) mustSchema(filePath string) *spec.Schema {
-	f, err := os.Open(s.resourceBase + filePath)
-	s.Require().Nil(err)
-
-	raw, err := ioutil.ReadAll(f)
-	s.Require().Nil(err)
-
-	sch := new(spec.Schema)
-	err = json.Unmarshal(raw, sch)
-	s.Require().Nil(err)
-
-	spec.SchemaHub.Put(sch)
-
-	return sch
+		if each.post != nil {
+			each.post(each.structure)
+		}
+	}
 }

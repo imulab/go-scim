@@ -2,10 +2,8 @@ package mongo
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/core/errors"
-	"github.com/imulab/go-scim/core/expr"
-	"github.com/imulab/go-scim/core/prop"
-	"github.com/imulab/go-scim/core/spec"
+	"github.com/imulab/go-scim/pkg/crud/expr"
+	"github.com/imulab/go-scim/pkg/spec"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
@@ -107,10 +105,10 @@ func (t *transformer) transformRelational(containerAttr *spec.Attribute, path *e
 		pathNames  = make([]string, 0)
 	)
 	{
-		for path != nil && cursorAttr.SingleValued() {
+		for path != nil && !cursorAttr.MultiValued() {
 			cursorAttr = cursorAttr.SubAttributeForName(path.Token())
 			if cursorAttr == nil {
-				return nil, errors.InvalidFilter("no such path in filter")
+				return nil, fmt.Errorf("%w: no path for '%s'", spec.ErrInvalidFilter, path.Token())
 			}
 
 			pathName := cursorAttr.Name()
@@ -129,7 +127,7 @@ func (t *transformer) transformRelational(containerAttr *spec.Attribute, path *e
 		if path == nil {
 			nextDoc, err = t.transformValue(cursorAttr, op, value)
 		} else {
-			nextDoc, err = t.transformRelational(cursorAttr.NewElementAttribute(), path, op, value)
+			nextDoc, err = t.transformRelational(cursorAttr.DeriveElementAttribute(), path, op, value)
 		}
 		if err != nil {
 			return nil, err
@@ -336,37 +334,41 @@ func (t *transformer) transformValue(attr *spec.Attribute, op *expr.Expression, 
 	}
 }
 
+func (t transformer) errIncompatibleValue(attr *spec.Attribute) error {
+	return fmt.Errorf("%w: value in filter incompatible with '%s'", spec.ErrInvalidFilter, attr.Path())
+}
+
 // Parse the given raw value to the appropriate data type according to the type information in attribute.
 // The attribute will be treated as singleValued even if it is multiValued.
 func (t transformer) parseValue(raw string, attr *spec.Attribute) (interface{}, error) {
 	if attr.Type() == spec.TypeComplex {
-		return nil, errors.InvalidFilter("incompatible complex property")
+		return nil, fmt.Errorf("%w: operations cannot be applied to complex attribute", spec.ErrInvalidFilter)
 	}
 	switch attr.Type() {
 	case spec.TypeString, spec.TypeReference, spec.TypeBinary:
 		return unquote(raw), nil
 	case spec.TypeDateTime:
-		t, err := time.Parse(prop.ISO8601, unquote(raw))
+		parsed, err := time.Parse(spec.ISO8601, unquote(raw))
 		if err != nil {
-			return nil, errors.InvalidFilter("invalid value: expects '%s' to be a dateTime", raw)
+			return nil, t.errIncompatibleValue(attr)
 		}
-		return primitive.NewDateTimeFromTime(t), nil
+		return primitive.NewDateTimeFromTime(parsed), nil
 	case spec.TypeBoolean:
 		b, err := strconv.ParseBool(raw)
 		if err != nil {
-			return nil, errors.InvalidFilter("invalid value: expects '%s' to be a boolean", raw)
+			return nil, t.errIncompatibleValue(attr)
 		}
 		return b, nil
 	case spec.TypeInteger:
 		i, err := strconv.ParseInt(raw, 10, 64)
 		if err != nil {
-			return nil, errors.InvalidFilter("invalid value: expects '%s' to be an integer", raw)
+			return nil, t.errIncompatibleValue(attr)
 		}
 		return i, nil
 	case spec.TypeDecimal:
 		f, err := strconv.ParseFloat(raw, 64)
 		if err != nil {
-			return nil, errors.InvalidFilter("invalid value: expects '%s' to be a decimal", raw)
+			return nil, t.errIncompatibleValue(attr)
 		}
 		return f, nil
 	default:

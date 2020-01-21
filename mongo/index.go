@@ -3,8 +3,7 @@ package mongo
 import (
 	"context"
 	"fmt"
-	"github.com/imulab/go-scim/core/spec"
-	"github.com/imulab/go-scim/protocol/log"
+	"github.com/imulab/go-scim/pkg/spec"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -17,7 +16,10 @@ const (
 
 func (d *mongoDB) ensureIndex() {
 	d.superAttr.DFS(func(a *spec.Attribute) {
-		if a.Uniqueness() == spec.UniquenessNone && !a.HasAnnotation(AnnotationMongoIndex) {
+		if a.Uniqueness() == spec.UniquenessNone {
+			return
+		}
+		if _, ok := a.Annotation(AnnotationMongoIndex); !ok {
 			return
 		}
 
@@ -41,22 +43,14 @@ func (d *mongoDB) ensureIndex() {
 			idm.Options.SetName(name)
 		}
 
-		indexName, err := d.coll.Indexes().CreateOne(context.Background(), idm, options.CreateIndexes())
+		_, err := d.coll.Indexes().CreateOne(context.Background(), idm, options.CreateIndexes())
 		if err != nil {
 			// https://docs.mongodb.com/manual/reference/command/createIndexes/
 			// Starting from MongoDB 4.2, MongoDB will return error if the index was already created. Previous
 			// version will return ok to indicate implicit success. Here, we regard any error as "not really an
 			// error" and only display warning information to logger.
-			d.logger.Warning("creating MongoDB index returned potential error", log.Args{
-				"error": err,
-			})
 			return
 		}
-
-		d.logger.Info("MongoDB index created", log.Args{
-			"indexName": indexName,
-			"attribute": a.ID(),
-			"mongoPath": path,
-		})
+		return
 	})
 }

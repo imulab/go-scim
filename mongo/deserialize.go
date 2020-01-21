@@ -2,9 +2,8 @@ package mongo
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/core/errors"
-	"github.com/imulab/go-scim/core/prop"
-	"github.com/imulab/go-scim/core/spec"
+	"github.com/imulab/go-scim/pkg/prop"
+	"github.com/imulab/go-scim/pkg/spec"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
@@ -14,7 +13,7 @@ import (
 // Construct a new resource unmarshaler, which could be feed to the unmarshal mechanism of the mongo driver.
 func newResourceUnmarshaler(resourceType *spec.ResourceType) *deserializer {
 	resource := prop.NewResource(resourceType)
-	navigator := resource.NewNavigator()
+	navigator := resource.Navigator()
 	return &deserializer{
 		resource:  resource,
 		navigator: navigator,
@@ -23,7 +22,7 @@ func newResourceUnmarshaler(resourceType *spec.ResourceType) *deserializer {
 
 type deserializer struct {
 	resource  *prop.Resource
-	navigator *prop.Navigator
+	navigator prop.Navigator
 }
 
 // Get the de-serialized resource. This should only be called after UnmarshalBSON has been called.
@@ -47,7 +46,7 @@ func (d *deserializer) deserializeComplex(vr bsonrw.ValueReader, isTopLevel bool
 	if !isTopLevel && vr.Type() != bsontype.EmbeddedDocument {
 		if vr.Type() == bsontype.Null {
 			_ = vr.ReadNull()
-			_ = d.navigator.Current().Delete()
+			_, _ = d.navigator.Current().Delete()
 			return nil
 		}
 		return d.errInvalidDocType(bsontype.EmbeddedDocument, vr.Type())
@@ -78,9 +77,18 @@ func (d *deserializer) deserializeComplex(vr bsonrw.ValueReader, isTopLevel bool
 
 		var subProp prop.Property
 		{
-			// first try to directly focus with the name from MongoDB.
-			subProp, err = d.navigator.FocusName(name)
-			if err != nil {
+			// First try to directly focus with the name from MongoDB.
+			// We try using navigator.Current().ChildAtIndex because using navigator.Dot would
+			// potentially corrupt the navigator by registering a permanent error, preventing
+			// us to retry if failed.
+			//
+			// If failed (err != nil), try to find a sub attribute whose had registered the matching
+			// MongoDB field alias in its metadata. If found, focus using the name of the sub attribute.
+			//
+			// If failed again, return the true error
+			if _, err := d.navigator.Current().ChildAtIndex(name); err == nil {
+				subProp = d.navigator.Dot(name).Current()
+			} else {
 				// if failed, try to find a sub attribute who has a registered MongoDB attribute extension
 				// that matches the name from MongoDB, and focus using the name of that sub attribute.
 				if subAttr := p.Attribute().FindSubAttribute(func(subAttr *spec.Attribute) bool {
@@ -90,9 +98,11 @@ func (d *deserializer) deserializeComplex(vr bsonrw.ValueReader, isTopLevel bool
 						return md.MongoName == name
 					}
 				}); subAttr != nil {
-					subProp, err = d.navigator.FocusName(subAttr.Name())
-				}
-				if err != nil {
+					subProp = d.navigator.Dot(subAttr.Name()).Current()
+					if d.navigator.HasError() {
+						return d.navigator.Error()
+					}
+				} else {
 					return d.errReadDoc(err)
 				}
 			}
@@ -143,7 +153,7 @@ func (d *deserializer) deserializeMultiValued(vr bsonrw.ValueReader) error {
 	if vr.Type() != bsontype.Array {
 		if vr.Type() == bsontype.Null {
 			_ = vr.ReadNull()
-			_ = d.navigator.Current().Delete()
+			_, _ = d.navigator.Current().Delete()
 			return nil
 		}
 		return d.errInvalidDocType(bsontype.Array, vr.Type())
@@ -164,10 +174,19 @@ func (d *deserializer) deserializeMultiValued(vr bsonrw.ValueReader) error {
 		}
 
 		// Construct and focus on a new element prototype to accept the new value
-		idx := d.navigator.Current().(prop.Container).NewChild()
-		elemProp, err := d.navigator.FocusIndex(idx)
-		if err != nil {
-			return err
+		var elemProp prop.Property
+		{
+			if mv, ok := d.navigator.Current().(interface{
+				AppendElement() int
+			}); !ok {
+				return fmt.Errorf("%w: expect property to implement AppendElement", spec.ErrInternal)
+			} else {
+				idx := mv.AppendElement()
+				elemProp = d.navigator.At(idx).Current()
+				if d.navigator.HasError() {
+					return d.navigator.Error()
+				}
+			}
 		}
 
 		if elemProp.Attribute().MultiValued() {
@@ -198,7 +217,7 @@ func (d *deserializer) deserializeString(vr bsonrw.ValueReader) error {
 	if vr.Type() != bsontype.String {
 		if vr.Type() == bsontype.Null {
 			_ = vr.ReadNull()
-			_ = d.navigator.Current().Delete()
+			_, _ = d.navigator.Current().Delete()
 			return nil
 		}
 		return d.errInvalidDocType(bsontype.String, vr.Type())
@@ -209,7 +228,11 @@ func (d *deserializer) deserializeString(vr bsonrw.ValueReader) error {
 		return d.errReadDoc(err)
 	}
 
-	return d.navigator.Current().Replace(value)
+	if _, err := d.navigator.Current().Replace(value); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *deserializer) deserializeDateTime(vr bsonrw.ValueReader) error {
@@ -223,7 +246,7 @@ func (d *deserializer) deserializeDateTime(vr bsonrw.ValueReader) error {
 	if vr.Type() != bsontype.DateTime {
 		if vr.Type() == bsontype.Null {
 			_ = vr.ReadNull()
-			_ = d.navigator.Current().Delete()
+			_, _ = d.navigator.Current().Delete()
 			return nil
 		}
 		return d.errInvalidDocType(bsontype.DateTime, vr.Type())
@@ -235,7 +258,12 @@ func (d *deserializer) deserializeDateTime(vr bsonrw.ValueReader) error {
 	}
 
 	t := time.Unix(0, milliSeconds*int64(time.Millisecond))
-	return d.navigator.Current().Replace(t.Format(prop.ISO8601))
+
+	if _, err := d.navigator.Current().Replace(t.Format(spec.ISO8601)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *deserializer) deserializeInteger(vr bsonrw.ValueReader) error {
@@ -249,7 +277,7 @@ func (d *deserializer) deserializeInteger(vr bsonrw.ValueReader) error {
 	if vr.Type() != bsontype.Int64 {
 		if vr.Type() == bsontype.Null {
 			_ = vr.ReadNull()
-			_ = d.navigator.Current().Delete()
+			_, _ = d.navigator.Current().Delete()
 			return nil
 		}
 		return d.errInvalidDocType(bsontype.Int64, vr.Type())
@@ -260,7 +288,11 @@ func (d *deserializer) deserializeInteger(vr bsonrw.ValueReader) error {
 		return d.errReadDoc(err)
 	}
 
-	return d.navigator.Current().Replace(i64)
+	if _, err := d.navigator.Current().Replace(i64); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *deserializer) deserializeDecimal(vr bsonrw.ValueReader) error {
@@ -274,7 +306,7 @@ func (d *deserializer) deserializeDecimal(vr bsonrw.ValueReader) error {
 	if vr.Type() != bsontype.Double {
 		if vr.Type() == bsontype.Null {
 			_ = vr.ReadNull()
-			_ = d.navigator.Current().Delete()
+			_, _ = d.navigator.Current().Delete()
 			return nil
 		}
 		return d.errInvalidDocType(bsontype.Double, vr.Type())
@@ -285,7 +317,11 @@ func (d *deserializer) deserializeDecimal(vr bsonrw.ValueReader) error {
 		return d.errReadDoc(err)
 	}
 
-	return d.navigator.Current().Replace(f64)
+	if _, err := d.navigator.Current().Replace(f64); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *deserializer) deserializeBoolean(vr bsonrw.ValueReader) error {
@@ -299,7 +335,7 @@ func (d *deserializer) deserializeBoolean(vr bsonrw.ValueReader) error {
 	if vr.Type() != bsontype.Boolean {
 		if vr.Type() == bsontype.Null {
 			_ = vr.ReadNull()
-			_ = d.navigator.Current().Delete()
+			_, _ = d.navigator.Current().Delete()
 			return nil
 		}
 		return d.errInvalidDocType(bsontype.Boolean, vr.Type())
@@ -310,20 +346,24 @@ func (d *deserializer) deserializeBoolean(vr bsonrw.ValueReader) error {
 		return d.errReadDoc(err)
 	}
 
-	return d.navigator.Current().Replace(b)
+	if _, err := d.navigator.Current().Replace(b); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *deserializer) errInvalidDocType(expect, actual bsontype.Type) error {
-	return errors.Internal("unexpected type in document: expect %s, got %s",
-		bsonTypeToString(expect), bsonTypeToString(actual))
+	return fmt.Errorf("%w: unexpected type in document: expect %s, got %s",
+		spec.ErrInternal, bsonTypeToString(expect), bsonTypeToString(actual))
 }
 
 func (d *deserializer) errPropertyType(expect, actual string) error {
-	return errors.Internal("unexpected property type: expect %s, got %s", expect, actual)
+	return fmt.Errorf("%w: unexpected property type: expect %s, got %s", spec.ErrInternal, expect, actual)
 }
 
 func (d *deserializer) errReadDoc(err error) error {
-	return errors.Internal("failed to read MongoDB document: %s", err)
+	return fmt.Errorf("%w: failed to read MongoDB document due to %v", spec.ErrInternal, err)
 }
 
 func bsonTypeToString(t bsontype.Type) string {
