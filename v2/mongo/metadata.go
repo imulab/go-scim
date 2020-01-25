@@ -1,6 +1,10 @@
 package mongo
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+)
 
 // a local cache of all metadata
 var metadataHub map[string]*Metadata
@@ -11,10 +15,15 @@ func init() {
 
 // Read metadata and add all metadata to the hub
 func ReadMetadata(raw []byte) error {
+	return ReadMetadataFromReader(bytes.NewReader(raw))
+}
+
+// ReadMetadataFromReader reads and registered the JSON encoded metadata from reader.
+func ReadMetadataFromReader(reader io.Reader) error {
 	p := new(struct {
 		Metadata []*Metadata `json:"metadata"`
 	})
-	if err := json.Unmarshal(raw, p); err != nil {
+	if err := json.NewDecoder(reader).Decode(p); err != nil {
 		return err
 	}
 	for _, md := range p.Metadata {
