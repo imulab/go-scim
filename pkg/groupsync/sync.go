@@ -99,7 +99,7 @@ func (s *SyncService) formulateGroupElementData(group *prop.Resource, direct boo
 	data := map[string]interface{}{
 		"value":   group.IdOrEmpty(),
 		"$ref":    group.MetaLocationOrEmpty(),
-		"display": group.Navigator().Dot("display").Current().Raw(),
+		"display": group.Navigator().Dot("displayName").Current().Raw(),
 	}
 	if direct {
 		data["type"] = "direct"
