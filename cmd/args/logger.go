@@ -11,7 +11,7 @@ type Logging struct {
 	Level string
 }
 
-func (arg *Logging) Logger() zerolog.Logger {
+func (arg Logging) Logger() zerolog.Logger {
 	var level zerolog.Level
 	switch arg.Level {
 	case "INFO":
@@ -35,7 +35,7 @@ func (arg *Logging) Logger() zerolog.Logger {
 		Logger()
 }
 
-func (arg *Logging) Flags() []cli.Flag {
+func (arg Logging) Flags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "log-level",

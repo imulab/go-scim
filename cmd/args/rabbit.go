@@ -18,7 +18,7 @@ type RabbitMQ struct {
 }
 
 // Url returns the RabbitMQ connection url from the options set.
-func (arg *RabbitMQ) Url() string {
+func (arg RabbitMQ) Url() string {
 	url := "amqp://"
 	if len(arg.Username) > 0 {
 		url += arg.Username
@@ -43,7 +43,7 @@ func (arg *RabbitMQ) Url() string {
 // Connect returns a connected RabbitMQ AMQP Channel using the options set, or an error. This method respects the
 // provided context, and makes the connection process cancellable and timeout-able. The default RabbitMQ connection
 // timeouts were kept in place, with the default timeout of 30 seconds.
-func (arg *RabbitMQ) Connect(ctx context.Context) (*amqp.Channel, error) {
+func (arg RabbitMQ) Connect(ctx context.Context) (*amqp.Channel, error) {
 	var (
 		amqpChan = make(chan *amqp.Channel, 1)
 		errChan  = make(chan error, 1)
@@ -77,7 +77,7 @@ func (arg *RabbitMQ) Connect(ctx context.Context) (*amqp.Channel, error) {
 	}
 }
 
-func (arg *RabbitMQ) Flags() []cli.Flag {
+func (arg RabbitMQ) Flags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "rabbit-host",

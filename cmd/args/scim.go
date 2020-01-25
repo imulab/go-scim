@@ -23,7 +23,7 @@ type Scim struct {
 
 // ParseServiceProviderConfig returns an instance of spec.ServiceProviderConfig from the JSON definition at
 // ServiceProviderConfigPath, or an error.
-func (arg *Scim) ParseServiceProviderConfig() (*spec.ServiceProviderConfig, error) {
+func (arg Scim) ParseServiceProviderConfig() (*spec.ServiceProviderConfig, error) {
 	f, err := os.Open(arg.ServiceProviderConfigPath)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (arg *Scim) ParseServiceProviderConfig() (*spec.ServiceProviderConfig, erro
 
 // RegisterSchemas iterates through all JSON files in the SchemasDirectory directory and registers all of them as
 // schema files.
-func (arg *Scim) RegisterSchemas() error {
+func (arg Scim) RegisterSchemas() error {
 	return filepath.Walk(arg.SchemasDirectory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -68,7 +68,7 @@ func (arg *Scim) RegisterSchemas() error {
 
 // ParseUserResourceType returns the parsed spec.ResourceType from the JSON schema definition at UserResourceTypePath.
 // Caller must make sure RegisterSchemas was invoked first.
-func (arg *Scim) ParseUserResourceType() (*spec.ResourceType, error) {
+func (arg Scim) ParseUserResourceType() (*spec.ResourceType, error) {
 	return arg.parseResourceType(arg.UserResourceTypePath)
 }
 
@@ -78,7 +78,7 @@ func (arg *Scim) ParseGroupResourceType() (*spec.ResourceType, error) {
 	return arg.parseResourceType(arg.GroupResourceTypePath)
 }
 
-func (arg *Scim) parseResourceType(path string) (*spec.ResourceType, error) {
+func (arg Scim) parseResourceType(path string) (*spec.ResourceType, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (arg *Scim) parseResourceType(path string) (*spec.ResourceType, error) {
 	return rt, nil
 }
 
-func (arg *Scim) Flags() []cli.Flag {
+func (arg Scim) Flags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "user-resource-type",
