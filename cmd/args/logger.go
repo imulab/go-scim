@@ -11,7 +11,7 @@ type Logging struct {
 	Level string
 }
 
-func (arg Logging) Logger() zerolog.Logger {
+func (arg Logging) Logger() *zerolog.Logger {
 	var level zerolog.Level
 	switch arg.Level {
 	case "INFO":
@@ -28,11 +28,12 @@ func (arg Logging) Logger() zerolog.Logger {
 		level = zerolog.InfoLevel
 	}
 
-	return zerolog.
+	l := zerolog.
 		New(os.Stderr).
 		Level(level).
 		With().Timestamp().
 		Logger()
+	return &l
 }
 
 func (arg Logging) Flags() []cli.Flag {

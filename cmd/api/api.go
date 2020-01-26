@@ -1,1 +1,49 @@
 package api
+
+import (
+	"fmt"
+	"github.com/imulab/go-scim/cmd/api/context"
+	"github.com/julienschmidt/httprouter"
+	"github.com/urfave/cli/v2"
+	"net/http"
+)
+
+// Command returns a cli.Command that starts an HTTP router to serve the SCIM API.
+func Command() *cli.Command {
+	args := context.Arguments{}
+	return &cli.Command{
+		Name:        "api",
+		Usage:       "Serves API for SCIM (Simple Cloud Identity Management) protocol",
+		Description: "Manage state of resources defined in the SCIM (Simple Cloud Identity Management) protocol",
+		Flags:       args.Flags(),
+		Action: func(_ *cli.Context) error {
+			app := context.Initialize(&args)
+			defer app.Close()
+
+			var router = httprouter.New()
+			{
+				router.GET("/ServiceProviderConfig", ServiceProviderConfigHandler(app.ServiceProviderConfig()))
+
+				router.GET("/Users/:id", GetHandler(app.UserGetService(), app.Logger()))
+				router.GET("/Users", SearchHandler(app.UserQueryService(), app.Logger()))
+				router.POST("/Users", CreateHandler(app.UserCreateService(), app.Logger()))
+				router.PUT("/Users/:id", ReplaceHandler(app.UserReplaceService(), app.Logger()))
+				router.PATCH("/Users/:id", PatchHandler(app.UserPatchService(), app.Logger()))
+				router.DELETE("/Users/:id", DeleteHandler(app.UserDeleteService(), app.Logger()))
+
+				router.GET("/Groups/:id", GetHandler(app.GroupGetService(), app.Logger()))
+				router.GET("/Groups", SearchHandler(app.GroupQueryService(), app.Logger()))
+				router.POST("/Groups", CreateHandler(app.GroupCreateService(), app.Logger()))
+				router.PUT("/Groups/:id", ReplaceHandler(app.GroupReplaceService(), app.Logger()))
+				router.PATCH("/Groups/:id", PatchHandler(app.GroupPatchService(), app.Logger()))
+				router.DELETE("/Groups/:id", DeleteHandler(app.GroupDeleteService(), app.Logger()))
+			}
+
+			app.Logger().Info().Fields(map[string]interface{}{
+				"port": args.HttpPort,
+			}).Msg("Listening for incoming requests.")
+
+			return http.ListenAndServe(fmt.Sprintf(":%d", args.HttpPort), router)
+		},
+	}
+}

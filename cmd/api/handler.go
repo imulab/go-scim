@@ -14,7 +14,7 @@ import (
 )
 
 // CreateHandler returns a route handler function for creating SCIM resources.
-func CreateHandler(svc service.Create, log zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func CreateHandler(svc service.Create, log *zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	return func(rw http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		cr, closer := handlerutil.CreateRequest(r)
 		defer closer()
@@ -35,7 +35,7 @@ func CreateHandler(svc service.Create, log zerolog.Logger) func(rw http.Response
 }
 
 // GetHandler returns a route handler function for getting SCIM resource.
-func GetHandler(svc service.Get, log zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func GetHandler(svc service.Get, log *zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		id := params.ByName("id")
 		if len(id) == 0 {
@@ -83,7 +83,7 @@ func GetHandler(svc service.Get, log zerolog.Logger) func(rw http.ResponseWriter
 }
 
 // DeleteHandler returns a route handler function for deleting SCIM resource.
-func DeleteHandler(svc service.Delete, log zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func DeleteHandler(svc service.Delete, log *zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		id := params.ByName("id")
 		if len(id) == 0 {
@@ -109,7 +109,7 @@ func DeleteHandler(svc service.Delete, log zerolog.Logger) func(rw http.Response
 }
 
 // ReplaceHandler returns a route handler function for replacing SCIM resource.
-func ReplaceHandler(svc service.Replace, log zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func ReplaceHandler(svc service.Replace, log *zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		id := params.ByName("id")
 		if len(id) == 0 {
@@ -143,7 +143,7 @@ func ReplaceHandler(svc service.Replace, log zerolog.Logger) func(rw http.Respon
 }
 
 // PatchHandler returns a route handler function for patching SCIM resource.
-func PatchHandler(svc service.Patch, log zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func PatchHandler(svc service.Patch, log *zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		id := params.ByName("id")
 		if len(id) == 0 {
@@ -178,7 +178,7 @@ func PatchHandler(svc service.Patch, log zerolog.Logger) func(rw http.ResponseWr
 
 // SearchHandler returns a route handler function for searching SCIM resources. This handler could be used in HTTP GET and
 // HTTP POST scenarios, as defined in the SCIM specification.
-func SearchHandler(svc service.Query, log zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func SearchHandler(svc service.Query, log *zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	return func(rw http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		var (
 			req    *service.QueryRequest
