@@ -33,6 +33,7 @@ type (
 		StartIndex   int
 		ItemsPerPage int
 		Resources    []*prop.Resource
+		Projection   *crud.Projection
 	}
 )
 
@@ -51,6 +52,8 @@ func (s *queryService) Do(ctx context.Context, req *QueryRequest) (resp *QueryRe
 	}
 
 	resp = new(QueryResponse)
+	resp.Projection = req.Projection
+
 	if req.Pagination != nil {
 		resp.StartIndex = req.Pagination.StartIndex
 	}

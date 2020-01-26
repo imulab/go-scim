@@ -5,6 +5,7 @@ import (
 	"errors"
 	scimjson "github.com/imulab/go-scim/v2/pkg/json"
 	"github.com/imulab/go-scim/v2/pkg/prop"
+	"github.com/imulab/go-scim/v2/pkg/service"
 	"github.com/imulab/go-scim/v2/pkg/spec"
 	"net/http"
 )
@@ -31,6 +32,31 @@ func WriteResourceToResponse(rw http.ResponseWriter, resource *prop.Resource, op
 
 	_, writeErr := rw.Write(raw)
 	return writeErr
+}
+
+// WriteSearchResultToResponse writes the search result to http.ResponseWrite, respecting the attribute or excludedAttributes
+// specified through options. Any error during the process will be returned.
+// This method also sets Content-Type header to application/json+scim. This method does not set response status, which should
+// be set before calling this method.
+func WriteSearchResultToResponse(rw http.ResponseWriter, searchResult *service.QueryResponse, options ...scimjson.Options) error {
+	render := SearchResultRendering{
+		Schemas:      []string{"urn:ietf:params:scim:api:messages:2.0:ListResponse"},
+		TotalResults: searchResult.TotalResults,
+		StartIndex:   searchResult.StartIndex,
+		ItemsPerPage: searchResult.ItemsPerPage,
+		Resources:    []json.RawMessage{},
+	}
+
+	for _, resource := range searchResult.Resources {
+		raw, err := scimjson.Serialize(resource, options...)
+		if err != nil {
+			return err
+		}
+		render.Resources = append(render.Resources, raw)
+	}
+
+	rw.Header().Set("Content-Type", "application/json+scim")
+	return json.NewEncoder(rw).Encode(render)
 }
 
 // WriteError writes the error to the http.ResponseWriter. Any error during the process will be returned.
@@ -67,4 +93,15 @@ func WriteError(rw http.ResponseWriter, err error) error {
 
 	_, writeErr := rw.Write(raw)
 	return writeErr
+}
+
+// SearchResultRendering is the JSON rendering structure for search results. This is very similar to
+// service.QueryResponse except that resources are pre-rendered to adapt for objects serialized using
+// scim json mechanism or go's json mechanism.
+type SearchResultRendering struct {
+	Schemas      []string          `json:"schemas"`
+	TotalResults int               `json:"totalResults"`
+	StartIndex   int               `json:"startIndex"`
+	ItemsPerPage int               `json:"itemsPerPage"`
+	Resources    []json.RawMessage `json:"Resources,omitempty"`
 }

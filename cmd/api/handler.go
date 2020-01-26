@@ -1,6 +1,7 @@
 package api
 
 import (
+	gojson "encoding/json"
 	"errors"
 	"fmt"
 	"github.com/imulab/go-scim/v2/pkg/handlerutil"
@@ -175,6 +176,8 @@ func PatchHandler(svc service.Patch, log zerolog.Logger) func(rw http.ResponseWr
 	}
 }
 
+// SearchHandler returns a route handler function for searching SCIM resources. This handler could be used in HTTP GET and
+// HTTP POST scenarios, as defined in the SCIM specification.
 func SearchHandler(svc service.Query, log zerolog.Logger) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	return func(rw http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		var (
@@ -213,7 +216,30 @@ func SearchHandler(svc service.Query, log zerolog.Logger) func(rw http.ResponseW
 			return
 		}
 
-		// todo handlerutil.WriteSearchResponse
+		var opt []json.Options
+		if resp.Projection != nil {
+			if len(resp.Projection.Attributes) > 0 {
+				opt = append(opt, json.Include(resp.Projection.Attributes...))
+			}
+			if len(resp.Projection.ExcludedAttributes) > 0 {
+				opt = append(opt, json.Exclude(resp.Projection.ExcludedAttributes...))
+			}
+		}
+
+		_ = handlerutil.WriteSearchResultToResponse(rw, resp)
+	}
+}
+
+// ServiceProviderConfigHandler returns a http route handler to write service provider config info.
+func ServiceProviderConfigHandler(config *spec.ServiceProviderConfig) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	raw, err := gojson.Marshal(config)
+	if err != nil {
+		panic(err)
 	}
 
+	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		rw.WriteHeader(200)
+		rw.Header().Set("Content-Type", "application/json+scim")
+		_, _ = rw.Write(raw)
+	}
 }

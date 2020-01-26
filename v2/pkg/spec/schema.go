@@ -85,6 +85,13 @@ func (r *schemaRegistry) Get(schemaId string) (schema *Schema, ok bool) {
 	return
 }
 
+// ForEachSchema invokes the callback function on each registered schema.
+func (r *schemaRegistry) ForEachSchema(callback func(schema *Schema)) {
+	for _, schema := range r.db {
+		callback(schema)
+	}
+}
+
 func (r *schemaRegistry) mustGet(schemaId string) *Schema {
 	schema, ok := r.Get(schemaId)
 	if !ok {
