@@ -71,7 +71,7 @@ func (s *DeleteServiceTestSuite) TestDo() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			service := test.setup(t)
-			err := service.Do(context.Background(), test.getRequest())
+			_, err := service.Do(context.Background(), test.getRequest())
 			test.expect(t, err)
 		})
 	}

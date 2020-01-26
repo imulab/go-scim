@@ -2,12 +2,14 @@ package context
 
 import (
 	"context"
+	apiservice "github.com/imulab/go-scim/cmd/api/service"
 	scimmongo "github.com/imulab/go-scim/v2/mongo"
 	"github.com/imulab/go-scim/v2/pkg/db"
 	"github.com/imulab/go-scim/v2/pkg/service"
 	"github.com/imulab/go-scim/v2/pkg/service/filter"
 	"github.com/imulab/go-scim/v2/pkg/spec"
 	"github.com/rs/zerolog"
+	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"
@@ -32,6 +34,8 @@ type applicationContext struct {
 	groupDatabase             db.DB
 	mongoClient               *mongo.Client
 	registerMongoMetadataOnce sync.Once
+
+	rabbitMqChannel *amqp.Channel
 
 	userCreateService   service.Create
 	groupCreateService  service.Create
@@ -167,17 +171,22 @@ func (ctx *applicationContext) UserCreateService() service.Create {
 	return ctx.userCreateService
 }
 
-// todo emit message wrapper
 func (ctx *applicationContext) GroupCreateService() service.Create {
 	if ctx.groupCreateService == nil {
-		ctx.groupCreateService = service.CreateService(ctx.GroupResourceType(), ctx.GroupDatabase(), []filter.ByResource{
-			filter.ByPropertyToByResource(
-				filter.ReadOnlyFilter(),
-				filter.UUIDFilter(),
-			),
-			filter.MetaFilter(),
-			filter.ByPropertyToByResource(filter.ValidationFilter(ctx.GroupDatabase())),
-		})
+		ctx.groupCreateService = &apiservice.GroupCreated{
+			Service: service.CreateService(ctx.GroupResourceType(), ctx.GroupDatabase(), []filter.ByResource{
+				filter.ByPropertyToByResource(
+					filter.ReadOnlyFilter(),
+					filter.UUIDFilter(),
+				),
+				filter.MetaFilter(),
+				filter.ByPropertyToByResource(filter.ValidationFilter(ctx.GroupDatabase())),
+			}),
+			Sender: &apiservice.GroupSyncSender{
+				Channel: ctx.RabbitMQChannel(),
+				Logger:  ctx.Logger(),
+			},
+		}
 	}
 	return ctx.groupCreateService
 }
@@ -196,16 +205,21 @@ func (ctx *applicationContext) UserReplaceService() service.Replace {
 	return ctx.userReplaceService
 }
 
-// todo emit message wrapper
 func (ctx *applicationContext) GroupReplaceService() service.Replace {
 	if ctx.groupReplaceService == nil {
-		ctx.groupReplaceService = service.ReplaceService(ctx.ServiceProviderConfig(), ctx.GroupResourceType(), ctx.GroupDatabase(), []filter.ByResource{
-			filter.ByPropertyToByResource(
-				filter.ReadOnlyFilter(),
-			),
-			filter.ByPropertyToByResource(filter.ValidationFilter(ctx.UserDatabase())),
-			filter.MetaFilter(),
-		})
+		ctx.groupReplaceService = &apiservice.GroupReplaced{
+			Service: service.ReplaceService(ctx.ServiceProviderConfig(), ctx.GroupResourceType(), ctx.GroupDatabase(), []filter.ByResource{
+				filter.ByPropertyToByResource(
+					filter.ReadOnlyFilter(),
+				),
+				filter.ByPropertyToByResource(filter.ValidationFilter(ctx.UserDatabase())),
+				filter.MetaFilter(),
+			}),
+			Sender: &apiservice.GroupSyncSender{
+				Channel: ctx.RabbitMQChannel(),
+				Logger:  ctx.Logger(),
+			},
+		}
 	}
 	return ctx.groupReplaceService
 }
@@ -224,16 +238,21 @@ func (ctx *applicationContext) UserPatchService() service.Patch {
 	return ctx.userPatchService
 }
 
-// todo emit message wrapper
 func (ctx *applicationContext) GroupPatchService() service.Patch {
 	if ctx.groupPatchService == nil {
-		ctx.groupPatchService = service.PatchService(ctx.ServiceProviderConfig(), ctx.GroupDatabase(), []filter.ByResource{}, []filter.ByResource{
-			filter.ByPropertyToByResource(
-				filter.ReadOnlyFilter(),
-			),
-			filter.ByPropertyToByResource(filter.ValidationFilter(ctx.GroupDatabase())),
-			filter.MetaFilter(),
-		})
+		ctx.groupPatchService = &apiservice.GroupPatched{
+			Service: service.PatchService(ctx.ServiceProviderConfig(), ctx.GroupDatabase(), []filter.ByResource{}, []filter.ByResource{
+				filter.ByPropertyToByResource(
+					filter.ReadOnlyFilter(),
+				),
+				filter.ByPropertyToByResource(filter.ValidationFilter(ctx.GroupDatabase())),
+				filter.MetaFilter(),
+			}),
+			Sender: &apiservice.GroupSyncSender{
+				Channel: ctx.RabbitMQChannel(),
+				Logger:  ctx.Logger(),
+			},
+		}
 	}
 	return ctx.groupPatchService
 }
@@ -245,10 +264,15 @@ func (ctx *applicationContext) UserDeleteService() service.Delete {
 	return ctx.userDeleteService
 }
 
-// todo emit message wrapper
 func (ctx *applicationContext) GroupDeleteService() service.Delete {
 	if ctx.groupDeleteService == nil {
-		ctx.groupDeleteService = service.DeleteService(ctx.ServiceProviderConfig(), ctx.GroupDatabase())
+		ctx.groupDeleteService = &apiservice.GroupDeleted{
+			Service: service.DeleteService(ctx.ServiceProviderConfig(), ctx.GroupDatabase()),
+			Sender: &apiservice.GroupSyncSender{
+				Channel: ctx.RabbitMQChannel(),
+				Logger:  ctx.Logger(),
+			},
+		}
 	}
 	return ctx.groupDeleteService
 }
@@ -281,8 +305,25 @@ func (ctx *applicationContext) GroupQueryService() service.Query {
 	return ctx.groupQueryService
 }
 
+func (ctx *applicationContext) RabbitMQChannel() *amqp.Channel {
+	if ctx.rabbitMqChannel == nil {
+		connectCtx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancelFunc()
+
+		c, err := ctx.args.RabbitMQ.Connect(connectCtx)
+		if err != nil {
+			panic(err)
+		}
+		ctx.rabbitMqChannel = c
+	}
+	return ctx.rabbitMqChannel
+}
+
 func (ctx *applicationContext) Close() {
 	if ctx.mongoClient != nil {
 		_ = ctx.mongoClient.Disconnect(context.Background())
+	}
+	if ctx.rabbitMqChannel != nil {
+		_ = ctx.rabbitMqChannel.Close()
 	}
 }

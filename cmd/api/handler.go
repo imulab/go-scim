@@ -95,7 +95,7 @@ func DeleteHandler(svc service.Delete, log *zerolog.Logger) func(rw http.Respons
 			return
 		}
 
-		err := svc.Do(r.Context(), handlerutil.DeleteRequest(r)(id))
+		_, err := svc.Do(r.Context(), handlerutil.DeleteRequest(r)(id))
 		if err != nil {
 			log.
 				Err(err).
