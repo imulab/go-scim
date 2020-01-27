@@ -3,6 +3,7 @@ package args
 import (
 	"context"
 	"fmt"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/streadway/amqp"
 	"github.com/urfave/cli/v2"
 )
@@ -52,19 +53,19 @@ func (arg RabbitMQ) Connect(ctx context.Context) (*amqp.Channel, error) {
 	defer close(errChan)
 
 	go func() {
-		conn, err := amqp.Dial(arg.Url())
-		if err != nil {
+		if err := backoff.Retry(func() error {
+			if conn, err := amqp.Dial(arg.Url()); err != nil {
+				return err
+			} else if ch, err := conn.Channel(); err != nil {
+				return err
+			} else {
+				amqpChan <- ch
+				return nil
+			}
+		}, backoff.NewExponentialBackOff()); err != nil {
 			errChan <- err
 			return
 		}
-
-		ch, err := conn.Channel()
-		if err != nil {
-			errChan <- err
-			return
-		}
-
-		amqpChan <- ch
 	}()
 
 	select {

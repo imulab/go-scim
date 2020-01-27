@@ -3,6 +3,7 @@ package args
 import (
 	"context"
 	"fmt"
+	"github.com/cenkalti/backoff/v4"
 	scimmongo "github.com/imulab/go-scim/v2/mongo"
 	"github.com/urfave/cli/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -59,12 +60,12 @@ func (arg MongoDB) Url() string {
 }
 
 // Connect returns a connected MongoDB client using the set options, or an error.
-func (arg MongoDB) Connect(ctx context.Context) (*mongo.Client, error) {
-	mc, err := mongo.Connect(ctx, options.Client().ApplyURI(arg.Url()))
-	if err != nil {
-		return nil, err
-	}
-	return mc, nil
+func (arg MongoDB) Connect(ctx context.Context) (client *mongo.Client, err error) {
+	err = backoff.Retry(func() (connectErr error) {
+		client, connectErr = mongo.Connect(ctx, options.Client().ApplyURI(arg.Url()))
+		return
+	}, backoff.NewExponentialBackOff())
+	return
 }
 
 // RegisterMetadata iterates all JSON files in the MetadataDir and registers its content as SCIM MongoDB metadata.
