@@ -1,7 +1,7 @@
 package context
 
 import (
-	"github.com/imulab/go-scim/cmd/args"
+	"github.com/imulab/go-scim/args"
 	"github.com/urfave/cli/v2"
 )
 
