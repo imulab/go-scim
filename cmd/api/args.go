@@ -5,12 +5,22 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func newArgs() *arguments {
+	return &arguments{
+		Scim:     new(args.Scim),
+		MemoryDB: new(args.MemoryDB),
+		MongoDB:  new(args.MongoDB),
+		RabbitMQ: new(args.RabbitMQ),
+		Logging:  new(args.Logging),
+	}
+}
+
 type arguments struct {
-	args.Scim
-	args.MemoryDB
-	args.MongoDB
-	args.RabbitMQ
-	args.Logging
+	*args.Scim
+	*args.MemoryDB
+	*args.MongoDB
+	*args.RabbitMQ
+	*args.Logging
 	httpPort int
 }
 

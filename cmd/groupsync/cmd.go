@@ -10,7 +10,7 @@ import (
 
 // Command returns a cli.Command that starts a process to synchronize group membership of user resources.
 func Command() *cli.Command {
-	args := arguments{}
+	args := newArgs()
 	return &cli.Command{
 		Name:        "group-sync",
 		Aliases:     []string{"gs", "sync"},

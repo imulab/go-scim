@@ -1,0 +1,9 @@
+{
+  "metadata": [
+    {
+      "id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.$ref",
+      "mongoName": "ref",
+      "mongoPath": "groups.ref"
+    }
+  ]
+}

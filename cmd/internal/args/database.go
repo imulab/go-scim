@@ -18,7 +18,7 @@ type MemoryDB struct {
 	UseMemoryDB bool
 }
 
-func (arg MemoryDB) Flags() []cli.Flag {
+func (arg *MemoryDB) Flags() []cli.Flag {
 	return []cli.Flag{
 		&cli.BoolFlag{
 			Name:        "memory",
@@ -41,7 +41,7 @@ type MongoDB struct {
 }
 
 // Url returns the MongoDB connection URL created using the set options.
-func (arg MongoDB) Url() string {
+func (arg *MongoDB) Url() string {
 	url := "mongodb://"
 	if len(arg.Username) > 0 {
 		url += fmt.Sprintf("%s:%s@", arg.Username, arg.Password)
@@ -60,7 +60,7 @@ func (arg MongoDB) Url() string {
 }
 
 // Connect returns a connected MongoDB client using the set options, or an error.
-func (arg MongoDB) Connect(ctx context.Context) (client *mongo.Client, err error) {
+func (arg *MongoDB) Connect(ctx context.Context) (client *mongo.Client, err error) {
 	err = backoff.Retry(func() (connectErr error) {
 		client, connectErr = mongo.Connect(ctx, options.Client().ApplyURI(arg.Url()))
 		return
@@ -69,7 +69,7 @@ func (arg MongoDB) Connect(ctx context.Context) (client *mongo.Client, err error
 }
 
 // RegisterMetadata iterates all JSON files in the MetadataDir and registers its content as SCIM MongoDB metadata.
-func (arg MongoDB) RegisterMetadata() error {
+func (arg *MongoDB) RegisterMetadata() error {
 	if len(arg.MetadataDir) == 0 {
 		return nil
 	}
@@ -92,7 +92,7 @@ func (arg MongoDB) RegisterMetadata() error {
 	})
 }
 
-func (arg MongoDB) Flags() []cli.Flag {
+func (arg *MongoDB) Flags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "mongo-host",

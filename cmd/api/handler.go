@@ -243,3 +243,11 @@ func ServiceProviderConfigHandler(config *spec.ServiceProviderConfig) func(rw ht
 		_, _ = rw.Write(raw)
 	}
 }
+
+// HealthHandler returns a http handler to report service health status.
+func HealthHandler() func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	// This needs rework to include MongoDB and RabbitMQ status.
+	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		rw.WriteHeader(200)
+	}
+}

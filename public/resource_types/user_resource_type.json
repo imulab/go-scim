@@ -1,0 +1,6 @@
+{
+  "id": "User",
+  "name": "User",
+  "endpoint": "/Users",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:User"
+}

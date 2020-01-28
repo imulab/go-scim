@@ -9,7 +9,7 @@ import (
 
 // Command returns a cli.Command that starts an HTTP router to serve the SCIM API.
 func Command() *cli.Command {
-	args := arguments{}
+	args := newArgs()
 	return &cli.Command{
 		Name:        "api",
 		Description: "Manage state of resources defined in the SCIM (Simple Cloud Identity Management) protocol",
@@ -35,6 +35,8 @@ func Command() *cli.Command {
 				router.PUT("/Groups/:id", ReplaceHandler(app.GroupReplaceService(), app.Logger()))
 				router.PATCH("/Groups/:id", PatchHandler(app.GroupPatchService(), app.Logger()))
 				router.DELETE("/Groups/:id", DeleteHandler(app.GroupDeleteService(), app.Logger()))
+
+				router.GET("/health", HealthHandler())
 			}
 
 			app.Logger().Info().Fields(map[string]interface{}{
