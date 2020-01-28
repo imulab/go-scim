@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/cmd/api/context"
 	"github.com/julienschmidt/httprouter"
 	"github.com/urfave/cli/v2"
 	"net/http"
@@ -10,14 +9,13 @@ import (
 
 // Command returns a cli.Command that starts an HTTP router to serve the SCIM API.
 func Command() *cli.Command {
-	args := context.Arguments{}
+	args := arguments{}
 	return &cli.Command{
 		Name:        "api",
-		Usage:       "Serves API for SCIM (Simple Cloud Identity Management) protocol",
 		Description: "Manage state of resources defined in the SCIM (Simple Cloud Identity Management) protocol",
 		Flags:       args.Flags(),
 		Action: func(_ *cli.Context) error {
-			app := context.Initialize(&args)
+			app := args.Initialize()
 			defer app.Close()
 
 			var router = httprouter.New()
@@ -40,10 +38,10 @@ func Command() *cli.Command {
 			}
 
 			app.Logger().Info().Fields(map[string]interface{}{
-				"port": args.HttpPort,
+				"port": args.httpPort,
 			}).Msg("Listening for incoming requests.")
 
-			return http.ListenAndServe(fmt.Sprintf(":%d", args.HttpPort), router)
+			return http.ListenAndServe(fmt.Sprintf(":%d", args.httpPort), router)
 		},
 	}
 }
