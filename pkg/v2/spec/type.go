@@ -3,8 +3,8 @@ package spec
 // A SCIM data type
 type Type int
 
+// SCIM data types defined in RFC7643
 const (
-	// SCIM data types defined in RFC7643
 	TypeString Type = iota
 	TypeInteger
 	TypeDecimal

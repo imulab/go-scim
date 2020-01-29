@@ -3,8 +3,8 @@ package spec
 // SCIM returned definition
 type Returned int
 
+// SCIM returned attribute defined in RFC7643
 const (
-	// SCIM returned attribute defined in RFC7643
 	ReturnedDefault Returned = iota
 	ReturnedAlways
 	ReturnedRequest

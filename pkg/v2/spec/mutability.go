@@ -3,8 +3,8 @@ package spec
 // SCIM mutability definition
 type Mutability int
 
+// SCIM mutability attribute defined in RFC7643
 const (
-	// SCIM mutability attribute defined in RFC7643
 	MutabilityReadWrite Mutability = iota
 	MutabilityReadOnly
 	MutabilityWriteOnly

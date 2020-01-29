@@ -1,6 +1,6 @@
 package spec
 
-// Structure for the service provider config
+// Service provider config
 type ServiceProviderConfig struct {
 	Schemas []string `json:"schemas"`
 	DocURI  string   `json:"documentationUri"`

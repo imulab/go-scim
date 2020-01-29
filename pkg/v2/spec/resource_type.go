@@ -6,7 +6,36 @@ import (
 	"github.com/imulab/go-scim/pkg/v2/spec/internal"
 )
 
-// Resource type is a collection of one or more schemas to describe a SCIM resource.
+// Resource type models the SCIM resource type. It is a collection of one main schema and zero or more schema extensions
+// to describe a single type of SCIM resource.
+//
+// To access the main schema of the resource type, call Schema method; to access the schema extensions, use ForEachExtension
+// method.
+//
+// A resource type can be used to generate a super attribute. A super attribute is a single valued complex typed attribute
+// that encapsulates all attributes from its main schema and schema extensions as sub attributes. Among these, the top-level
+// attributes from the main schema will be added to the super attribute as top level sub attributes. The top-level attributes
+// from each schema extension will be first added to a container complex attribute as top level sub attributes, and then that
+// single container complex attribute is added to the super attribute as a top level sub attribute.
+//
+// For example, suppose we have a main schema containing attribute A1 and A2, a schema extension B containing attribute B1,
+// and another schema extension C containing attribute C1 and C2. The super attribute will be in the structure of:
+//	{
+//		A1,
+//		A2,
+//		B {
+//			B1
+//		},
+//		C {
+//			C1,
+//			C2
+//		}
+//	}
+//
+// ResourceType is currently being parsed to and from JSON using special adapters. This design is subject to change
+// when we move to treat ResourceType as just another resource.
+// See also:
+//	issue https://github.com/imulab/go-scim/issues/40
 type ResourceType struct {
 	id          string
 	name        string

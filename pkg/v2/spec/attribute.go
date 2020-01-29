@@ -10,9 +10,55 @@ import (
 	"strings"
 )
 
-// Enhanced SCIM attribute model.
-// Attribute is the basic unit that describes data requirement in SCIM. It includes the data requirement defined
-// in RFC7643. It also includes additional metadata that makes actual SCIM processing easier.
+// Attribute models a superset of defined SCIM attributes. It serves as the basic unit that describes data requirement
+// this project.
+//
+// In addition to attributes defined in SCIM, four additional attributes are defined: id, index, path and annotations.
+// Id defines a unique identifier for this attribute, which by convention, should be the full URN name. Index defines
+// a relative ascending sort index for the attribute among other attributes on the same level, which can be used to ensure
+// proper ordering and nice presentation. Path is joined attribute names from the root, which is used to determine the
+// full attribute name without further calculation. Annotations are of type map[string]map[string]interface{}, which is
+// used as the major extension point to define additional behaviour. It is widely used by other processing mechanisms
+// in this module. These four additional attributes have JSON names of "id", "_index", "_path" and "_annotations"
+// respectively.
+//
+// As an example, a typical attribute can be defined in JSON as:
+//	{
+//		"id": "urn:ietf:params:scim:schemas:core:2.0:User:name.familyName",
+//		"name": "familyName",
+//		"type": "string",
+//		"multiValued": false,
+//		"required": false,
+//		"caseExact": false,
+//		"mutability": "readWrite",
+// 		"returned": "default",
+// 		"uniqueness": "none",
+//		"_index": 1,
+//		"_path": "name.familyName",
+//		"_annotations": {
+//			"@Identity": {}
+//		}
+//	}
+// The above example defines a typical "name.familyName" attribute in the User resource type. It can be universally
+// identified by "urn:ietf:params:scim:schemas:core:2.0:User:name.familyName"; can be placed at the second position (index 1)
+// among sub attributes of "urn:ietf:params:scim:schemas:core:2.0:User:name"; has a path of "name.familyName" and has a
+// single parameter-less annotation of "@Identity".
+//
+// Because Attribute is at the core of the SCIM protocol, it is designed to be read only as much as possible. All data
+// access, including iteration, search operations, need to be done via accessor methods. For simple fields, look for the
+// methods corresponding to the field name. For example, field name can be accessed via method Name. For array fields,
+// look for methods prefixed with ForEach, Exists and Count to perform iteration, search and get-length operations.
+//
+// Attribute also introduces the notion of an element attribute. An element attribute is a derived attribute from a
+// multiValued attribute in order to represent the data requirements of its elements. Because elements of multiValued
+// properties can be generated and deleted on the fly, these attributes also need to be so. DeriveElementAttribute can
+// be used to generate a new element attribute. IsElementAttributeOf can be used to check if the current attribute is a
+// derived element attribute.
+//
+// As of now, Attribute is parsed to and from JSON using special adapter structures that exposes and hides certain fields.
+// This design is subject to change when we move to treat Schema as just another resource.
+// See also:
+//	issue https://github.com/imulab/go-scim/issues/40
 type Attribute struct {
 	name            string
 	description     string
@@ -195,9 +241,39 @@ func (attr *Attribute) IsElementAttributeOf(other *Attribute) bool {
 }
 
 // DeriveElementAttribute create an element attribute of this attribute. This method is only meaningful when invoked
-// on a multiValued attribute. The derived element attribute will inherit most properties from this attribute except
-// a few things: the id will be suffixed "$elem"; multiValued will be set to false; annotations will be derived from
+// on a multiValued attribute.
+//
+// The derived element attribute will inherit most properties from this attribute except for id, multiValued and annotations.
+// Id will be suffixed with "$elem". MultiValued will be set to false. Annotations will be derived from the parameters of
 // "@ElementAnnotations" from this attribute.
+//
+// For example, a multiValued attribute (certain fields omitted for brevity) like
+//	{
+//		"id": "urn:ietf:params:scim:schemas:core:2.0:User:emails",
+//		"name": "emails",
+//		"type": "complex",
+//		"multiValued": true,
+//		"_annotations": {
+//			"@ElementAnnotations": {
+//				"@StateSummary": {}
+//			}
+//		},
+//		...
+//	}
+// will derive an element attribute of:
+//	{
+//		"id": "urn:ietf:params:scim:schemas:core:2.0:User:emails$elem",
+//		"name": "emails",
+//		"type": "complex",
+//		"multiValued": false,
+//		"_annotations": {
+//			"@StateSummary": {}
+//		},
+//		...
+//	}
+//
+// See also:
+//	annotation.ElementAnnotations
 func (attr *Attribute) DeriveElementAttribute() *Attribute {
 	elemAttr := Attribute{
 		name:            attr.name,

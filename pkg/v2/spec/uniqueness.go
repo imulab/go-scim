@@ -3,8 +3,8 @@ package spec
 // SCIM uniqueness definition
 type Uniqueness int
 
+// SCIM uniqueness attribute defined in RFC7643
 const (
-	// SCIM uniqueness attribute defined in RFC7643
 	UniquenessNone Uniqueness = iota
 	UniquenessServer
 	UniquenessGlobal
