@@ -1,13 +1,13 @@
-package mongo
+package v2
 
 import (
 	"context"
 	"fmt"
-	"github.com/imulab/go-scim/v2/pkg/crud"
-	"github.com/imulab/go-scim/v2/pkg/crud/expr"
-	"github.com/imulab/go-scim/v2/pkg/db"
-	"github.com/imulab/go-scim/v2/pkg/prop"
-	"github.com/imulab/go-scim/v2/pkg/spec"
+	"github.com/imulab/go-scim/pkg/v2/crud"
+	"github.com/imulab/go-scim/pkg/v2/crud/expr"
+	"github.com/imulab/go-scim/pkg/v2/db"
+	"github.com/imulab/go-scim/pkg/v2/prop"
+	"github.com/imulab/go-scim/pkg/v2/spec"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

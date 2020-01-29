@@ -1,9 +1,9 @@
-package mongo
+package v2
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/v2/pkg/prop"
-	"github.com/imulab/go-scim/v2/pkg/spec"
+	"github.com/imulab/go-scim/pkg/v2/prop"
+	"github.com/imulab/go-scim/pkg/v2/spec"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"go.mongodb.org/mongo-driver/bson/bsontype"

@@ -1,14 +1,14 @@
-package mongo
+package v2
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/imulab/go-scim/v2/pkg/crud"
-	"github.com/imulab/go-scim/v2/pkg/db"
-	scimjson "github.com/imulab/go-scim/v2/pkg/json"
-	"github.com/imulab/go-scim/v2/pkg/prop"
-	"github.com/imulab/go-scim/v2/pkg/spec"
+	"github.com/imulab/go-scim/pkg/v2/crud"
+	"github.com/imulab/go-scim/pkg/v2/db"
+	scimjson "github.com/imulab/go-scim/pkg/v2/json"
+	"github.com/imulab/go-scim/pkg/v2/prop"
+	"github.com/imulab/go-scim/pkg/v2/spec"
 	"github.com/ory/dockertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -613,21 +613,21 @@ func (s *MongoDatabaseTestSuite) parseResourceType() {
 		post      func(parsed interface{})
 	}{
 		{
-			filepath:  "../stock/core_schema.json",
+			filepath:  "../../public/schemas/core_schema.json",
 			structure: new(spec.Schema),
 			post: func(parsed interface{}) {
 				spec.Schemas().Register(parsed.(*spec.Schema))
 			},
 		},
 		{
-			filepath:  "../stock/user_schema.json",
+			filepath:  "../../public/schemas/user_schema.json",
 			structure: new(spec.Schema),
 			post: func(parsed interface{}) {
 				spec.Schemas().Register(parsed.(*spec.Schema))
 			},
 		},
 		{
-			filepath:  "../stock/user_resource_type.json",
+			filepath:  "../../public/resource_types/user_resource_type.json",
 			structure: new(spec.ResourceType),
 			post: func(parsed interface{}) {
 				s.resourceType = parsed.(*spec.ResourceType)

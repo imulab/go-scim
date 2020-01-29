@@ -1,4 +1,4 @@
-package mongo
+package v2
 
 import (
 	"bytes"

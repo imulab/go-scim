@@ -1,4 +1,4 @@
-module github.com/imulab/go-scim/mongo
+module github.com/imulab/go-scim/mongo/v2
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
@@ -13,7 +13,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/gotestyourself/gotestyourself v1.3.0 // indirect
-	github.com/imulab/go-scim/v2/pkg v0.0.0
+	github.com/imulab/go-scim/pkg/v2 v2.0.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/lib/pq v0.0.0-20180327071824-d34b9ff171c2 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
@@ -32,6 +32,6 @@ require (
 	golang.org/x/text v0.3.2 // indirect
 )
 
-replace github.com/imulab/go-scim/v2/pkg => ../pkg
+replace github.com/imulab/go-scim/pkg/v2 => ../../pkg/v2
 
 go 1.13
