@@ -9,9 +9,9 @@ import (
 	"sync"
 )
 
-// Return a new memory implementation of Database. This implementation saves resources in memory. Although
-// it does allow for concurrent access through the use of RWMutex, it does not allow for high throughput usage.
-// It is intended for testing and showcasing purposes only. This implementation also ignores all the field projection
+// Memory return a new memory implementation of DB. This implementation saves resources in memory. Although
+// it does allow for concurrent access through the use of RWMutex, it does not support high throughput usage.
+// Hence, it is only intended for testing and showcasing purposes. This implementation also ignores all the field projection
 // parameters that it always returned the full resource regardless of the request to include or exclude attributes.
 func Memory() DB {
 	db := memoryDB{
