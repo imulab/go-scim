@@ -32,10 +32,10 @@ func SubscriberFactory() *subscriberFactory {
 
 // Constructor function to initialize a Subscriber instance.
 //
-// - publisher is the property that is creating the Subscriber, and also what the Subscriber will eventually
-// subscribe to.
-// - params is the parameter specified with the annotation that was associated with the Subscriber type, it might be
-// useful when customizing Subscribers during initialization.
+//	publisher is the property that is creating the Subscriber, and also what the Subscriber will eventually subscribe to.
+//
+//	params is the parameter specified with the annotation that was associated with the Subscriber type, it might be
+//	useful when customizing Subscribers during initialization.
 //
 // Stateless Subscriber implementation may choose to return the same instance.
 type SubscriberFactoryFunc func(publisher Property, params map[string]interface{}) Subscriber

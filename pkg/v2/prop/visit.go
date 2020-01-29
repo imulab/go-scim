@@ -2,7 +2,10 @@ package prop
 
 import "github.com/imulab/go-scim/pkg/v2/spec"
 
-// Interface to implement for callers to react to a property structure traversal.
+// Visitor defines behaviour for implementations to react to a passive Property structure traversal. It shall be used
+// in cases where caller does not have knowledge of resource structure and has to rely on a spontaneous DFS traversal.
+// By implementing this interface, caller will have some control over whether a property should be visited and be notified
+// for entering and exiting container Property.
 type Visitor interface {
 	// Returns true if property should be visited; if false, the property will not be visited.
 	ShouldVisit(property Property) bool
@@ -18,7 +21,7 @@ type Visitor interface {
 	EndChildren(container Property)
 }
 
-// Entry point to visit a property in a depth-first-search fashion.
+// Visit is the entry point to visit a property in a depth-first-search fashion.
 func Visit(property Property, visitor Visitor) error {
 	if !visitor.ShouldVisit(property) {
 		return nil

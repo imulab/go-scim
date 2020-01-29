@@ -11,7 +11,7 @@ func NewResource(resourceType *spec.ResourceType) *Resource {
 	return &r
 }
 
-// Resource represents a SCIM resource. It is a wrapper around the root property.
+// Resource represents a SCIM resource. It is a wrapper around the root Property.
 type Resource struct {
 	resourceType *spec.ResourceType
 	data         *complexProperty

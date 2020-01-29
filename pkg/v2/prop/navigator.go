@@ -12,6 +12,23 @@ func Navigate(property Property) Navigator {
 	return &defaultNavigator{stack: []Property{property}}
 }
 
+// Navigator is a controlled mechanism to traverse the Resource/Property data structure. It should be used in cases
+// where the caller has knowledge of what to access. For example, when de-serializing JSON into a Resource, caller
+// has knowledge of the JSON structure, therefore knows what to access in the Resource structure.
+//
+// The Navigator exists for two purposes: First, to maintain a call stack of the traversal trace, enabling modification
+// events to be propagated along the trace, all the way to the root property, and notify subscribers on every level.
+// Without such call stack, such things will have to resort to runtime reflection, which is hard to get right or maintain.
+// Second, as a frequently used feature, the Navigator promotes fluent API by returning the instance for the majority of
+// the accessor methods, making the code easier to read in general.
+//
+// Because the Navigator does not return error on every error-able operation, implementation will mostly be stateful. Callers
+// should call Error or HasError to check if the Navigator is currently in the error state, after performing one or possibly
+// several chained operations fluently.
+//
+// The call stack can be advanced by calling Dot, At and Where methods. Which methods to call depends on the context. The
+// call stack can be retracted by calling Retract. The top and the bottom item on the stack can be queried by calling
+// Current and Source. The stack depth is available via Depth.
 type Navigator interface {
 	// Error returns any error occurred during fluent navigation. If any step
 	// during the navigation had generated an error, further steps will become
