@@ -5,18 +5,19 @@ import (
 	"strings"
 )
 
-// Return options to include given attributes in JSON serialization. Supplied attributes are still
+// Include returns Options to include given attributes in JSON serialization. Supplied attributes are still
 // subject to SCIM rules for return-ability.
 func Include(attributes ...string) Options {
 	return include{attributes: attributes}
 }
 
-// Return options to exclude given attributes in JSON serialization. Supplied attributes are still
+// Exclude returns Options to exclude given attributes in JSON serialization. Supplied attributes are still
 // subject to SCIM rules for return-ability.
 func Exclude(attributes ...string) Options {
 	return exclude{attributes: attributes}
 }
 
+// JSON serialization options.
 type Options interface {
 	apply(s *serializer, resource *prop.Resource)
 }

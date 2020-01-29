@@ -10,8 +10,8 @@ import (
 	"unicode/utf8"
 )
 
-// Entry point of JSON deserialization. Unmarshal the JSON input bytes into the unassigned
-// structure of resource.
+// Deserialize is the entry point of JSON deserialization. Unmarshal the JSON input bytes into a pre-prepared unassigned
+// structure of Resource.
 func Deserialize(json []byte, resource *prop.Resource) error {
 	if err := checkValid(json, &scanner{}); err != nil {
 		return err
@@ -34,6 +34,7 @@ func Deserialize(json []byte, resource *prop.Resource) error {
 // Entry point to deserialize a piece of JSON data into the given property. The JSON data is expected to be the content
 // of a json.RawMessage parsed from the built-in encoding/json mechanism, hence, it should not contain any preceding
 // spaces, and should a fragment of valid JSON.
+//
 // The allowElementForArray option is provided to allow JSON array element values be provided for a multiValued property
 // so that it will be de-serialized as its element. The result will be a multiValued property containing a single element.
 func DeserializeProperty(json []byte, property prop.Property, allowElementForArray bool) error {
