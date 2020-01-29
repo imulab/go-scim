@@ -6,7 +6,19 @@ import (
 	"strings"
 )
 
-// Create a SCIM filter and return the root of the abstract syntax tree, or any error.
+// CompileFilter compiles the given SCIM filter and return the root of the abstract syntax tree, or any error.
+//
+// For example, for a filter such as:
+//	(value eq "foo") and (primary ne true)
+// CompileFilter will return an abstract syntax tree in the structure of:
+//	               and
+//	             /    \
+//	          eq        \
+//	         /  \         \
+//	     value  "foo"     ne
+//	                     /  \
+//	                primary true
+//
 func CompileFilter(filter string) (*Expression, error) {
 	compiler := &filterCompiler{
 		scan:    &filterScanner{},

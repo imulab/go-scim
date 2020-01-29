@@ -1,6 +1,11 @@
 package expr
 
-// Register saves the given urn into the lookup structure, so it could be referenced later.
+// RegisterURN saves the given urn into the lookup structure, so it could be referenced later. This is necessary because
+// the URN prefix defined in SCIM breaks ordinary path syntax by the use of dot (.). Normally, dot is used to separate
+// path segments (i.e. name.familyName). However, dot is also contained in URN prefix such as
+//	urn:ietf:params:scim:schemas:core:2.0:User
+// to indicate version 2.0. Hence, the compiler needs to recognize these URN prefixes in advance to properly parse them
+// as a path segment instead of delimiting by dot.
 func RegisterURN(urn string) {
 	urnsCache = urnsCache.insert(urnsCache, urn, 0)
 }

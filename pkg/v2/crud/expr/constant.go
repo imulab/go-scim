@@ -1,5 +1,6 @@
 package expr
 
+// Keyword and operators
 const (
 	LeftParen  = "("
 	RightParen = ")"
