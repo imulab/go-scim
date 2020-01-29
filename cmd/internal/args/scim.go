@@ -2,7 +2,7 @@ package args
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim/v2/pkg/spec"
+	"github.com/imulab/go-scim/pkg/v2/spec"
 	"github.com/urfave/cli/v2"
 	"os"
 	"path/filepath"

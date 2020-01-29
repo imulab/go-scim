@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cenkalti/backoff/v4"
-	scimmongo "github.com/imulab/go-scim/v2/mongo"
+	scimmongo "github.com/imulab/go-scim/mongo/v2"
 	"github.com/urfave/cli/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
