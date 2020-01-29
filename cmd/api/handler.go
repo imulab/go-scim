@@ -10,6 +10,9 @@ import (
 	"github.com/imulab/go-scim/v2/pkg/spec"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog"
+	"github.com/streadway/amqp"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"net/http"
 )
 
@@ -245,9 +248,31 @@ func ServiceProviderConfigHandler(config *spec.ServiceProviderConfig) func(rw ht
 }
 
 // HealthHandler returns a http handler to report service health status.
-func HealthHandler() func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	// This needs rework to include MongoDB and RabbitMQ status.
+func HealthHandler(mongoClient *mongo.Client, rabbitConn *amqp.Connection) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		rw.WriteHeader(200)
+		var (
+			mongoUp  = mongoClient.Ping(r.Context(), readpref.Primary()) == nil
+			rabbitUp = !rabbitConn.IsClosed()
+			overalUp = mongoUp && rabbitUp
+		)
+
+		status := func(r bool) string {
+			if r {
+				return "up"
+			} else {
+				return "down"
+			}
+		}
+
+		if overalUp {
+			rw.WriteHeader(200)
+		} else {
+			rw.WriteHeader(500)
+		}
+		_ = gojson.NewEncoder(rw).Encode(map[string]string{
+			"service_status":      status(overalUp),
+			"mongodb_connection":  status(mongoUp),
+			"rabbitmq_connection": status(rabbitUp),
+		})
 	}
 }

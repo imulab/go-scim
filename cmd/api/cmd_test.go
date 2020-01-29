@@ -205,7 +205,6 @@ func (s *CommandTestSuite) TearDownSuite() {
 func (s *CommandTestSuite) mustAbs(path string) string {
 	p, err := filepath.Abs(path)
 	s.Require().Nil(err)
-	println(p)
 	return p
 }
 

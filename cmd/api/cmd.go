@@ -36,7 +36,7 @@ func Command() *cli.Command {
 				router.PATCH("/Groups/:id", PatchHandler(app.GroupPatchService(), app.Logger()))
 				router.DELETE("/Groups/:id", DeleteHandler(app.GroupDeleteService(), app.Logger()))
 
-				router.GET("/health", HealthHandler())
+				router.GET("/health", HealthHandler(app.MongoClient(), app.RabbitMQConnection()))
 			}
 
 			app.Logger().Info().Fields(map[string]interface{}{

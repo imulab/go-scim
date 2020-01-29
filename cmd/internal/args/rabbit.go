@@ -41,12 +41,12 @@ func (arg *RabbitMQ) Url() string {
 	return url
 }
 
-// Connect returns a connected RabbitMQ AMQP channel using the options set, or an error. This method respects the
+// Connect returns a connected RabbitMQ AMQP connection using the options set, or an error. This method respects the
 // provided context, and makes the connection process cancellable and timeout-able. The default RabbitMQ connection
 // timeouts were kept in place, with the default timeout of 30 seconds.
-func (arg *RabbitMQ) Connect(ctx context.Context) (*amqp.Channel, error) {
+func (arg *RabbitMQ) Connect(ctx context.Context) (*amqp.Connection, error) {
 	var (
-		amqpChan = make(chan *amqp.Channel, 1)
+		amqpChan = make(chan *amqp.Connection, 1)
 		errChan  = make(chan error, 1)
 	)
 	defer close(amqpChan)
@@ -56,10 +56,8 @@ func (arg *RabbitMQ) Connect(ctx context.Context) (*amqp.Channel, error) {
 		if err := backoff.Retry(func() error {
 			if conn, err := amqp.Dial(arg.Url()); err != nil {
 				return err
-			} else if ch, err := conn.Channel(); err != nil {
-				return err
 			} else {
-				amqpChan <- ch
+				amqpChan <- conn
 				return nil
 			}
 		}, backoff.NewExponentialBackOff()); err != nil {
