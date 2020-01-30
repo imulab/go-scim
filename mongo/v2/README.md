@@ -1,6 +1,17 @@
 # MongoDB Module
 
+[![GoDoc](https://godoc.org/github.com/imulab/go-scim/mongo/v2?status.svg)](https://godoc.org/github.com/imulab/go-scim/mongo/v2)
+
 This module provides the capability to persist SCIM resources in MongoDB.
+
+## Usage
+
+To get this package:
+
+```bash
+# make sure Go 1.13
+go get github.com/imulab/go-scim/mongo/v2
+```
 
 ## Persistence
 

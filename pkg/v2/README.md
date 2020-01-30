@@ -1,5 +1,7 @@
 # SCIM
 
+[![GoDoc](https://godoc.org/github.com/imulab/go-scim/pkg/v2?status.svg)](https://godoc.org/github.com/imulab/go-scim/pkg/v2)
+
 This module implements features described in [RFC 7643 - SCIM: Core Schema](https://tools.ietf.org/html/rfc7643) and
 [RFC 7644 - SCIM: Protocol](https://tools.ietf.org/html/rfc7644), along with custom features that address specific 
 implementation difficulties.
