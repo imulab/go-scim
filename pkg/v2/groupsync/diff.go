@@ -78,22 +78,26 @@ func (d *Diff) addLeft(id string) {
 	d.left[id] = struct{}{}
 }
 
+// ForEachJoined iterates all member ids that joined the group and invoke the callback.
 func (d *Diff) ForEachJoined(callback func(id string)) {
 	for k := range d.joined {
 		callback(k)
 	}
 }
 
+// ForEachLeft iterates all member ids that left the group and invoke the callback.
 func (d *Diff) ForEachLeft(callback func(id string)) {
 	for k := range d.left {
 		callback(k)
 	}
 }
 
+// CountJoined returns the total number of new members that joined the group.
 func (d *Diff) CountJoined() int {
 	return len(d.joined)
 }
 
+// CountLeft returns the total number of members that just left the group.
 func (d *Diff) CountLeft() int {
 	return len(d.left)
 }

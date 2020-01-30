@@ -9,19 +9,23 @@ import (
 	"strconv"
 )
 
-// NewSyncService returns a service that synchronizes the user resource's group property. The service does not
-// save the user resource. Since the nature of the task dictates that the process may take a while if the user is
-// a member of many groups, or the user's group are members of other groups, context can be used to cancel the
-// processing at any time. The service checks for context cancellation signals before each database search.
+// NewSyncService returns a new SyncService.
 func NewSyncService(groupDB db.DB) *SyncService {
 	s := SyncService{groupDB: groupDB}
 	return &s
 }
 
+// SyncService synchronizes the user resource's "groups" property.
 type SyncService struct {
 	groupDB db.DB
 }
 
+// SyncGroupPropertyForUser updates the user's "groups" property, according to the latest state in Group resources. This
+// method does not save or replace the updated resource with the database. It is up to the caller to do so.
+//
+// Due to nested membership, this method may search the group database multiple times, which may turn out to be a lengthy
+// process. The ctx context can be used to set a timeline or cancel the processing, this method will respect that at
+// appropriate intervals.
 func (s *SyncService) SyncGroupPropertyForUser(ctx context.Context, user *prop.Resource) error {
 	groupNav := user.Navigator().Dot("groups")
 	if groupNav.HasError() {
