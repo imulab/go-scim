@@ -1,3 +1,4 @@
+// This package describes the internally used annotations
 package annotation
 
 const (
