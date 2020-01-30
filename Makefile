@@ -50,3 +50,11 @@ doc:
 	tar -c --exclude='.git' --exclude='tmp' . | tar -x -C /tmp/tmpgopath/src/github.com/imulab/go-scim
 	@echo "$(OK_COLOR)==> Open http://localhost:6060/pkg/github.com/imulab/go-scim$(NO_COLOR)"
 	GOROOT=/tmp/tmpgoroot/ GOPATH=/tmp/tmpgopath/ godoc -http=localhost:6060
+
+docker:
+	@echo "$(OK_COLOR)==> Building image scim:latest$(NO_COLOR)"
+	docker build -t scim:latest .
+
+compose:
+	@echo "$(OK_COLOR)==> Starting local stack$(NO_COLOR)"
+	docker-compose up

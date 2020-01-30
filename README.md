@@ -3,11 +3,13 @@
 > GoSCIM aims to be a fully featured implementation of [SCIM v2](http://www.simplecloud.info/) specification. It 
 provides opinion-free and extensible building blocks, as well as an opinionated server implementation.
 
-## T.L.D.R
+## TLDR
+
+###### *Requirements:* [Docker](https://docs.docker.com/get-started/) and [Docker Compose](https://docs.docker.com/compose/gettingstarted/)
 
 ```bash
-make
-docker-compose up --build
+# Builds docker image and starts local docker-compose stack
+make docker compose
 ```
 
 ## Project structure
