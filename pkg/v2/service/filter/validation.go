@@ -14,20 +14,20 @@ import (
 // ValidationFilter returns a ByProperty that performs validation on each property. The validation carried out are
 // required check, canonical check, mutability check and uniqueness check.
 //
-// 		The required check fails when attribute is required but property is unassigned.
+// The required check fails when attribute is required but property is unassigned.
 //
-//		The canonical check fails when @Enum is annotated with the attribute, indicating that the canonicalValues
-//		defined should be treated as the only valid values of holding property, and the property value is not among
-//		the canonicalValues.
+// The canonical check fails when @Enum is annotated with the attribute, indicating that the canonicalValues
+// defined should be treated as the only valid values of holding property, and the property value is not among
+// the canonicalValues.
 //
-//		The mutability check only fails when attribute is immutable, and the property value differs from the reference
-//		property value, if one exists. It does not check for readOnly attributes because the logic is largely handled
-// 		by ReadOnlyFilter.
+// The mutability check only fails when attribute is immutable, and the property value differs from the reference
+// property value, if one exists. It does not check for readOnly attributes because the logic is largely handled
+// by ReadOnlyFilter.
 //
-//		The uniqueness check fails when the property value already exists in the database. It formulates the query
-// 		(id ne <id>) and (<path> eq <value>), where <id> is the resource id, <path> is the unique attribute path, and
-//		<value> is the property value. The database returns the number of records matching this filter. If the count is
-//		greater than 0, the check fails. Note this check only handles the uniqueness=server case.
+// The uniqueness check fails when the property value already exists in the database. It formulates the query
+// (id ne <id>) and (<path> eq <value>), where <id> is the resource id, <path> is the unique attribute path, and
+// <value> is the property value. The database returns the number of records matching this filter. If the count is
+// greater than 0, the check fails. Note this check only handles the uniqueness=server case.
 //
 // Error is returned to caller if any of these check fails.
 func ValidationFilter(database db.DB) ByProperty {

@@ -6,6 +6,8 @@ import (
 	"github.com/imulab/go-scim/pkg/v2/spec"
 )
 
+// Visit performs a DFS visit on the resource and sequentially invokes the ByProperty filters on each visited property
+// in the resource. Any visit or filtering error is returned.
 func Visit(ctx context.Context, resource *prop.Resource, filters ...ByProperty) error {
 	n := flexNavigator{stack: []prop.Property{resource.RootProperty()}}
 	v := syncVisitor{
@@ -25,6 +27,13 @@ func Visit(ctx context.Context, resource *prop.Resource, filters ...ByProperty) 
 	return resource.Visit(&v)
 }
 
+// VisitWithRef performs a DFS visit on the resource and sequentially invokes the ByProperty filters on each visited
+// property in the resource, along with the synchronized reference property. The synchronization is carried out with
+// best effort, which means the reference property may be out of sync. Out of sync can happen when the resource has a
+// property value that the reference resource does not have (i.e. Add) Caller need to test if
+//	ref == nil || ref == outOfSync
+// to determine if the reference is out of sync.
+// Any visit or filtering error is returned.
 func VisitWithRef(ctx context.Context, resource *prop.Resource, ref *prop.Resource, filters ...ByProperty) error {
 	n := flexNavigator{stack: []prop.Property{resource.RootProperty()}}
 	f := flexNavigator{stack: []prop.Property{ref.RootProperty()}}
