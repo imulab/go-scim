@@ -15,14 +15,14 @@ make docker compose
 ## :file_folder: Project structure
 
 Since v1, the project has grown into three independent modules. 
-- `github.com/imulab/go-scim/pkg/v2` module evolved from most of the original building blocks. This module provides
-customizable, extensible and opinion free implementation of the SCIM specification.
-- `github.com/imulab/go-scim/mongo/v2` module evolved from the original mongo package. This module provides persistence
-capabilities to MongoDB.
-- `github.com/imulab/go-scim` module evolved from the original example server implementation. It is now a __opinionated__
-personal server implementation that depends on the above two modules.
+- [pkg module](https://github.com/imulab/go-scim/tree/master/pkg/v2) evolved from most of the original building blocks. 
+This module provides customizable, extensible and opinion free implementation of the SCIM specification.
+- [mongo module](https://github.com/imulab/go-scim/tree/master/mongo/v2) evolved from the original mongo package. 
+This module provides persistence capabilities to MongoDB.
+- [server module](https://github.com/imulab/go-scim) evolved from the original example server implementation. It is now 
+an __opinionated__ personal server implementation that depends on the above two modules.
 
-Documentation for the [pkg](https://github.com/imulab/go-scim/tree/master/pkg/v2) and [mongo](https://github.com/imulab/go-scim/tree/master/mongo/v2) module can be viewed in their respective directories.
+Documentation for the individual modules can be viewed in their respective directories and godoc badge links.
 
 ## :no_entry_sign: End of v1
 
