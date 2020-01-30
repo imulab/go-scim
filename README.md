@@ -1,58 +1,34 @@
 # GoSCIM
 
-> GoSCIM aims to be a fully featured implementation of [SCIM v2](http://www.simplecloud.info/) specifiction. It provides basic building blocks to SCIM functions and a functional out-of-box server. It is also designed with extensibility in mind to make customizations easy.
+<img src="./asset/scim.png" width="100">
 
-**Caution** This is the early stage of `v2.0.0` version of go-scim. We are now at `v2.0.0-m4` ([release notes](https://github.com/imulab/go-scim/releases/tag/v2.0.0-m4)). This second major release will introduce drastic changes to the way resources are handled in the system. 
+> GoSCIM aims to be a fully featured implementation of [SCIM v2](http://www.simplecloud.info/) specification. It 
+provides opinion-free and extensible building blocks, as well as an opinionated server implementation.
 
-For the currently stable version, checkout tag `v1.0.1`, or go to [here](https://github.com/imulab/go-scim/tree/v1.0.1).
+## T.L.D.R
 
-## Features in v2
-
-- Reflection free operations on resources
-- Property event system
-- Direct serialization and deserialization in JSON and other data exchange formats
-- Enhanced attributes model to allow for custom metadata
-- Robust SCIM path and filter parsing
-- Resource filters to allow for custom resource processing
-- Feature provider interfaces to allow 3rd party integration
-
-## Installation and Usage
-
-The project is in the early stage of `v2.0.0`. As for now, to check out the functionalities included in the tests:
-
-```
-# cd into one of core, protocol, mongo, server
-$ go test ./...
+```bash
+make
+docker-compose up --build
 ```
 
-## Migration to Go modules
+## Project structure
 
-Since `v2.0.0-m3`, the project has migrated from [dep](https://golang.github.io/dep/) to [go modules](https://github.com/golang/go/wiki/Modules). This allows users to import the exact project modules separately as needed, and also allows their functions to evolve independently.
+Since v1, the project has grown into three independent modules. 
+- `github.com/imulab/go-scim/pkg/v2` module evolved from most of the original building blocks. This module provides
+customizable, extensible and opinion free implementation of the SCIM specification.
+- `github.com/imulab/go-scim/mongo/v2` module evolved from the original mongo package. This module provides persistence
+capabilities to MongoDB.
+- `github.com/imulab/go-scim` module evolved from the original example server implementation. It is now a __opinionated__
+personal server implementation that depends on the above two modules.
 
-The project will continue to use a single tag until the official release of `v2.0.0`. On the official release, all modules will be tagged separately as
-`v2.0.0` (for instance, `core/v2.0.0`, and `server/v2.0.0`). After that, modules will evolve independently.
+Documentation for the [pkg](https://github.com/imulab/go-scim/tree/master/pkg/v2) and [mongo](https://github.com/imulab/go-scim/tree/master/mongo/v2) module can be viewed in their respective directories.
 
-## Documentation Index (TBD)
+## End of v1
 
-- [Project orientation](#)
-- [Extensible attributes](#)
-- [Resource model and property structure](#)
-- [Path, filter and CRUD](#)
-- [Resource filters](#)
-- [Feature providers](#)
-- [Integration points](#)
+Due to limited time and resource and a drastic new design in v2, the building blocks and mongo package from v1 will no 
+longer be maintained. The `github.com/imulab/go-scim` will go on as an opinionated personal implementation, which may or
+may not resonate with everyone's use case.
 
-## Road Map
-
-While the fundamentals of the functions are delivered in `v2.0.0-m1`, we are still hard at work to deliver the rest. In the coming weeks and months, the rest of functions towrads `v2.0.0` will be released.
-In addition to the scheduled functions, tests and documentations will also be added.
-
-- `v2.0.0-m5` to tackle resource root query and bulk operations.
-- `v2.0.0-rc1` to complete tests
-- `v2.0.0-rc2` to complete documentations
-
-As for after the release of `v2.0.0`, more features are being planned. The list includes:
-- [SCIM Password Management Extension](https://tools.ietf.org/id/draft-hunt-scim-password-mgmt-00.txt)
-- Authentication endpoints
-- [SCIM Soft Delete](https://tools.ietf.org/id/draft-ansari-scim-soft-delete-00.txt)
-- [SCIM Notify](https://tools.ietf.org/id/draft-hunt-scim-notify-00.txt)
+However, other modules will continue to be maintained and accept changes to allow reasonable use cases, while remaining
+true to the specification itself.

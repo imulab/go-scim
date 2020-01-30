@@ -1,7 +1,0 @@
-{
-  "id": "Group",
-  "name": "Group",
-  "description": "Group resource type",
-  "endpoint": "https://scim.imulab.io/Groups",
-  "schema": "urn:ietf:params:scim:schemas:core:2.0:Group"
-}
