@@ -12,7 +12,7 @@ RUN make build
 ##########################################################################
 # FINAL IMAGE
 ##########################################################################
-FROM alpine:3.11
+FROM debian:buster-slim
 
 # copy binary
 COPY --from=builder /build/scim/bin/linux_amd64/scim /usr/bin/scim

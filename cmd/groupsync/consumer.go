@@ -35,9 +35,11 @@ func (c *consumer) Start(ctx context.Context) (safeExit chan struct{}, err error
 		nil,
 	)
 	if err != nil {
-		c.logger.Err(err).Msg("Failed to consume message")
+		c.logger.Err(err).Msg("failed to consume message")
 		return
 	}
+
+	c.logger.Info().Msg("group sync consumer starts to listen for messages")
 
 	safeExit = make(chan struct{}, 1)
 
