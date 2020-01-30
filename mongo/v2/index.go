@@ -11,6 +11,8 @@ import (
 )
 
 const (
+	// @MongoIndex annotates a field so that a corresponding index is generated in MongoDB. If uniqueness=server on
+	// the annotated field, a unique index is generated. Otherwise, an ordinary index is generated.
 	AnnotationMongoIndex = "@MongoIndex"
 )
 

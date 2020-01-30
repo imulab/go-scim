@@ -19,8 +19,7 @@ import (
 //
 // The database will attempt to create MongoDB indexes on attributes whose uniqueness is global or server, or that has
 // been annotated with "@MongoIndex". For unique attributes, a unique MongoDB index will be created, otherwise, it is
-// just an ordinary index. Any index creation error are treated as non-error and simply logged as warning. Successful
-// index creation will be logged as info.
+// just an ordinary index. Any index creation error are treated as non-error and simply ignored.
 //
 // This implementation has limited capability of correctly performing field projection according to the specification.
 // It dumbly treats the *crud.Projection parameter as it is without performing any sanitation. As a result, if any
@@ -28,13 +27,17 @@ import (
 // it will be returned. It is expected by downstream calls to perform a pre-sanitation on the parameters or perform
 // a post-guard operation to ensure no sensitive information is leaked.
 //
-// The "github.com/imulab/go-scim/core/json" provides a post-guard operation in its serialization function to ensure
+// The "github.com/imulab/go-scim/pkg/v2/json" provides a post-guard operation in its serialization function to ensure
 // returned=never parameters are never leaked. When used with this database, the only situation needs to be worried
 // about is that returned=always parameter may not be returned at all when included intentionally in the "attributes"
 // parameter list. This behaviour might be acceptable. If not, pre-sanitation of the projection list is required.
 //
 // If so desired, use Options().IgnoreProjection() to ignore projection altogether and return a complete version of
 // the result every time.
+//
+// This implementation also has limited capability to correctly performing sorting according to the specification. The
+// control is not as fine grained as in crud.SeekSortTarget. It can sort on singular type, but may fail if asked to sort
+// on multiValued type, or a singular type within a multiValued type.
 //
 // This implementation do not directly use the SCIM attribute path to persist into MongoDB. Instead, it uses a concept
 // of MongoDB persistence paths (or mongo paths). These mongo paths are introduced to provide an alternative name to
@@ -49,10 +52,10 @@ import (
 // The atomicity of MongoDB is utilized to avoid explicit locking when modifying the resource. When performing Replace
 // (which provides service to SCIM replace and SCIM patch) and Delete operations, the resources id and version is used
 // as the criteria to match a document in store before carrying out the operation. If the provided id and version failed
-// to match a document, a preCondition error is returned instead of a notFound error. This is because caller already
+// to match a document, a conflict error is returned instead of a notFound error. This is because caller already
 // provided a resource as argument which was fetched from the database, hence, the resource by the id must have existed.
 // The only reason that id and version failed to match would then because another process modified the resource concurrently.
-// Therefore, preCondition seems to be a reasonable error code.
+// Therefore, conflict seems to be a reasonable error code.
 func DB(resourceType *spec.ResourceType, coll *mongo.Collection, opt *DBOptions) db.DB {
 	d := &mongoDB{
 		resourceType: resourceType,

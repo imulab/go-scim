@@ -33,7 +33,19 @@ func ReadMetadataFromReader(reader io.Reader) error {
 }
 
 // Mongo package extension to spec.Attribute. Here we define a MongoDB property alias
-// to override the attribute name when saving to or reading from MongoDB.
+// to override the attribute name when saving to or reading from MongoDB. This is necessary because
+// some valid SCIM field names are not valid in MongoDB.
+//
+// To define metadata to be supplied to ReadMetadataFromReader, compose something similar to:
+//	{
+//		"metadata": [
+//			{
+//				"id": "urn:ietf:params:scim:schemas:core:2.0:User:groups.$ref",
+//				"mongoName": "ref",
+//				"mongoPath": "groups.ref"
+//			}
+//		]
+//	}
 type Metadata struct {
 	Id        string `json:"id"`
 	MongoName string `json:"mongoName"`
