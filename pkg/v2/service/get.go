@@ -7,21 +7,24 @@ import (
 	"github.com/imulab/go-scim/pkg/v2/prop"
 )
 
-// GetService returns a Get service.
+// GetService returns a get resource service.
 func GetService(database db.DB) Get {
 	return &getService{database: database}
 }
 
 type (
+	// Get resource resource
 	Get interface {
 		Do(ctx context.Context, req *GetRequest) (resp *GetResponse, err error)
 	}
+	// Get resource request
 	GetRequest struct {
-		ResourceID string
-		Projection *crud.Projection
+		ResourceID string           // id of the resource to get
+		Projection *crud.Projection // field projection to be considered when fetching resource
 	}
+	// Get resource response
 	GetResponse struct {
-		Resource *prop.Resource
+		Resource *prop.Resource // resource got from database
 	}
 )
 

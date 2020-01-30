@@ -10,7 +10,8 @@ import (
 	"github.com/imulab/go-scim/pkg/v2/spec"
 )
 
-// QueryService returns a Query service
+// QueryService returns a query resource service. This service is only capable of performing querying on a single type
+// of resource. This does not handle root query.
 func QueryService(config *spec.ServiceProviderConfig, database db.DB) Query {
 	return &queryService{
 		database: database,
@@ -19,21 +20,24 @@ func QueryService(config *spec.ServiceProviderConfig, database db.DB) Query {
 }
 
 type (
+	// Query resource service
 	Query interface {
 		Do(ctx context.Context, req *QueryRequest) (resp *QueryResponse, err error)
 	}
+	// Query resource request
 	QueryRequest struct {
 		Filter     string
 		Sort       *crud.Sort
 		Pagination *crud.Pagination
 		Projection *crud.Projection
 	}
+	// Query resource response
 	QueryResponse struct {
 		TotalResults int
 		StartIndex   int
 		ItemsPerPage int
 		Resources    []*prop.Resource
-		Projection   *crud.Projection
+		Projection   *crud.Projection // included so that caller may render properly
 	}
 )
 

@@ -8,6 +8,7 @@ import (
 	"github.com/imulab/go-scim/pkg/v2/spec"
 )
 
+// DeleteService returns a delete resource service
 func DeleteService(config *spec.ServiceProviderConfig, database db.DB) Delete {
 	return &deleteService{
 		Database: database,
@@ -16,15 +17,18 @@ func DeleteService(config *spec.ServiceProviderConfig, database db.DB) Delete {
 }
 
 type (
+	// Delete resource service
 	Delete interface {
 		Do(ctx context.Context, req *DeleteRequest) (resp *DeleteResponse, err error)
 	}
+	// Delete resource request
 	DeleteRequest struct {
-		ResourceID    string
-		MatchCriteria func(resource *prop.Resource) bool
+		ResourceID    string                             // id of the resource to be deleted
+		MatchCriteria func(resource *prop.Resource) bool // extra criteria the resource has to meet in order to be deleted
 	}
+	// Delete resource response
 	DeleteResponse struct {
-		Deleted *prop.Resource
+		Deleted *prop.Resource // the resource that was deleted
 	}
 )
 

@@ -15,7 +15,8 @@ import (
 	"io/ioutil"
 )
 
-// PatchService returns a Patch service
+// PatchService returns a patch resource service. preFilters will run after resource fetched from database and before
+// resource is patched. postFilters will run after resource has been patched and before resource is saved back to database.
 func PatchService(
 	config *spec.ServiceProviderConfig,
 	database db.DB,
@@ -31,27 +32,32 @@ func PatchService(
 }
 
 type (
+	// Patch resource service
 	Patch interface {
 		Do(ctx context.Context, req *PatchRequest) (resp *PatchResponse, err error)
 	}
+	// Patch payload definition
 	PatchPayload struct {
 		Schemas    []string         `json:"schemas"`
 		Operations []PatchOperation `json:"Operations"`
 	}
+	// Patch operation definition
 	PatchOperation struct {
 		Op    string          `json:"op"`
 		Path  string          `json:"path"`
 		Value json.RawMessage `json:"value"`
 	}
+	// Patch resource request
 	PatchRequest struct {
-		ResourceID    string
-		MatchCriteria func(resource *prop.Resource) bool
-		PayloadSource io.Reader
+		ResourceID    string                             // id of the resource to patch
+		MatchCriteria func(resource *prop.Resource) bool // extra criteria to meet for the resource to be patched
+		PayloadSource io.Reader                          // source to read the patch payload from
 	}
+	// Patch resource response
 	PatchResponse struct {
-		Patched  bool
-		Ref      *prop.Resource
-		Resource *prop.Resource
+		Patched  bool           // true if the resource was patched; false if the resource was not patched but there was no error
+		Ref      *prop.Resource // reference resource (the before state)
+		Resource *prop.Resource // patched resource (the after state)
 	}
 )
 

@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 )
 
-// ReplaceService returns a Replace service.
+// ReplaceService returns a replace service.
 func ReplaceService(
 	config *spec.ServiceProviderConfig,
 	resourceType *spec.ResourceType,
@@ -28,18 +28,21 @@ func ReplaceService(
 }
 
 type (
+	// Replace resource service
 	Replace interface {
 		Do(ctx context.Context, req *ReplaceRequest) (resp *ReplaceResponse, err error)
 	}
+	// Replace resource request
 	ReplaceRequest struct {
-		ResourceID    string
-		PayloadSource io.Reader
-		MatchCriteria func(resource *prop.Resource) bool
+		ResourceID    string                             // id of the resource to be replaced
+		PayloadSource io.Reader                          // source to read replacement payload from
+		MatchCriteria func(resource *prop.Resource) bool // extra criteria to meet in order to be replaced
 	}
+	// Replace resource response
 	ReplaceResponse struct {
-		Replaced bool
-		Ref      *prop.Resource
-		Resource *prop.Resource
+		Replaced bool           // true if resource was replaced; false if resource was not replaced, but has no error
+		Ref      *prop.Resource // reference resource (before state)
+		Resource *prop.Resource // replaced resource (after state)
 	}
 )
 

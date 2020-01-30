@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 )
 
-// Create returns a create service.
+// Create returns a create resource service.
 func CreateService(resourceType *spec.ResourceType, database db.DB, filters []filter.ByResource) Create {
 	return &createService{
 		resourceType: resourceType,
@@ -22,14 +22,17 @@ func CreateService(resourceType *spec.ResourceType, database db.DB, filters []fi
 }
 
 type (
+	// Create resource service
 	Create interface {
 		Do(ctx context.Context, req *CreateRequest) (resp *CreateResponse, err error)
 	}
+	// Create resource request
 	CreateRequest struct {
-		PayloadSource io.Reader
+		PayloadSource io.Reader // reader source to read resource payload from
 	}
+	// Create resource response
 	CreateResponse struct {
-		Resource *prop.Resource
+		Resource *prop.Resource // the created resource
 	}
 )
 
