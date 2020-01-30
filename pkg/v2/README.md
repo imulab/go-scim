@@ -28,6 +28,15 @@ To get this package:
 go get github.com/imulab/go-scim/pkg/v2
 ```
 
+## Features in v2
+
+- :free: Reflection free operations on resources
+- :mailbox_with_mail: Property subscribers
+- :rocket: Direct serialization and deserialization in JSON and other data exchange formats
+- :wrench: Enhanced attributes model to allow for custom metadata
+- :thumbsup: Robust SCIM path and filter parsing
+- :fast_forward: Resource filters to allow for custom resource processing
+
 ## Project Structure
 
 Features in this module are separated into different directories:
