@@ -6,8 +6,10 @@ import (
 	"sort"
 )
 
+// Order for sorting
 type SortOrder string
 
+// Sort order defined in specification
 const (
 	SortDefault SortOrder = ""
 	SortAsc     SortOrder = "ascending"
@@ -15,15 +17,17 @@ const (
 )
 
 type (
+	// Option to sort
 	Sort struct {
 		By    string
 		Order SortOrder
 	}
-	// Include or exclude attributes in the return. At most one can be specified.
+	// Option to include or exclude attributes in the return. At most one can be specified.
 	Projection struct {
 		Attributes         []string
 		ExcludedAttributes []string
 	}
+	// Option to paginate.
 	Pagination struct {
 		StartIndex int // 1-based start index
 		Count      int

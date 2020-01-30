@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Evaluate the resource with the given SCIM filter and return the boolean result or an error.
 func Evaluate(resource *prop.Resource, filter string) (bool, error) {
 	cf, err := expr.CompileFilter(filter)
 	if err != nil {
