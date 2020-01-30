@@ -1,6 +1,4 @@
-# GoSCIM
-
-<img src="./asset/scim.png" width="100">
+<img src="./asset/scim.png" width="200">
 
 > GoSCIM aims to be a fully featured implementation of [SCIM v2](http://www.simplecloud.info/) specification. It 
 provides opinion-free and extensible building blocks, as well as an opinionated server implementation.
