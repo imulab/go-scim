@@ -1,8 +1,19 @@
 # MongoDB Module
 
+[![GoDoc](https://godoc.org/github.com/imulab/go-scim/mongo/v2?status.svg)](https://godoc.org/github.com/imulab/go-scim/mongo/v2)
+
 This module provides the capability to persist SCIM resources in MongoDB.
 
-## Persistence
+## :bulb: Usage
+
+To get this package:
+
+```bash
+# make sure Go 1.13
+go get github.com/imulab/go-scim/mongo/v2
+```
+
+## :floppy_disk: Persistence
 
 This basic `db.DB` implementation in this module assumes one-to-one mapping between a SCIM resource type and a MongoDB 
 collection.
@@ -46,7 +57,7 @@ specifies the path name from the document root. Use `ReadMetadata` to register b
 
 The module utilizes the atomicity of MongoDB and safely performs modification operations without explicitly locking the
 resource. `Replace` and `Delete` operations would only perform data modification if the `id` and `meta.version` fields
-matches the record in MongoDB. If no match was found, a `preCondition` error is returned to indicate some current process
+matches the record in MongoDB. If no match was found, a `conflict` error is returned to indicate some current process
 must have modified the resource in between.
 
 ### Projection
@@ -57,10 +68,10 @@ This is done intentionally, as `db.DB` is not a client facing component with res
 parameters supplied should have been pre-sanitized so that it does not contradict with the `returned` property. 
 
 There are also cases where callers may wish to carry out operations after the query on fields not requested by the client.
-In this case, callers can use `DBOptions.IgnoreProjection()` to disable projection altogether so the database always 
+In this case, callers can use `Options.IgnoreProjection()` to disable projection altogether so the database always 
 return the full version of the resource.
 
-## Serialization
+## :black_nib: Serialization
 
 This module provides direct serialization and de-deserialization between SCIM resource and MongoDB BSON format, without
 the transition of an intermediary data format.
@@ -68,7 +79,7 @@ the transition of an intermediary data format.
 The serialization of the less significant components like filter, sort, pagination and projection are still being
 converted to `bson.D`, before being serialized to BSON and sent to MongoDB.
 
-## Testing
+## :construction: Testing
 
 This module uses [org/dockertest](https://github.com/ory/dockertest) to setup testing docker containers at test run time.
 The environment variables to customize the local docker connection are:

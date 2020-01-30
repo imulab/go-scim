@@ -1,5 +1,7 @@
 # SCIM
 
+[![GoDoc](https://godoc.org/github.com/imulab/go-scim/pkg/v2?status.svg)](https://godoc.org/github.com/imulab/go-scim/pkg/v2)
+
 This module implements features described in [RFC 7643 - SCIM: Core Schema](https://tools.ietf.org/html/rfc7643) and
 [RFC 7644 - SCIM: Protocol](https://tools.ietf.org/html/rfc7644), along with custom features that address specific 
 implementation difficulties.
@@ -19,7 +21,7 @@ It is not the goal of this package to enable every possible use case, or to prov
 >
 > We apologize for any inconvenience caused by this decision. The original v1 can still be checked out via tags.
 
-## Usage
+## :bulb: Usage
 
 To get this package:
 
@@ -28,7 +30,7 @@ To get this package:
 go get github.com/imulab/go-scim/pkg/v2
 ```
 
-## Features in v2
+## :gift: Features in v2
 
 - :free: Reflection free operations on resources
 - :mailbox_with_mail: Property subscribers
@@ -37,7 +39,7 @@ go get github.com/imulab/go-scim/pkg/v2
 - :thumbsup: Robust SCIM path and filter parsing
 - :fast_forward: Resource filters to allow for custom resource processing
 
-## Project Structure
+## :file_folder: Project Structure
 
 Features in this module are separated into different directories:
 - `spec` directory implements the foundation of SCIM resource type definition
@@ -52,7 +54,7 @@ Features in this module are separated into different directories:
 
 For detailed documentation, please check out README of individual directories, or GoDoc.
 
-## Road Map
+## :bullettrain_side: Road Map
 
 After delivering the v2.0.0 which will cover most features, efforts will be directed toward:
 - ResourceType(s) and Schema(s) endpoints (see [issue 40](https://github.com/imulab/go-scim/issues/40))

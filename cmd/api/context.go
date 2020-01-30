@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/imulab/go-scim/cmd/internal/groupsync"
 	scimmongo "github.com/imulab/go-scim/mongo/v2"
 	"github.com/imulab/go-scim/pkg/v2/db"
 	"github.com/imulab/go-scim/pkg/v2/service"
@@ -345,6 +346,10 @@ func (ctx *applicationContext) RabbitMQChannel() *amqp.Channel {
 	if ctx.rabbitMqChannel == nil {
 		c, err := ctx.RabbitMQConnection().Channel()
 		if err != nil {
+			ctx.logInitFailure("rabbit channel", err)
+			panic(err)
+		}
+		if err := groupsync.DeclareQueue(c); err != nil {
 			ctx.logInitFailure("rabbit channel", err)
 			panic(err)
 		}
