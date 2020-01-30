@@ -42,3 +42,12 @@ Features in this module are separated into different directories:
 - `handlerutil` directory implements utilities that help parsing and rendering HTTP, assuming Go's HTTP abstraction
 
 For detailed documentation, please check out README of individual directories, or GoDoc.
+
+## Road Map
+
+After delivering the v2.0.0 which will cover most features, efforts will be directed toward:
+- ResourceType(s) and Schema(s) endpoints (see [issue 40](https://github.com/imulab/go-scim/issues/40))
+- Root query
+- Bulk operations
+- SCIM password management extension
+- SCIM soft delete extension
