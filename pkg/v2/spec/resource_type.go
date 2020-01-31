@@ -136,7 +136,7 @@ func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 	}
 
 	if includeCore {
-		super.subAttributes = append(super.subAttributes, Schemas().mustGet(internal.CoreSchemaId).attributes...)
+		super.subAttributes = append(super.subAttributes, Schemas().mustGet(CoreSchemaId).attributes...)
 		super.annotations[annotation.SyncSchema] = map[string]interface{}{}
 	}
 

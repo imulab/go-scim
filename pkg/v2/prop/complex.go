@@ -23,9 +23,10 @@ func NewComplex(attr *spec.Attribute) Property {
 			p.subscribers = append(p.subscribers, subscriber)
 		}
 	})
-	attr.ForEachSubAttribute(func(subAttribute *spec.Attribute) {
+	_ = attr.ForEachSubAttribute(func(subAttribute *spec.Attribute) error {
 		p.subProps = append(p.subProps, NewProperty(subAttribute))
 		p.nameIndex[strings.ToLower(subAttribute.Name())] = len(p.subProps) - 1
+		return nil
 	})
 	return &p
 }
@@ -87,10 +88,11 @@ func (p *complexProperty) Dirty() bool {
 
 func (p *complexProperty) identitySubAttributes() map[*spec.Attribute]struct{} {
 	idSubAttr := map[*spec.Attribute]struct{}{}
-	p.attr.ForEachSubAttribute(func(subAttribute *spec.Attribute) {
+	_ = p.attr.ForEachSubAttribute(func(subAttribute *spec.Attribute) error {
 		if _, ok := subAttribute.Annotation(annotation.Identity); ok {
 			idSubAttr[subAttribute] = struct{}{}
 		}
+		return nil
 	})
 	return idSubAttr
 }

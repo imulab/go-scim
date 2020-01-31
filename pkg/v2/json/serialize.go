@@ -11,9 +11,17 @@ import (
 	"unicode/utf8"
 )
 
+// Interface to implement to be able to serialize to JSON.
+type Serializable interface {
+	// MainSchemaId returns the id of the resource type's main schema that describes the target
+	MainSchemaId() string
+	// Visit implements the order for the visitor
+	Visit(visitor prop.Visitor) error
+}
+
 // Serialize the given resource to JSON bytes. The serialization process subjects to the request attributes and
 // excludedAttributes from options, and the SCIM return-ability rules.
-func Serialize(resource *prop.Resource, options ...Options) ([]byte, error) {
+func Serialize(serializable Serializable, options ...Options) ([]byte, error) {
 	s := serializer{
 		Buffer:   bytes.Buffer{},
 		includes: []string{},
@@ -22,14 +30,14 @@ func Serialize(resource *prop.Resource, options ...Options) ([]byte, error) {
 		scratch:  [64]byte{},
 	}
 	for _, opt := range options {
-		opt.apply(&s, resource)
+		opt.apply(&s, serializable)
 	}
 
 	if len(s.includes) > 0 && len(s.excludes) > 0 {
 		return nil, fmt.Errorf("%w: attributes and excludedAttributes are mutually exclusive", spec.ErrInvalidValue)
 	}
 
-	if err := resource.Visit(&s); err != nil {
+	if err := serializable.Visit(&s); err != nil {
 		return nil, err
 	}
 

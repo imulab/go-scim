@@ -1,7 +1,6 @@
 package json
 
 import (
-	"github.com/imulab/go-scim/pkg/v2/prop"
 	"strings"
 )
 
@@ -19,14 +18,14 @@ func Exclude(attributes ...string) Options {
 
 // JSON serialization options.
 type Options interface {
-	apply(s *serializer, resource *prop.Resource)
+	apply(s *serializer, serializable Serializable)
 }
 
 type include struct {
 	attributes []string
 }
 
-func (i include) apply(s *serializer, resource *prop.Resource) {
+func (i include) apply(s *serializer, serializable Serializable) {
 	if s.includes == nil {
 		s.includes = []string{}
 	}
@@ -34,7 +33,7 @@ func (i include) apply(s *serializer, resource *prop.Resource) {
 		if len(path) > 0 {
 			s.includes = append(s.includes, strings.TrimPrefix(
 				strings.ToLower(path),
-				strings.ToLower(resource.ResourceType().Schema().ID()+":")),
+				strings.ToLower(serializable.MainSchemaId()+":")),
 			)
 		}
 	}
@@ -44,7 +43,7 @@ type exclude struct {
 	attributes []string
 }
 
-func (e exclude) apply(s *serializer, resource *prop.Resource) {
+func (e exclude) apply(s *serializer, serializable Serializable) {
 	if s.excludes == nil {
 		s.excludes = []string{}
 	}
@@ -52,7 +51,7 @@ func (e exclude) apply(s *serializer, resource *prop.Resource) {
 		if len(path) > 0 {
 			s.excludes = append(s.excludes, strings.TrimPrefix(
 				strings.ToLower(path),
-				strings.ToLower(resource.ResourceType().Schema().ID()+":")),
+				strings.ToLower(serializable.MainSchemaId()+":")),
 			)
 		}
 	}

@@ -176,11 +176,19 @@ func (attr *Attribute) ExistsReferenceType(criteria func(referenceType string) b
 	return false
 }
 
+// CountReferenceTypes returns the total number of reference types.
+func (attr *Attribute) CountReferenceTypes() int {
+	return len(attr.referenceTypes)
+}
+
 // ForEachSubAttribute invokes callback function on each sub attribute.
-func (attr *Attribute) ForEachSubAttribute(callback func(subAttribute *Attribute)) {
+func (attr *Attribute) ForEachSubAttribute(callback func(subAttribute *Attribute) error) error {
 	for _, eachSubAttribute := range attr.subAttributes {
-		callback(eachSubAttribute)
+		if err := callback(eachSubAttribute); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // FindSubAttribute returns the sub attribute that matches the criteria, or returns nil if no sub attribute meets criteria.
@@ -201,6 +209,11 @@ func (attr *Attribute) SubAttributeForName(name string) *Attribute {
 		}
 	}
 	return nil
+}
+
+// Return the total number of sub attributes.
+func (attr *Attribute) CountSubAttributes() int {
+	return len(attr.subAttributes)
 }
 
 // GoesBy returns true if this attribute can be addressed by the given name.
@@ -307,6 +320,32 @@ func (attr *Attribute) DeriveElementAttribute() *Attribute {
 	}
 
 	return &elemAttr
+}
+
+// PublicValues returns a representation of this attribute's public values (non-extension) in a data structure
+// that conforms to the definition of prop.Property#Raw. However, this method does not implement it.
+func (attr *Attribute) PublicValues() interface{} {
+	data := map[string]interface{}{
+		"name":            attr.name,
+		"description":     attr.description,
+		"type":            attr.typ.String(),
+		"multiValued":     attr.multiValued,
+		"required":        attr.required,
+		"caseExact":       attr.caseExact,
+		"mutability":      attr.mutability.String(),
+		"returned":        attr.returned.String(),
+		"uniqueness":      attr.uniqueness.String(),
+		"canonicalValues": attr.canonicalValues,
+		"referenceTypes":  attr.referenceTypes,
+	}
+	if len(attr.subAttributes) > 0 {
+		var subPV []interface{}
+		for _, subAttr := range attr.subAttributes {
+			subPV = append(subPV, subAttr.PublicValues())
+		}
+		data["subAttributes"] = subPV
+	}
+	return data
 }
 
 // Equals returns true if the two attributes are considered equal.
