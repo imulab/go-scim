@@ -242,7 +242,6 @@ func ServiceProviderConfigHandler(config *spec.ServiceProviderConfig) func(rw ht
 	}
 
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		rw.WriteHeader(200)
 		rw.Header().Set("Content-Type", "application/json+scim")
 		_, _ = rw.Write(raw)
 	}
@@ -267,7 +266,6 @@ func ResourceTypesHandler(resourceTypes ...*spec.ResourceType) func(rw http.Resp
 	}
 
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		rw.WriteHeader(200)
 		rw.Header().Set("Content-Type", recorder.Header().Get("Content-Type"))
 		_, _ = rw.Write(recorder.Body.Bytes())
 	}
@@ -291,7 +289,6 @@ func ResourceTypeByIdHandler(resourceTypes ...*spec.ResourceType) func(rw http.R
 			return
 		}
 
-		rw.WriteHeader(200)
 		rw.Header().Set("Content-Type", "application/json+scim")
 		_, _ = rw.Write(raw)
 	}
@@ -319,7 +316,6 @@ func SchemasHandler() func(rw http.ResponseWriter, r *http.Request, params httpr
 	}
 
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		rw.WriteHeader(200)
 		rw.Header().Set("Content-Type", recorder.Header().Get("Content-Type"))
 		_, _ = rw.Write(recorder.Body.Bytes())
 	}
@@ -351,7 +347,6 @@ func SchemaByIdHandler() func(rw http.ResponseWriter, r *http.Request, params ht
 			return
 		}
 
-		rw.WriteHeader(200)
 		rw.Header().Set("Content-Type", "application/json+scim")
 		_, _ = rw.Write(raw)
 	}
