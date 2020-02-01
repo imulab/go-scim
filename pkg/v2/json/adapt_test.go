@@ -8,6 +8,45 @@ import (
 	"testing"
 )
 
+func TestResourceTypeToSerializable(t *testing.T) {
+	f, err := os.Open("../../../public/schemas/user_schema.json")
+	assert.Nil(t, err)
+
+	sch := new(spec.Schema)
+	err = json.NewDecoder(f).Decode(sch)
+	assert.Nil(t, err)
+	spec.Schemas().Register(sch)
+
+	f, err = os.Open("../../../public/resource_types/user_resource_type.json")
+	assert.Nil(t, err)
+
+	rt := new(spec.ResourceType)
+	err = json.NewDecoder(f).Decode(rt)
+	assert.Nil(t, err)
+
+	raw, err := Serialize(ResourceTypeToSerializable(rt))
+	assert.Nil(t, err)
+
+	expect := `
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:ResourceType"
+  ],
+  "id": "User",
+  "meta": {
+    "resourceType": "ResourceType",
+    "location": "/ResourceTypes/User"
+  },
+  "name": "User",
+  "endpoint": "/Users",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:User"
+}
+
+`
+
+	assert.JSONEq(t, expect, string(raw))
+}
+
 func TestSchemaToSerializable(t *testing.T) {
 	f, err := os.Open("../../../public/schemas/user_schema.json")
 	assert.Nil(t, err)

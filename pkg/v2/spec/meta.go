@@ -34,6 +34,15 @@ type metaAttr struct {
 	attrCanonicalValues *Attribute
 	attrReferenceTypes  *Attribute
 	attrSubAttributes   *Attribute
+
+	resourceType                        *Attribute
+	resourceTypeName                    *Attribute
+	resourceTypeDescription             *Attribute
+	resourceTypeEndpoint                *Attribute
+	resourceTypeSchema                  *Attribute
+	resourceTypeSchemaExtensions        *Attribute
+	resourceTypeSchemaExtensionSchema   *Attribute
+	resourceTypeSchemaExtensionRequired *Attribute
 }
 
 // CoreSchemasAttribute returns an attribute to describe the "schemas" field.
@@ -352,4 +361,122 @@ func (m *metaAttr) AttributeSubAttributesAttributeNoSub() *Attribute {
 		}
 	}
 	return m.attrSubAttributes
+}
+
+// ResourceTypeAttributeNoSub returns an attribute to act as the container attribute for ResourceType resources, but it does not
+// actually contain any sub attributes.
+func (m *metaAttr) ResourceTypeAttributeNoSub() *Attribute {
+	if m.resourceType == nil {
+		m.resourceType = &Attribute{
+			id:    "urn:ietf:params:scim:schemas:core:2.0:ResourceType",
+			name:  "",
+			typ:   TypeComplex,
+			index: 0,
+			path:  "",
+		}
+	}
+	return m.resourceType
+}
+
+// ResourceTypeNameAttribute returns an attribute to describe "urn:ietf:params:scim:schemas:core:2.0:ResourceType:name"
+func (m *metaAttr) ResourceTypeNameAttribute() *Attribute {
+	if m.resourceTypeName == nil {
+		m.resourceTypeName = &Attribute{
+			id:    "urn:ietf:params:scim:schemas:core:2.0:ResourceType:name",
+			name:  "name",
+			typ:   TypeString,
+			index: 100,
+			path:  "name",
+		}
+	}
+	return m.resourceTypeName
+}
+
+// ResourceTypeDescriptionAttribute returns an attribute to describe "urn:ietf:params:scim:schemas:core:2.0:ResourceType:description".
+func (m *metaAttr) ResourceTypeDescriptionAttribute() *Attribute {
+	if m.resourceTypeDescription == nil {
+		m.resourceTypeDescription = &Attribute{
+			id:    "urn:ietf:params:scim:schemas:core:2.0:ResourceType:description",
+			name:  "description",
+			typ:   TypeString,
+			index: 101,
+			path:  "description",
+		}
+	}
+	return m.resourceTypeDescription
+}
+
+// ResourceTypeEndpointAttribute returns an attribute to describe "urn:ietf:params:scim:schemas:core:2.0:ResourceType:endpoint".
+func (m *metaAttr) ResourceTypeEndpointAttribute() *Attribute {
+	if m.resourceTypeEndpoint == nil {
+		m.resourceTypeEndpoint = &Attribute{
+			id:    "urn:ietf:params:scim:schemas:core:2.0:ResourceType:endpoint",
+			name:  "endpoint",
+			typ:   TypeString,
+			index: 102,
+			path:  "endpoint",
+		}
+	}
+	return m.resourceTypeEndpoint
+}
+
+// ResourceTypeSchemaAttribute returns an attribute to describe "urn:ietf:params:scim:schemas:core:2.0:ResourceType:schema".
+func (m *metaAttr) ResourceTypeSchemaAttribute() *Attribute {
+	if m.resourceTypeSchema == nil {
+		m.resourceTypeSchema = &Attribute{
+			id:    "urn:ietf:params:scim:schemas:core:2.0:ResourceType:schema",
+			name:  "schema",
+			typ:   TypeReference,
+			index: 103,
+			path:  "schema",
+		}
+	}
+	return m.resourceTypeSchema
+}
+
+// ResourceTypeSchemaExtensionsAttributeNoSub returns an attribute to describe
+// "urn:ietf:params:scim:schemas:core:2.0:ResourceType:schemaExtensions", but the returned attribute
+// does not have any subAttributes defined.
+func (m *metaAttr) ResourceTypeSchemaExtensionsAttributeNoSub() *Attribute {
+	if m.resourceTypeSchemaExtensions == nil {
+		m.resourceTypeSchemaExtensions = &Attribute{
+			id:          "urn:ietf:params:scim:schemas:core:2.0:ResourceType:schemaExtensions",
+			name:        "schemaExtensions",
+			typ:         TypeComplex,
+			multiValued: true,
+			index:       104,
+			path:        "schemaExtensions",
+		}
+	}
+	return m.resourceTypeSchemaExtensions
+}
+
+// ResourceTypeSchemaExtensionSchemaAttribute returns an attribute to describe
+// "urn:ietf:params:scim:schemas:core:2.0:ResourceType:schemaExtensions.schema".
+func (m *metaAttr) ResourceTypeSchemaExtensionSchemaAttribute() *Attribute {
+	if m.resourceTypeSchemaExtensionSchema == nil {
+		m.resourceTypeSchemaExtensionSchema = &Attribute{
+			id:    "urn:ietf:params:scim:schemas:core:2.0:ResourceType:schemaExtensions.schema",
+			name:  "schema",
+			typ:   TypeReference,
+			index: 0,
+			path:  "schemaExtensions.schema",
+		}
+	}
+	return m.resourceTypeSchemaExtensionSchema
+}
+
+// ResourceTypeSchemaExtensionRequiredAttribute returns an attribute to describe
+// "urn:ietf:params:scim:schemas:core:2.0:ResourceType:schemaExtensions.required".
+func (m *metaAttr) ResourceTypeSchemaExtensionRequiredAttribute() *Attribute {
+	if m.resourceTypeSchemaExtensionRequired == nil {
+		m.resourceTypeSchemaExtensionRequired = &Attribute{
+			id:    "urn:ietf:params:scim:schemas:core:2.0:ResourceType:schemaExtensions.required",
+			name:  "required",
+			typ:   TypeBoolean,
+			index: 1,
+			path:  "schemaExtensions.required",
+		}
+	}
+	return m.resourceTypeSchemaExtensionRequired
 }

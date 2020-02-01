@@ -9,3 +9,8 @@ import (
 func SchemaToSerializable(sch *spec.Schema) Serializable {
 	return &internal.SerializableSchema{Sch: sch}
 }
+
+// ResourceTypeToSerializable returns a Serializable wrapper for a resource type so it can be used to call json.Serialize
+func ResourceTypeToSerializable(resourceType *spec.ResourceType) Serializable {
+	return &internal.SerializableResourceType{ResourceType: resourceType}
+}
