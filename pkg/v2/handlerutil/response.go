@@ -83,8 +83,8 @@ func WriteError(rw http.ResponseWriter, err error) error {
 		errMsg.ScimType = spec.ErrInternal.Type
 	}
 
-	rw.WriteHeader(errMsg.Status)
 	rw.Header().Set("Content-Type", "application/json+scim")
+	rw.WriteHeader(errMsg.Status)
 
 	raw, jsonErr := json.Marshal(errMsg)
 	if jsonErr != nil {

@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"net/http"
+	"net/http/httptest"
 )
 
 // CreateHandler returns a route handler function for creating SCIM resources.
@@ -241,7 +242,111 @@ func ServiceProviderConfigHandler(config *spec.ServiceProviderConfig) func(rw ht
 	}
 
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		rw.WriteHeader(200)
+		rw.Header().Set("Content-Type", "application/json+scim")
+		_, _ = rw.Write(raw)
+	}
+}
+
+// ResourceTypesHandler returns a route handler function for getting all defined ResourceType.
+func ResourceTypesHandler(resourceTypes ...*spec.ResourceType) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	result := &service.QueryResponse{
+		TotalResults: len(resourceTypes),
+		StartIndex:   1,
+		ItemsPerPage: len(resourceTypes),
+		Resources:    []json.Serializable{},
+	}
+	for _, resourceType := range resourceTypes {
+		result.Resources = append(result.Resources, json.ResourceTypeToSerializable(resourceType))
+	}
+
+	// use recorder to cache render result
+	recorder := httptest.NewRecorder()
+	if err := handlerutil.WriteSearchResultToResponse(recorder, result); err != nil {
+		panic(err)
+	}
+
+	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		rw.Header().Set("Content-Type", recorder.Header().Get("Content-Type"))
+		_, _ = rw.Write(recorder.Body.Bytes())
+	}
+}
+
+// ResourceTypeByIdHandler returns a route handler function get ResourceType by its id.
+func ResourceTypeByIdHandler(resourceTypes ...*spec.ResourceType) func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	cache := map[string]gojson.RawMessage{}
+	for _, resourceType := range resourceTypes {
+		raw, err := json.Serialize(json.ResourceTypeToSerializable(resourceType))
+		if err != nil {
+			panic(err)
+		}
+		cache[resourceType.ID()] = raw
+	}
+
+	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		raw, ok := cache[params.ByName("id")]
+		if !ok {
+			_ = handlerutil.WriteError(rw, fmt.Errorf("%w: resource type is not found", spec.ErrNotFound))
+			return
+		}
+
+		rw.Header().Set("Content-Type", "application/json+scim")
+		_, _ = rw.Write(raw)
+	}
+}
+
+// SchemasHandler returns a route handler function for getting all defined Schema.
+func SchemasHandler() func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	result := &service.QueryResponse{StartIndex: 1, Resources: []json.Serializable{}}
+	if err := spec.Schemas().ForEachSchema(func(schema *spec.Schema) error {
+		if schema.ID() == spec.CoreSchemaId {
+			return nil
+		}
+		result.Resources = append(result.Resources, json.SchemaToSerializable(schema))
+		return nil
+	}); err != nil {
+		panic(err)
+	}
+	result.TotalResults = len(result.Resources)
+	result.ItemsPerPage = len(result.Resources)
+
+	// use recorder to cache render result
+	recorder := httptest.NewRecorder()
+	if err := handlerutil.WriteSearchResultToResponse(recorder, result); err != nil {
+		panic(err)
+	}
+
+	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		rw.Header().Set("Content-Type", recorder.Header().Get("Content-Type"))
+		_, _ = rw.Write(recorder.Body.Bytes())
+	}
+}
+
+// SchemaByIdHandler returns a route handler function get Schema by its id.
+func SchemaByIdHandler() func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	cache := map[string]gojson.RawMessage{}
+	if err := spec.Schemas().ForEachSchema(func(schema *spec.Schema) error {
+		if schema.ID() == spec.CoreSchemaId {
+			return nil
+		}
+
+		raw, err := json.Serialize(json.SchemaToSerializable(schema))
+		if err != nil {
+			return err
+		}
+		cache[schema.ID()] = raw
+
+		return nil
+	}); err != nil {
+		panic(err)
+	}
+
+	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		raw, ok := cache[params.ByName("id")]
+		if !ok {
+			_ = handlerutil.WriteError(rw, fmt.Errorf("%w: schema is not found", spec.ErrNotFound))
+			return
+		}
+
 		rw.Header().Set("Content-Type", "application/json+scim")
 		_, _ = rw.Write(raw)
 	}

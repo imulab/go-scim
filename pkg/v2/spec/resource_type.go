@@ -71,10 +71,29 @@ func (t *ResourceType) Schema() *Schema {
 }
 
 // ForEachExtension iterates through all schema extensions and invoke the callback.
-func (t *ResourceType) ForEachExtension(callback func(extension *Schema, required bool)) {
+func (t *ResourceType) ForEachExtension(callback func(extension *Schema, required bool) error) error {
 	for _, ext := range t.extensions {
-		callback(ext, t.required[ext.id])
+		if err := callback(ext, t.required[ext.id]); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+// CountExtensions returns the total number of extensions
+func (t *ResourceType) CountExtensions() int {
+	return len(t.extensions)
+}
+
+// ResourceTypeName returns the resource type of the ResourceType resource. This value is formally defined and hence fixed.
+func (t *ResourceType) ResourceTypeName() string {
+	return "ResourceType"
+}
+
+// ResourceLocation returns the relative URI at which this ResourceType resource can be accessed. This value is formally
+// defined in the specification and hence fixed.
+func (t *ResourceType) ResourceLocation() string {
+	return "/ResourceTypes/" + t.ID()
 }
 
 func (t *ResourceType) MarshalJSON() ([]byte, error) {
@@ -136,14 +155,14 @@ func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 	}
 
 	if includeCore {
-		super.subAttributes = append(super.subAttributes, Schemas().mustGet(internal.CoreSchemaId).attributes...)
+		super.subAttributes = append(super.subAttributes, Schemas().mustGet(CoreSchemaId).attributes...)
 		super.annotations[annotation.SyncSchema] = map[string]interface{}{}
 	}
 
 	super.subAttributes = append(super.subAttributes, t.schema.attributes...)
 
 	var i = len(super.subAttributes)
-	t.ForEachExtension(func(extension *Schema, required bool) {
+	_ = t.ForEachExtension(func(extension *Schema, required bool) error {
 		super.subAttributes = append(super.subAttributes, &Attribute{
 			id:            extension.id,
 			name:          extension.id,
@@ -162,6 +181,7 @@ func (t *ResourceType) SuperAttribute(includeCore bool) *Attribute {
 			},
 		})
 		i++
+		return nil
 	})
 
 	return &super

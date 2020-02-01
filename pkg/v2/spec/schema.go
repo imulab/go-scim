@@ -5,6 +5,9 @@ import (
 	"sync"
 )
 
+// Reserved Id for core schema
+const CoreSchemaId = "core"
+
 // Schema models a SCIM schema. It is the collection of one or more attributes. Schema structure is read only
 // after construction. Schema can be identified by its id, and can be cached in a schema registry.
 //
@@ -38,10 +41,24 @@ func (s *Schema) Description() string {
 }
 
 // ForEachAttribute iterate all attributes in this schema and invoke callback function.
-func (s *Schema) ForEachAttribute(callback func(attr *Attribute)) {
+func (s *Schema) ForEachAttribute(callback func(attr *Attribute) error) error {
 	for _, attr := range s.attributes {
-		callback(attr)
+		if err := callback(attr); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+// ResourceTypeName returns the resource type of the Schema resource. This value is formally defined and hence fixed.
+func (s *Schema) ResourceTypeName() string {
+	return "Schema"
+}
+
+// ResourceLocation returns the relative URI at which this Schema resource can be accessed. This value is formally
+// defined in the specification and hence fixed.
+func (s *Schema) ResourceLocation() string {
+	return "/Schemas/" + s.ID()
 }
 
 func (s *Schema) MarshalJSON() ([]byte, error) {
@@ -95,10 +112,13 @@ func (r *schemaRegistry) Get(schemaId string) (schema *Schema, ok bool) {
 }
 
 // ForEachSchema invokes the callback function on each registered schema.
-func (r *schemaRegistry) ForEachSchema(callback func(schema *Schema)) {
+func (r *schemaRegistry) ForEachSchema(callback func(schema *Schema) error) error {
 	for _, schema := range r.db {
-		callback(schema)
+		if err := callback(schema); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (r *schemaRegistry) mustGet(schemaId string) *Schema {

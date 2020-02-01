@@ -87,7 +87,7 @@ func (s *QueryServiceTestSuite) TestDo() {
 				assert.Nil(t, err)
 				assert.Equal(t, 1, resp.TotalResults)
 				assert.Len(t, resp.Resources, 1)
-				assert.Equal(t, "user003", resp.Resources[0].Navigator().Dot("id").Current().Raw())
+				assert.Equal(t, "user003", resp.Resources[0].(*prop.Resource).Navigator().Dot("id").Current().Raw())
 			},
 		},
 		{
@@ -119,7 +119,7 @@ func (s *QueryServiceTestSuite) TestDo() {
 				assert.Equal(t, 5, resp.TotalResults)
 				assert.Len(t, resp.Resources, 5)
 				for i, expected := range []string{"user005", "user004", "user003", "user002", "user001"} {
-					assert.Equal(t, expected, resp.Resources[i].Navigator().Dot("id").Current().Raw())
+					assert.Equal(t, expected, resp.Resources[i].(*prop.Resource).Navigator().Dot("id").Current().Raw())
 				}
 			},
 		},
@@ -156,7 +156,7 @@ func (s *QueryServiceTestSuite) TestDo() {
 				assert.Equal(t, 5, resp.TotalResults)
 				assert.Len(t, resp.Resources, 2)
 				for i, expected := range []string{"user002", "user003"} {
-					assert.Equal(t, expected, resp.Resources[i].Navigator().Dot("id").Current().Raw())
+					assert.Equal(t, expected, resp.Resources[i].(*prop.Resource).Navigator().Dot("id").Current().Raw())
 				}
 			},
 		},

@@ -51,6 +51,11 @@ func (r *Resource) Navigator() Navigator {
 	return Navigate(r.data)
 }
 
+// MainSchemaId returns the id of the resource type's main schema.
+func (r *Resource) MainSchemaId() string {
+	return r.resourceType.Schema().ID()
+}
+
 // Visit starts a DFS visit on the root property of the resource.
 func (r *Resource) Visit(visitor Visitor) error {
 	visitor.BeginChildren(r.data)
