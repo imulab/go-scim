@@ -6,7 +6,7 @@ import (
 	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/crud/expr"
 	"github.com/imulab/go-scim/pkg/v2/db"
-	"github.com/imulab/go-scim/pkg/v2/prop"
+	"github.com/imulab/go-scim/pkg/v2/json"
 	"github.com/imulab/go-scim/pkg/v2/spec"
 )
 
@@ -36,7 +36,7 @@ type (
 		TotalResults int
 		StartIndex   int
 		ItemsPerPage int
-		Resources    []*prop.Resource
+		Resources    []json.Serializable
 		Projection   *crud.Projection // included so that caller may render properly
 	}
 )
@@ -77,8 +77,12 @@ func (s *queryService) Do(ctx context.Context, req *QueryRequest) (resp *QueryRe
 		}
 	}
 
-	if resp.Resources, err = s.database.Query(ctx, req.Filter, req.Sort, req.Pagination, req.Projection); err != nil {
+	resources, err := s.database.Query(ctx, req.Filter, req.Sort, req.Pagination, req.Projection)
+	if err != nil {
 		return
+	}
+	for _, r := range resources {
+		resp.Resources = append(resp.Resources, r)
 	}
 
 	resp.ItemsPerPage = len(resp.Resources)

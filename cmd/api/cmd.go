@@ -18,9 +18,15 @@ func Command() *cli.Command {
 			app := args.Initialize()
 			defer app.Close()
 
+			app.ensureSchemaRegistered()
+
 			var router = httprouter.New()
 			{
 				router.GET("/ServiceProviderConfig", ServiceProviderConfigHandler(app.ServiceProviderConfig()))
+				router.GET("/Schemas", SchemasHandler())
+				router.GET("/Schemas/:id", SchemaByIdHandler())
+				router.GET("/ResourceTypes", ResourceTypesHandler(app.UserResourceType(), app.GroupResourceType()))
+				router.GET("/ResourceTypes/:id", ResourceTypeByIdHandler(app.userResourceType, app.GroupResourceType()))
 
 				router.GET("/Users/:id", GetHandler(app.UserGetService(), app.Logger()))
 				router.GET("/Users", SearchHandler(app.UserQueryService(), app.Logger()))

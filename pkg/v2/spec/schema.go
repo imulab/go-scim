@@ -112,10 +112,13 @@ func (r *schemaRegistry) Get(schemaId string) (schema *Schema, ok bool) {
 }
 
 // ForEachSchema invokes the callback function on each registered schema.
-func (r *schemaRegistry) ForEachSchema(callback func(schema *Schema)) {
+func (r *schemaRegistry) ForEachSchema(callback func(schema *Schema) error) error {
 	for _, schema := range r.db {
-		callback(schema)
+		if err := callback(schema); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (r *schemaRegistry) mustGet(schemaId string) *Schema {
