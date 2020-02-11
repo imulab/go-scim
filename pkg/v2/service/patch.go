@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"strings"
+
 	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/crud/expr"
 	"github.com/imulab/go-scim/pkg/v2/db"
@@ -11,8 +15,6 @@ import (
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/service/filter"
 	"github.com/imulab/go-scim/pkg/v2/spec"
-	"io"
-	"io/ioutil"
 )
 
 // PatchService returns a patch resource service. preFilters will run after resource fetched from database and before
@@ -105,7 +107,7 @@ func (s *patchService) Do(ctx context.Context, req *PatchRequest) (resp *PatchRe
 	}
 
 	for _, patchOp := range patch.Operations {
-		switch patchOp.Op {
+		switch strings.ToLower(patchOp.Op) {
 		case "add":
 			if valueToAdd, err := patchOp.ParseValue(resource); err != nil {
 				return nil, err
