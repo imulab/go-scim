@@ -70,7 +70,7 @@ func (f readOnlyPropertyFilter) tryCopy(nav prop.Navigator, refNav prop.Navigato
 		return nil
 	}
 
-	if refNav == nil || refNav.Current() == outOfSync {
+	if refNav == nil || IsOutOfSync(refNav.Current()) {
 		return nil
 	}
 

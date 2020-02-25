@@ -322,7 +322,7 @@ func (s *VisitorTestSuite) TestVisitWithRef() {
 				visited := make([]compare, 0)
 				for i, p := range propVisited {
 					c := compare{prop: p.Attribute().ID()}
-					if refVisited[i] == outOfSync {
+					if IsOutOfSync(refVisited[i]) {
 						c.ref = "outOfSync"
 					} else {
 						c.ref = refVisited[i].Attribute().ID()
