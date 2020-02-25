@@ -186,7 +186,7 @@ kvs:
 				break kvs
 			case scanEnd:
 				break kvs
-			case scanSkipSpace, scanObjectValue:
+			case scanSkipSpace, scanObjectValue, scanEndArray:
 				d.scanNext()
 			default:
 				break fastForward
@@ -233,7 +233,10 @@ func (d *deserializeState) parseMultiValuedProperty() error {
 	}
 
 	// Skip any spaces between '[' and the potential first element
-	d.scanWhile(scanSkipSpace)
+	d.scanNext()
+	if d.opCode == scanSkipSpace {
+		d.scanWhile(scanSkipSpace)
+	}
 
 elements:
 	for d.opCode != scanEndArray {

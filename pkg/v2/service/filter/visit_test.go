@@ -23,6 +23,101 @@ type VisitorTestSuite struct {
 	resourceType *spec.ResourceType
 }
 
+func (s *VisitorTestSuite) TestUnsupportedFilterDoesNotPreventRemainingFiltersFromRunning() {
+	tests := []struct {
+		name        string
+		getResource func(t *testing.T) *prop.Resource
+		expect      func(t *testing.T, propVisited []prop.Property)
+	}{
+		{
+			name: "traverse resource",
+			getResource: func(t *testing.T) *prop.Resource {
+				r := prop.NewResource(s.resourceType)
+				assert.False(t, r.Navigator().Replace(map[string]interface{}{
+					"schemas": []interface{}{"A", "B"},
+					"id":      "foobar",
+					"meta": map[string]interface{}{
+						"version": "v1",
+					},
+					"emails": []interface{}{
+						map[string]interface{}{
+							"value": "foo@bar.com",
+						},
+						map[string]interface{}{
+							"value": "bar@foo.com",
+						},
+					},
+				}).HasError())
+				return r
+			},
+			expect: func(t *testing.T, propVisited []prop.Property) {
+				for i, p := range []string{
+					"schemas",
+					"schemas$elem",
+					"schemas$elem",
+					"id",
+					"externalId",
+					"meta",
+					"meta.resourceType",
+					"meta.created",
+					"meta.lastModified",
+					"meta.location",
+					"meta.version",
+					"urn:ietf:params:scim:schemas:core:2.0:User:userName",
+					"urn:ietf:params:scim:schemas:core:2.0:User:name",
+					"urn:ietf:params:scim:schemas:core:2.0:User:name.formatted",
+					"urn:ietf:params:scim:schemas:core:2.0:User:name.familyName",
+					"urn:ietf:params:scim:schemas:core:2.0:User:name.givenName",
+					"urn:ietf:params:scim:schemas:core:2.0:User:name.middleName",
+					"urn:ietf:params:scim:schemas:core:2.0:User:name.honorificPrefix",
+					"urn:ietf:params:scim:schemas:core:2.0:User:name.honorificSuffix",
+					"urn:ietf:params:scim:schemas:core:2.0:User:displayName",
+					"urn:ietf:params:scim:schemas:core:2.0:User:nickName",
+					"urn:ietf:params:scim:schemas:core:2.0:User:profileUrl",
+					"urn:ietf:params:scim:schemas:core:2.0:User:title",
+					"urn:ietf:params:scim:schemas:core:2.0:User:userType",
+					"urn:ietf:params:scim:schemas:core:2.0:User:preferredLanguage",
+					"urn:ietf:params:scim:schemas:core:2.0:User:locale",
+					"urn:ietf:params:scim:schemas:core:2.0:User:timezone",
+					"urn:ietf:params:scim:schemas:core:2.0:User:active",
+					"urn:ietf:params:scim:schemas:core:2.0:User:password",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails$elem",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails.value",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails.type",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails.primary",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails.display",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails$elem",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails.value",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails.type",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails.primary",
+					"urn:ietf:params:scim:schemas:core:2.0:User:emails.display",
+					"urn:ietf:params:scim:schemas:core:2.0:User:phoneNumbers",
+					"urn:ietf:params:scim:schemas:core:2.0:User:ims",
+					"urn:ietf:params:scim:schemas:core:2.0:User:photos",
+					"urn:ietf:params:scim:schemas:core:2.0:User:addresses",
+					"urn:ietf:params:scim:schemas:core:2.0:User:groups",
+					"urn:ietf:params:scim:schemas:core:2.0:User:entitlements",
+					"urn:ietf:params:scim:schemas:core:2.0:User:roles",
+					"urn:ietf:params:scim:schemas:core:2.0:User:x509Certificates",
+				} {
+					assert.Equal(t, p, propVisited[i].Attribute().ID())
+				}
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			resource := test.getResource(t)
+			recordingFilter := recordingPropertyFilter{propHistory: []prop.Property{}}
+			err := Visit(context.Background(), resource, alwaysUnsupportedFilter{}, &recordingFilter)
+			assert.Nil(t, err)
+			test.expect(t, recordingFilter.propHistory)
+		})
+	}
+}
+
 func (s *VisitorTestSuite) TestVisit() {
 	tests := []struct {
 		name        string
@@ -227,7 +322,7 @@ func (s *VisitorTestSuite) TestVisitWithRef() {
 				visited := make([]compare, 0)
 				for i, p := range propVisited {
 					c := compare{prop: p.Attribute().ID()}
-					if refVisited[i] == outOfSync {
+					if IsOutOfSync(refVisited[i]) {
 						c.ref = "outOfSync"
 					} else {
 						c.ref = refVisited[i].Attribute().ID()
@@ -364,5 +459,19 @@ func (f *recordingPropertyFilter) Filter(_ context.Context, _ *spec.ResourceType
 func (f *recordingPropertyFilter) FilterRef(_ context.Context, _ *spec.ResourceType, nav prop.Navigator, refNav prop.Navigator) error {
 	f.propHistory = append(f.propHistory, nav.Current())
 	f.refHistory = append(f.refHistory, refNav.Current())
+	return nil
+}
+
+type alwaysUnsupportedFilter struct{}
+
+func (f alwaysUnsupportedFilter) Supports(_ *spec.Attribute) bool {
+	return false
+}
+
+func (f alwaysUnsupportedFilter) Filter(_ context.Context, _ *spec.ResourceType, _ prop.Navigator) error {
+	return nil
+}
+
+func (f alwaysUnsupportedFilter) FilterRef(_ context.Context, _ *spec.ResourceType, _ prop.Navigator, _ prop.Navigator) error {
 	return nil
 }

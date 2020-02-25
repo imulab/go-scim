@@ -8,6 +8,11 @@ import (
 // Marker property that indicates flexNavigator is out of sync
 var outOfSync = outOfSyncProperty{}
 
+// IsOutOfSync returns true when the given property is the marker out-of-sync property.
+func IsOutOfSync(property prop.Property) bool {
+	return property == outOfSync
+}
+
 // flexNavigator is a Navigator implementation that can be used in two ways.
 //
 // First, as a follow-along navigator that synchronizes with another Navigator. When the other navigator focuses on
@@ -62,7 +67,7 @@ func (n *flexNavigator) Retract() prop.Navigator {
 }
 
 func (n *flexNavigator) Dot(name string) prop.Navigator {
-	if n.Current() == outOfSync {
+	if IsOutOfSync(n.Current()) {
 		n.Push(outOfSync)
 		return n
 	}
@@ -82,7 +87,7 @@ func (n *flexNavigator) Dot(name string) prop.Navigator {
 }
 
 func (n *flexNavigator) At(index int) prop.Navigator {
-	if n.Current() == outOfSync {
+	if IsOutOfSync(n.Current()) {
 		n.Push(outOfSync)
 		return n
 	}
@@ -102,7 +107,7 @@ func (n *flexNavigator) At(index int) prop.Navigator {
 }
 
 func (n *flexNavigator) Where(criteria func(child prop.Property) bool) prop.Navigator {
-	if n.Current() == outOfSync {
+	if IsOutOfSync(n.Current()) {
 		n.Push(outOfSync)
 		return n
 	}

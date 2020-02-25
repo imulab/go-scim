@@ -15,7 +15,7 @@ func Visit(ctx context.Context, resource *prop.Resource, filters ...ByProperty) 
 		visitFunc: func(resourceNav prop.Navigator, referenceNav prop.Navigator) error {
 			for _, filter := range filters {
 				if !filter.Supports(resourceNav.Current().Attribute()) {
-					return nil
+					continue
 				}
 				if err := filter.Filter(ctx, resource.ResourceType(), resourceNav); err != nil {
 					return err
@@ -43,7 +43,7 @@ func VisitWithRef(ctx context.Context, resource *prop.Resource, ref *prop.Resour
 		visitFunc: func(resourceNav prop.Navigator, referenceNav prop.Navigator) error {
 			for _, filter := range filters {
 				if !filter.Supports(resourceNav.Current().Attribute()) {
-					return nil
+					continue
 				}
 				if err := filter.FilterRef(ctx, resource.ResourceType(), resourceNav, referenceNav); err != nil {
 					return err

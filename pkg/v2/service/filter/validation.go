@@ -121,7 +121,7 @@ func (f *validationPropertyFilter) validateCanonical(property prop.Property) err
 }
 
 func (f *validationPropertyFilter) validateMutability(property prop.Property, ref prop.Property) error {
-	if ref == nil || ref == outOfSync {
+	if ref == nil || IsOutOfSync(ref) {
 		return nil
 	}
 
