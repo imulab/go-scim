@@ -32,57 +32,57 @@ func (s *JsonDeserializeTestSuite) TestDeserializeResource() {
 			name: "default",
 			json: `
 {
-   "schemas":[
-      "urn:ietf:params:scim:schemas:core:2.0:User"
-   ],
-   "id":"3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-   "meta":{
-      "resourceType":"User",
-      "created":"2019-11-20T13:09:00",
-      "lastModified":"2019-11-20T13:09:00",
-      "location":"https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-      "version":"W/\"1\""
-   },
-   "userName":"imulab",
-   "name":{
-      "formatted":"Mr. Weinan Qiu",
-      "familyName":"Qiu",
-      "givenName":"Weinan",
-      "honorificPrefix":"Mr."
-   },
-   "displayName":"Weinan",
-   "profileUrl":"https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
-   "userType":"Employee",
-   "preferredLanguage":"zh_CN",
-   "locale":"zh_CN",
-   "timezone":"Asia/Shanghai",
-   "active":true,
-   "emails":[
-      {
-         "value":"imulab@foo.com",
-         "type":"work",
-         "primary":true,
-         "display":"imulab@foo.com"
-      },
-      {
-         "value":"imulab@bar.com",
-         "type":"home",
-         "display":"imulab@bar.com"
-      }
-   ],
-   "phoneNumbers":[
-      {
-         "value":"123-45678",
-         "type":"work",
-         "primary":true,
-         "display":"123-45678"
-      },
-      {
-         "value":"123-45679",
-         "type":"work",
-         "display":"123-45679"
-      }
-   ]
+  "schemas":[
+     "urn:ietf:params:scim:schemas:core:2.0:User"
+  ],
+  "id":"3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+  "meta":{
+     "resourceType":"User",
+     "created":"2019-11-20T13:09:00",
+     "lastModified":"2019-11-20T13:09:00",
+     "location":"https://identity.imulab.io/Users/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+     "version":"W/\"1\""
+  },
+  "userName":"imulab",
+  "name":{
+     "formatted":"Mr. Weinan Qiu",
+     "familyName":"Qiu",
+     "givenName":"Weinan",
+     "honorificPrefix":"Mr."
+  },
+  "displayName":"Weinan",
+  "profileUrl":"https://identity.imulab.io/profiles/3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+  "userType":"Employee",
+  "preferredLanguage":"zh_CN",
+  "locale":"zh_CN",
+  "timezone":"Asia/Shanghai",
+  "active":true,
+  "emails":[
+     {
+        "value":"imulab@foo.com",
+        "type":"work",
+        "primary":true,
+        "display":"imulab@foo.com"
+     },
+     {
+        "value":"imulab@bar.com",
+        "type":"home",
+        "display":"imulab@bar.com"
+     }
+  ],
+  "phoneNumbers":[
+     {
+        "value":"123-45678",
+        "type":"work",
+        "primary":true,
+        "display":"123-45678"
+     },
+     {
+        "value":"123-45679",
+        "type":"work",
+        "display":"123-45679"
+     }
+  ]
 }
 `,
 			expect: func(t *testing.T, resource *prop.Resource, err error) {
@@ -194,6 +194,21 @@ func (s *JsonDeserializeTestSuite) TestDeserializeResource() {
 					assert.Nil(t, nav.Error())
 					assert.Nil(t, nav.Current().Raw())
 				}
+			},
+		},
+		{
+			name: "empty array",
+			json: `
+{
+	"id": "foobar",
+	"emails":[],
+	"timezone":"Asia/Shanghai"
+}`,
+			expect: func(t *testing.T, resource *prop.Resource, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "foobar", resource.Navigator().Dot("id").Current().Raw())
+				assert.True(t, resource.Navigator().Dot("emails").Current().IsUnassigned())
+				assert.Equal(t, "Asia/Shanghai", resource.Navigator().Dot("timezone").Current().Raw())
 			},
 		},
 	}
