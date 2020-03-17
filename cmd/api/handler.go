@@ -242,7 +242,7 @@ func ServiceProviderConfigHandler(config *spec.ServiceProviderConfig) func(rw ht
 	}
 
 	return func(rw http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		rw.Header().Set("Content-Type", "application/json+scim")
+		rw.Header().Set("Content-Type", spec.ApplicationScimJson)
 		_, _ = rw.Write(raw)
 	}
 }
@@ -289,7 +289,7 @@ func ResourceTypeByIdHandler(resourceTypes ...*spec.ResourceType) func(rw http.R
 			return
 		}
 
-		rw.Header().Set("Content-Type", "application/json+scim")
+		rw.Header().Set("Content-Type", spec.ApplicationScimJson)
 		_, _ = rw.Write(raw)
 	}
 }
@@ -347,7 +347,7 @@ func SchemaByIdHandler() func(rw http.ResponseWriter, r *http.Request, params ht
 			return
 		}
 
-		rw.Header().Set("Content-Type", "application/json+scim")
+		rw.Header().Set("Content-Type", spec.ApplicationScimJson)
 		_, _ = rw.Write(raw)
 	}
 }
