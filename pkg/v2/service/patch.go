@@ -188,7 +188,7 @@ func (p *PatchPayload) Validate() error {
 	}
 
 	for _, each := range p.Operations {
-		switch each.Op {
+		switch strings.ToLower(each.Op) {
 		case "add":
 			if len(each.Value) == 0 {
 				return fmt.Errorf("%w: no value for add operation", spec.ErrInvalidSyntax)

@@ -144,6 +144,68 @@ func (s *PatchServiceTestSuite) TestDo() {
 				assert.False(t, resp.Patched)
 			},
 		},
+		{
+			name: "patch to make a difference with upper case OP",
+			setup: func(t *testing.T) Patch {
+				database := db.Memory()
+				err := database.Insert(context.TODO(), s.resourceOf(t, map[string]interface{}{
+					"schemas":  []interface{}{"urn:ietf:params:scim:schemas:core:2.0:User"},
+					"id":       "foo",
+					"userName": "foo",
+					"timezone": "Asia/Shanghai",
+					"emails": []interface{}{
+						map[string]interface{}{
+							"value": "foo@bar.com",
+							"type":  "home",
+						},
+					},
+				}))
+				require.Nil(t, err)
+				return PatchService(s.config, database, nil, []filter.ByResource{
+					filter.ByPropertyToByResource(
+						filter.ReadOnlyFilter(),
+						filter.BCryptFilter(),
+					),
+					filter.ByPropertyToByResource(filter.ValidationFilter(database)),
+					filter.MetaFilter(),
+				})
+			},
+			getRequest: func() *PatchRequest {
+				return &PatchRequest{
+					ResourceID: "foo",
+					PayloadSource: strings.NewReader(`
+{
+	"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+	"Operations": [
+		{
+			"op": "ADD",
+			"path": "userName",
+			"value": "foobar"
+		},
+		{
+			"op": "REPLACE",
+			"path": "emails[value eq \"foo@bar.com\"].type",
+			"value": "work"
+		},
+		{
+			"op": "REMOVE",
+			"path": "timezone"
+		}
+	]
+}
+`),
+				}
+			},
+			expect: func(t *testing.T, resp *PatchResponse, err error) {
+				assert.Nil(t, err)
+				assert.True(t, resp.Patched)
+				assert.NotEmpty(t, resp.Resource.MetaVersionOrEmpty())
+				assert.NotEqual(t, resp.Ref.MetaVersionOrEmpty(), resp.Resource.MetaVersionOrEmpty())
+				assert.Equal(t, "foobar", resp.Resource.Navigator().Dot("userName").Current().Raw())
+				assert.True(t, resp.Resource.Navigator().Dot("timezone").Current().IsUnassigned())
+				assert.Equal(t, "work", resp.Resource.Navigator().Dot("emails").At(0).Dot("type").Current().Raw())
+			},
+		},
 	}
 
 	for _, test := range tests {
