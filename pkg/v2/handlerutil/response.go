@@ -13,7 +13,7 @@ import (
 // WriteResourceToResponse writes the given resource to http.ResponseWriter, respecting the attributes or excludedAttributes
 // specified through options. Any error during the process will be returned.
 // Apart from writing the JSON representation of the resource to body, this method also sets Content-Type header to
-// application/json+scim; sets Location header to resource's meta.location field, if any; and sets ETag header to
+// application/scim+json; sets Location header to resource's meta.location field, if any; and sets ETag header to
 // resource's meta.version field, if any. This method does not set response status, which should be set before calling
 // this method.
 func WriteResourceToResponse(rw http.ResponseWriter, resource *prop.Resource, options ...scimjson.Options) error {
@@ -22,7 +22,7 @@ func WriteResourceToResponse(rw http.ResponseWriter, resource *prop.Resource, op
 		return jsonErr
 	}
 
-	rw.Header().Set("Content-Type", "application/json+scim")
+	rw.Header().Set("Content-Type", spec.ApplicationScimJson)
 	if location := resource.MetaLocationOrEmpty(); len(location) > 0 {
 		rw.Header().Set("Location", location)
 	}
@@ -36,7 +36,7 @@ func WriteResourceToResponse(rw http.ResponseWriter, resource *prop.Resource, op
 
 // WriteSearchResultToResponse writes the search result to http.ResponseWrite, respecting the attribute or excludedAttributes
 // specified through options. Any error during the process will be returned.
-// This method also sets Content-Type header to application/json+scim. This method does not set response status, which should
+// This method also sets Content-Type header to application/scim+json. This method does not set response status, which should
 // be set before calling this method.
 func WriteSearchResultToResponse(rw http.ResponseWriter, searchResult *service.QueryResponse, options ...scimjson.Options) error {
 	render := SearchResultRendering{
@@ -55,14 +55,14 @@ func WriteSearchResultToResponse(rw http.ResponseWriter, searchResult *service.Q
 		render.Resources = append(render.Resources, raw)
 	}
 
-	rw.Header().Set("Content-Type", "application/json+scim")
+	rw.Header().Set("Content-Type", spec.ApplicationScimJson)
 	return json.NewEncoder(rw).Encode(render)
 }
 
 // WriteError writes the error to the http.ResponseWriter. Any error during the process will be returned.
 // If the cause of the error (determined using errors.Unwrap) is a *spec.Error, the cause status and scimType will be
 // used together with the error's message as detail. If the cause is not a *spec.Error, spec.ErrInternal is used instead.
-// This method also writes the http status with the error's defined status, and set Content-Type header to application/json+scim.
+// This method also writes the http status with the error's defined status, and set Content-Type header to application/scim+json.
 func WriteError(rw http.ResponseWriter, err error) error {
 	var errMsg = struct {
 		Schemas  []string `json:"schemas"`
@@ -83,7 +83,7 @@ func WriteError(rw http.ResponseWriter, err error) error {
 		errMsg.ScimType = spec.ErrInternal.Type
 	}
 
-	rw.Header().Set("Content-Type", "application/json+scim")
+	rw.Header().Set("Content-Type", spec.ApplicationScimJson)
 	rw.WriteHeader(errMsg.Status)
 
 	raw, jsonErr := json.Marshal(errMsg)
