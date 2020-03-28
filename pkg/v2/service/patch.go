@@ -234,7 +234,7 @@ func (o *PatchOperation) ParseValue(resource *prop.Resource) (interface{}, error
 	}
 
 	p := prop.NewProperty(attr)
-	if err := scimjson.DeserializeProperty(o.Value, p, o.Op == "add"); err != nil {
+	if err := scimjson.DeserializeProperty(o.Value, p, strings.ToLower(o.Op) == "add"); err != nil {
 		return nil, err
 	}
 

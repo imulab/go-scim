@@ -156,8 +156,7 @@ func TestExclusivePrimarySubscriber(t *testing.T) {
 						"primary": true,
 					},
 					map[string]interface{}{
-						"value":   "bar",
-						"primary": nil,
+						"value": "bar",
 					},
 				}, raw)
 			},
@@ -182,11 +181,10 @@ func TestExclusivePrimarySubscriber(t *testing.T) {
 				assert.Equal(t, []interface{}{
 					map[string]interface{}{
 						"value":   "foo",
-						"primary": nil,
+						"primary": nil, // this nil will be present because it is dirty
 					},
 					map[string]interface{}{
-						"value":   "bar",
-						"primary": nil,
+						"value": "bar",
 					},
 				}, raw)
 			},
