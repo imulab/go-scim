@@ -139,10 +139,7 @@ func (s *ComplexPropertyTestSuite) TestRaw() {
 				return nil
 			},
 			expect: func(t *testing.T, raw interface{}) {
-				assert.Equal(t, map[string]interface{}{
-					"givenName":  nil,
-					"familyName": nil,
-				}, raw)
+				assert.Equal(t, map[string]interface{}{}, raw)
 			},
 		},
 		{
@@ -360,8 +357,7 @@ func (s *ComplexPropertyTestSuite) TestAdd() {
 			expect: func(t *testing.T, raw interface{}, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, map[string]interface{}{
-					"givenName":  "David",
-					"familyName": nil,
+					"givenName": "David",
 				}, raw)
 			},
 		},
@@ -435,7 +431,7 @@ func (s *ComplexPropertyTestSuite) TestReplace() {
 				assert.Nil(t, err)
 				assert.Equal(t, map[string]interface{}{
 					"givenName":  "David",
-					"familyName": nil,
+					"familyName": "Q", // if replace partial data, the rest will still be present
 				}, raw)
 			},
 		},

@@ -62,7 +62,9 @@ func (p *complexProperty) Attribute() *spec.Attribute {
 func (p *complexProperty) Raw() interface{} {
 	values := map[string]interface{}{}
 	_ = p.ForEachChild(func(_ int, child Property) error {
-		values[child.Attribute().Name()] = child.Raw()
+		if child.Dirty() {
+			values[child.Attribute().Name()] = child.Raw()
+		}
 		return nil
 	})
 	return values
@@ -195,10 +197,6 @@ func (p *complexProperty) Replace(value interface{}) (*Event, error) {
 	}
 
 	wasUnassigned := p.IsUnassigned()
-
-	if _, err := p.Delete(); err != nil {
-		return nil, err
-	}
 
 	if _, err := p.Add(value); err != nil {
 		return nil, err

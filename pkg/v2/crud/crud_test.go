@@ -241,8 +241,7 @@ func (s *CrudTestSuite) TestReplace() {
 						"primary": true,
 					},
 					map[string]interface{}{
-						"value":   "baz",
-						"primary": nil,
+						"value": "baz",
 					},
 				}, r.Navigator().Dot("emails").Current().Raw())
 			},
@@ -380,11 +379,10 @@ func (s *CrudTestSuite) TestDelete() {
 				assert.Equal(t, []interface{}{
 					map[string]interface{}{
 						"value":   "foo",
-						"primary": nil,
+						"primary": nil, // nil is present because it's dirty now
 					},
 					map[string]interface{}{
-						"value":   "bar",
-						"primary": nil,
+						"value": "bar",
 					},
 				}, r.Navigator().Dot("emails").Current().Raw())
 			},

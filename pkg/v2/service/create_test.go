@@ -80,14 +80,9 @@ func (s *CreateServiceTestSuite) TestDo() {
 					map[string]interface{}{
 						"value":   "foo@bar.com",
 						"primary": true,
-						"display": nil,
-						"type":    nil,
 					},
 					map[string]interface{}{
-						"value":   "bar@foo.com",
-						"primary": nil,
-						"display": nil,
-						"type":    nil,
+						"value": "bar@foo.com",
 					},
 				}, n().Dot("emails").Current().Raw())
 				assert.NotEmpty(t, n().Dot("id").Current().Raw())
