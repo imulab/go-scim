@@ -2,8 +2,9 @@ package prop
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/v2/spec"
 	"time"
+
+	"github.com/imulab/go-scim/pkg/v2/spec"
 )
 
 // NewDateTime creates a new dateTime property associated with attribute.
@@ -110,8 +111,16 @@ func (p *dateTimeProperty) Replace(value interface{}) (*Event, error) {
 	}
 
 	t, err := p.fromISO8601(s)
+
+	var err2 error
+
 	if err != nil {
-		return nil, err
+
+		t, err2 = p.fromRFC3339(s)
+
+		if err2 != nil {
+			return nil, fmt.Errorf("%s %s", err, err2)
+		}
 	}
 
 	p.dirty = true
@@ -175,6 +184,14 @@ func (p *dateTimeProperty) fromISO8601(value string) (time.Time, error) {
 	return t, nil
 }
 
+func (p *dateTimeProperty) fromRFC3339(value string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("%w, value for '%s' does not conform to RFC3339", spec.ErrInvalidValue, p.attr.Path())
+	}
+	return t, nil
+}
+
 func (p *dateTimeProperty) EqualsTo(value interface{}) bool {
 	return p.compareThisAndValue(value, func(this time.Time, that time.Time) bool {
 		return this.Equal(that)
@@ -217,7 +234,10 @@ func (p *dateTimeProperty) compareThisAndValue(value interface{}, comparator fun
 
 	t, err := p.fromISO8601(s)
 	if err != nil {
-		return false
+		t, err = p.fromRFC3339(s)
+		if err != nil {
+			return false
+		}
 	}
 
 	return comparator(*(p.value), t)
