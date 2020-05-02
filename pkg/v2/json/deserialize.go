@@ -2,12 +2,13 @@ package json
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/v2/prop"
-	"github.com/imulab/go-scim/pkg/v2/spec"
 	"strconv"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
+
+	"github.com/imulab/go-scim/pkg/v2/prop"
+	"github.com/imulab/go-scim/pkg/v2/spec"
 )
 
 // Deserialize is the entry point of JSON deserialization. Unmarshal the JSON input bytes into a pre-prepared unassigned
@@ -399,7 +400,7 @@ func (d *deserializeState) parseBooleanProperty() error {
 			return err
 		}
 	} else if d.isFalse(start, end) {
-		if _, err := d.navigator.Current().Replace(true); err != nil {
+		if _, err := d.navigator.Current().Replace(false); err != nil {
 			return err
 		}
 	} else {
