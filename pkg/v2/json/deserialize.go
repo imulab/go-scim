@@ -2,12 +2,14 @@ package json
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/v2/prop"
-	"github.com/imulab/go-scim/pkg/v2/spec"
 	"strconv"
+	"strings"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
+
+	"github.com/imulab/go-scim/pkg/v2/prop"
+	"github.com/imulab/go-scim/pkg/v2/spec"
 )
 
 // Deserialize is the entry point of JSON deserialization. Unmarshal the JSON input bytes into a pre-prepared unassigned
@@ -399,10 +401,13 @@ func (d *deserializeState) parseBooleanProperty() error {
 			return err
 		}
 	} else if d.isFalse(start, end) {
-		if _, err := d.navigator.Current().Replace(true); err != nil {
+		if _, err := d.navigator.Current().Replace(false); err != nil {
 			return err
 		}
 	} else {
+		if isHackingForMicrosoft, err := d.tryHackForMicrosoftADBooleanIssue(p, start, end); isHackingForMicrosoft {
+			return err
+		}
 		return d.errInvalidSyntax("expects boolean value")
 	}
 
@@ -491,6 +496,47 @@ func (d *deserializeState) isFalse(start, end int) bool {
 		d.data[start+2] == 'l' &&
 		d.data[start+3] == 's' &&
 		d.data[start+4] == 'e'
+}
+
+func (d *deserializeState) isTrueInMicrosoftFormat(start, end int) bool {
+	return end-start == 6 &&
+		d.data[start] == '"' &&
+		(d.data[start+1] == 't' || d.data[start+1] == 'T') &&
+		d.data[start+2] == 'r' &&
+		d.data[start+3] == 'u' &&
+		d.data[start+4] == 'e' &&
+		d.data[start+5] == '"'
+}
+
+func (d *deserializeState) isFalseInMicrosoftFormat(start, end int) bool {
+	return end-start == 7 &&
+		d.data[start] == '"' &&
+		(d.data[start+1] == 'F' || d.data[start+1] == 'f') &&
+		d.data[start+2] == 'a' &&
+		d.data[start+3] == 'l' &&
+		d.data[start+4] == 's' &&
+		d.data[start+5] == 'e' &&
+		d.data[start+6] == '"'
+}
+
+// Microsoft Azure Directory passes boolean values in as "True" and "False". In order to support this popular
+// use case, we include a hack here temporarily for this issue only. Thanks to @plamenGo.
+// See https://github.com/imulab/go-scim/pull/67
+func (d *deserializeState) tryHackForMicrosoftADBooleanIssue(p prop.Property, start, end int) (bool, error) {
+	if strings.ToLower(p.Attribute().Path()) != "active" {
+		// We are only hacking for the "active" property for now.
+		return false, nil
+	}
+
+	if d.isTrueInMicrosoftFormat(start, end) {
+		_, err := d.navigator.Current().Replace(true)
+		return true, err
+	} else if d.isFalseInMicrosoftFormat(start, end) {
+		_, err := d.navigator.Current().Replace(false)
+		return true, err
+	}
+
+	panic("Microsoft may have fixed the boolean issue")
 }
 
 // scanWhile processes bytes in d.data[d.off:] until it
