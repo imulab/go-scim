@@ -34,7 +34,7 @@ func TestGetRequestProjection(t *testing.T) {
 			requestFunc: func() *http.Request {
 				r := httptest.NewRequest(http.MethodGet, "/", nil)
 				r.URL.RawQuery = url.Values{
-					paramAttributes: []string{"foo bar baz"},
+					paramAttributes: []string{"foo,bar,baz"},
 				}.Encode()
 				return r
 			},
@@ -49,7 +49,7 @@ func TestGetRequestProjection(t *testing.T) {
 			requestFunc: func() *http.Request {
 				r := httptest.NewRequest(http.MethodGet, "/", nil)
 				r.URL.RawQuery = url.Values{
-					paramExcludedAttributes: []string{"foo bar baz"},
+					paramExcludedAttributes: []string{"foo,bar,baz"},
 				}.Encode()
 				return r
 			},
@@ -64,8 +64,8 @@ func TestGetRequestProjection(t *testing.T) {
 			requestFunc: func() *http.Request {
 				r := httptest.NewRequest(http.MethodGet, "/", nil)
 				r.URL.RawQuery = url.Values{
-					paramAttributes:         []string{"foo bar baz"},
-					paramExcludedAttributes: []string{"foo bar baz"},
+					paramAttributes:         []string{"foo,bar,baz"},
+					paramExcludedAttributes: []string{"foo,bar,baz"},
 				}.Encode()
 				return r
 			},
