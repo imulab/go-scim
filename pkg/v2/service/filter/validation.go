@@ -171,11 +171,7 @@ func (f *validationPropertyFilter) validateUniqueness(ctx context.Context, nav p
 	if err != nil {
 		return err
 	} else if n > 0 {
-		if property.Attribute().Path() == "userName" {
-			return fmt.Errorf("%w: value of '%s' is not unique", spec.ErrUniqueness, property.Attribute().Path())
-		}
-
-		return fmt.Errorf("%w: value of '%s' is not unique", spec.ErrInvalidValue, property.Attribute().Path())
+		return fmt.Errorf("%w: value of '%s' is not unique", spec.ErrUniqueness, property.Attribute().Path())
 	}
 
 	return nil
