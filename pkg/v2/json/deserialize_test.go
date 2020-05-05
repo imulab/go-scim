@@ -211,6 +211,23 @@ func (s *JsonDeserializeTestSuite) TestDeserializeResource() {
 				assert.Equal(t, "Asia/Shanghai", resource.Navigator().Dot("timezone").Current().Raw())
 			},
 		},
+		{
+			name: "Microsoft AD boolean issue hack (pr/67)",
+			json: `
+{
+  "schemas":[
+     "urn:ietf:params:scim:schemas:core:2.0:User"
+  ],
+  "id":"3cc032f5-2361-417f-9e2f-bc80adddf4a3",
+  "userName":"imulab",
+  "active": "True"
+}
+`,
+			expect: func(t *testing.T, resource *prop.Resource, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, true, resource.Navigator().Dot("active").Current().Raw())
+			},
+		},
 	}
 
 	for _, test := range tests {
