@@ -202,7 +202,7 @@ func TestValidationFilter(t *testing.T) {
 			},
 			expect: func(t *testing.T, err error) {
 				assert.NotNil(t, err)
-				assert.Equal(t, spec.ErrInvalidValue, errors.Unwrap(err))
+				assert.Equal(t, spec.ErrUniqueness, errors.Unwrap(err))
 			},
 		},
 		{

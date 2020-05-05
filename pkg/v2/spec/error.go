@@ -9,7 +9,7 @@ var (
 	ErrTooMany = &Error{Status: 400, Type: "tooMany"}
 
 	// One or more of the attribute values are already in use or are reserved.
-	ErrUniqueness = &Error{Status: 400, Type: "uniqueness"}
+	ErrUniqueness = &Error{Status: 409, Type: "uniqueness"}
 
 	// The attempted modification is not compatible with the target attribute's mutability or current state (e.g.,
 	// modification of an "immutable" attribute with an existing value).
