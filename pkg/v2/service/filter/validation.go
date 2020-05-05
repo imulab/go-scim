@@ -3,12 +3,13 @@ package filter
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/imulab/go-scim/pkg/v2/annotation"
 	"github.com/imulab/go-scim/pkg/v2/db"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/spec"
-	"strconv"
-	"strings"
 )
 
 // ValidationFilter returns a ByProperty that performs validation on each property. The validation carried out are
@@ -170,6 +171,10 @@ func (f *validationPropertyFilter) validateUniqueness(ctx context.Context, nav p
 	if err != nil {
 		return err
 	} else if n > 0 {
+		if property.Attribute().Path() == "userName" {
+			return fmt.Errorf("%w: value of '%s' is not unique", spec.ErrUniqueness, property.Attribute().Path())
+		}
+
 		return fmt.Errorf("%w: value of '%s' is not unique", spec.ErrInvalidValue, property.Attribute().Path())
 	}
 
