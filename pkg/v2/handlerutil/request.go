@@ -27,7 +27,7 @@ const (
 func GetRequestProjection(request *http.Request) (projection *crud.Projection, err error) {
 	if attrValue := request.URL.Query().Get(paramAttributes); len(attrValue) > 0 {
 		projection = &crud.Projection{
-			Attributes: strings.Split(strings.TrimSpace(attrValue), " "),
+			Attributes: strings.Split(strings.TrimSpace(attrValue), ","),
 		}
 	}
 
@@ -37,7 +37,7 @@ func GetRequestProjection(request *http.Request) (projection *crud.Projection, e
 			return
 		}
 		projection = &crud.Projection{
-			ExcludedAttributes: strings.Split(strings.TrimSpace(exclAttrValue), " "),
+			ExcludedAttributes: strings.Split(strings.TrimSpace(exclAttrValue), ","),
 		}
 	}
 
