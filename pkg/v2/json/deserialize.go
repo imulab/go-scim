@@ -2,12 +2,13 @@ package json
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/pkg/v2/prop"
-	"github.com/imulab/go-scim/pkg/v2/spec"
 	"strconv"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
+
+	"github.com/imulab/go-scim/pkg/v2/prop"
+	"github.com/imulab/go-scim/pkg/v2/spec"
 )
 
 // Deserialize is the entry point of JSON deserialization. Unmarshal the JSON input bytes into a pre-prepared unassigned
@@ -399,8 +400,20 @@ func (d *deserializeState) parseBooleanProperty() error {
 			return err
 		}
 	} else if d.isFalse(start, end) {
-		if _, err := d.navigator.Current().Replace(true); err != nil {
+		if _, err := d.navigator.Current().Replace(false); err != nil {
 			return err
+		}
+	} else if p.Attribute().Path() == "active" {
+		// Hack to work around Azure AD bugs
+		// they send "True" for active instead of true
+		if d.isTrueInQuotes(start, end) {
+			if _, err := d.navigator.Current().Replace(true); err != nil {
+				return err
+			}
+		} else if d.isFalseInQuotes(start, end) {
+			if _, err := d.navigator.Current().Replace(false); err != nil {
+				return err
+			}
 		}
 	} else {
 		return d.errInvalidSyntax("expects boolean value")
@@ -474,6 +487,27 @@ func (d *deserializeState) isNull(start, end int) bool {
 		d.data[start+1] == 'u' &&
 		d.data[start+2] == 'l' &&
 		d.data[start+3] == 'l'
+}
+
+func (d *deserializeState) isTrueInQuotes(start, end int) bool {
+	return end-start == 6 &&
+		d.data[start] == '"' &&
+		(d.data[start+1] == 't' || d.data[start+1] == 'T') &&
+		d.data[start+2] == 'r' &&
+		d.data[start+3] == 'u' &&
+		d.data[start+4] == 'e' &&
+		d.data[start+5] == '"'
+}
+
+func (d *deserializeState) isFalseInQuotes(start, end int) bool {
+	return end-start == 7 &&
+		d.data[start] == '"' &&
+		(d.data[start+1] == 'F' || d.data[start+1] == 'f') &&
+		d.data[start+2] == 'a' &&
+		d.data[start+3] == 'l' &&
+		d.data[start+4] == 's' &&
+		d.data[start+5] == 'e' &&
+		d.data[start+6] == '"'
 }
 
 func (d *deserializeState) isTrue(start, end int) bool {
