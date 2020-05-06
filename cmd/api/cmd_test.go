@@ -4,6 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"sync"
+	"syscall"
+	"testing"
+
 	"github.com/cenkalti/backoff"
 	"github.com/ory/dockertest"
 	"github.com/streadway/amqp"
@@ -14,13 +22,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"golang.org/x/sync/errgroup"
-	"net/http"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"sync"
-	"syscall"
-	"testing"
 )
 
 var (
@@ -42,7 +43,7 @@ func TestCommand(t *testing.T) {
 }
 
 type CommandTestSuite struct {
-	sync.Mutex
+	sync.Once
 	suite.Suite
 	dockerPool           *dockertest.Pool
 	dockerMongoResource  *dockertest.Resource
@@ -111,20 +112,18 @@ func (s *CommandTestSuite) SetupSuite() {
 	s.Require().Nil(g.Wait())
 }
 
-func (s *CommandTestSuite) getDockerPool() (*dockertest.Pool, error) {
+func (s *CommandTestSuite) getDockerPool() error {
 	var err error
-	if s.dockerPool == nil {
-		s.Lock()
-		if s.dockerPool == nil {
+	s.Do(
+		func() {
 			s.dockerPool, err = dockertest.NewPool(testDockerEndpoint)
-		}
-		s.Unlock()
-	}
-	return s.dockerPool, err
+		})
+
+	return err
 }
 
 func (s *CommandTestSuite) setupDockerRabbitMQ() (err error) {
-	s.dockerPool, err = s.getDockerPool()
+	err = s.getDockerPool()
 	if err != nil {
 		return
 	}
@@ -157,7 +156,7 @@ func (s *CommandTestSuite) setupDockerRabbitMQ() (err error) {
 }
 
 func (s *CommandTestSuite) setupDockerMongoDB() (err error) {
-	s.dockerPool, err = s.getDockerPool()
+	err = s.getDockerPool()
 	if err != nil {
 		return
 	}
