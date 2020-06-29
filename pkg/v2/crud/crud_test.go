@@ -159,6 +159,18 @@ func (s *CrudTestSuite) TestAdd() {
 				}, r.Navigator().Dot("emails").Current().Raw())
 			},
 		},
+		{
+			name: "add to an extension schema field",
+			getResource: func(t *testing.T) *prop.Resource {
+				return prop.NewResource(s.resourceType)
+			},
+			path:  "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber",
+			value: "6546579",
+			expect: func(t *testing.T, r *prop.Resource, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, "6546579", r.Navigator().Dot("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User").Dot("employeeNumber").Current().Raw())
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -460,6 +472,10 @@ func (s *CrudTestSuite) SetupSuite() {
 	require.Nil(s.T(), json.Unmarshal([]byte(testMainSchema), schema))
 	spec.Schemas().Register(schema)
 
+	schemaExtension := new(spec.Schema)
+	require.Nil(s.T(), json.Unmarshal([]byte(testSchemaExtension), schemaExtension))
+	spec.Schemas().Register(schemaExtension)
+
 	s.resourceType = new(spec.ResourceType)
 	require.Nil(s.T(), json.Unmarshal([]byte(testResourceType), s.resourceType))
 	Register(s.resourceType)
@@ -563,11 +579,32 @@ const (
   ]
 }
 `
+	testSchemaExtension = `
+{
+  "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+  "name": "Enterprise User",
+  "attributes": [
+    {
+      "id": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber",
+      "name": "employeeNumber",
+      "type": "string",
+      "_index": 100,
+      "_path": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber"
+    }
+  ]
+}
+`
 	testResourceType = `
 {
   "id": "Test",
   "name": "Test",
-  "schema": "main"
+  "schema": "main",
+  "schemaExtensions": [
+    {
+      "schema": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+      "required": false
+    }
+  ]
 }
 `
 )

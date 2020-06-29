@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/db"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/service/filter"
@@ -262,6 +263,60 @@ func (s *PatchServiceTestSuite) TestDo() {
 				))
 			},
 		},
+		{
+			name: "patch a field in the schema extension",
+			setup: func(t *testing.T) Patch {
+				database := db.Memory()
+				err := database.Insert(context.TODO(), s.resourceOf(t, map[string]interface{}{
+					"schemas": []interface{}{
+						"urn:ietf:params:scim:schemas:core:2.0:User",
+						"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+					},
+					"id":       "foo",
+					"userName": "foo",
+					"emails": []interface{}{
+						map[string]interface{}{
+							"value": "foo@bar.com",
+							"type":  "home",
+						},
+					},
+					"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": map[string]interface{}{
+						"employeeNumber": "1234567",
+					},
+				}))
+				require.Nil(t, err)
+				return PatchService(s.config, database, nil, []filter.ByResource{
+					filter.ByPropertyToByResource(
+						filter.ReadOnlyFilter(),
+						filter.BCryptFilter(),
+					),
+					filter.ByPropertyToByResource(filter.ValidationFilter(database)),
+					filter.MetaFilter(),
+				})
+			},
+			getRequest: func() *PatchRequest {
+				return &PatchRequest{
+					ResourceID: "foo",
+					PayloadSource: strings.NewReader(`
+		{
+			"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+			"Operations": [
+				{
+					"op": "add",
+					"path": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber",
+					"value": "6546579"
+				}
+			]
+		}
+		`),
+				}
+			},
+			expect: func(t *testing.T, resp *PatchResponse, err error) {
+				assert.Nil(t, err)
+				assert.True(t, resp.Patched)
+				assert.Equal(t, "6546579", resp.Resource.Navigator().Dot("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User").Dot("employeeNumber").Current().Raw())
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -300,10 +355,18 @@ func (s *PatchServiceTestSuite) SetupSuite() {
 			},
 		},
 		{
+			filepath:  "../../../public/schemas/user_enterprise_extension_schema.json",
+			structure: new(spec.Schema),
+			post: func(parsed interface{}) {
+				spec.Schemas().Register(parsed.(*spec.Schema))
+			},
+		},
+		{
 			filepath:  "../../../public/resource_types/user_resource_type.json",
 			structure: new(spec.ResourceType),
 			post: func(parsed interface{}) {
 				s.resourceType = parsed.(*spec.ResourceType)
+				crud.Register(s.resourceType)
 			},
 		},
 	} {

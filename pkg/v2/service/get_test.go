@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/db"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/spec"
@@ -105,10 +106,18 @@ func (s *GetServiceTestSuite) SetupSuite() {
 			},
 		},
 		{
+			filepath:  "../../../public/schemas/user_enterprise_extension_schema.json",
+			structure: new(spec.Schema),
+			post: func(parsed interface{}) {
+				spec.Schemas().Register(parsed.(*spec.Schema))
+			},
+		},
+		{
 			filepath:  "../../../public/resource_types/user_resource_type.json",
 			structure: new(spec.ResourceType),
 			post: func(parsed interface{}) {
 				s.resourceType = parsed.(*spec.ResourceType)
+				crud.Register(s.resourceType)
 			},
 		},
 	} {
