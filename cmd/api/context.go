@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/imulab/go-scim/cmd/internal/groupsync"
 	scimmongo "github.com/imulab/go-scim/mongo/v2"
+	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/db"
 	"github.com/imulab/go-scim/pkg/v2/service"
 	"github.com/imulab/go-scim/pkg/v2/service/filter"
@@ -73,6 +74,7 @@ func (ctx *applicationContext) UserResourceType() *spec.ResourceType {
 			panic(err)
 		}
 		ctx.userResourceType = u
+		crud.Register(ctx.userResourceType)
 		ctx.logInitialized("user resource type")
 	}
 	return ctx.userResourceType
@@ -87,6 +89,7 @@ func (ctx *applicationContext) GroupResourceType() *spec.ResourceType {
 			panic(err)
 		}
 		ctx.groupResourceType = g
+		crud.Register(ctx.groupResourceType)
 		ctx.logInitialized("group resource type")
 	}
 	return ctx.groupResourceType

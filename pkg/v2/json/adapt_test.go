@@ -2,6 +2,7 @@ package json
 
 import (
 	"encoding/json"
+	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/spec"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -17,12 +18,22 @@ func TestResourceTypeToSerializable(t *testing.T) {
 	assert.Nil(t, err)
 	spec.Schemas().Register(sch)
 
+	f, err = os.Open("../../../public/schemas/user_enterprise_extension_schema.json")
+	assert.Nil(t, err)
+
+	schExt := new(spec.Schema)
+	err = json.NewDecoder(f).Decode(schExt)
+	assert.Nil(t, err)
+	spec.Schemas().Register(schExt)
+
 	f, err = os.Open("../../../public/resource_types/user_resource_type.json")
 	assert.Nil(t, err)
 
 	rt := new(spec.ResourceType)
 	err = json.NewDecoder(f).Decode(rt)
 	assert.Nil(t, err)
+
+	crud.Register(rt)
 
 	raw, err := Serialize(ResourceTypeToSerializable(rt))
 	assert.Nil(t, err)
@@ -39,7 +50,13 @@ func TestResourceTypeToSerializable(t *testing.T) {
   },
   "name": "User",
   "endpoint": "/Users",
-  "schema": "urn:ietf:params:scim:schemas:core:2.0:User"
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:User",
+  "schemaExtensions": [
+    {
+      "schema": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+      "required": false
+    }
+  ]
 }
 
 `

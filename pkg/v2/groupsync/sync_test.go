@@ -3,6 +3,7 @@ package groupsync
 import (
 	"context"
 	"encoding/json"
+	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/db"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/spec"
@@ -137,6 +138,13 @@ func (s *SyncServiceTestSuite) SetupSuite() {
 			},
 		},
 		{
+			filepath:  "../../../public/schemas/user_enterprise_extension_schema.json",
+			structure: new(spec.Schema),
+			post: func(parsed interface{}) {
+				spec.Schemas().Register(parsed.(*spec.Schema))
+			},
+		},
+		{
 			filepath:  "../../../public/schemas/group_schema.json",
 			structure: new(spec.Schema),
 			post: func(parsed interface{}) {
@@ -148,6 +156,7 @@ func (s *SyncServiceTestSuite) SetupSuite() {
 			structure: new(spec.ResourceType),
 			post: func(parsed interface{}) {
 				s.userResourceType = parsed.(*spec.ResourceType)
+				crud.Register(s.userResourceType)
 			},
 		},
 		{
@@ -155,6 +164,7 @@ func (s *SyncServiceTestSuite) SetupSuite() {
 			structure: new(spec.ResourceType),
 			post: func(parsed interface{}) {
 				s.groupResourceType = parsed.(*spec.ResourceType)
+				crud.Register(s.groupResourceType)
 			},
 		},
 	} {
