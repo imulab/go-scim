@@ -36,6 +36,8 @@ type Navigator interface {
 	Error() error
 	// HasError returns true when Error is not nil.
 	HasError() bool
+	// ClearError resets the error in the navigator.
+	ClearError()
 	// Depth return the number of properties that was focused, including the
 	// currently focused. These properties, excluding the current one, can be
 	// refocused by calling Retract, one at a time in the reversed order that
@@ -76,6 +78,10 @@ func (n *defaultNavigator) Error() error {
 
 func (n *defaultNavigator) HasError() bool {
 	return n.err != nil
+}
+
+func (n *defaultNavigator) ClearError() {
+	n.err = nil
 }
 
 func (n *defaultNavigator) Depth() int {

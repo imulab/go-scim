@@ -22,6 +22,13 @@ func Evaluate(resource *prop.Resource, filter string) (bool, error) {
 	}.evaluate()
 }
 
+func EvaluateExpressionOnProperty(prop prop.Property, expr *expr.Expression) (bool, error) {
+	return evaluator{
+		base:   prop,
+		filter: expr,
+	}.evaluate()
+}
+
 type evaluator struct {
 	base   prop.Property
 	filter *expr.Expression
