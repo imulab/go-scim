@@ -73,10 +73,10 @@ type Facade struct {
 //		Id			string	`scim:"id"`
 //		Email 		string	`scim:"userName,emails[type eq \"work\" and primary eq true].value"`
 //		BackupEmail *string	`scim:"emails[type eq \"work\" and primary eq false].value"`
-//		Name		string	`scim:"name.formatted"
+//		Name		string	`scim:"name.formatted"`
 //		NickName	*string	`scim:"nickName"`
 //		CreatedAt	int64	`scim:"meta.created"`
-//		UpdatedAt	int64	`scim:"meta.lastModified"
+//		UpdatedAt	int64	`scim:"meta.lastModified"`
 //		Active		bool	`scim:"active"`
 //		Manager		*string	`scim:"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager.value"`
 //	}
