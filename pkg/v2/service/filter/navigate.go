@@ -40,6 +40,10 @@ func (n *flexNavigator) HasError() bool {
 	return n.err != nil
 }
 
+func (n *flexNavigator) ClearError() {
+	n.err = nil
+}
+
 func (n *flexNavigator) Depth() int {
 	return len(n.stack)
 }
