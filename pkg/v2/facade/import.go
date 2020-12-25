@@ -3,6 +3,7 @@ package facade
 import (
 	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/crud/expr"
+	"github.com/imulab/go-scim/pkg/v2/facade/internal"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/spec"
 	"reflect"
@@ -57,105 +58,53 @@ func (f importer) assign(resource *prop.Resource, path string, field reflect.Val
 		return err
 	}
 
-	switch field.Type().Kind() {
-	case reflect.String: // string: String, Reference, Binary
-		field.SetString(nav.Current().Raw().(string))
-		return nil
-	case reflect.Int64:
-		switch nav.Current().Attribute().Type() {
-		case spec.TypeInteger: // int64: Integer
-			field.SetInt(nav.Current().Raw().(int64))
-			return nil
-		case spec.TypeDateTime: // int64: DateTime
-			if t, err := time.Parse(spec.ISO8601, nav.Current().Raw().(string)); err != nil {
-				return err
-			} else {
-				field.SetInt(t.UTC().Unix())
-				return nil
-			}
-		}
-	case reflect.Float64: // float64: Decimal
-		field.SetFloat(nav.Current().Raw().(float64))
-		return nil
-	case reflect.Bool: // bool: Boolean
-		field.SetBool(nav.Current().Raw().(bool))
-		return nil
-	case reflect.Ptr:
-		switch field.Type().Elem().Kind() {
-		case reflect.String: // *string: String, Reference, Binary
-			v := nav.Current().Raw().(string)
-			field.Set(reflect.ValueOf(&v))
-			return nil
-		case reflect.Int64:
-			switch nav.Current().Attribute().Type() {
-			case spec.TypeInteger: // *int64: Integer
-				v := nav.Current().Raw().(int64)
-				field.Set(reflect.ValueOf(&v))
-				return nil
-			case spec.TypeDateTime: // *int64: DateTime
-				if t, err := time.Parse(spec.ISO8601, nav.Current().Raw().(string)); err != nil {
+	attr := nav.Current().Attribute()
+	if attr.MultiValued() {
+		slice := internal.Slice(nav.Current().Raw().([]interface{}))
+		switch attr.Type() {
+		case spec.TypeString, spec.TypeReference, spec.TypeBinary:
+			field.Set(reflect.ValueOf(slice.StringTyped()))
+		case spec.TypeInteger:
+			field.Set(reflect.ValueOf(slice.Int64Typed()))
+		case spec.TypeDecimal:
+			field.Set(reflect.ValueOf(slice.Float64Typed()))
+		case spec.TypeBoolean:
+			field.Set(reflect.ValueOf(slice.BoolTyped()))
+		case spec.TypeDateTime:
+			var timestamps []int64
+			for _, each := range slice {
+				var t time.Time
+				t, err = time.Parse(spec.ISO8601, each.(string))
+				if err != nil {
 					return err
-				} else {
-					v := t.UTC().Unix()
-					field.Set(reflect.ValueOf(&v))
-					return nil
 				}
+				timestamps = append(timestamps, t.UTC().Unix())
 			}
-		case reflect.Float64: // *float64: Decimal
-			v := nav.Current().Raw().(float64)
-			field.Set(reflect.ValueOf(&v))
-			return nil
-		case reflect.Bool: // *bool: Boolean
-			v := nav.Current().Raw().(bool)
-			field.Set(reflect.ValueOf(&v))
-			return nil
+			field.Set(reflect.ValueOf(timestamps))
 		}
-	case reflect.Slice:
-		switch field.Type().Elem().Kind() {
-		case reflect.String: // []string: String, Reference, Binary
-			var array []string
-			for _, elem := range nav.Current().Raw().([]interface{}) {
-				array = append(array, elem.(string))
+	} else {
+		switch attr.Type() {
+		case spec.TypeString, spec.TypeReference, spec.TypeBinary:
+			err = internal.SetString(field, nav.Current().Raw().(string))
+		case spec.TypeInteger:
+			err = internal.SetInt64(field, nav.Current().Raw().(int64))
+		case spec.TypeDecimal:
+			err = internal.SetFloat64(field, nav.Current().Raw().(float64))
+		case spec.TypeBoolean:
+			err = internal.SetBool(field, nav.Current().Raw().(bool))
+		case spec.TypeDateTime:
+			var t time.Time
+			t, err = time.Parse(spec.ISO8601, nav.Current().Raw().(string))
+			if err != nil {
+				break
 			}
-			field.Set(reflect.ValueOf(array))
-			return nil
-		case reflect.Int64:
-			switch nav.Current().Attribute().Type() {
-			case spec.TypeInteger: // []int64: Integer
-				var array []int64
-				for _, elem := range nav.Current().Raw().([]interface{}) {
-					array = append(array, elem.(int64))
-				}
-				field.Set(reflect.ValueOf(array))
-				return nil
-			case spec.TypeDateTime: // []int64: DateTime
-				var array []int64
-				for _, elem := range nav.Current().Raw().([]interface{}) {
-					if t, err := time.Parse(spec.ISO8601, elem.(string)); err != nil {
-						return err
-					} else {
-						array = append(array, t.UTC().Unix())
-					}
-				}
-				field.Set(reflect.ValueOf(array))
-				return nil
-			}
-		case reflect.Float64: // []float64: Decimal
-			var array []float64
-			for _, elem := range nav.Current().Raw().([]interface{}) {
-				array = append(array, elem.(float64))
-			}
-			field.Set(reflect.ValueOf(&array))
-			return nil
-		case reflect.Bool: // []bool: Boolean
-			var array []bool
-			for _, elem := range nav.Current().Raw().([]interface{}) {
-				array = append(array, elem.(bool))
-			}
-			field.Set(reflect.ValueOf(&array))
-			return nil
+			err = internal.SetInt64(field, t.UTC().Unix())
 		}
 	}
 
-	return ErrInputType
+	if err != nil {
+		return ErrInputType
+	}
+
+	return nil
 }
