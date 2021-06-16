@@ -4,10 +4,14 @@
 FROM golang:1.13-buster AS builder
 
 WORKDIR /build/scim
+COPY go.mod ./
+COPY pkg/v2/go.mod ./pkg/v2/go.mod
+COPY mongo/v2/go.mod ./mongo/v2/go.mod
+COPY Makefile ./
+RUN make deps
 
 COPY . ./
-
-RUN make build
+RUN make binary
 
 ##########################################################################
 # FINAL IMAGE
