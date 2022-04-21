@@ -44,8 +44,9 @@ func (s *JsonSerializeTestSuite) TestSerialize() {
 				expect := `
 {
    "schemas":[
-      "urn:ietf:params:scim:schemas:core:2.0:User"
-   ],
+      "urn:ietf:params:scim:schemas:core:2.0:User",
+      "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+	 ],
    "id":"3cc032f5-2361-417f-9e2f-bc80adddf4a3",
    "meta":{
       "resourceType":"User",
@@ -93,7 +94,10 @@ func (s *JsonSerializeTestSuite) TestSerialize() {
          "type":"work",
          "display":"123-45679"
       }
-   ]
+   ],
+   "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+   	  "employeeNumber": "1234567"
+   }
 }
 `
 				assert.JSONEq(t, expect, string(raw))
@@ -109,13 +113,15 @@ func (s *JsonSerializeTestSuite) TestSerialize() {
 			},
 			options: []Options{
 				Include("emails.value", "emails.type"),
+				Include("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber"),
 			},
 			expect: func(t *testing.T, raw []byte, err error) {
 				assert.Nil(t, err)
 				expect := `
 {
    "schemas":[
-      "urn:ietf:params:scim:schemas:core:2.0:User"
+      "urn:ietf:params:scim:schemas:core:2.0:User",
+      "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
    ],
    "id":"3cc032f5-2361-417f-9e2f-bc80adddf4a3",
    "emails":[
@@ -127,7 +133,10 @@ func (s *JsonSerializeTestSuite) TestSerialize() {
          "value":"imulab@bar.com",
          "type":"home"
       }
-   ]
+   ],
+   "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+   	  "employeeNumber": "1234567"
+   }
 }
 `
 				assert.JSONEq(t, expect, string(raw))
@@ -145,13 +154,15 @@ func (s *JsonSerializeTestSuite) TestSerialize() {
 				Exclude("emails.type", "emails.value", "emails.primary"),
 				Exclude("phoneNumbers", "ims", "groups", "entitlements"),
 				Exclude("roles", "photos", "addresses", "x509Certificates"),
+				Exclude("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber"),
 			},
 			expect: func(t *testing.T, raw []byte, err error) {
 				assert.Nil(t, err)
 				expect := `
 {
    "schemas":[
-      "urn:ietf:params:scim:schemas:core:2.0:User"
+      "urn:ietf:params:scim:schemas:core:2.0:User",
+      "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
    ],
    "id":"3cc032f5-2361-417f-9e2f-bc80adddf4a3",
    "meta":{
@@ -182,7 +193,8 @@ func (s *JsonSerializeTestSuite) TestSerialize() {
       {
          "display":"imulab@bar.com"
       }
-   ]
+   ],
+   "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {}
 }
 `
 				assert.JSONEq(t, expect, string(raw))
@@ -244,6 +256,7 @@ func (s *JsonSerializeTestSuite) SetupSuite() {
 	s.resourceData = map[string]interface{}{
 		"schemas": []interface{}{
 			"urn:ietf:params:scim:schemas:core:2.0:User",
+			"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
 		},
 		"id": "3cc032f5-2361-417f-9e2f-bc80adddf4a3",
 		"meta": map[string]interface{}{
@@ -292,6 +305,9 @@ func (s *JsonSerializeTestSuite) SetupSuite() {
 				"type":    "work",
 				"display": "123-45679",
 			},
+		},
+		"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": map[string]interface{}{
+			"employeeNumber": "1234567",
 		},
 	}
 }
