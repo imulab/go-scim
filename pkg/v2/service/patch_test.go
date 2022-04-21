@@ -43,6 +43,13 @@ func (s *PatchServiceTestSuite) TestDo() {
 				err := database.Insert(context.TODO(), s.resourceOf(t, map[string]interface{}{
 					"schemas":  []interface{}{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					"id":       "foo",
+					"meta": map[string]interface{}{
+						"resourceType": "User",
+						"created":      "2019-11-20T13:09:00",
+						"lastModified": "2019-11-20T13:09:00",
+						"location":     "https://identity.imulab.io/Users/foo",
+						"version":      "W/\"1\"",
+					},
 					"userName": "foo",
 					"timezone": "Asia/Shanghai",
 					"emails": []interface{}{
@@ -90,6 +97,7 @@ func (s *PatchServiceTestSuite) TestDo() {
 			},
 			expect: func(t *testing.T, resp *PatchResponse, err error) {
 				assert.Nil(t, err)
+				require.NotNil(t, resp)
 				assert.True(t, resp.Patched)
 				assert.NotEmpty(t, resp.Resource.MetaVersionOrEmpty())
 				assert.NotEqual(t, resp.Ref.MetaVersionOrEmpty(), resp.Resource.MetaVersionOrEmpty())
@@ -105,6 +113,13 @@ func (s *PatchServiceTestSuite) TestDo() {
 				err := database.Insert(context.TODO(), s.resourceOf(t, map[string]interface{}{
 					"schemas":  []interface{}{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					"id":       "foo",
+					"meta": map[string]interface{}{
+						"resourceType": "User",
+						"created":      "2019-11-20T13:09:00",
+						"lastModified": "2019-11-20T13:09:00",
+						"location":     "https://identity.imulab.io/Users/foo",
+						"version":      "W/\"1\"",
+					},
 					"userName": "foo",
 					"timezone": "Asia/Shanghai",
 					"emails": []interface{}{
@@ -143,6 +158,7 @@ func (s *PatchServiceTestSuite) TestDo() {
 			},
 			expect: func(t *testing.T, resp *PatchResponse, err error) {
 				assert.Nil(t, err)
+				require.NotNil(t, resp)
 				assert.False(t, resp.Patched)
 			},
 		},
@@ -153,6 +169,13 @@ func (s *PatchServiceTestSuite) TestDo() {
 				err := database.Insert(context.TODO(), s.resourceOf(t, map[string]interface{}{
 					"schemas":  []interface{}{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					"id":       "foo",
+					"meta": map[string]interface{}{
+						"resourceType": "User",
+						"created":      "2019-11-20T13:09:00",
+						"lastModified": "2019-11-20T13:09:00",
+						"location":     "https://identity.imulab.io/Users/foo",
+						"version":      "W/\"1\"",
+					},
 					"userName": "foo",
 					"timezone": "Asia/Shanghai",
 					"emails": []interface{}{
@@ -200,6 +223,7 @@ func (s *PatchServiceTestSuite) TestDo() {
 			},
 			expect: func(t *testing.T, resp *PatchResponse, err error) {
 				assert.Nil(t, err)
+				require.NotNil(t, resp)
 				assert.True(t, resp.Patched)
 				assert.NotEmpty(t, resp.Resource.MetaVersionOrEmpty())
 				assert.NotEqual(t, resp.Ref.MetaVersionOrEmpty(), resp.Resource.MetaVersionOrEmpty())
@@ -215,6 +239,13 @@ func (s *PatchServiceTestSuite) TestDo() {
 				err := database.Insert(context.TODO(), s.resourceOf(t, map[string]interface{}{
 					"schemas":  []interface{}{"urn:ietf:params:scim:schemas:core:2.0:User"},
 					"id":       "foo",
+					"meta": map[string]interface{}{
+						"resourceType": "User",
+						"created":      "2019-11-20T13:09:00",
+						"lastModified": "2019-11-20T13:09:00",
+						"location":     "https://identity.imulab.io/Users/foo",
+						"version":      "W/\"1\"",
+					},
 					"userName": "foo",
 					"timezone": "Asia/Shanghai",
 					"emails": []interface{}{
@@ -255,6 +286,7 @@ func (s *PatchServiceTestSuite) TestDo() {
 			},
 			expect: func(t *testing.T, resp *PatchResponse, err error) {
 				assert.Nil(t, err)
+				require.NotNil(t, resp)
 				assert.True(t, resp.Patched)
 				assert.Equal(t, "bar", resp.Resource.Navigator().Dot("userName").Current().Raw())
 				assert.Nil(t, bcrypt.CompareHashAndPassword(
@@ -273,6 +305,13 @@ func (s *PatchServiceTestSuite) TestDo() {
 						"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
 					},
 					"id":       "foo",
+					"meta": map[string]interface{}{
+						"resourceType": "User",
+						"created":      "2019-11-20T13:09:00",
+						"lastModified": "2019-11-20T13:09:00",
+						"location":     "https://identity.imulab.io/Users/foo",
+						"version":      "W/\"1\"",
+					},
 					"userName": "foo",
 					"emails": []interface{}{
 						map[string]interface{}{
@@ -313,6 +352,7 @@ func (s *PatchServiceTestSuite) TestDo() {
 			},
 			expect: func(t *testing.T, resp *PatchResponse, err error) {
 				assert.Nil(t, err)
+				require.NotNil(t, resp)
 				assert.True(t, resp.Patched)
 				assert.Equal(t, "6546579", resp.Resource.Navigator().Dot("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User").Dot("employeeNumber").Current().Raw())
 			},

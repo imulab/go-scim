@@ -83,13 +83,13 @@ func (s *patchService) Do(ctx context.Context, req *PatchRequest) (resp *PatchRe
 		return
 	}
 
-	resource, err := s.database.Get(ctx, req.ResourceID, nil)
+	ref, err := s.database.Get(ctx, req.ResourceID, nil)
 	if err != nil {
 		return
 	}
 
 	if s.config.ETag.Supported && req.MatchCriteria != nil {
-		if !req.MatchCriteria(resource) {
+		if !req.MatchCriteria(ref) {
 			err = fmt.Errorf("%w: resource does not meet pre condition", spec.ErrConflict)
 			return
 		}
@@ -98,7 +98,7 @@ func (s *patchService) Do(ctx context.Context, req *PatchRequest) (resp *PatchRe
 	// To save another database round trip, we use Clone to retain independent copy of the fetched resource.
 	// However, because the cloned instance share subscribers, it is better to work on the original instance.
 	// Hence, we assign reference to the clone, which will not be modified.
-	ref := resource.Clone()
+	resource := ref.Clone()
 
 	for _, f := range s.preFilters {
 		if err = f.FilterRef(ctx, resource, ref); err != nil {
