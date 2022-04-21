@@ -90,7 +90,7 @@ func (s *serializer) ShouldVisit(property prop.Property) bool {
 			test := strings.ToLower(property.Attribute().Path())
 			if len(s.includes) > 0 {
 				for _, include := range s.includes {
-					if include == test || strings.HasPrefix(include, test+".") || strings.HasPrefix(test, include+".") {
+					if include == test || strings.HasPrefix(include, test+".") || strings.HasPrefix(include, test+":") {
 						return !property.IsUnassigned()
 					}
 				}
@@ -110,7 +110,7 @@ func (s *serializer) ShouldVisit(property prop.Property) bool {
 		if len(s.includes) > 0 {
 			test := strings.ToLower(property.Attribute().Path())
 			for _, include := range s.includes {
-				if include == test || strings.HasPrefix(include, test+".") || strings.HasPrefix(test, include+".") {
+				if include == test || strings.HasPrefix(include, test+".") || strings.HasPrefix(include, test+":") {
 					return true
 				}
 			}
