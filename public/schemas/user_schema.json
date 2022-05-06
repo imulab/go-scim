@@ -438,14 +438,14 @@
           "name": "formatted",
           "type": "string",
           "_index": 0,
-          "_path": "photos.formatted"
+          "_path": "addresses.formatted"
         },
         {
           "id": "urn:ietf:params:scim:schemas:core:2.0:User:addresses.streetAddress",
           "name": "streetAddress",
           "type": "string",
           "_index": 1,
-          "_path": "photos.streetAddress",
+          "_path": "addresses.streetAddress",
           "_annotations": {
             "@Identity": {}
           }
@@ -455,7 +455,7 @@
           "name": "locality",
           "type": "string",
           "_index": 2,
-          "_path": "photos.locality",
+          "_path": "addresses.locality",
           "_annotations": {
             "@Identity": {}
           }
@@ -465,7 +465,7 @@
           "name": "region",
           "type": "string",
           "_index": 3,
-          "_path": "photos.region",
+          "_path": "addresses.region",
           "_annotations": {
             "@Identity": {}
           }
@@ -475,7 +475,7 @@
           "name": "postalCode",
           "type": "string",
           "_index": 4,
-          "_path": "photos.postalCode",
+          "_path": "addresses.postalCode",
           "_annotations": {
             "@Identity": {}
           }
@@ -485,7 +485,7 @@
           "name": "country",
           "type": "string",
           "_index": 5,
-          "_path": "photos.country",
+          "_path": "addresses.country",
           "_annotations": {
             "@Identity": {}
           }
@@ -502,7 +502,7 @@
             "other"
           ],
           "_index": 6,
-          "_path": "photos.type",
+          "_path": "addresses.type",
           "_annotations": {
             "@Identity": {}
           }
@@ -512,7 +512,7 @@
           "name": "primary",
           "type": "boolean",
           "_index": 7,
-          "_path": "photos.primary",
+          "_path": "addresses.primary",
           "_annotations": {
             "@Primary": {}
           }
