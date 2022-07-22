@@ -1,21 +1,5 @@
-# Created by .ignore support plugin (hsz.mobi)
-### Go template
-# Binaries for programs and plugins
-*.exe
-*.dll
-*.so
-*.dylib
+# IDE
+/.idea/
 
-# Test binary, build with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-vendor/
-
-# IntelliJ
-.idea/
-*.iml
-
+# Vagrant
+/.vagrant/
