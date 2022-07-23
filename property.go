@@ -36,9 +36,14 @@ type Property interface {
 	// Attribute, but must return distinct instance of Value.
 	Clone() Property
 
-	// Set sets the given value for this Property. The type of the value varies according to attribute type and
+	// Set replaces the given value for this Property. The type of the value varies according to attribute type and
 	// implementations. Setting a Property with nil will make this property Unassigned.
 	Set(value any) error
+
+	// Add adds the given value to this Property. For singular non-complex types, it is semantically identical to Set.
+	// For singular complex types, it sets values on a subset of all sub properties. For multiValued types, it simply
+	// appends a new element property.
+	Add(value any) error
 
 	// Delete removes the value of this Property. A deleted Property is always Unassigned.
 	Delete()
@@ -121,11 +126,7 @@ func (p *simpleProperty) Clone() Property {
 
 func (p *simpleProperty) Set(value any) error {
 	if value == nil {
-		p.vs = nil
-		p.vi = nil
-		p.vf = nil
-		p.vb = nil
-		p.hash = 0
+		p.Delete()
 		return nil
 	}
 
@@ -182,6 +183,10 @@ func (p *simpleProperty) Set(value any) error {
 	}
 
 	return ErrInvalidValue
+}
+
+func (p *simpleProperty) Add(value any) error {
+	return p.Set(value)
 }
 
 func (p *simpleProperty) Delete() {
@@ -263,8 +268,12 @@ func (p *complexProperty) Clone() Property {
 }
 
 func (p *complexProperty) Set(value any) error {
+	p.Delete()
+	return p.Add(value)
+}
+
+func (p *complexProperty) Add(value any) error {
 	if value == nil {
-		p.resetChildren()
 		return nil
 	}
 
@@ -272,8 +281,6 @@ func (p *complexProperty) Set(value any) error {
 	if !ok {
 		return ErrInvalidValue
 	}
-
-	p.resetChildren()
 
 	for k, v := range values {
 		if subProp := p.dot(k); subProp != nil {
@@ -389,6 +396,10 @@ func (p *multiValuedProperty) Unassigned() bool {
 		return true
 	}
 
+	// TODO(q)
+	// since all additions are performed through Add (Set is delegated to Add) where compaction is performed, it should
+	// be asserted that non-empty elements are always assigned, essentially reduce this method to len(p.elem) == 0 and
+	// boost its performance.
 	for _, each := range p.elem {
 		if !each.Unassigned() {
 			return false
@@ -407,27 +418,18 @@ func (p *multiValuedProperty) Clone() Property {
 }
 
 func (p *multiValuedProperty) Set(value any) error {
-	p.elem = []Property{}
+	p.Delete()
 
-	values, ok := value.([]any)
-	if !ok {
+	if value == nil {
+		return nil
+	}
+
+	switch value.(type) {
+	case []any, []string, []int64, []float64, []bool:
+		return p.Add(value)
+	default:
 		return ErrInvalidValue
 	}
-
-	for _, each := range values {
-		if each == nil {
-			continue
-		}
-
-		sub := createProperty(p.attr.toSingleValued())
-		if err := sub.Set(each); err != nil {
-			return err
-		}
-
-		p.elem = append(p.elem, sub)
-	}
-
-	return nil
 }
 
 func (p *multiValuedProperty) Add(value any) error {
@@ -435,19 +437,17 @@ func (p *multiValuedProperty) Add(value any) error {
 		return nil
 	}
 
-	// todo: allow for []any, []string, []int64, []float64, []bool, else assume single value
 	switch newValue := value.(type) {
 	case []any:
-		for _, each := range newValue {
-			if err := p.Add(each); err != nil {
-				return err
-			}
-		}
-		return nil
+		return addSliceToMultiValueProperty(p, newValue)
 	case []string:
-
-	default:
-
+		return addSliceToMultiValueProperty(p, newValue)
+	case []int64:
+		return addSliceToMultiValueProperty(p, newValue)
+	case []float64:
+		return addSliceToMultiValueProperty(p, newValue)
+	case []bool:
+		return addSliceToMultiValueProperty(p, newValue)
 	}
 
 	newElem := createProperty(p.attr.toSingleValued())
@@ -457,12 +457,26 @@ func (p *multiValuedProperty) Add(value any) error {
 
 	primaryGuard := p.primarySwitch()
 
+	// Must be invoked later in the order of primaryGuard -> deduplicate -> compact, because:
+	// primaryGuard may produce duplicate elements, which can be deduplicated; deduplication may
+	// produce unassigned elements, which can be cleaned up by compaction.
+	defer p.compact()
+	defer p.deduplicate()
+	defer primaryGuard()
+
 	p.elem = append(p.elem, newElem)
 
-	primaryGuard()
-	p.deduplicate()
-	p.compact()
+	return nil
+}
 
+func addSliceToMultiValueProperty[E interface {
+	any | string | int64 | float64 | bool
+}](p *multiValuedProperty, values []E) error {
+	for _, each := range values {
+		if err := p.Add(each); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -543,6 +557,10 @@ func (p *multiValuedProperty) ByIndex(index any) Property {
 }
 
 func (p *multiValuedProperty) deduplicate() {
+	if len(p.elem) < 2 {
+		return
+	}
+
 	hashSet := map[uint64]struct{}{}
 
 	for _, each := range p.elem {
@@ -555,8 +573,6 @@ func (p *multiValuedProperty) deduplicate() {
 	}
 }
 
-// compact can be called after invoking any modification on this property or its sub properties, in order to remove
-// unassigned elements.
 func (p *multiValuedProperty) compact() {
 	for i := p.Len() - 1; i >= 0; i-- {
 		if p.elem[i].Unassigned() {
@@ -565,12 +581,13 @@ func (p *multiValuedProperty) compact() {
 	}
 }
 
-// primarySwitch can be called before invoking any modification methods on this property or its sub properties. It
-// returns a callback that can be invoked after modifications have been made, in order to correct the "exclusive primary"
-// problem.
 func (p *multiValuedProperty) primarySwitch() func() {
 	if p.attr.typ != TypeComplex {
 		return func() {}
+	}
+
+	if len(p.elem) < 2 {
+		return func() {} // no need to guard the primary property if there's less than two.
 	}
 
 	pre := p.Find(func(child Property) bool {
