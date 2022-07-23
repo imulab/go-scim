@@ -47,11 +47,11 @@ func (a *Attribute) MarshalJSON() ([]byte, error) {
 		Type            Type         `json:"type"`
 		SubAttrs        []*Attribute `json:"subAttributes,omitempty"`
 		CanonicalValues []string     `json:"canonicalValues,omitempty"`
-		MultiValued     bool         `json:"multiValued,omitempty"`
-		Required        bool         `json:"required,omitempty"`
-		CaseExact       bool         `json:"caseExact,omitempty"`
-		Mutability      Mutability   `json:"mutability,omitempty"`
-		Returned        Returned     `json:"returned,omitempty"`
+		MultiValued     bool         `json:"multiValued"`
+		Required        bool         `json:"required"`
+		CaseExact       bool         `json:"caseExact"`
+		Mutability      Mutability   `json:"mutability"`
+		Returned        Returned     `json:"returned"`
 		Uniqueness      Uniqueness   `json:"uniqueness,omitempty"`
 		RefTypes        []string     `json:"referenceTypes,omitempty"`
 	}

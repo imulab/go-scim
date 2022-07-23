@@ -1,5 +1,7 @@
 package scim
 
+import "encoding/json"
+
 type Uniqueness int
 
 const (
@@ -22,5 +24,5 @@ func (u Uniqueness) String() string {
 }
 
 func (u Uniqueness) MarshalJSON() ([]byte, error) {
-	return []byte(u.String()), nil
+	return json.Marshal(u.String())
 }

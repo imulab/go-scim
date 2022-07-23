@@ -1,5 +1,7 @@
 package scim
 
+import "encoding/json"
+
 type Mutability int
 
 const (
@@ -25,5 +27,5 @@ func (m Mutability) String() string {
 }
 
 func (m Mutability) MarshalJSON() ([]byte, error) {
-	return []byte(m.String()), nil
+	return json.Marshal(m.String())
 }

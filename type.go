@@ -1,5 +1,7 @@
 package scim
 
+import "encoding/json"
+
 type Type int
 
 const (
@@ -37,5 +39,5 @@ func (t Type) String() string {
 }
 
 func (t Type) MarshalJSON() ([]byte, error) {
-	return []byte(t.String()), nil
+	return json.Marshal(t.String())
 }

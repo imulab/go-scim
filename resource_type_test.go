@@ -3,6 +3,7 @@ package scim_test
 import (
 	"encoding/json"
 	"github.com/imulab/go-scim"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -65,9 +66,29 @@ func TestBuildResourceType(t *testing.T) {
 		Build()
 
 	userRTypeJSON, err := json.Marshal(userRType)
-	if err != nil {
-		t.Fatal(err)
+	if assert.NoError(t, err) {
+		expectedJSON := `
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:ResourceType"
+  ],
+  "meta": {
+    "location": "https://test.org/v2/ResourceType/User",
+    "resourceType": "ResourceType"
+  },
+  "id": "User",
+  "name": "User",
+  "endpoint": "/v2/User",
+  "description": "User resource type",
+  "schema": "urn:ietf:params:scim:schemas:core:2.0:User",
+  "extensions": [
+    {
+      "schema": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+      "required": false
+    }
+  ]
+}
+`
+		assert.JSONEq(t, expectedJSON, string(userRTypeJSON))
 	}
-
-	println(string(userRTypeJSON))
 }
