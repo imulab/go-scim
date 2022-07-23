@@ -2,7 +2,6 @@ package scim
 
 import (
 	"encoding/binary"
-	"github.com/samber/lo"
 	"hash/fnv"
 	"strings"
 )
@@ -298,9 +297,13 @@ func (p *complexProperty) Delete() {
 }
 
 func (p *complexProperty) Hash() uint64 {
-	sub := lo.Filter(p.sub, func(p Property, _ int) bool {
-		// only include sub properties whose attribute is marked identity
-		return p.Attribute().identity
+	// only include sub properties whose attribute is marked identity
+	var sub []Property
+	_ = p.Iterate(func(_ int, child Property) error {
+		if child.Attribute().identity {
+			sub = append(sub, child)
+		}
+		return nil
 	})
 	if len(sub) == 0 {
 		sub = p.sub
