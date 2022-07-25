@@ -91,7 +91,10 @@ type (
 
 func BuildResourceType[T any](id string) *resourceTypeDsl[T] {
 	return &resourceTypeDsl[T]{
-		ResourceType: &ResourceType[T]{id: id},
+		ResourceType: &ResourceType[T]{
+			id:         id,
+			extensions: []*Schema{},
+		},
 	}
 }
 
