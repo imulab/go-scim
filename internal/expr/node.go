@@ -2,6 +2,11 @@ package expr
 
 import "strings"
 
+const (
+	leftParen  = "("
+	rightParen = ")"
+)
+
 type nodeType int
 
 const (
@@ -22,6 +27,10 @@ type Node struct {
 	next  *Node
 	left  *Node
 	right *Node
+}
+
+func (n *Node) Value() string {
+	return n.value
 }
 
 func (n *Node) IsPath() bool {
@@ -92,9 +101,9 @@ func (n *Node) walk(fn func(n *Node)) {
 
 func newOperator(op string) *Node {
 	switch strings.ToLower(op) {
-	case and, or, not:
+	case And, Or, Not:
 		return &Node{value: op, nType: nodeTypeLogical}
-	case eq, ne, sw, ew, co, gt, ge, lt, le, pr:
+	case Eq, Ne, Sw, Ew, Co, Gt, Ge, Lt, Le, Pr:
 		return &Node{value: op, nType: nodeTypeRelational}
 	default:
 		panic("unexpected token as operator")

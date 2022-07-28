@@ -1,6 +1,9 @@
 package scim
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"github.com/imulab/go-scim/internal/expr"
+)
 
 const (
 	resourceTypeURN = "urn:ietf:params:scim:schemas:core:2.0:ResourceType"
@@ -41,6 +44,16 @@ func (t *ResourceType[T]) archetypeAttribute() *Attribute {
 	}
 
 	return a
+}
+
+func (t *ResourceType[T]) registerSchemaURNs() {
+	if t.schema != nil {
+		expr.RegisterURN(t.schema.id)
+	}
+
+	for _, ext := range t.extensions {
+		expr.RegisterURN(ext.id)
+	}
 }
 
 func (t *ResourceType[T]) MarshalJSON() ([]byte, error) {
@@ -151,6 +164,7 @@ func (d *resourceTypeDsl[T]) Build() *ResourceType[T] {
 	case d.ResourceType.schema == nil:
 		panic("main schema is required")
 	default:
+		d.ResourceType.registerSchemaURNs()
 		return d.ResourceType
 	}
 }
