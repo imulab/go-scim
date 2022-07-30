@@ -550,7 +550,7 @@ func (p *multiValuedProperty) ByIndex(index any) Property {
 	switch i := index.(type) {
 	case int:
 		if i < 0 || i >= len(p.elem) {
-			panic("index of out range")
+			return nil
 		} else {
 			return p.elem[i]
 		}
