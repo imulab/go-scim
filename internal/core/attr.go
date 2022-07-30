@@ -1,5 +1,7 @@
 package core
 
+import "strings"
+
 // Attribute describes the data type of Property.
 type Attribute struct {
 	Name        string       `json:"name"`
@@ -41,4 +43,45 @@ type Attribute struct {
 	// have the same Attribute and the same hash, they are deemed as duplicate of each other. If these duplicated
 	// properties are elements of a multivalued property, they may be subject to deduplication.
 	Identity bool `json:"identity,omitempty"`
+}
+
+// NewProperty constructs a new Property instance with this Attribute. The returned Property is always unassigned.
+func (t *Attribute) NewProperty() Property {
+	if t.MultiValued {
+		return &multiProperty{attr: t, elem: []Property{}}
+	}
+
+	if t.Type == TypeComplex {
+		p := &complexProperty{attr: t, nameIndex: map[string]int{}}
+		for i, sub := range p.attr.Sub {
+			p.children = append(p.children, sub.NewProperty())
+			p.nameIndex[strings.ToLower(sub.Name)] = i
+		}
+		return p
+	}
+
+	return &simpleProperty{attr: t}
+}
+
+func (t *Attribute) asSingleValued() *Attribute {
+	if !t.MultiValued {
+		return t
+	}
+
+	return &Attribute{
+		Name:        t.Name,
+		Description: t.Description,
+		Type:        t.Type,
+		Sub:         t.Sub,
+		Canonical:   t.Canonical,
+		MultiValued: false,
+		Required:    t.Required,
+		CaseExact:   t.CaseExact,
+		Mutability:  t.Mutability,
+		Returned:    t.Returned,
+		Uniqueness:  t.Uniqueness,
+		RefTypes:    t.RefTypes,
+		Primary:     t.Primary,
+		Identity:    t.Identity,
+	}
 }
