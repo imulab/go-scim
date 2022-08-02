@@ -1,6 +1,9 @@
 package expr
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/imulab/go-scim/core"
+)
 
 // CompilePath compiles the given SCIM path expression and returns the head of the path expression linked list, or any
 // error.
@@ -16,7 +19,7 @@ import "fmt"
 //	            /  \
 //	         value  "foo@bar.com"
 //
-// When this function errors, it returns either ErrPath or ErrFilter, caller may convert them to standard SCIM errors.
+// When this function errors, it returns either core.ErrInvalidPath or core.ErrInvalidFilter.
 func CompilePath(path string) (*Node, error) {
 	compiler := &pathCompiler{
 		scan: &pathScanner{},
@@ -141,7 +144,7 @@ func (c *pathCompiler) skipWhile(op int) int {
 }
 
 func (c *pathCompiler) errCompile() error {
-	return fmt.Errorf("%w: error compiling path", ErrPath)
+	return fmt.Errorf("%w: error compiling path", core.ErrInvalidPath)
 }
 
 // events reported by the path scanner, to be consumed by the path compiler.
@@ -388,6 +391,6 @@ func (ps *pathScanner) error(c byte, hint string) int {
 		hint = "n/a"
 	}
 	ps.err = fmt.Errorf("%w: invalid character %s around position %d (hint:%s)",
-		ErrPath, quoteChar(c), ps.bytes, hint)
+		core.ErrInvalidPath, quoteChar(c), ps.bytes, hint)
 	return scanPathError
 }

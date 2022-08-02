@@ -2,14 +2,9 @@ package core
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"hash/fnv"
 	"strings"
-)
-
-var (
-	ErrValue = errors.New("value is incompatible with attribute")
 )
 
 // Property abstracts a single node on the resource value tree. It may hold values, or other properties, as described
@@ -42,13 +37,13 @@ type Property interface {
 	Clone() Property
 
 	// Add modifies the value of the property by adding a new value to it. For singular non-complex properties, the
-	// Add operation is identical to the Set operation. If the given value is incompatible with the attribute, implementations
-	// should return ErrValue.
+	// Add operation is identical to the Set operation. If the given value is incompatible with the attribute,
+	// implementations should return ErrInvalidValue.
 	Add(value any) error
 
 	// Set modifies the value of the property by completely replace its value with the new value. Calling Set wil nil
 	// is semantically identical to calling Delete. Otherwise, if the given value is incompatible with the attribute,
-	// implementations should return ErrValue.
+	// implementations should return ErrInvalidValue.
 	Set(value any) error
 
 	// Delete modifies the value of the property by removing it. After the operation, Unassigned should return true.
@@ -186,7 +181,7 @@ func (p *simpleProperty) Set(value any) error {
 		}
 	}
 
-	return ErrValue
+	return ErrInvalidValue
 }
 
 func (p *simpleProperty) Delete() {
@@ -276,7 +271,7 @@ func (p *complexProperty) Add(value any) error {
 
 	values, ok := value.(map[string]any)
 	if !ok {
-		return ErrValue
+		return ErrInvalidValue
 	}
 
 	for k, v := range values {
@@ -510,7 +505,7 @@ func (p *multiProperty) Set(value any) error {
 		p.Delete()
 		return p.Add(value)
 	default:
-		return ErrValue
+		return ErrInvalidValue
 	}
 }
 

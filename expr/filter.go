@@ -2,7 +2,7 @@ package expr
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim"
+	"github.com/imulab/go-scim/core"
 )
 
 // CompileFilter compiles the given SCIM filter and return the root of the abstract syntax tree, or any error.
@@ -17,7 +17,7 @@ import (
 //	                     /  \
 //	                primary true
 //
-// When this function errors, it returns either ErrPath or ErrFilter, caller may convert them to standard SCIM errors.
+// When this function errors, it returns either core.ErrInvalidPath or core.ErrInvalidFilter.
 func CompileFilter(filter string) (*Node, error) {
 	compiler := &filterCompiler{
 		scan:    &filterScanner{},
@@ -63,7 +63,7 @@ func CompileFilter(filter string) (*Node, error) {
 				}
 			}
 			if len(compiler.opStack) == 0 {
-				return nil, fmt.Errorf("%w: mismatched parenthesis", scim.ErrInvalidFilter)
+				return nil, fmt.Errorf("%w: mismatched parenthesis", core.ErrInvalidFilter)
 			} else {
 				// discard the left parenthesis
 				compiler.opStack = compiler.opStack[:len(compiler.opStack)-1]
@@ -176,9 +176,9 @@ func (c *filterCompiler) pushBuildResult(step *Node) error {
 	if step.IsPath() {
 		head, err := CompilePath(step.value)
 		if err != nil {
-			return fmt.Errorf("%w: invalid path in filter", ErrFilter)
+			return fmt.Errorf("%w: invalid path in filter", core.ErrInvalidFilter)
 		} else if head.containsFilter() {
-			return fmt.Errorf("%w: illegal nested filter", ErrFilter)
+			return fmt.Errorf("%w: illegal nested filter", core.ErrInvalidFilter)
 		}
 		c.rsStack = append(c.rsStack, head)
 		return nil
@@ -332,7 +332,7 @@ func (c *filterCompiler) scanWhile(op int) int {
 }
 
 func (c *filterCompiler) errCompile() error {
-	return fmt.Errorf("%w: error compiling filter", ErrFilter)
+	return fmt.Errorf("%w: error compiling filter", core.ErrInvalidFilter)
 }
 
 // events reported by the filter scanner, to be consumed by the filter compiler.
@@ -1034,7 +1034,7 @@ func (fs *filterScanner) stateEof(_ *filterScanner, _ byte) int {
 
 	if fs.parenLevel != 0 {
 		fs.step = fs.stateError
-		fs.err = fmt.Errorf("%w: mismatched parenthesis", ErrFilter)
+		fs.err = fmt.Errorf("%w: mismatched parenthesis", core.ErrInvalidFilter)
 		return scanPathError
 	}
 
@@ -1053,7 +1053,7 @@ func (fs *filterScanner) error(c byte, hint string) int {
 		hint = "n/a"
 	}
 	fs.err = fmt.Errorf("%w: invalid character %s around position %d (hint:%s)",
-		ErrFilter, quoteChar(c), fs.bytes, hint)
+		core.ErrInvalidFilter, quoteChar(c), fs.bytes, hint)
 	return scanFilterError
 }
 
