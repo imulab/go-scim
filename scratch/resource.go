@@ -1,4 +1,4 @@
-package scim
+package scratch
 
 type Resource[T any] struct {
 	rtype *ResourceType[T]

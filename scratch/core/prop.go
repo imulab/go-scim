@@ -90,7 +90,7 @@ func (p *simpleProperty) Value() any {
 		return nil
 	}
 
-	switch p.attr.Type {
+	switch p.attr.typ {
 	case TypeString, TypeBinary, TypeDateTime, TypeReference:
 		return *p.vs
 	case TypeInteger:
@@ -105,7 +105,7 @@ func (p *simpleProperty) Value() any {
 }
 
 func (p *simpleProperty) Unassigned() bool {
-	switch p.attr.Type {
+	switch p.attr.typ {
 	case TypeString, TypeBinary, TypeDateTime, TypeReference:
 		return p.vs == nil
 	case TypeInteger:
@@ -143,11 +143,11 @@ func (p *simpleProperty) Set(value any) error {
 		return nil
 	}
 
-	switch p.attr.Type {
+	switch p.attr.typ {
 	case TypeString, TypeBinary, TypeDateTime, TypeReference:
 		if v, ok := value.(string); ok {
 			p.vs = &v
-			if p.attr.CaseExact {
+			if p.attr.caseExact {
 				p.updateHash([]byte(*p.vs))
 			} else {
 				p.updateHash([]byte(strings.ToLower(*p.vs)))
@@ -238,7 +238,7 @@ func (p *complexProperty) Value() any {
 	values := map[string]any{}
 	for _, each := range p.children {
 		if !each.Unassigned() {
-			values[each.Attr().Name] = each.Value()
+			values[each.Attr().name] = each.Value()
 		}
 	}
 
@@ -300,7 +300,7 @@ func (p *complexProperty) Hash() uint64 {
 	// only include idProps properties whose attribute is marked identity
 	var idProps []Property
 	_ = p.ForEach(func(_ int, child Property) error {
-		if child.Attr().Identity {
+		if child.Attr().identity {
 			idProps = append(idProps, child)
 		}
 		return nil
@@ -311,7 +311,7 @@ func (p *complexProperty) Hash() uint64 {
 
 	h := fnv.New64a()
 	for _, each := range idProps {
-		_, _ = h.Write([]byte(each.Attr().Name))
+		_, _ = h.Write([]byte(each.Attr().name))
 		if !each.Unassigned() {
 			_, _ = h.Write(uint64ToBytes(each.Hash()))
 		}
@@ -458,13 +458,13 @@ func (p *multiProperty) compact() {
 }
 
 func (p *multiProperty) primarySwitchGuard() (post func()) {
-	if p.attr.Type != TypeComplex || p.Len() < 2 {
+	if p.attr.typ != TypeComplex || p.Len() < 2 {
 		post = func() {}
 		return
 	}
 
 	before := p.Find(func(child Property) bool {
-		return child.Attr().Primary && child.Value() == true
+		return child.Attr().primary && child.Value() == true
 	})
 	if before == nil {
 		post = func() {}
@@ -481,7 +481,7 @@ func (p *multiProperty) primarySwitchGuard() (post func()) {
 				return nil
 			}
 
-			if !child.Attr().Primary || child.Value() != true {
+			if !child.Attr().primary || child.Value() != true {
 				return nil
 			}
 

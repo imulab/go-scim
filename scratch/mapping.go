@@ -1,4 +1,4 @@
-package scim
+package scratch
 
 type Mapping[T any] struct {
 	path       string

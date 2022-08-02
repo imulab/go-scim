@@ -143,7 +143,7 @@ func (n *Navigator) buildAttributePath() string {
 		if i > 0 {
 			sb.WriteRune('.')
 		}
-		sb.WriteString(p.Attr().Name)
+		sb.WriteString(p.Attr().name)
 	}
 	return sb.String()
 }

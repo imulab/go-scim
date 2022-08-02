@@ -21,7 +21,7 @@ func (u Uniqueness) String() string {
 	case UniquenessGlobal:
 		return "global"
 	default:
-		panic("invalid Uniqueness")
+		panic("invalid uniqueness")
 	}
 }
 

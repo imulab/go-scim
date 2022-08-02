@@ -23,7 +23,7 @@ func (r Returned) String() string {
 	case ReturnedNever:
 		return "never"
 	default:
-		panic("invalid Returned-ability")
+		panic("invalid returned-ability")
 	}
 }
 

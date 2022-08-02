@@ -1,4 +1,4 @@
-package core
+package scim
 
 import "encoding/json"
 
@@ -23,7 +23,7 @@ func (m Mutability) String() string {
 	case MutabilityImmutable:
 		return "immutable"
 	default:
-		panic("invalid Mutability")
+		panic("invalid mutability")
 	}
 }
 

@@ -27,7 +27,7 @@ func Visit(prop Property, visitor Visitor) error {
 		return err
 	}
 
-	if prop.Attr().MultiValued || prop.Attr().Type == TypeComplex {
+	if prop.Attr().multiValued || prop.Attr().typ == TypeComplex {
 		visitor.BeginChildren(prop)
 
 		if err := prop.ForEach(func(_ int, child Property) error {

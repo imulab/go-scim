@@ -1,8 +1,7 @@
-package scim_test
+package scratch_test
 
 import (
 	"encoding/json"
-	"github.com/imulab/go-scim"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
