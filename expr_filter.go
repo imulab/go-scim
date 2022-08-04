@@ -417,7 +417,7 @@ func (fs *filterScanner) init() {
 	fs.bytes = 0
 }
 
-// Source state of filter scanner. We expect a predicate here. A predicate can start with an attribute path name, or
+// source state of filter scanner. We expect a predicate here. A predicate can start with an attribute path name, or
 // a left parenthesis (for grouping), or the first character of the 'not' logical operator.
 func (fs *filterScanner) stateBeginPredicate(scan *filterScanner, c byte) int {
 	if c == ' ' {

@@ -201,7 +201,7 @@ func (ps *pathScanner) init() {
 	ps.bytes = 0
 }
 
-// Source state in which we are beginning the scanning of a step. Here, we expects a first character
+// source state in which we are beginning the scanning of a step. Here, we expects a first character
 // of a step which is either a namespace or an ordinary step. When this character fits some first character
 // of a registered namespace, we shall attempt to match it to a namespace until there's a mismatch; otherwise,
 // try viewing it as an ordinary step.
