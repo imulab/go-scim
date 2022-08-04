@@ -106,48 +106,53 @@ type attributeJSON struct {
 
 type attributeDsl Attribute
 
-// StringAttribute starts an Attribute builder DSL for string typed attributes.
-func StringAttribute(name string) *attributeDsl {
-	return &attributeDsl{name: name, typ: TypeString}
-}
-
-// IntegerAttribute starts an Attribute builder DSL for integer typed attributes.
-func IntegerAttribute(name string) *attributeDsl {
-	return &attributeDsl{name: name, typ: TypeInteger}
-}
-
-// DecimalAttribute starts an Attribute builder DSL for string typed attributes.
-func DecimalAttribute(name string) *attributeDsl {
-	return &attributeDsl{name: name, typ: TypeDecimal}
-}
-
-// BooleanAttribute starts an Attribute builder DSL for boolean typed attributes.
-func BooleanAttribute(name string) *attributeDsl {
-	return &attributeDsl{name: name, typ: TypeBoolean}
-}
-
-// DateTimeAttribute starts an Attribute builder DSL for dateTime typed attributes.
-func DateTimeAttribute(name string) *attributeDsl {
-	return &attributeDsl{name: name, typ: TypeDateTime}
-}
-
-// BinaryAttribute starts an Attribute builder DSL for binary typed attributes.
-func BinaryAttribute(name string) *attributeDsl {
-	return &attributeDsl{name: name, typ: TypeBinary}
-}
-
-// ReferenceAttribute starts an Attribute builder DSL for reference typed attributes.
-func ReferenceAttribute(name string) *attributeDsl {
-	return &attributeDsl{name: name, typ: TypeReference}
-}
-
-// ComplexAttribute starts an Attribute builder DSL for complex typed attributes.
-func ComplexAttribute(name string) *attributeDsl {
-	return &attributeDsl{name: name, typ: TypeComplex}
+func (d *attributeDsl) Name(name string) *attributeDsl {
+	d.name = name
+	return d
 }
 
 func (d *attributeDsl) Describe(text string) *attributeDsl {
 	d.description = text
+	return d
+}
+
+func (d *attributeDsl) String() *attributeDsl {
+	d.typ = TypeString
+	return d
+}
+
+func (d *attributeDsl) Integer() *attributeDsl {
+	d.typ = TypeInteger
+	return d
+}
+
+func (d *attributeDsl) Decimal() *attributeDsl {
+	d.typ = TypeDecimal
+	return d
+}
+
+func (d *attributeDsl) Boolean() *attributeDsl {
+	d.typ = TypeBoolean
+	return d
+}
+
+func (d *attributeDsl) DateTime() *attributeDsl {
+	d.typ = TypeDateTime
+	return d
+}
+
+func (d *attributeDsl) Binary() *attributeDsl {
+	d.typ = TypeBinary
+	return d
+}
+
+func (d *attributeDsl) Reference() *attributeDsl {
+	d.typ = TypeReference
+	return d
+}
+
+func (d *attributeDsl) Complex() *attributeDsl {
+	d.typ = TypeComplex
 	return d
 }
 
@@ -157,6 +162,9 @@ func (d *attributeDsl) CanonicalValues(values ...string) *attributeDsl {
 }
 
 func (d *attributeDsl) ReferenceTypes(values ...string) *attributeDsl {
+	if d.typ != TypeReference {
+		panic("referenceTypes can only be applied to reference typed attributes")
+	}
 	d.refTypes = append(d.refTypes, values...)
 	return d
 }
@@ -229,6 +237,64 @@ func (d *attributeDsl) Identity() *attributeDsl {
 	return d
 }
 
+func (d *attributeDsl) SubAttributes(fn func(sd *attributeListDsl)) *attributeDsl {
+	if d.typ != TypeComplex {
+		panic("sub attributes can only be added complex typed attributes")
+	}
+
+	sd := new(attributeListDsl)
+	fn(sd)
+
+	for _, it := range sd.list {
+		d.sub = append(d.sub, it.build())
+	}
+
+	return d
+}
+
 func (d *attributeDsl) build() *Attribute {
 	return (*Attribute)(d)
 }
+
+type attributeListDsl struct {
+	list []*attributeDsl
+}
+
+func (d *attributeListDsl) Add(fn func(d *attributeDsl)) *attributeListDsl {
+	d0 := new(attributeDsl)
+	fn(d0)
+	d.list = append(d.list, d0)
+	return d
+}
+
+func (d *attributeListDsl) build() []*Attribute {
+	var attrs []*Attribute
+	for _, it := range d.list {
+		attrs = append(attrs, it.build())
+	}
+	return attrs
+}
+
+var (
+	coreAttributes = new(attributeListDsl).Add(func(d *attributeDsl) {
+		d.Name("schemas").Reference().MultiValued().Required().CaseExact().AlwaysReturn()
+	}).Add(func(d *attributeDsl) {
+		d.Name("id").String().CaseExact().AlwaysReturn().ReadOnly().UniqueGlobally()
+	}).Add(func(d *attributeDsl) {
+		d.Name("externalId").String()
+	}).Add(func(d *attributeDsl) {
+		d.Name("meta").Complex().ReadOnly().SubAttributes(func(sd *attributeListDsl) {
+			sd.Add(func(d *attributeDsl) {
+				d.Name("resourceType").String().CaseExact().ReadOnly()
+			}).Add(func(d *attributeDsl) {
+				d.Name("created").DateTime().ReadOnly()
+			}).Add(func(d *attributeDsl) {
+				d.Name("lastModified").DateTime().ReadOnly()
+			}).Add(func(d *attributeDsl) {
+				d.Name("location").Reference().ReadOnly()
+			}).Add(func(d *attributeDsl) {
+				d.Name("version").String().ReadOnly()
+			})
+		})
+	}).build()
+)
