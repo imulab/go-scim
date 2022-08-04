@@ -1,4 +1,4 @@
-package expr
+package scim
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -16,7 +16,7 @@ func TestFilterCompiler(t *testing.T) {
 		value string
 		typ   int
 	}
-	selectType := func(s *Node) int {
+	selectType := func(s *Expr) int {
 		if s.IsPath() {
 			return step
 		} else if s.IsOperator() {
@@ -28,7 +28,7 @@ func TestFilterCompiler(t *testing.T) {
 		}
 	}
 
-	RegisterURN("urn:ietf:params:scim:schemas:core:2.0:User")
+	registerURN("urn:ietf:params:scim:schemas:core:2.0:User")
 
 	tests := []struct {
 		name   string
@@ -138,12 +138,12 @@ func TestFilterCompiler(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			root, err := CompileFilter(test.filter)
+			root, err := compileFilter(test.filter)
 			if err != nil || root == nil {
 				test.assert(t, nil, err)
 			} else {
 				trail := make([]expect, 0)
-				root.walk(func(step *Node) {
+				root.Walk(func(step *Expr) {
 					trail = append(trail, expect{
 						value: step.value,
 						typ:   selectType(step),

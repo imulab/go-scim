@@ -1,6 +1,8 @@
 package scim
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type ResourceType[T any] struct {
 	id          string
@@ -100,6 +102,14 @@ func (d *resourceTypeDsl[T]) Build() *ResourceType[T] {
 	registerURN(d.schema.id)
 	for _, it := range d.extensions {
 		registerURN(it.id)
+	}
+
+	for _, it := range d.mappings {
+		head, err := compilePath(it.path)
+		if err != nil {
+			panic(err)
+		}
+		it.compiledPath = head
 	}
 
 	return (*ResourceType[T])(d)

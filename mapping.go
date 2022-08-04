@@ -10,7 +10,7 @@ package scim
 // paths may be rejected when appearing in a SCIM filter, as they do not map to a meaningful concrete data property.
 type Mapping[T any] struct {
 	path          string
-	compiledPath  any
+	compiledPath  *Expr
 	getter        func(model *T) (any, error)
 	setter        func(prop Property, model *T) error
 	filterEnabled bool
@@ -20,7 +20,6 @@ type mappingDsl[T any] Mapping[T]
 
 func (d *mappingDsl[T]) Path(path string) *mappingDsl[T] {
 	d.path = path
-	// todo compile path
 	return d
 }
 

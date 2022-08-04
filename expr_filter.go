@@ -1,11 +1,10 @@
-package expr
+package scim
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/core"
 )
 
-// CompileFilter compiles the given SCIM filter and return the root of the abstract syntax tree, or any error.
+// compileFilter compiles the given SCIM filter and return the root of the abstract syntax tree, or any error.
 //
 // For example, <(value eq "foo") and (primary ne true)> returns a structure like:
 //
@@ -17,15 +16,15 @@ import (
 //	                     /  \
 //	                primary true
 //
-// When this function errors, it returns either core.ErrInvalidPath or core.ErrInvalidFilter.
-func CompileFilter(filter string) (*Node, error) {
+// When this function errors, it returns either ErrInvalidPath or ErrInvalidFilter.
+func compileFilter(filter string) (*Expr, error) {
 	compiler := &filterCompiler{
 		scan:    &filterScanner{},
 		data:    append(copyOf(filter), 0, 0),
 		off:     0,
 		op:      scanFilterSkipSpace,
-		opStack: make([]*Node, 0),
-		rsStack: make([]*Node, 0),
+		opStack: make([]*Expr, 0),
+		rsStack: make([]*Expr, 0),
 	}
 	compiler.scan.init()
 
@@ -52,7 +51,7 @@ func CompileFilter(filter string) (*Node, error) {
 
 		case pushOpRightParenthesis:
 			for {
-				popped := compiler.popOperatorIf(func(top *Node) bool {
+				popped := compiler.popOperatorIf(func(top *Expr) bool {
 					return !top.IsLeftParenthesis()
 				})
 				if popped != nil {
@@ -63,7 +62,7 @@ func CompileFilter(filter string) (*Node, error) {
 				}
 			}
 			if len(compiler.opStack) == 0 {
-				return nil, fmt.Errorf("%w: mismatched parenthesis", core.ErrInvalidFilter)
+				return nil, fmt.Errorf("%w: mismatched parenthesis", ErrInvalidFilter)
 			} else {
 				// discard the left parenthesis
 				compiler.opStack = compiler.opStack[:len(compiler.opStack)-1]
@@ -73,7 +72,7 @@ func CompileFilter(filter string) (*Node, error) {
 		case pushOpInsufficientPriority:
 			minPriority := opPriority(step.value)
 			for {
-				popped := compiler.popOperatorIf(func(top *Node) bool {
+				popped := compiler.popOperatorIf(func(top *Expr) bool {
 					return opPriority(top.value) >= minPriority
 				})
 				if popped != nil {
@@ -92,7 +91,7 @@ func CompileFilter(filter string) (*Node, error) {
 
 	// pop all remaining operators
 	for len(compiler.opStack) > 0 {
-		_ = compiler.pushBuildResult(compiler.popOperatorIf(func(top *Node) bool {
+		_ = compiler.pushBuildResult(compiler.popOperatorIf(func(top *Expr) bool {
 			return true
 		}))
 	}
@@ -119,14 +118,14 @@ type filterCompiler struct {
 	// latest op code produced by filter scanner
 	op int
 	// operator stack used by shunting yard algorithm
-	opStack []*Node
+	opStack []*Expr
 	// result/output stack used by shunting yard algorithm
-	rsStack []*Node
+	rsStack []*Expr
 }
 
 // Part of the shunting yard algorithm. Push the operator or parenthesis represented by the step argument onto the
 // operator stack, maintain priority. Return code to instruct caller for next steps.
-func (c *filterCompiler) pushOperator(step *Node) int {
+func (c *filterCompiler) pushOperator(step *Expr) int {
 	if step.IsRightParenthesis() {
 		return pushOpRightParenthesis
 	}
@@ -149,7 +148,7 @@ func (c *filterCompiler) pushOperator(step *Node) int {
 }
 
 // Part of the shunting yard algorithm. Pop operator off stack if it meets the condition. Else return nil.
-func (c *filterCompiler) popOperatorIf(condition func(top *Node) bool) *Node {
+func (c *filterCompiler) popOperatorIf(condition func(top *Expr) bool) *Expr {
 	if len(c.opStack) == 0 {
 		return nil
 	}
@@ -165,7 +164,7 @@ func (c *filterCompiler) popOperatorIf(condition func(top *Node) bool) *Node {
 }
 
 // Part of the shunting yard algorithm. Push operators onto the result stack to form a tree.
-func (c *filterCompiler) pushBuildResult(step *Node) error {
+func (c *filterCompiler) pushBuildResult(step *Expr) error {
 	// Literal: push and return
 	if step.IsLiteral() {
 		c.rsStack = append(c.rsStack, step)
@@ -174,11 +173,11 @@ func (c *filterCompiler) pushBuildResult(step *Node) error {
 
 	// Path: re-compile and push
 	if step.IsPath() {
-		head, err := CompilePath(step.value)
+		head, err := compilePath(step.value)
 		if err != nil {
-			return fmt.Errorf("%w: invalid path in filter", core.ErrInvalidFilter)
+			return fmt.Errorf("%w: invalid path in filter", ErrInvalidFilter)
 		} else if head.containsFilter() {
-			return fmt.Errorf("%w: illegal nested filter", core.ErrInvalidFilter)
+			return fmt.Errorf("%w: illegal nested filter", ErrInvalidFilter)
 		}
 		c.rsStack = append(c.rsStack, head)
 		return nil
@@ -220,7 +219,7 @@ func (c *filterCompiler) hasMore() bool {
 }
 
 // Produce the next token
-func (c *filterCompiler) next() (*Node, error) {
+func (c *filterCompiler) next() (*Expr, error) {
 	if c.op == scanFilterError {
 		return nil, c.scan.err
 	}
@@ -247,7 +246,7 @@ func (c *filterCompiler) next() (*Node, error) {
 
 // Produce a literal node from the current offset. This should only be called when scanFilterBeginLiteral is returned
 // as op code.
-func (c *filterCompiler) scanLiteral() (*Node, error) {
+func (c *filterCompiler) scanLiteral() (*Expr, error) {
 	start := c.off - 1
 	end := c.scanWhile(scanFilterContinue)
 	switch c.op {
@@ -260,7 +259,7 @@ func (c *filterCompiler) scanLiteral() (*Node, error) {
 
 // Produce an operator node from the current offset. This should only be called when scanFilterBeginOp is returned
 // as op code.
-func (c *filterCompiler) scanOperator() (*Node, error) {
+func (c *filterCompiler) scanOperator() (*Expr, error) {
 	start := c.off - 1
 	end := c.scanWhile(scanFilterContinue)
 	switch c.op {
@@ -272,9 +271,9 @@ func (c *filterCompiler) scanOperator() (*Node, error) {
 }
 
 // Produce an path step from the current offset. Note the returned step will be the unsegmented whole of the path
-// in the filter as the filterScanner does not break them down. The caller will need to call CompilePath to replace
+// in the filter as the filterScanner does not break them down. The caller will need to call compilePath to replace
 // the step with the compiled head.
-func (c *filterCompiler) scanPath() (*Node, error) {
+func (c *filterCompiler) scanPath() (*Expr, error) {
 	start := c.off - 1
 	end := c.scanWhile(scanFilterContinue)
 	switch c.op {
@@ -288,7 +287,7 @@ func (c *filterCompiler) scanPath() (*Node, error) {
 // Produce a path or operator node from the current offset. This fits the case where we read 'n' at the start of the
 // predicate, we are not quite sure whether it is going to be 'not' and just another path with prefix 'n'. This should
 // only be called when scanFilterBeginAny is returned as op code.
-func (c *filterCompiler) scanOperatorOrPath() (*Node, error) {
+func (c *filterCompiler) scanOperatorOrPath() (*Expr, error) {
 	start := c.off - 1
 	end := c.scanWhile(scanFilterContinue)
 	switch c.op {
@@ -332,7 +331,7 @@ func (c *filterCompiler) scanWhile(op int) int {
 }
 
 func (c *filterCompiler) errCompile() error {
-	return fmt.Errorf("%w: error compiling filter", core.ErrInvalidFilter)
+	return fmt.Errorf("%w: error compiling filter", ErrInvalidFilter)
 }
 
 // events reported by the filter scanner, to be consumed by the filter compiler.
@@ -1034,7 +1033,7 @@ func (fs *filterScanner) stateEof(_ *filterScanner, _ byte) int {
 
 	if fs.parenLevel != 0 {
 		fs.step = fs.stateError
-		fs.err = fmt.Errorf("%w: mismatched parenthesis", core.ErrInvalidFilter)
+		fs.err = fmt.Errorf("%w: mismatched parenthesis", ErrInvalidFilter)
 		return scanPathError
 	}
 
@@ -1053,7 +1052,7 @@ func (fs *filterScanner) error(c byte, hint string) int {
 		hint = "n/a"
 	}
 	fs.err = fmt.Errorf("%w: invalid character %s around position %d (hint:%s)",
-		core.ErrInvalidFilter, quoteChar(c), fs.bytes, hint)
+		ErrInvalidFilter, quoteChar(c), fs.bytes, hint)
 	return scanFilterError
 }
 

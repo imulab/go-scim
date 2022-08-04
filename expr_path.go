@@ -1,11 +1,11 @@
-package expr
+package scim
 
 import (
 	"fmt"
-	"github.com/imulab/go-scim/core"
+	"strconv"
 )
 
-// CompilePath compiles the given SCIM path expression and returns the head of the path expression linked list, or any
+// compilePath compiles the given SCIM path expression and returns the head of the path expression linked list, or any
 // error.
 //
 // The result may contain a filter root node, depending on the given path expression. When the given path contains no
@@ -19,8 +19,8 @@ import (
 //	            /  \
 //	         value  "foo@bar.com"
 //
-// When this function errors, it returns either core.ErrInvalidPath or core.ErrInvalidFilter.
-func CompilePath(path string) (*Node, error) {
+// When this function errors, it returns either ErrInvalidPath or ErrInvalidFilter.
+func compilePath(path string) (*Expr, error) {
 	compiler := &pathCompiler{
 		scan: &pathScanner{},
 		data: append(copyOf(path), 0, 0),
@@ -29,7 +29,7 @@ func CompilePath(path string) (*Node, error) {
 	}
 	compiler.scan.init()
 
-	head := &Node{}
+	head := &Expr{}
 	cursor := head
 
 	for compiler.hasMore() {
@@ -64,7 +64,7 @@ func (c *pathCompiler) hasMore() bool {
 }
 
 // Produce the next token
-func (c *pathCompiler) next() (*Node, error) {
+func (c *pathCompiler) next() (*Expr, error) {
 	if c.op == scanPathError {
 		return nil, c.scan.err
 	}
@@ -86,7 +86,7 @@ func (c *pathCompiler) next() (*Node, error) {
 }
 
 // Scan and make the path step after reading scanPathBeginStep op code.
-func (c *pathCompiler) scanStep() (*Node, error) {
+func (c *pathCompiler) scanStep() (*Expr, error) {
 	// start offset is one previous of the internal offset state because this function is only
 	// invoked after seeing scanPathBeginStep, hence we are already one pass the actual start
 	// of the step
@@ -105,12 +105,12 @@ func (c *pathCompiler) scanStep() (*Node, error) {
 }
 
 // Scan and make the filter step after reading scanPathBeginFilter op code. The work is delegated filterCompiler
-func (c *pathCompiler) scanFilter() (*Node, error) {
+func (c *pathCompiler) scanFilter() (*Expr, error) {
 	start := c.off
 	end := c.skipWhile(scanPathContinue)
 	switch c.op {
 	case scanPathEndFilter, scanPathEnd:
-		root, err := CompileFilter(string(c.data[start:end]))
+		root, err := compileFilter(string(c.data[start:end]))
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +144,7 @@ func (c *pathCompiler) skipWhile(op int) int {
 }
 
 func (c *pathCompiler) errCompile() error {
-	return fmt.Errorf("%w: error compiling path", core.ErrInvalidPath)
+	return fmt.Errorf("%w: error compiling path", ErrInvalidPath)
 }
 
 // events reported by the path scanner, to be consumed by the path compiler.
@@ -391,6 +391,40 @@ func (ps *pathScanner) error(c byte, hint string) int {
 		hint = "n/a"
 	}
 	ps.err = fmt.Errorf("%w: invalid character %s around position %d (hint:%s)",
-		core.ErrInvalidPath, quoteChar(c), ps.bytes, hint)
+		ErrInvalidPath, quoteChar(c), ps.bytes, hint)
 	return scanPathError
+}
+
+// isFirstAlphabet returns true if the byte can be the first alphabet of a SCIM attribute name.
+func isFirstAlphabet(c byte) bool {
+	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '$'
+}
+
+// isNonFirstAlphabet returns true if the byte can be the non-first alphabet of a SCIM attribute name.
+func isNonFirstAlphabet(c byte) bool {
+	return ('a' <= c && c <= 'z') ||
+		('A' <= c && c <= 'Z') ||
+		('0' <= c && c <= '9') ||
+		c == '-' ||
+		c == '_'
+}
+
+func quoteChar(c byte) string {
+	// special cases - different from quoted strings
+	if c == '\'' {
+		return `'\''`
+	}
+	if c == '"' {
+		return `'"'`
+	}
+
+	// use quoted string with different quotation marks
+	s := strconv.Quote(string(c))
+	return "'" + s[1:len(s)-1] + "'"
+}
+
+func copyOf(raw string) []byte {
+	data := make([]byte, len(raw))
+	copy(data, raw)
+	return data
 }
