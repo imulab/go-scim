@@ -93,15 +93,15 @@ type attributeJSON struct {
 	Type        Type         `json:"type"`
 	Sub         []*Attribute `json:"subAttributes,omitempty"`
 	Canonical   []string     `json:"canonicalValues,omitempty"`
-	MultiValued bool         `json:"multiValued"`
-	Required    bool         `json:"required"`
-	CaseExact   bool         `json:"caseExact"`
-	Mutability  Mutability   `json:"mutability"`
-	Returned    Returned     `json:"returned"`
-	Uniqueness  Uniqueness   `json:"uniqueness"`
+	MultiValued bool         `json:"multiValued,omitempty"`
+	Required    bool         `json:"required,omitempty"`
+	CaseExact   bool         `json:"caseExact,omitempty"`
+	Mutability  Mutability   `json:"mutability,omitempty"`
+	Returned    Returned     `json:"returned,omitempty"`
+	Uniqueness  Uniqueness   `json:"uniqueness,omitempty"`
 	RefTypes    []string     `json:"referenceTypes,omitempty"`
-	Primary     bool         `json:"primary,omitempty"`
-	Identity    bool         `json:"identity,omitempty"`
+	Primary     bool         `json:"-"`
+	Identity    bool         `json:"-"`
 }
 
 type attributeDsl Attribute

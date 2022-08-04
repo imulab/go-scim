@@ -15,3 +15,30 @@ type Mapping[T any] struct {
 	setter        func(prop Property, model *T) error
 	filterEnabled bool
 }
+
+type mappingDsl[T any] Mapping[T]
+
+func (d *mappingDsl[T]) Path(path string) *mappingDsl[T] {
+	d.path = path
+	// todo compile path
+	return d
+}
+
+func (d *mappingDsl[T]) Getter(fn func(model *T) (any, error)) *mappingDsl[T] {
+	d.getter = fn
+	return d
+}
+
+func (d *mappingDsl[T]) Setter(fn func(prop Property, model *T) error) *mappingDsl[T] {
+	d.setter = fn
+	return d
+}
+
+func (d *mappingDsl[T]) EnableFilter() *mappingDsl[T] {
+	d.filterEnabled = true
+	return d
+}
+
+func (d *mappingDsl[T]) build() *Mapping[T] {
+	return (*Mapping[T])(d)
+}

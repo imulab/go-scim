@@ -2,6 +2,13 @@ package scim
 
 import "encoding/json"
 
+// BuildSchema builds and returns a new Schema.
+func BuildSchema(builder func(d *schemaDsl)) *Schema {
+	b := new(schemaDsl)
+	builder(b)
+	return b.build()
+}
+
 // Schema is a collection of Attribute.
 type Schema struct {
 	id          string
@@ -55,8 +62,12 @@ func (d *schemaDsl) WithAttributes(fn func(d *attributeListDsl)) *schemaDsl {
 	return d
 }
 
+func (d *schemaDsl) build() *Schema {
+	return (*Schema)(d)
+}
+
 var (
-	userSchema = func(d *schemaDsl) {
+	UserSchema = func(d *schemaDsl) {
 		d.ID("urn:ietf:params:scim:schemas:core:2.0:User").
 			Name("User").
 			Describe("Defined attributes for the user schema").
@@ -211,6 +222,56 @@ var (
 							d.Name("primary").Boolean().Primary()
 						}).Add(func(d *attributeDsl) {
 							d.Name("display").String()
+						})
+					})
+				})
+			})
+	}
+
+	UserEnterpriseSchemaExtension = func(d *schemaDsl) {
+		d.ID("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User").
+			Name("Enterprise User").
+			Describe("Extension attributes for enterprise users").
+			WithAttributes(func(d *attributeListDsl) {
+				d.Add(func(d *attributeDsl) {
+					d.Name("employeeNumber").String()
+				}).Add(func(d *attributeDsl) {
+					d.Name("costCenter").String()
+				}).Add(func(d *attributeDsl) {
+					d.Name("organization").String()
+				}).Add(func(d *attributeDsl) {
+					d.Name("division").String()
+				}).Add(func(d *attributeDsl) {
+					d.Name("department").String()
+				}).Add(func(d *attributeDsl) {
+					d.Name("manager").Complex().SubAttributes(func(sd *attributeListDsl) {
+						sd.Add(func(d *attributeDsl) {
+							d.Name("value").String()
+						}).Add(func(d *attributeDsl) {
+							d.Name("$ref").Reference()
+						}).Add(func(d *attributeDsl) {
+							d.Name("displayName").String()
+						})
+					})
+				})
+			})
+	}
+
+	GroupSchema = func(d *schemaDsl) {
+		d.ID("urn:ietf:params:scim:schemas:core:2.0:Group").
+			Name("Group").
+			Describe("Defined attributes for the group schema").
+			WithAttributes(func(d *attributeListDsl) {
+				d.Add(func(d *attributeDsl) {
+					d.Name("displayName").String()
+				}).Add(func(d *attributeDsl) {
+					d.Name("members").Complex().MultiValued().SubAttributes(func(sd *attributeListDsl) {
+						sd.Add(func(d *attributeDsl) {
+							d.Name("value").String().Immutable().Identity()
+						}).Add(func(d *attributeDsl) {
+							d.Name("$ref").Reference().Immutable().Identity()
+						}).Add(func(d *attributeDsl) {
+							d.Name("display").String().Immutable()
 						})
 					})
 				})
