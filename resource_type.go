@@ -97,5 +97,10 @@ func (d *resourceTypeDsl[T]) AddMapping(fn func(md *mappingDsl[T])) *resourceTyp
 }
 
 func (d *resourceTypeDsl[T]) Build() *ResourceType[T] {
+	registerURN(d.schema.id)
+	for _, it := range d.extensions {
+		registerURN(it.id)
+	}
+
 	return (*ResourceType[T])(d)
 }
