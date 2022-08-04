@@ -1,6 +1,9 @@
 package scim
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // Attribute describes the data type of Property.
 type Attribute struct {
@@ -102,6 +105,49 @@ type attributeJSON struct {
 	RefTypes    []string     `json:"referenceTypes,omitempty"`
 	Primary     bool         `json:"-"`
 	Identity    bool         `json:"-"`
+}
+
+// createProperty constructs a new Property instance with this Attribute. The returned Property is always unassigned.
+func (t *Attribute) createProperty() Property {
+	if t.multiValued {
+		return &multiProperty{attr: t, elem: []Property{}}
+	}
+
+	if t.typ == TypeComplex {
+		p := &complexProperty{attr: t, nameIndex: map[string]int{}}
+		for i, sub := range p.attr.sub {
+			p.children = append(p.children, sub.createProperty())
+			p.nameIndex[strings.ToLower(sub.name)] = i
+		}
+		return p
+	}
+
+	return &simpleProperty{attr: t}
+}
+
+// toSingleValued returns an Attribute instance with multiValued set to false. It the multiValued is already false, the
+// same instance is returned.
+func (t *Attribute) toSingleValued() *Attribute {
+	if !t.multiValued {
+		return t
+	}
+
+	return &Attribute{
+		name:        t.name,
+		description: t.description,
+		typ:         t.typ,
+		sub:         t.sub,
+		canonical:   t.canonical,
+		multiValued: false,
+		required:    t.required,
+		caseExact:   t.caseExact,
+		mutability:  t.mutability,
+		returned:    t.returned,
+		uniqueness:  t.uniqueness,
+		refTypes:    t.refTypes,
+		primary:     t.primary,
+		identity:    t.identity,
+	}
 }
 
 type attributeDsl Attribute
