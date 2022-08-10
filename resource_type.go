@@ -16,6 +16,34 @@ type ResourceType[T any] struct {
 	mappings    []*Mapping[T]
 }
 
+// archAttribute returns an ad-hoc attribute to model the entire resource structure. The returned attribute will
+// include all coreAttributes, all attributes from the main schema, and optionally all attributes from any extensions
+// under a complex attribute named after the extension's id.
+func (r *ResourceType[T]) archAttribute() *Attribute {
+	arch := &Attribute{
+		name:     r.name,
+		typ:      TypeComplex,
+		sub:      []*Attribute{},
+		required: true,
+	}
+
+	arch.sub = append(arch.sub, coreAttributes...)
+	arch.sub = append(arch.sub, r.schema.attrs...)
+
+	for _, it := range r.extensions {
+		arch.sub = append(arch.sub, &Attribute{
+			name:     it.id,
+			typ:      TypeComplex,
+			sub:      append([]*Attribute{}, it.attrs...),
+			required: it.required,
+			id:       it.id,
+			path:     it.id,
+		})
+	}
+
+	return arch
+}
+
 func (r *ResourceType[T]) MarshalJSON() ([]byte, error) {
 	j := resourceTypeJSON{
 		Id:         r.id,
