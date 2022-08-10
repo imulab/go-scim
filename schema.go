@@ -52,7 +52,11 @@ func (d *schemaDsl) Describe(text string) *schemaDsl {
 }
 
 func (d *schemaDsl) WithAttributes(fn func(d *attributeListDsl)) *schemaDsl {
-	sd := new(attributeListDsl)
+	if len(d.id) == 0 {
+		panic("set id first")
+	}
+
+	sd := &attributeListDsl{namespace: d.id}
 	fn(sd)
 
 	for _, it := range sd.list {

@@ -2,6 +2,7 @@ package scim
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -46,6 +47,13 @@ type Attribute struct {
 	// have the same Attribute and the same hash, they are deemed as duplicate of each other. If these duplicated
 	// properties are elements of a multivalued property, they may be subject to deduplication.
 	identity bool
+
+	// id is an internally maintained identifier of the attribute. Its value is in the format of <schema urn>:<path>.
+	id string
+
+	// path is an internally maintained full name of the attribute. The path starts from the attribute name at the root
+	// of the resource and ends with the current attribute name, delimited by period. For example, nickName, emails.value.
+	path string
 }
 
 func (t *Attribute) singleValued() *Attribute {
@@ -150,7 +158,11 @@ func (t *Attribute) toSingleValued() *Attribute {
 	}
 }
 
-type attributeDsl Attribute
+type attributeDsl struct {
+	Attribute
+	namespace string
+	prefix    string
+}
 
 func (d *attributeDsl) Name(name string) *attributeDsl {
 	d.name = name
@@ -288,7 +300,20 @@ func (d *attributeDsl) SubAttributes(fn func(sd *attributeListDsl)) *attributeDs
 		panic("sub attributes can only be added complex typed attributes")
 	}
 
-	sd := new(attributeListDsl)
+	if len(d.name) == 0 {
+		panic("set name first")
+	}
+
+	sd := &attributeListDsl{
+		namespace: d.namespace,
+		prefix: func() string {
+			if len(d.prefix) == 0 {
+				return d.name
+			} else {
+				return fmt.Sprintf("%s.%s", d.prefix, d.name)
+			}
+		}(),
+	}
 	fn(sd)
 
 	for _, it := range sd.list {
@@ -299,15 +324,27 @@ func (d *attributeDsl) SubAttributes(fn func(sd *attributeListDsl)) *attributeDs
 }
 
 func (d *attributeDsl) build() *Attribute {
-	return (*Attribute)(d)
+	attr := &d.Attribute
+
+	if len(d.prefix) == 0 {
+		attr.path = attr.name
+	} else {
+		attr.path = fmt.Sprintf("%s.%s", d.prefix, attr.name)
+	}
+
+	attr.id = fmt.Sprintf("%s:%s", d.namespace, attr.path)
+
+	return attr
 }
 
 type attributeListDsl struct {
-	list []*attributeDsl
+	list      []*attributeDsl
+	namespace string
+	prefix    string
 }
 
 func (d *attributeListDsl) Add(fn func(d *attributeDsl)) *attributeListDsl {
-	d0 := new(attributeDsl)
+	d0 := &attributeDsl{namespace: d.namespace, prefix: d.prefix}
 	fn(d0)
 	d.list = append(d.list, d0)
 	return d

@@ -7,7 +7,8 @@ import (
 )
 
 func TestUserSchema(t *testing.T) {
-	j, err := json.Marshal(BuildSchema(UserSchema))
+	sch := BuildSchema(UserSchema)
+	j, err := json.Marshal(sch)
 	if assert.NoError(t, err) {
 		assert.JSONEq(t, `
 {
