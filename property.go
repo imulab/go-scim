@@ -72,6 +72,10 @@ type Property interface {
 	ByIndex(index any) Property
 }
 
+type appendElement interface {
+	appendElement() (index int, post func())
+}
+
 type simpleProperty struct {
 	attr *Attribute
 	vs   *string
@@ -429,6 +433,18 @@ func (p *multiProperty) Add(value any) error {
 	p.elem = append(p.elem, newElem)
 
 	return nil
+}
+
+func (p *multiProperty) appendElement() (index int, post func()) {
+	p.elem = append(p.elem, p.attr.toSingleValued().createProperty())
+	index = len(p.elem) - 1
+	primaryGuard := p.primarySwitchGuard()
+	post = func() {
+		primaryGuard()
+		p.deduplicate()
+		p.compact()
+	}
+	return
 }
 
 func (p *multiProperty) deduplicate() {

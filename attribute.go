@@ -76,6 +76,8 @@ func (t *Attribute) singleValued() *Attribute {
 		refTypes:    t.refTypes,
 		primary:     t.primary,
 		identity:    t.identity,
+		id:          fmt.Sprintf("%s$elem", t.id),
+		path:        t.path,
 	}
 }
 

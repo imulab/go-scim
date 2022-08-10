@@ -16,6 +16,14 @@ type ResourceType[T any] struct {
 	mappings    []*Mapping[T]
 }
 
+// New creates a new Resource with this ResourceType.
+func (r *ResourceType[T]) New() *Resource[T] {
+	return &Resource[T]{
+		resourceType: r,
+		root:         r.archAttribute().createProperty().(*complexProperty),
+	}
+}
+
 // archAttribute returns an ad-hoc attribute to model the entire resource structure. The returned attribute will
 // include all coreAttributes, all attributes from the main schema, and optionally all attributes from any extensions
 // under a complex attribute named after the extension's id.
