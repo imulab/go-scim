@@ -5,12 +5,6 @@ import (
 	"encoding/base64"
 )
 
-// TODO complete the rest of properties
-// TODO remove simpleProperty
-// TODO evaluator
-// TODO traverseQualifiedElements
-// TODO crud methods on resources
-
 type binaryProperty struct {
 	*stringProperty
 }
