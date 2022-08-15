@@ -2,12 +2,6 @@ package scim
 
 import "hash/fnv"
 
-// TODO complete the rest of properties
-// TODO remove simpleProperty
-// TODO evaluator
-// TODO traverseQualifiedElements
-// TODO crud methods on resources
-
 type integerProperty struct {
 	attr *Attribute
 	vi   *int64
