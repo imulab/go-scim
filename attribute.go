@@ -107,7 +107,16 @@ func (t *Attribute) createProperty() Property {
 		return p
 	}
 
-	return &simpleProperty{attr: t}
+	switch t.typ {
+	case TypeString:
+		return &stringProperty{attr: t}
+	case TypeDateTime:
+		return &dateTimeProperty{stringProperty: &stringProperty{attr: t}}
+	default:
+		// todo remove this
+		return &simpleProperty{attr: t}
+	}
+
 }
 
 // toSingleValued returns an Attribute instance with multiValued set to false. It the multiValued is already false, the
@@ -134,6 +143,38 @@ func (t *Attribute) toSingleValued() *Attribute {
 		identity:    t.identity,
 		id:          fmt.Sprintf("%s$elem", t.id),
 		path:        t.path,
+	}
+}
+
+func (t *Attribute) compareString(s1, s2 string) int {
+	if t.caseExact {
+		return strings.Compare(s1, s2)
+	} else {
+		return strings.Compare(strings.ToLower(s1), strings.ToLower(s2))
+	}
+}
+
+func (t *Attribute) hasPrefix(s, prefix string) bool {
+	if t.caseExact {
+		return strings.HasPrefix(s, prefix)
+	} else {
+		return strings.HasPrefix(strings.ToLower(s), strings.ToLower(prefix))
+	}
+}
+
+func (t *Attribute) hasSuffix(s, suffix string) bool {
+	if t.caseExact {
+		return strings.HasSuffix(s, suffix)
+	} else {
+		return strings.HasSuffix(strings.ToLower(s), strings.ToLower(suffix))
+	}
+}
+
+func (t *Attribute) containsString(s, substr string) bool {
+	if t.caseExact {
+		return strings.Contains(s, substr)
+	} else {
+		return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 	}
 }
 

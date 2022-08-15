@@ -76,6 +76,17 @@ type appendElement interface {
 	appendElement() (index int, post func())
 }
 
+// trait interfaces for property implementations so they can participate in expression evaluations.
+type (
+	eqTrait interface{ equalsTo(value any) bool }
+	swTrait interface{ startsWith(value string) bool }
+	ewTrait interface{ endsWith(value string) bool }
+	coTrait interface{ contains(value string) bool }
+	gtTrait interface{ greaterThan(value any) bool }
+	ltTrait interface{ lessThan(value any) bool }
+	prTrait interface{ isPresent() bool }
+)
+
 type simpleProperty struct {
 	attr *Attribute
 	vs   *string
