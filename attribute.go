@@ -112,6 +112,8 @@ func (t *Attribute) createProperty() Property {
 		return &stringProperty{attr: t}
 	case TypeDateTime:
 		return &dateTimeProperty{stringProperty: &stringProperty{attr: t}}
+	case TypeBinary:
+		return &binaryProperty{stringProperty: &stringProperty{attr: t}}
 	default:
 		// todo remove this
 		return &simpleProperty{attr: t}
