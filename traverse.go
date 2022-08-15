@@ -76,7 +76,25 @@ func (t *traverser) traverseSelectedElements(query *Expr) error {
 }
 
 func (t *traverser) traverseQualifiedElements(filter *Expr) error {
-	panic("TODO")
+	return t.nav.forEachChild(func(index int, child Property) error {
+		t.nav.at(index)
+		if t.nav.hasError() {
+			return t.nav.err
+		}
+
+		defer t.nav.retract()
+
+		v := &evaluator{root: t.nav.current(), filter: filter}
+
+		r, err := v.evaluate()
+		if err != nil {
+			return err
+		} else if !r {
+			return nil
+		}
+
+		return t.traverse(filter.next)
+	})
 }
 
 // elementStrategy is a high-level function that returns a function to determine whether a child property should be traversed

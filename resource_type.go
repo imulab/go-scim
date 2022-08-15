@@ -52,6 +52,18 @@ func (r *ResourceType[T]) archAttribute() *Attribute {
 	return arch
 }
 
+func (r *ResourceType[T]) skipMainSchemaNamespace(query *Expr) *Expr {
+	if query == nil {
+		return nil
+	}
+
+	if query.IsPath() && query.value == r.schema.id {
+		return query.next
+	}
+
+	return query
+}
+
 func (r *ResourceType[T]) MarshalJSON() ([]byte, error) {
 	j := resourceTypeJSON{
 		Id:         r.id,

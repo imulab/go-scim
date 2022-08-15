@@ -3,6 +3,7 @@ package scim
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -124,6 +125,43 @@ func (t *Attribute) createProperty() Property {
 		return &booleanProperty{attr: t}
 	default:
 		panic("invalid attribute type")
+	}
+}
+
+func (t *Attribute) parseValue(token string) (any, error) {
+	switch t.typ {
+	case TypeString, TypeReference, TypeBinary, TypeDateTime:
+		if strings.HasPrefix(token, "\"") && strings.HasSuffix(token, "\"") {
+			token = strings.TrimPrefix(token, "\"")
+			token = strings.TrimSuffix(token, "\"")
+			return token, nil
+		} else {
+			return nil, ErrInvalidValue
+		}
+
+	case TypeInteger:
+		if i64, err := strconv.ParseInt(token, 10, 64); err != nil {
+			return nil, ErrInvalidValue
+		} else {
+			return i64, nil
+		}
+
+	case TypeDecimal:
+		if f64, err := strconv.ParseFloat(token, 64); err != nil {
+			return nil, ErrInvalidValue
+		} else {
+			return f64, nil
+		}
+
+	case TypeBoolean:
+		if b, err := strconv.ParseBool(token); err != nil {
+			return nil, ErrInvalidValue
+		} else {
+			return b, nil
+		}
+
+	default:
+		return nil, ErrInvalidValue
 	}
 }
 
