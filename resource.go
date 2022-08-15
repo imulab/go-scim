@@ -10,7 +10,7 @@ func (r *Resource[T]) ResourceType() *ResourceType[T] {
 }
 
 func (r *Resource[T]) navigator() *navigator {
-	return &navigator{stack: []Property{r.root}}
+	return newNavigator(r.root)
 }
 
 func (r *Resource[T]) MarshalJSON() ([]byte, error) {

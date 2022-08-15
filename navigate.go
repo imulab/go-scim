@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+func newNavigator(prop Property) *navigator {
+	return &navigator{stack: []Property{prop}}
+}
+
 // navigator is a controlled mechanism to traverse the Property tree. It should be used in cases where the caller has
 // knowledge of what to access. For example, when de-serializing JSON into a Property, caller has knowledge of the JSON
 // structure, therefore knows what to access in the Property structure.
