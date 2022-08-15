@@ -123,10 +123,8 @@ func (t *Attribute) createProperty() Property {
 	case TypeBoolean:
 		return &booleanProperty{attr: t}
 	default:
-		// todo remove this
-		return &simpleProperty{attr: t}
+		panic("invalid attribute type")
 	}
-
 }
 
 // toSingleValued returns an Attribute instance with multiValued set to false. It the multiValued is already false, the
