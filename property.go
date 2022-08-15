@@ -31,11 +31,6 @@ type Property interface {
 	// despite the lack of data for efficiency purposes.
 	Unassigned() bool
 
-	// Clone returns a deep copy of this property. The returned property can share the same instance of Attribute with
-	// the original property (because attributes are considered readonly after setup), but must have distinct instances
-	// of values.
-	Clone() Property
-
 	// Add modifies the value of the property by adding a new value to it. For singular non-complex properties, the
 	// Add operation is identical to the Set operation. If the given value is incompatible with the attribute,
 	// implementations should return ErrInvalidValue.
@@ -87,6 +82,20 @@ type (
 	prTrait interface{ isPresent() bool }
 )
 
+func cloneProperty(p Property) Property {
+	p0 := p.Attr().createProperty()
+
+	if p.Unassigned() {
+		return p0
+	}
+
+	if err := p0.Set(p.Value()); err != nil {
+		panic(fmt.Errorf("failed to clone property: %s", err))
+	}
+
+	return p0
+}
+
 type simpleProperty struct {
 	attr *Attribute
 	vs   *string
@@ -132,20 +141,6 @@ func (p *simpleProperty) Unassigned() bool {
 	default:
 		panic("unexpected simple property type")
 	}
-}
-
-func (p *simpleProperty) Clone() Property {
-	p0 := p.attr.createProperty()
-
-	if p.Unassigned() {
-		return p0
-	}
-
-	if err := p0.Set(p.Value()); err != nil {
-		panic(fmt.Errorf("failed to clone property: %s", err))
-	}
-
-	return p0
 }
 
 func (p *simpleProperty) Add(value any) error {
@@ -404,7 +399,7 @@ func (p *multiProperty) Unassigned() bool {
 func (p *multiProperty) Clone() Property {
 	p0 := p.attr.createProperty().(*multiProperty)
 	for _, each := range p.elem {
-		p0.elem = append(p0.elem, each.Clone())
+		p0.elem = append(p0.elem, cloneProperty(each))
 	}
 	return p0
 }

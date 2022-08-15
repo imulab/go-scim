@@ -1,11 +1,5 @@
 package scim
 
-// TODO complete the rest of properties
-// TODO remove simpleProperty
-// TODO evaluator
-// TODO traverseQualifiedElements
-// TODO crud methods on resources
-
 type referenceProperty struct {
 	*stringProperty
 }

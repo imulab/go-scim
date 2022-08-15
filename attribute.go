@@ -116,6 +116,8 @@ func (t *Attribute) createProperty() Property {
 		return &binaryProperty{stringProperty: &stringProperty{attr: t}}
 	case TypeReference:
 		return &referenceProperty{stringProperty: &stringProperty{attr: t}}
+	case TypeInteger:
+		return &integerProperty{attr: t}
 	default:
 		// todo remove this
 		return &simpleProperty{attr: t}

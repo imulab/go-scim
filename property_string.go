@@ -1,7 +1,6 @@
 package scim
 
 import (
-	"fmt"
 	"hash/fnv"
 	"strings"
 )
@@ -25,20 +24,6 @@ func (p *stringProperty) Value() any {
 
 func (p *stringProperty) Unassigned() bool {
 	return p.vs == nil
-}
-
-func (p *stringProperty) Clone() Property {
-	p0 := p.attr.createProperty()
-
-	if p.Unassigned() {
-		return p0
-	}
-
-	if err := p0.Set(p.Value()); err != nil {
-		panic(fmt.Errorf("failed to clone property: %s", err))
-	}
-
-	return p0
 }
 
 func (p *stringProperty) Add(value any) error {
