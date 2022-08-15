@@ -56,31 +56,6 @@ type Attribute struct {
 	path string
 }
 
-func (t *Attribute) singleValued() *Attribute {
-	if !t.multiValued {
-		return t
-	}
-
-	return &Attribute{
-		name:        t.name,
-		description: t.description,
-		typ:         t.typ,
-		sub:         t.sub,
-		canonical:   t.canonical,
-		multiValued: false,
-		required:    t.required,
-		caseExact:   t.caseExact,
-		mutability:  t.mutability,
-		returned:    t.returned,
-		uniqueness:  t.uniqueness,
-		refTypes:    t.refTypes,
-		primary:     t.primary,
-		identity:    t.identity,
-		id:          fmt.Sprintf("%s$elem", t.id),
-		path:        t.path,
-	}
-}
-
 func (t *Attribute) MarshalJSON() ([]byte, error) {
 	return json.Marshal(attributeJSON{
 		Name:        t.name,
@@ -157,6 +132,8 @@ func (t *Attribute) toSingleValued() *Attribute {
 		refTypes:    t.refTypes,
 		primary:     t.primary,
 		identity:    t.identity,
+		id:          fmt.Sprintf("%s$elem", t.id),
+		path:        t.path,
 	}
 }
 
