@@ -120,6 +120,8 @@ func (t *Attribute) createProperty() Property {
 		return &integerProperty{attr: t}
 	case TypeDecimal:
 		return &decimalProperty{attr: t}
+	case TypeBoolean:
+		return &booleanProperty{attr: t}
 	default:
 		// todo remove this
 		return &simpleProperty{attr: t}
