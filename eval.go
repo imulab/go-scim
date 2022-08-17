@@ -12,11 +12,14 @@ func evaluate(p Property, filter string) (bool, error) {
 		return false, err
 	}
 
+	return evaluateExpr(p, cf)
+}
+
+func evaluateExpr(p Property, filter *Expr) (bool, error) {
 	v := &evaluator{
 		root:   p,
-		filter: cf,
+		filter: filter,
 	}
-
 	return v.evaluate()
 }
 
