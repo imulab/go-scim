@@ -114,11 +114,12 @@ func TestPathCompiler(t *testing.T) {
 				test.assert(t, nil, err)
 			} else {
 				trail := make([]expect, 0)
-				head.Walk(func(step *Expr) {
+				_ = head.Walk(func(step *Expr) error {
 					trail = append(trail, expect{
 						value: step.value,
 						typ:   selectType(step),
 					})
+					return nil
 				})
 			}
 		})

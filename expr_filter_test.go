@@ -143,11 +143,12 @@ func TestFilterCompiler(t *testing.T) {
 				test.assert(t, nil, err)
 			} else {
 				trail := make([]expect, 0)
-				root.Walk(func(step *Expr) {
+				_ = root.Walk(func(step *Expr) error {
 					trail = append(trail, expect{
 						value: step.value,
 						typ:   selectType(step),
 					})
+					return nil
 				})
 			}
 		})

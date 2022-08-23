@@ -16,6 +16,56 @@ func (r *Resource[T]) ResourceType() *ResourceType[T] {
 	return r.resourceType
 }
 
+// Import transfers the mapped values from the model into this Resource. This method would fail at the first mapping
+// getter error. The transfer mode is "add", instead of "replace".
+func (r *Resource[T]) Import(model *T) error {
+	if model == nil {
+		panic("expect non-nil model")
+	}
+
+	for _, mapping := range r.resourceType.mappings {
+		value, err := mapping.getter(model)
+		if err != nil {
+			return err
+		}
+
+		err = r.addCompiled(mapping.compiledPath, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Export transfers mapped values from this Resource into the model. This method would fail at the first error when
+// retrieving the mapping value at given path and invoking the setter.
+func (r *Resource[T]) Export(model *T) error {
+	if model == nil {
+		panic("expect non-nil model")
+	}
+
+	for _, mapping := range r.resourceType.mappings {
+		prop, err := r.getProperty(mapping.compiledPath)
+		if err != nil {
+			return err
+		}
+
+		err = mapping.setter(prop, model)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ExportNew is a shorthand for Export with a new model.
+func (r *Resource[T]) ExportNew() (*T, error) {
+	model := r.resourceType.newModel()
+	return model, r.Export(model)
+}
+
 // Patch applies a single PatchOperation on this Resource. If any error is returned, the Resource should be considered
 // corrupted and invalid to export to the custom data model.
 //
@@ -53,19 +103,10 @@ func (r *Resource[T]) Patch(request *PatchOperation) error {
 	}
 }
 
-func (r *Resource[T]) get(path string) (any, error) {
-	if len(path) == 0 {
-		panic("path is required")
-	}
-
-	head, err := compilePath(path)
-	if err != nil {
-		return nil, err
-	}
-
+func (r *Resource[T]) getProperty(path *Expr) (Property, error) {
 	nav := r.navigator()
 
-	for cur := head; cur != nil; cur = cur.next {
+	for cur := path; cur != nil; cur = cur.next {
 		switch {
 		case cur.IsPath():
 			nav.dot(cur.value)
@@ -85,7 +126,7 @@ func (r *Resource[T]) get(path string) (any, error) {
 		}
 	}
 
-	return nav.current().Value(), nil
+	return nav.current(), nil
 }
 
 func (r *Resource[T]) add(path string, value any) error {
@@ -98,9 +139,13 @@ func (r *Resource[T]) add(path string, value any) error {
 		return err
 	}
 
+	return r.addCompiled(head, value)
+}
+
+func (r *Resource[T]) addCompiled(path *Expr, value any) error {
 	return defaultTraverse(
 		r.root,
-		r.resourceType.skipMainSchemaNamespace(head),
+		r.resourceType.skipMainSchemaNamespace(path),
 		func(nav *navigator) error { return nav.add(value).err },
 	)
 }
@@ -115,9 +160,13 @@ func (r *Resource[T]) replace(path string, value any) error {
 		return err
 	}
 
+	return r.replaceCompiled(head, value)
+}
+
+func (r *Resource[T]) replaceCompiled(path *Expr, value any) error {
 	return defaultTraverse(
 		r.root,
-		r.resourceType.skipMainSchemaNamespace(head),
+		r.resourceType.skipMainSchemaNamespace(path),
 		func(nav *navigator) error { return nav.replace(value).err },
 	)
 }

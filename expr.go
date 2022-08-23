@@ -98,18 +98,44 @@ func (n *Expr) containsFilter() bool {
 
 // Walk performs traversal on the hybrid linked-list/binary tree structure of Expr. The callback function fn is
 // invoked on each non-nil Expr.
-func (n *Expr) Walk(fn func(n *Expr)) {
+func (n *Expr) Walk(fn func(n *Expr) error) error {
 	if n == nil {
-		return
+		return nil
 	}
 
 	if fn != nil {
-		fn(n)
+		return fn(n)
 	}
 
-	n.left.Walk(fn)
-	n.right.Walk(fn)
-	n.next.Walk(fn)
+	if err := n.left.Walk(fn); err != nil {
+		return err
+	}
+
+	if err := n.right.Walk(fn); err != nil {
+		return err
+	}
+
+	return n.next.Walk(fn)
+}
+
+func (n *Expr) equals(m *Expr) bool {
+	if n == nil {
+		return m == nil
+	}
+
+	if n.nType != m.nType || strings.ToLower(n.value) != strings.ToLower(m.value) {
+		return false
+	}
+
+	if leftEq := n.left.equals(m.left); !leftEq {
+		return false
+	}
+
+	if rightEq := n.right.equals(m.right); !rightEq {
+		return false
+	}
+
+	return n.next.equals(m.next)
 }
 
 func newOperator(op string) *Expr {
