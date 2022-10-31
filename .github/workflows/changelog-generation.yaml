@@ -1,0 +1,38 @@
+on:
+  push:
+    tags: 
+    - '*'
+
+jobs:
+  generate-release:
+    runs-on: ubuntu-latest
+    name: Generate and Publish changelog
+    
+    steps:
+      - name: Generate changelog
+        uses: cyralinc/devops-changelog-generator-action@v0
+        id: generate_changelog
+        with:
+          tag: ${{ github.ref_name }}
+          repository: ${{ github.repository }}
+          # If there is more than one Jira ticket prefix, add it separating by comma:
+          # jira-prefixes: FOO,BAR,BAZ
+          jira-prefixes: ENG
+          git-credentials: ${{secrets.PAT_CHANGELOG_GENERATOR}}
+          dependencies-config: ${{secrets.CYRAL_JSON_DEPENDENCIES_CONFIG}}
+          gcr-credentials: ${{ secrets.GCR_CYRAL_DEV_JSON_TOKEN }}
+
+      - name: Set git user
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body_path: ./CHANGELOG.md
