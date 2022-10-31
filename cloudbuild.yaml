@@ -1,0 +1,209 @@
+steps:
+  # Download the cicd key
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args:
+      - cp
+      - gs://cyral-keys/cicd_key.enc
+      - ./id_cicd.enc
+    id: 'get-cicd-key'
+
+  # Decrypt the cicd key
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - kms
+      - decrypt
+      - --ciphertext-file=id_cicd.enc
+      - --plaintext-file=/root/.ssh/id_rsa
+      - --location=global
+      - --keyring=github-keyring
+      - --key=github-key
+    id: 'decrypt-cicd-key'
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+
+  # Set up git with key and domain.
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        chmod 600 /root/.ssh/id_rsa
+        cat <<EOF >/root/.ssh/config
+        Hostname github.com
+        IdentityFile /root/.ssh/id_rsa
+        StrictHostKeyChecking no
+        EOF
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+    id: 'ssh-config'
+
+  # Ask git to use ssh instead of https
+  - name: 'gcr.io/cloud-builders/git'
+    args:
+      - config
+      - --global
+      - url.git@github.com:.insteadOf
+      - https://github.com/
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+    id: 'git-config'
+
+  # Run unit tests
+  - name: golang
+    env:
+      - 'PROJECT_ROOT=github.com/cyralinc/cyral-go-scim'
+      - 'GO111MODULE=on'
+    args:
+      - go
+      - test
+      - -v
+      - -race
+      - ./...
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+      - name: 'go-modules'
+        path: /go
+    id: 'unit-tests-top'
+    waitFor: ['git-config']
+
+  - name: golang
+    env:
+      - 'PROJECT_ROOT=github.com/cyralinc/cyral-go-scim'
+      - 'GO111MODULE=on'
+    dir: mongo/v2
+    args:
+      - go
+      - test
+      - -v
+      - -race
+      - ./...
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+      - name: 'go-modules'
+        path: /go
+    id: 'unit-tests-mongo'
+    waitFor: ['unit-tests-top']
+
+  - name: golang
+    env:
+      - 'PROJECT_ROOT=github.com/cyralinc/cyral-go-scim'
+      - 'GO111MODULE=on'
+    dir: pkg/v2
+    args:
+      - go
+      - test
+      - -v
+      - -race
+      - ./...
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+      - name: 'go-modules'
+        path: /go
+    id: 'unit-tests-pkg'
+    waitFor: ['unit-tests-mongo']
+
+  # Run security tests
+  - name: securego/gosec
+    env:
+      - 'GO111MODULE=on'
+    args:
+      - -exclude-dir=mongo
+      - -exclude-dir=pkg
+      - ./...
+    volumes:
+      - name: 'go-modules'
+        path: /go
+    id: 'security-tests-top'
+    waitFor: ['unit-tests-top']
+
+  # Run security tests
+  - name: securego/gosec
+    env:
+      - 'GO111MODULE=on'
+    dir: ./mongo/v2
+    args:
+      - ./...
+    volumes:
+      - name: 'go-modules'
+        path: /go
+    id: 'security-tests-mongo'
+    waitFor: ['unit-tests-mongo']
+
+  # Run security tests
+  - name: securego/gosec
+    env:
+      - 'GO111MODULE=on'
+    dir: ./pkg/v2
+    args:
+      - ./...
+    volumes:
+      - name: 'go-modules'
+        path: /go
+    id: 'security-tests-pkg'
+    waitFor: ['unit-tests-pkg']
+
+  # Run lint
+  - name: golangci/golangci-lint
+    env:
+      - 'GO111MODULE=on'
+    args:
+      - golangci-lint
+      - run
+      - --timeout=5m
+    volumes:
+      - name: 'go-modules'
+        path: /go
+    id: 'run-lint-top'
+    waitFor: ['unit-tests-top']
+
+  # Run lint
+  - name: golangci/golangci-lint
+    env:
+      - 'GO111MODULE=on'
+    dir: ./mongo/v2
+    args:
+      - golangci-lint
+      - run
+      - --timeout=5m
+    volumes:
+      - name: 'go-modules'
+        path: /go
+    id: 'run-lint-mongo'
+    waitFor: ['unit-tests-mongo']
+
+  # Run lint
+  - name: golangci/golangci-lint
+    env:
+      - 'GO111MODULE=on'
+    dir: ./pkg/v2
+    args:
+      - golangci-lint
+      - run
+      - --timeout=5m
+    volumes:
+      - name: 'go-modules'
+        path: /go
+    id: 'run-lint-pkg'
+    waitFor: ['unit-tests-pkg']
+
+# Cut release(s) if VERSIONS file has changed. This script just tags,
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+      - ./cut-release.sh
+      - $BRANCH_NAME
+      - $REPO_NAME
+      - $COMMIT_SHA
+    volumes:
+      - name: 'ssh'
+        path: /root/.ssh
+    id: 'cut-release'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
