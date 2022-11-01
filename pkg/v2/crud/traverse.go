@@ -1,7 +1,9 @@
 package crud
 
 import (
+	"errors"
 	"fmt"
+
 	"github.com/imulab/go-scim/pkg/v2/annotation"
 	"github.com/imulab/go-scim/pkg/v2/crud/expr"
 	"github.com/imulab/go-scim/pkg/v2/prop"
@@ -79,10 +81,32 @@ func (t traverser) traverseSelectedElements(query *expr.Expression) error {
 
 func (t traverser) traverseQualifiedElements(filter *expr.Expression) error {
 	return t.nav.ForEachChild(func(index int, child prop.Property) error {
-		t.nav.At(index)
-		if err := t.nav.Error(); err != nil {
-			return err
+		// index is not trustworthy if an earlier child has been deleted by
+		// the callback function. In this case, the child would be actually
+		// at an earlier index. Thus we may need to go backwards from index
+		// to find the child.
+		var i int
+		for i = index; i >= 0; i-- {
+			t.nav.At(i)
+			err := t.nav.Error()
+			if err != nil && errors.Is(err, spec.ErrNoTarget) {
+				// index is out of bounds due to earlier element deletion.
+				// Just ignore this error and carry on.
+				t.nav.ClearError()
+				continue
+			} else if err != nil {
+				return err
+			}
+			if t.nav.Current() == child {
+				break
+			}
+			t.nav.Retract()
 		}
+		if i < 0 {
+			// this should not happen
+			return fmt.Errorf("unexpected error, failed to find array element")
+		}
+
 		defer t.nav.Retract()
 
 		r, err := evaluator{base: t.nav.Current(), filter: filter}.evaluate()

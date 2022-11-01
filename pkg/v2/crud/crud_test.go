@@ -3,12 +3,13 @@ package crud
 import (
 	"encoding/json"
 	"errors"
+	"testing"
+
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/spec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 func TestAddReplaceDelete(t *testing.T) {
@@ -305,6 +306,7 @@ func (s *CrudTestSuite) TestDelete() {
 		name        string
 		getResource func(t *testing.T) *prop.Resource
 		path        string
+		value       interface{}
 		expect      func(t *testing.T, r *prop.Resource, err error)
 	}{
 		{
@@ -457,7 +459,7 @@ func (s *CrudTestSuite) TestDelete() {
 	for _, test := range tests {
 		s.T().Run(test.name, func(t *testing.T) {
 			resource := test.getResource(t)
-			err := Delete(resource, test.path)
+			err := Delete(resource, test.path, test.value)
 			test.expect(t, resource, err)
 		})
 	}

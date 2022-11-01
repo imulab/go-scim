@@ -121,7 +121,14 @@ func (s *patchService) Do(ctx context.Context, req *PatchRequest) (resp *PatchRe
 				return nil, err
 			}
 		case "remove":
-			if err := crud.Delete(resource, patchOp.Path); err != nil {
+			var valuesToDelete interface{}
+			if len(patchOp.Value) > 0 {
+				valuesToDelete, err = patchOp.ParseValue(resource)
+				if err != nil {
+					return nil, err
+				}
+			}
+			if err := crud.Delete(resource, patchOp.Path, valuesToDelete); err != nil {
 				return nil, err
 			}
 		}
@@ -200,8 +207,6 @@ func (p *PatchPayload) Validate() error {
 		case "remove":
 			if len(each.Path) == 0 {
 				return fmt.Errorf("%w: no path for remove operation", spec.ErrInvalidSyntax)
-			} else if len(each.Value) > 0 {
-				return fmt.Errorf("%w: value is unnecessary for remove operation", spec.ErrInvalidSyntax)
 			}
 		default:
 			return fmt.Errorf("%w: invalid patch operation", spec.ErrInvalidSyntax)

@@ -3,6 +3,11 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/imulab/go-scim/pkg/v2/crud"
 	"github.com/imulab/go-scim/pkg/v2/db"
 	"github.com/imulab/go-scim/pkg/v2/prop"
@@ -12,10 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/crypto/bcrypt"
-	"io/ioutil"
-	"os"
-	"strings"
-	"testing"
 )
 
 func TestPatchService(t *testing.T) {
@@ -315,6 +316,133 @@ func (s *PatchServiceTestSuite) TestDo() {
 				assert.Nil(t, err)
 				assert.True(t, resp.Patched)
 				assert.Equal(t, "6546579", resp.Resource.Navigator().Dot("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User").Dot("employeeNumber").Current().Raw())
+			},
+		},
+		{
+			name: "patch to remove multiple array elements by value",
+			setup: func(t *testing.T) Patch {
+				database := db.Memory()
+				err := database.Insert(context.TODO(), s.resourceOf(t, map[string]interface{}{
+					"schemas": []interface{}{
+						"urn:ietf:params:scim:schemas:core:2.0:User",
+						"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+					},
+					"id":       "foo",
+					"userName": "foo",
+					"emails": []interface{}{
+						map[string]interface{}{
+							"value": "foo@bar.com",
+							"type":  "home",
+						},
+						map[string]interface{}{
+							"value": "foo@baz.com",
+							"type":  "other",
+						},
+						map[string]interface{}{
+							"value": "foo@acme.com",
+							"type":  "work",
+						},
+					},
+				}))
+				require.Nil(t, err)
+				return PatchService(s.config, database, nil, []filter.ByResource{
+					filter.ByPropertyToByResource(
+						filter.ReadOnlyFilter(),
+						filter.BCryptFilter(),
+					),
+					filter.ByPropertyToByResource(filter.ValidationFilter(database)),
+					filter.MetaFilter(),
+				})
+			},
+			getRequest: func() *PatchRequest {
+				return &PatchRequest{
+					ResourceID: "foo",
+					PayloadSource: strings.NewReader(`
+		{
+			"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+			"Operations": [
+				{
+					"op": "remove",
+					"path": "emails",
+					"value": [
+						{
+							"value": "foo@bar.com"
+						},
+						{
+							"value": "foo@baz.com",
+							"type": "other"
+						}
+					]
+				}
+			]
+		}
+		`),
+				}
+			},
+			expect: func(t *testing.T, resp *PatchResponse, err error) {
+				assert.Nil(t, err)
+				assert.True(t, resp.Patched)
+				members := resp.Resource.Navigator().Dot("emails").Current().Raw().([]interface{})
+				assert.Len(t, members, 1)
+			},
+		},
+		{
+			name: "patch to remove multiple array elements by filter",
+			setup: func(t *testing.T) Patch {
+				database := db.Memory()
+				err := database.Insert(context.TODO(), s.resourceOf(t, map[string]interface{}{
+					"schemas": []interface{}{
+						"urn:ietf:params:scim:schemas:core:2.0:User",
+						"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+					},
+					"id":       "foo",
+					"userName": "foo",
+					"emails": []interface{}{
+						map[string]interface{}{
+							"value": "foo@bar.com",
+							"type":  "home",
+						},
+						map[string]interface{}{
+							"value": "foo@baz.com",
+							"type":  "other",
+						},
+						map[string]interface{}{
+							"value": "foo@acme.com",
+							"type":  "work",
+						},
+					},
+				}))
+				require.Nil(t, err)
+				return PatchService(s.config, database, nil, []filter.ByResource{
+					filter.ByPropertyToByResource(
+						filter.ReadOnlyFilter(),
+						filter.BCryptFilter(),
+					),
+					filter.ByPropertyToByResource(filter.ValidationFilter(database)),
+					filter.MetaFilter(),
+				})
+			},
+			getRequest: func() *PatchRequest {
+				return &PatchRequest{
+					ResourceID: "foo",
+					PayloadSource: strings.NewReader(`
+		{
+			"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+			"Operations": [
+				{
+					"op": "remove",
+					"path": "emails[value co \"foo@ba\"]"
+				}
+			]
+		}
+		`),
+				}
+			},
+			expect: func(t *testing.T, resp *PatchResponse, err error) {
+				assert.Nil(t, err)
+				assert.True(t, resp.Patched)
+				members := resp.Resource.Navigator().Dot("emails").Current().Raw().([]interface{})
+				assert.Len(t, members, 1)
 			},
 		},
 	}

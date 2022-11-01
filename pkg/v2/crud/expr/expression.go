@@ -105,6 +105,19 @@ func (e *Expression) ContainsFilter() bool {
 	return false
 }
 
+// Append appends a given expression to the tail of this expression.
+func (e *Expression) Append(expr *Expression) *Expression {
+	if e == nil {
+		return expr
+	}
+	last := e
+	for last.next != nil {
+		last = last.next
+	}
+	last.next = expr
+	return e
+}
+
 // Walk traverses the hybrid linked list / tree structure connected to the current step. cb is the callback function invoked
 // for each step; marker and done comprises the termination mechanism. When the current step finishes its traversal, it
 // compares itself against marker. If they are equal, invoke the done function to let the caller know we have returned

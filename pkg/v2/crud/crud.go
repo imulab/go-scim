@@ -2,6 +2,7 @@ package crud
 
 import (
 	"fmt"
+
 	"github.com/imulab/go-scim/pkg/v2/crud/expr"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/spec"
@@ -44,7 +45,9 @@ func Replace(resource *prop.Resource, path string, value interface{}) error {
 }
 
 // Delete value from the SCIM resource at the specified SCIM path. The path cannot be empty.
-func Delete(resource *prop.Resource, path string) error {
+// value can be nil, or []interface{} with each element a map[string]interface{} or
+// map[string]interface{}
+func Delete(resource *prop.Resource, path string, value interface{}) error {
 	if len(path) == 0 {
 		return fmt.Errorf("%w: path must be specified for delete operation", spec.ErrInvalidPath)
 	}
@@ -53,10 +56,30 @@ func Delete(resource *prop.Resource, path string) error {
 	if err != nil {
 		return err
 	}
+	var query *expr.Expression
 
-	return defaultTraverse(resource.RootProperty(), skipMainSchemaNamespace(resource, head), func(nav prop.Navigator) error {
-		return nav.Delete().Error()
-	})
+	if value != nil {
+		switch v := value.(type) {
+		case map[string]interface{}:
+			query, err = expr.FromValue(v)
+		case []interface{}:
+			query, err = expr.FromValueList(v)
+		default:
+			return fmt.Errorf("%w: values (%v) for a delete operation is of unsupported type %T",
+				spec.ErrInvalidValue, value, value)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("%w: %v", spec.ErrInvalidValue, err)
+	}
+	head = head.Append(query)
+	return defaultTraverse(
+		resource.RootProperty(),
+		skipMainSchemaNamespace(resource, head),
+		func(nav prop.Navigator) error {
+			return nav.Delete().Error()
+		},
+	)
 }
 
 func skipMainSchemaNamespace(resource *prop.Resource, query *expr.Expression) *expr.Expression {
