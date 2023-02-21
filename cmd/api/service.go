@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	job "github.com/imulab/go-scim/cmd/internal/groupsync"
 	"github.com/imulab/go-scim/pkg/v2/groupsync"
 	"github.com/imulab/go-scim/pkg/v2/prop"
@@ -10,7 +12,6 @@ import (
 	"github.com/rs/zerolog"
 	uuid "github.com/satori/go.uuid"
 	"github.com/streadway/amqp"
-	"time"
 )
 
 // groupCreated is a wrapper implementation of service.Create that computes the member joined the group and submit
@@ -93,7 +94,12 @@ func (s *groupSyncSender) Send(group *prop.Resource, diff *groupsync.Diff) {
 		return
 	}
 
-	messageId := uuid.NewV4().String()
+	id, err := uuid.NewV4()
+	if err != nil {
+		s.logger.Err(err).Msg("Failed to generate message id.")
+		return
+	}
+	messageId := id.String()
 	s.logger.Info().Fields(map[string]interface{}{
 		"messageId": messageId,
 		"groupId":   group.IdOrEmpty(),
@@ -107,6 +113,7 @@ func (s *groupSyncSender) Send(group *prop.Resource, diff *groupsync.Diff) {
 			s.submitMessage(messageId, group, id)
 		})
 	}(messageId, diff)
+	return
 }
 
 func (s *groupSyncSender) submitMessage(messageId string, group *prop.Resource, memberId string) {
