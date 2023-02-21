@@ -12,7 +12,7 @@ require (
 	github.com/opencontainers/runc v1.0.0-rc9 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/rs/zerolog v1.17.2
-	github.com/satori/go.uuid v1.2.0
+	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0
