@@ -1,6 +1,25 @@
 version: 2
+
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "12:00"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "gomod"
+    directory: "/mongo/v2"
+    schedule:
+      interval: "daily"
+      time: "12:00"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "gomod"
+    directory: "/pkg/v2"
+    schedule:
+      interval: "daily"
+      time: "12:00"
+    open-pull-requests-limit: 5
