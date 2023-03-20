@@ -21,8 +21,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	go.mongodb.org/mongo-driver v1.11.2
-	golang.org/x/crypto v0.7.0 // indirect
+	go.mongodb.org/mongo-driver v1.11.3
 	golang.org/x/tools v0.7.0 // indirect
 )
 
