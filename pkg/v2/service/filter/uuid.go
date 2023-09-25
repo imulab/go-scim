@@ -2,10 +2,10 @@ package filter
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/imulab/go-scim/pkg/v2/annotation"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/spec"
-	"github.com/satori/go.uuid"
 )
 
 // UUIDFilter returns a ByProperty filter that generates a UUID for string property that is annotated with @UUID. The
@@ -34,7 +34,7 @@ func (f uuidPropertyFilter) Filter(_ context.Context, _ *spec.ResourceType, nav 
 		return nil
 	}
 
-	return nav.Replace(uuid.NewV4().String()).Error()
+	return nav.Replace(uuid.New().String()).Error()
 }
 
 func (f uuidPropertyFilter) FilterRef(_ context.Context, _ *spec.ResourceType, _ prop.Navigator, _ prop.Navigator) error {

@@ -12,11 +12,13 @@ const CoreSchemaId = "core"
 // after construction. Schema can be identified by its id, and can be cached in a schema registry.
 //
 // See also:
+//
 //	Schemas()
 //
 // Schema is currently being parsed to and from JSON via special adapters. This design is subject to change when we
 // move to treat Schema as just another resource.
 // See also:
+//
 //	issue https://github.com/imulab/go-scim/issues/40
 type Schema struct {
 	id          string
