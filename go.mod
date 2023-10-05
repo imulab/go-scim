@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cenkalti/backoff/v4 v4.2.0
+	github.com/google/uuid v1.3.1
 	github.com/imulab/go-scim/mongo/v2 v2.0.0
 	github.com/imulab/go-scim/pkg/v2 v2.0.0
 	github.com/julienschmidt/httprouter v1.3.0
@@ -12,7 +13,6 @@ require (
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/rs/zerolog v1.29.0
-	github.com/satori/go.uuid v1.2.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.8.2
 	github.com/urfave/cli/v2 v2.25.0
