@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
+
 	"github.com/imulab/go-scim/pkg/v2/db"
 	"github.com/imulab/go-scim/pkg/v2/json"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/service/filter"
 	"github.com/imulab/go-scim/pkg/v2/spec"
-	"io"
-	"io/ioutil"
 )
 
 // ReplaceService returns a replace service.
@@ -84,6 +85,7 @@ func (s *replaceService) Do(ctx context.Context, req *ReplaceRequest) (resp *Rep
 	if newVersion == oldVersion {
 		resp = &ReplaceResponse{
 			Replaced: false,
+			Resource: replacement,
 			Ref:      ref,
 		}
 		return
