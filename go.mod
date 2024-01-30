@@ -15,7 +15,7 @@ require (
 	github.com/rs/zerolog v1.29.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.8.2
-	github.com/urfave/cli/v2 v2.25.0
+	github.com/urfave/cli/v2 v2.25.7
 	go.mongodb.org/mongo-driver v1.11.3
 	golang.org/x/sync v0.1.0
 )
