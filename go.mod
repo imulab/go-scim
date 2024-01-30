@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/cenkalti/backoff/v4 v4.2.0
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/google/uuid v1.3.1
 	github.com/imulab/go-scim/mongo/v2 v2.0.0
 	github.com/imulab/go-scim/pkg/v2 v2.0.0
