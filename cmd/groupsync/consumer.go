@@ -11,8 +11,8 @@ import (
 	"github.com/imulab/go-scim/pkg/v2/groupsync"
 	"github.com/imulab/go-scim/pkg/v2/prop"
 	"github.com/imulab/go-scim/pkg/v2/service/filter"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/rs/zerolog"
-	"github.com/streadway/amqp"
 )
 
 type consumer struct {

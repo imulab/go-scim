@@ -1,6 +1,6 @@
 package groupsync
 
-import "github.com/streadway/amqp"
+import amqp "github.com/rabbitmq/amqp091-go"
 
 // Queue name in RabbitMQ, used by consumer and producer to exchange message.
 const RabbitQueueName = "group_sync"

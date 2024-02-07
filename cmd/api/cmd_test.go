@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package api
@@ -16,7 +17,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/ory/dockertest"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/urfave/cli/v2"

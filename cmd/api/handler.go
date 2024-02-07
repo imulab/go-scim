@@ -4,17 +4,18 @@ import (
 	gojson "encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+
 	"github.com/imulab/go-scim/pkg/v2/handlerutil"
 	"github.com/imulab/go-scim/pkg/v2/json"
 	"github.com/imulab/go-scim/pkg/v2/service"
 	"github.com/imulab/go-scim/pkg/v2/spec"
 	"github.com/julienschmidt/httprouter"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/rs/zerolog"
-	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"net/http"
-	"net/http/httptest"
 )
 
 // CreateHandler returns a route handler function for creating SCIM resources.

@@ -3,8 +3,9 @@ package args
 import (
 	"context"
 	"fmt"
+
 	"github.com/cenkalti/backoff/v4"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/urfave/cli/v2"
 )
 
