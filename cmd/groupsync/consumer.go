@@ -192,7 +192,13 @@ func (c *consumer) retry(message *job.Message) {
 }
 
 func (c *consumer) send(message *job.Message) {
-	messageId := uuid.NewV4().String()
+	uid, err := uuid.NewV4()
+	if err != nil {
+		c.logger.Err(err).Fields(message.Fields()).Msg("Error generating uuid.")
+		return
+	}
+
+	messageId := uid.String()
 
 	raw, err := json.Marshal(message)
 	if err != nil {

@@ -34,7 +34,12 @@ func (f uuidPropertyFilter) Filter(_ context.Context, _ *spec.ResourceType, nav 
 		return nil
 	}
 
-	return nav.Replace(uuid.NewV4().String()).Error()
+	uid, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
+
+	return nav.Replace(uid.String()).Error()
 }
 
 func (f uuidPropertyFilter) FilterRef(_ context.Context, _ *spec.ResourceType, _ prop.Navigator, _ prop.Navigator) error {

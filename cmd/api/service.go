@@ -93,7 +93,13 @@ func (s *groupSyncSender) Send(group *prop.Resource, diff *groupsync.Diff) {
 		return
 	}
 
-	messageId := uuid.NewV4().String()
+	uid, err := uuid.NewV4()
+	if err != nil {
+		s.logger.Err(err).Fields(map[string]interface{}{"groupId": group.IdOrEmpty()}).Msg("Error generating uuid.")
+		return
+	}
+
+	messageId := uid.String()
 	s.logger.Info().Fields(map[string]interface{}{
 		"messageId": messageId,
 		"groupId":   group.IdOrEmpty(),
