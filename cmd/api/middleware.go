@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -82,7 +83,7 @@ func validateBearerToken(token string, validTokens []string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("invalid bearer token")
+	return errors.New("invalid bearer token")
 }
 
 // validateOAuth2Token validates an OAuth2 token (simplified for mock server)
@@ -94,15 +95,7 @@ func validateOAuth2Token(_ context.Context, token string, authConfig *args.Auth)
 		}
 	}
 
-	// Basic token format validation (sufficient for mock/testing)
-	if len(token) < 10 {
-		return fmt.Errorf("token too short")
-	}
-
-	// For mock server, accept tokens that look like valid JWTs or have basic format
-	if !strings.Contains(token, ".") && len(token) < 20 {
-		return fmt.Errorf("invalid token format")
-	}
+	// For mock server, accept any non-empty Bearer token (already validated upstream)
 
 	// Cache the token for 1 hour
 	if authConfig.TokenCache == nil {
