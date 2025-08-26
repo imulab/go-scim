@@ -13,8 +13,8 @@ func Command() *cli.Command {
 	args := newArgs()
 	return &cli.Command{
 		Name:        "api",
-		Usage:       "Start SCIM API server with optional authentication",
-		Description: "Manage state of resources defined in the SCIM protocol. Supports OAuth2 and Bearer token authentication.",
+		Usage:       "Start SCIM API mock server (no authentication)",
+		Description: "Mock SCIM server for integration testing. No authentication required.",
 		Flags:       args.Flags(),
 		Action: func(_ *cli.Context) error {
 			app := args.Initialize()
@@ -47,27 +47,11 @@ func Command() *cli.Command {
 				router.GET("/health", HealthHandler(app.MongoClient(), app.RabbitMQConnection()))
 			}
 
-			// Configure handler with optional authentication
-			var handler http.Handler = router
+			app.Logger().Info().Fields(map[string]interface{}{
+				"port": args.httpPort,
+			}).Msg("Listening for incoming requests without authentication.")
 
-			// Apply authentication middleware if enabled
-			if args.Auth.IsAuthenticationEnabled() {
-				handler = AuthMiddleware(args.Auth)(router)
-
-				app.Logger().Info().Fields(map[string]interface{}{
-					"port":           args.httpPort,
-					"auth_enabled":   true,
-					"oauth2_enabled": args.Auth.OAuth2Enabled,
-					"bearer_tokens":  len(args.Auth.GetBearerTokens()) > 0,
-				}).Msg("Listening for incoming requests with authentication enabled.")
-			} else {
-				app.Logger().Info().Fields(map[string]interface{}{
-					"port":         args.httpPort,
-					"auth_enabled": false,
-				}).Msg("Listening for incoming requests without authentication.")
-			}
-
-			return http.ListenAndServe(fmt.Sprintf(":%d", args.httpPort), handler)
+			return http.ListenAndServe(fmt.Sprintf(":%d", args.httpPort), router)
 		},
 	}
 }

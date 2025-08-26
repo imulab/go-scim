@@ -12,7 +12,6 @@ func newArgs() *arguments {
 		MongoDB:  new(args.MongoDB),
 		RabbitMQ: new(args.RabbitMQ),
 		Logging:  new(args.Logging),
-		Auth:     new(args.Auth),
 	}
 }
 
@@ -22,7 +21,6 @@ type arguments struct {
 	*args.MongoDB
 	*args.RabbitMQ
 	*args.Logging
-	*args.Auth
 	httpPort int
 }
 
@@ -42,7 +40,6 @@ func (arg *arguments) Flags() []cli.Flag {
 	flags = append(flags, arg.MongoDB.Flags()...)
 	flags = append(flags, arg.RabbitMQ.Flags()...)
 	flags = append(flags, arg.Logging.Flags()...)
-	flags = append(flags, arg.Auth.Flags()...)
 	return flags
 }
 
