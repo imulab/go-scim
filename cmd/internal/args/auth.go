@@ -2,7 +2,6 @@ package args
 
 import (
 	"strings"
-	"time"
 
 	"github.com/urfave/cli/v2"
 )
@@ -21,8 +20,6 @@ type Auth struct {
 	BearerTokens string
 	// Enable authentication (either OAuth2 or Bearer token)
 	AuthEnabled bool
-	// Simple token cache for OAuth2 (used internally)
-	TokenCache map[string]time.Time
 }
 
 // GetBearerTokens returns a slice of valid bearer tokens

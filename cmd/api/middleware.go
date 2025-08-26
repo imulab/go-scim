@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/imulab/go-scim/cmd/internal/args"
 )
@@ -87,22 +86,8 @@ func validateBearerToken(token string, validTokens []string) error {
 }
 
 // validateOAuth2Token validates an OAuth2 token (simplified for mock server)
-func validateOAuth2Token(_ context.Context, token string, authConfig *args.Auth) error {
-	// Check cache first for performance
-	if authConfig.TokenCache != nil {
-		if expiry, exists := authConfig.TokenCache[token]; exists && time.Now().Before(expiry) {
-			return nil
-		}
-	}
-
+func validateOAuth2Token(_ context.Context, _ string, _ *args.Auth) error {
 	// For mock server, accept any non-empty Bearer token (already validated upstream)
-
-	// Cache the token for 1 hour
-	if authConfig.TokenCache == nil {
-		authConfig.TokenCache = make(map[string]time.Time)
-	}
-	authConfig.TokenCache[token] = time.Now().Add(1 * time.Hour)
-
 	return nil
 }
 
