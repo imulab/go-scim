@@ -198,17 +198,115 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ## Traceability
 
-Updated during roadmap creation.
+Mapped during roadmap creation (2026-05-07). All v1 REQ-IDs map to exactly one phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (To be filled by roadmapper) | | |
+| DEF-01 | Phase 1 | Pending |
+| DEF-02 | Phase 1 | Pending |
+| DEF-03 | Phase 1 | Pending |
+| DEF-04 | Phase 1 | Pending |
+| DEF-05 | Phase 1 | Pending |
+| GEN-01 | Phase 2 | Pending |
+| GEN-02 | Phase 2 | Pending |
+| GEN-03 | Phase 2 | Pending |
+| GEN-04 | Phase 2 | Pending |
+| GEN-05 | Phase 2 | Pending |
+| GEN-06 | Phase 2 | Pending |
+| DOM-01 | Phase 2 | Pending |
+| DOM-02 | Phase 2 | Pending |
+| DOM-03 | Phase 2 | Pending |
+| PER-01 | Phase 3 | Pending |
+| PER-02 | Phase 3 | Pending |
+| PER-03 | Phase 3 | Pending |
+| PER-04 | Phase 3 | Pending |
+| PER-05 | Phase 3 | Pending |
+| PER-06 | Phase 3 | Pending |
+| DDL-01 | Phase 3 | Pending |
+| DDL-02 | Phase 3 | Pending |
+| DDL-03 | Phase 3 | Pending |
+| HTTP-01 | Phase 4 | Pending |
+| HTTP-02 | Phase 4 | Pending |
+| HTTP-03 | Phase 4 | Pending |
+| HTTP-04 | Phase 4 | Pending |
+| HTTP-05 | Phase 4 | Pending |
+| HTTP-06 | Phase 4 | Pending |
+| DISC-01 | Phase 4 | Pending |
+| DISC-02 | Phase 4 | Pending |
+| DISC-03 | Phase 4 | Pending |
+| DISC-04 | Phase 4 | Pending |
+| LIST-01 | Phase 4 | Pending |
+| LIST-02 | Phase 4 | Pending |
+| LIST-03 | Phase 4 | Pending |
+| LIST-04 | Phase 4 | Pending |
+| LIST-05 | Phase 4 | Pending |
+| LIST-06 | Phase 4 | Pending |
+| LIST-07 | Phase 4 | Pending |
+| LIST-08 | Phase 4 | Pending |
+| PATCH-01 | Phase 5 | Pending |
+| PATCH-02 | Phase 5 | Pending |
+| PATCH-03 | Phase 5 | Pending |
+| PATCH-04 | Phase 5 | Pending |
+| PATCH-05 | Phase 5 | Pending |
+| PATCH-06 | Phase 5 | Pending |
+| PATCH-07 | Phase 5 | Pending |
+| PATCH-08 | Phase 5 | Pending |
+| PATCH-09 | Phase 5 | Pending |
+| ETAG-01 | Phase 5 | Pending |
+| ETAG-02 | Phase 3 | Pending |
+| ETAG-03 | Phase 5 | Pending |
+| ETAG-04 | Phase 5 | Pending |
+| BULK-01 | Phase 5 | Pending |
+| BULK-02 | Phase 5 | Pending |
+| BULK-03 | Phase 5 | Pending |
+| BULK-04 | Phase 5 | Pending |
+| RES-01 | Phase 6 | Pending |
+| RES-02 | Phase 6 | Pending |
+| RES-03 | Phase 6 | Pending |
+| RES-04 | Phase 6 | Pending |
+| CLI-01 | Phase 7 | Pending |
+| CLI-02 | Phase 7 | Pending |
+| CLI-03 | Phase 7 | Pending |
+| CLI-04 | Phase 7 | Pending |
+| CLI-05 | Phase 7 | Pending |
+| LIB-01 | Phase 1 | Pending |
+| LIB-02 | Phase 4 | Pending |
+| LIB-03 | Phase 1 | Pending |
+| LIB-04 | Phase 1 | Pending |
+| OBS-01 | Phase 7 | Pending |
+| OBS-02 | Phase 7 | Pending |
+| OBS-03 | Phase 7 | Pending |
+| TEST-01 | Phase 7 | Pending |
+| TEST-02 | Phase 7 | Pending |
+| TEST-03 | Phase 7 | Pending |
+| TEST-04 | Phase 7 | Pending |
+| TEST-05 | Phase 7 | Pending |
+| TEST-06 | Phase 7 | Pending |
+| REPO-01 | Phase 0 | Pending |
+| REPO-02 | Phase 0 | Pending |
+| REPO-03 | Phase 0 | Pending |
+| REPO-04 | Phase 0 | Pending |
+| REPO-05 | Phase 0 | Pending |
 
 **Coverage:**
-- v1 requirements: TBD total
-- Mapped to phases: TBD
-- Unmapped: TBD
+- v1 requirements: 85 total
+- Mapped to phases: 85
+- Unmapped: 0
+
+**Per-phase counts:**
+
+| Phase | REQ Count |
+|-------|-----------|
+| Phase 0: Architecture Spike & Repo Setup | 5 |
+| Phase 1: Definition + IR + Validator | 8 |
+| Phase 2: Domain Emitter + Generator Pipeline | 9 |
+| Phase 3: Persistence + DDL + ETag (SQLite) | 10 |
+| Phase 4: HTTP Server + Discovery + List | 19 |
+| Phase 5: PATCH + ETag/If-Match + Bulk | 16 |
+| Phase 6: Multi-Resource (Group/EU/Custom) | 4 |
+| Phase 7: CLI + Observability + Compliance | 14 |
+| **Total** | **85** |
 
 ---
 *Requirements defined: 2026-05-07*
-*Last updated: 2026-05-07 after initial definition*
+*Last updated: 2026-05-07 — traceability populated by roadmapper*
