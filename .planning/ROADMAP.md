@@ -35,7 +35,11 @@ go-scim v3 is a build-time code generator that takes a SCIM resource definition 
   3. Two `go.mod` modules exist (`scimgen` and `scimrt`) linked by a `go.work` file, with `go.work` gitignored
   4. CI pipeline builds every module both with `GOWORK=on` (workspace mode) and `GOWORK=off` (production-like) and a disagreement between the two fails the build
   5. Code-emission engine decision (`text/template` + `go/format` vs `dave/jennifer`) recorded in PROJECT.md Key Decisions with the spike evidence that drove it
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 00-01-PLAN.md — CONTRIBUTING.md anti-relapse rules + PR template + CODEOWNERS + lefthook hooks
+  - [ ] 00-02-PLAN.md — gen/rt modules + go.work gitignore + LICENSE + README + Makefile + GitHub Actions CI
+  - [ ] 00-03-PLAN.md — emission-engine spike (text/template vs dave/jennifer) + PROJECT.md Key Decisions
+  - [ ] 00-04-PLAN.md — reconcile REQUIREMENTS.md / ROADMAP.md / STACK.md per CONTEXT.md overrides
 
 ### Phase 1: Definition + IR + Validator
 **Goal**: A user can describe a SCIM resource via a typed Go builder; mistakes surface at `go generate` time with file:line attribution back to the builder call, never in machine-generated code.
@@ -127,7 +131,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Architecture Spike & Repo Setup | 0/TBD | Not started | - |
+| 0. Architecture Spike & Repo Setup | 0/4 | Not started | - |
 | 1. Definition + IR + Validator | 0/TBD | Not started | - |
 | 2. Domain Emitter + Generator Pipeline | 0/TBD | Not started | - |
 | 3. Persistence + DDL + ETag (SQLite) | 0/TBD | Not started | - |
