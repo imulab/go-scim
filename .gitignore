@@ -1,0 +1,13 @@
+# Go workspace state — per-developer, never committed (REPO-01).
+go.work
+go.work.sum
+
+# Build artifacts
+*.exe
+*.test
+/bin/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
