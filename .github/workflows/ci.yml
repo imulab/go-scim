@@ -1,0 +1,75 @@
+name: ci
+on:
+  push:
+    branches: [next, master, main]
+  pull_request:
+
+jobs:
+  build-workspace:
+    name: build (workspace, go ${{ matrix.go }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.25', '1.26']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Recreate workspace
+        run: |
+          go work init
+          go work use ./gen ./rt
+      - name: Build workspace
+        # Repo root is not itself a module, so plain `go build ./...` does
+        # not match. Enumerate the module trees so the workspace catches
+        # every package.
+        run: go build ./gen/... ./rt/...
+
+  build-isolated:
+    name: build (GOWORK=off, ${{ matrix.module }}, go ${{ matrix.go }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.25', '1.26']
+        module: [gen, rt]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Build module in isolation
+        env:
+          GOWORK: 'off'
+        run: |
+          cd ${{ matrix.module }}
+          go build ./...
+
+  forbidden-symbols:
+    name: forbidden-symbol grep gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Grep for relapse signatures
+        run: ./.github/scripts/forbidden-symbols.sh
+
+  commit-msg-lint:
+    name: commit message vendor-name gate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check PR commit messages for vendor names
+        run: |
+          base=${{ github.event.pull_request.base.sha }}
+          head=${{ github.event.pull_request.head.sha }}
+          if git log "${base}..${head}" --format=%B | grep -iE 'Entra|Okta|Azure\s*AD|AzureAD'; then
+            echo "::error::Commit message contains vendor name (per CONTRIBUTING.md Rule 3)."
+            exit 1
+          fi
