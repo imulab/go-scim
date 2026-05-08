@@ -19,7 +19,7 @@ go-scim v3 is a build-time code generator that takes a SCIM resource definition 
 - [ ] **Phase 4: HTTP Server + Discovery + List/Filter/Sort/Pagination** - Plain http.Handler with discovery endpoints and full filter grammar
 - [ ] **Phase 5: PATCH + ETag/If-Match + Bulk** - RFC 7644 §3.5.2 PATCH engine, conditional writes, /Bulk fan-out
 - [ ] **Phase 6: Multi-Resource (Group + EnterpriseUser + Custom Types)** - Built-in Group/EnterpriseUser definitions plus user-defined custom resources
-- [ ] **Phase 7: CLI + Observability SPI + Compliance Test Emitter** - scimgen CLI, no-op observability defaults, emitted compliance suite
+- [ ] **Phase 7: CLI + Observability SPI + Compliance Test Emitter** - scim CLI, no-op observability defaults, emitted compliance suite
 
 **Deferred to v1.x:** Phase 8 (Postgres dialect + driver) — architectural validation gate for the SQL SPI; PROJECT.md defers concrete non-SQLite drivers to post-v1.
 
@@ -32,7 +32,7 @@ go-scim v3 is a build-time code generator that takes a SCIM resource definition 
 **Success Criteria** (what must be TRUE):
   1. Contributor architecture rules document exists and explicitly forbids (a) generic Property/tree models, (b) runtime schema interpretation in generated servers, (c) IdP-specific accommodations
   2. PR template asks reviewers to confirm the change does not introduce IdP-specific tolerance and answer must be no
-  3. Two `go.mod` modules exist (`scimgen` and `scimrt`) linked by a `go.work` file, with `go.work` gitignored
+  3. Two `go.mod` modules exist (`gen` and `rt`) linked by a `go.work` file, with `go.work` gitignored
   4. CI pipeline builds every module both with `GOWORK=on` (workspace mode) and `GOWORK=off` (production-like) and a disagreement between the two fails the build
   5. Code-emission engine decision (`text/template` + `go/format` vs `dave/jennifer`) recorded in PROJECT.md Key Decisions with the spike evidence that drove it
 **Plans**: 4 plans
@@ -48,9 +48,9 @@ go-scim v3 is a build-time code generator that takes a SCIM resource definition 
 **Success Criteria** (what must be TRUE):
   1. User can author a User-resource definition by importing `scimdef` and chaining typed builder calls in a Go file (no `map[string]interface{}` in the IR)
   2. Validator rejects definitions with URN format errors, attribute name collisions, sub-attribute name violations, multi-valued complex `primary` ambiguities, or reserved attribute names — and the error message points to the builder call site (file:line)
-  3. `scimgen dump-ir` emits the validated IR as JSON for debugging
+  3. `scim dump-ir` emits the validated IR as JSON for debugging
   4. Generator is importable as a Go library (in-process generation works without invoking the CLI)
-  5. Generator (`scimgen`) and runtime support library (`scimrt`) are separately versioned modules; `scimgen` never appears in any generated file's import list
+  5. Generator (`gen`) and runtime support library (`rt`) are separately versioned modules; `gen` never appears in any generated file's import list
 **Plans**: TBD
 
 ### Phase 2: Domain Emitter + Generator Pipeline
@@ -74,7 +74,7 @@ go-scim v3 is a build-time code generator that takes a SCIM resource definition 
   2. `meta.version` is a per-resource monotonic counter incremented in the same transaction as every write — two consecutive writes always produce strictly increasing versions
   3. Generator emits a deterministic single-file `schema.sql` per resource set; two regen runs produce byte-identical SQL; the DDL is consumable by golang-migrate / goose / atlas naming conventions
   4. Persistence column shape carries a `tenant_id` (single value used in v1) so multi-tenancy can be added later without rewriting the repos
-  5. `modernc.org/sqlite` reference driver implements the SQL SPI in `scimrt/sqldriver` and the SPI is extracted only after the SQLite implementation passes integration tests against the User repo (concrete-first; SPI shape informed by working seams)
+  5. `modernc.org/sqlite` reference driver implements the SQL SPI in `rt/sqldriver` and the SPI is extracted only after the SQLite implementation passes integration tests against the User repo (concrete-first; SPI shape informed by working seams)
 **Plans**: TBD
 
 ### Phase 4: HTTP Server + Discovery + List/Filter/Sort/Pagination
@@ -96,7 +96,7 @@ go-scim v3 is a build-time code generator that takes a SCIM resource definition 
 **Success Criteria** (what must be TRUE):
   1. PATCH supports the full RFC 7644 §3.5.2 op set (`add`, `replace`, `remove`) across all path forms — no path, attribute path, sub-attribute path, value-path filter (e.g. `emails[type eq "work"].value`) — and the multi-valued `value: [...]` array add form merges rather than replaces
   2. PATCH is atomic: all ops succeed or the resource is unchanged; filter-targeted Remove on multi-valued attributes removes only matching elements; Replace on a non-existent target behaves per RFC; removing required sub-attributes returns the correct error; `returned: never` and `mutability: readOnly` violations are rejected with the correct `scimType`
-  3. PATCH engine lives in `scimrt/patch` and operates on typed resources via generated visitor methods (e.g. `(*User).ApplyPatch(op)`); no reflection over generated structs at runtime; PATCH conformance test corpus drawn from spec examples + `scim-patch` + adversarial cases ships with the runtime
+  3. PATCH engine lives in `rt/patch` and operates on typed resources via generated visitor methods (e.g. `(*User).ApplyPatch(op)`); no reflection over generated structs at runtime; PATCH conformance test corpus drawn from spec examples + `scim-patch` + adversarial cases ships with the runtime
   4. Every response carries a weak ETag (`W/"..."`) sourced from `meta.version`; `If-Match` on PUT/PATCH/DELETE returns 412 on mismatch; `If-None-Match: *` on POST is enforced for upsert protection
   5. `/Bulk` endpoint executes operations sequentially, resolves `bulkId` cross-references within a single request, honors `failOnErrors`, and fans out to the same per-resource handlers (no duplicated logic)
 **Plans**: TBD
@@ -117,9 +117,9 @@ go-scim v3 is a build-time code generator that takes a SCIM resource definition 
 **Depends on**: Phase 6
 **Requirements**: CLI-01, CLI-02, CLI-03, CLI-04, CLI-05, OBS-01, OBS-02, OBS-03, TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06
 **Success Criteria** (what must be TRUE):
-  1. `scimgen` CLI built on Cobra exposes `generate`, `check`, and `dump-ir` subcommands (CLI is a thin wrapper over the library API); `scimgen generate` runs the full pipeline against a definition entry point and writes a runnable repo; `scimgen check` warns on definition diffs that would break user-owned code
+  1. `scim` CLI built on Cobra exposes `generate`, `check`, and `dump-ir` subcommands (CLI is a thin wrapper over the library API); `scim generate` runs the full pipeline against a definition entry point and writes a runnable repo; `scim check` warns on definition diffs that would break user-owned code
   2. CLI emits `cmd/server/main.go` that wires environment variables and flags into the typed `Config` struct (12-factor on top of the library API); the generated `main.go` is regenerable but user-editable (file naming distinguishes it from `*_gen.go`)
-  3. `scimrt/observe` exposes Logger / Tracer / Meter SPIs with no-op default implementations — generated servers compile and run with no observability dependencies; user can wire concrete adapters (slog handler, OTel, Prometheus) via the `Config` struct
+  3. `rt/observe` exposes Logger / Tracer / Meter SPIs with no-op default implementations — generated servers compile and run with no observability dependencies; user can wire concrete adapters (slog handler, OTel, Prometheus) via the `Config` struct
   4. Generator emits unit tests for handlers and repos, integration tests against the SQLite reference driver, golden-file snapshots of generator output, and a SCIM v2 compliance test suite into the user's repo at `internal/scimtest/` covering RFC 7643/7644 conformance
   5. Filter parser fuzz target (`go test -fuzz`) runs at least 24h in CI without crash before being declared done; "compiled examples" CI module compiles and runs the generated quickstart server end-to-end
 **Plans**: TBD

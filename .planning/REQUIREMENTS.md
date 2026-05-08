@@ -33,7 +33,7 @@
 - [ ] **PER-01**: Per-resource SQL repository emitted with hand-shaped SQL — no embedded ORM, no runtime tree
 - [ ] **PER-02**: Repository exposes Create / Get / Replace / Delete operations that participate in a single transaction with the version-counter increment
 - [ ] **PER-03**: Persistence layer is tenant-id aware in its column shape (single tenant value used in v1; design supports later request-layer multi-tenancy)
-- [ ] **PER-04**: SQL driver abstraction exists in `scimrt/sqldriver` exposing a small SPI (Tx, Exec, Query, Migrate, Close)
+- [ ] **PER-04**: SQL driver abstraction exists in `rt/sqldriver` exposing a small SPI (Tx, Exec, Query, Migrate, Close)
 - [ ] **PER-05**: `modernc.org/sqlite` reference driver implements the SPI and ships in v1
 - [ ] **PER-06**: SQL driver SPI is extracted only after the SQLite implementation passes the compliance suite (concrete-first)
 
@@ -79,7 +79,7 @@
 - [ ] **PATCH-05**: Replace on a non-existent target behaves per RFC (treated as Add where applicable)
 - [ ] **PATCH-06**: Removing a required sub-attribute returns the correct error; removing a `returned: never` attribute is a no-op or rejected per spec
 - [ ] **PATCH-07**: PATCH is atomic — entire op set succeeds or the resource is unchanged
-- [ ] **PATCH-08**: PATCH engine lives in `scimrt/patch` and operates on typed resources via generated visitor methods (e.g. `(*User).ApplyPatch(op)`); no reflection over generated structs at runtime
+- [ ] **PATCH-08**: PATCH engine lives in `rt/patch` and operates on typed resources via generated visitor methods (e.g. `(*User).ApplyPatch(op)`); no reflection over generated structs at runtime
 - [ ] **PATCH-09**: PATCH conformance test corpus drawn from spec examples + `scim-patch` corpus + adversarial cases ships with the runtime
 
 ### ETag / Concurrency
@@ -105,10 +105,10 @@
 
 ### CLI
 
-- [ ] **CLI-01**: `scimgen` CLI built on Cobra wraps the library API (CLI = thin wrapper)
-- [ ] **CLI-02**: `scimgen generate` runs the full pipeline against a definition entry point and writes a runnable repo
-- [ ] **CLI-03**: `scimgen check` warns on definition diffs that would break user-owned code
-- [ ] **CLI-04**: `scimgen dump-ir` emits the IR as JSON for debugging
+- [ ] **CLI-01**: `scim` CLI built on Cobra wraps the library API (CLI = thin wrapper)
+- [ ] **CLI-02**: `scim generate` runs the full pipeline against a definition entry point and writes a runnable repo
+- [ ] **CLI-03**: `scim check` warns on definition diffs that would break user-owned code
+- [ ] **CLI-04**: `scim dump-ir` emits the IR as JSON for debugging
 - [ ] **CLI-05**: CLI emits `cmd/server/main.go` that wires environment variables and flags into the typed `Config` struct (12-factor on top of the library API)
 
 ### Library
@@ -116,11 +116,11 @@
 - [ ] **LIB-01**: Generator is importable as a Go library; in-process generation supported
 - [ ] **LIB-02**: Generated server consumes a typed `Config` struct constructed by the user's `main`
 - [ ] **LIB-03**: Generator and runtime support library are separately versioned (semver)
-- [ ] **LIB-04**: Generated code imports only the `scimrt` runtime module — never the `scimgen` generator module
+- [ ] **LIB-04**: Generated code imports only the `rt` runtime module — never the `gen` generator module
 
 ### Observability
 
-- [ ] **OBS-01**: `scimrt/observe` exposes Logger / Tracer / Meter SPIs only (no concrete impl)
+- [ ] **OBS-01**: `rt/observe` exposes Logger / Tracer / Meter SPIs only (no concrete impl)
 - [ ] **OBS-02**: No-op default implementations supplied so generated servers compile and run with no observability dependencies
 - [ ] **OBS-03**: User can wire concrete adapters (slog handler, OTel, Prometheus) via the `Config` struct
 
@@ -136,7 +136,7 @@
 ### Repo / Workspace / License
 
 - [ ] **REPO-01**: Multi-module workspace via `go.work` (gitignored); CI runs with `GOWORK=off` to validate each module standalone
-- [ ] **REPO-02**: Two `go.mod` modules: `scimgen` (generator) and `scimrt` (runtime support library)
+- [ ] **REPO-02**: Two `go.mod` modules: `gen` (generator at `github.com/imulab/go-scim/gen`) and `rt` (runtime support library at `github.com/imulab/go-scim/rt`)
 - [ ] **REPO-03**: License is MIT (matching legacy `.legacy/LICENSE`)
 - [ ] **REPO-04**: Contributor architecture rules document encodes anti-relapse rules (no generic tree, no runtime schema interpretation, no IdP accommodation)
 - [ ] **REPO-05**: PR template asks reviewers to verify changes do not introduce IdP-specific tolerance
@@ -310,3 +310,4 @@ Mapped during roadmap creation (2026-05-07). All v1 REQ-IDs map to exactly one p
 ---
 *Requirements defined: 2026-05-07*
 *Last updated: 2026-05-07 — traceability populated by roadmapper*
+*Updated 2026-05-07 (Phase 0 plan) — CONTEXT.md overrides applied: module names scimgen→gen, scimrt→rt; CLI binary scimgen→scim. Requirement IDs unchanged.*
