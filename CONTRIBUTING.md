@@ -119,3 +119,4 @@ The rules are amendable via project decision, not bypassable via PR.
 3. PROJECT.md "Out of Scope" already reserves the right to scope additions; rule amendments use the same channel.
 
 If you are about to merge a PR that violates one of these rules without an accompanying amendment in `CONTRIBUTING.md` and `PROJECT.md`, stop. The rule is the conversation.
+< codeowners test >
