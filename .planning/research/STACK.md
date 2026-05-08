@@ -11,7 +11,7 @@
 
 | Dimension | Pick | One-liner |
 |-----------|------|-----------|
-| Go toolchain | **Go 1.24+** (use 1.25 if available) | Tool directives in `go.mod`, generic type aliases, Swiss Tables runtime |
+| Go toolchain | **Go 1.25+** (CI tests 1.25 + 1.26) | Tool directives in `go.mod`, generic type aliases, Swiss Tables runtime, `go.work` workspaces |
 | Multi-module workflow | **`go.work`** (gitignored) + per-module `go.mod` | Iterate generator + runtime in lockstep without `replace` hacks |
 | Code generation | **`dave/jennifer`** (primary) + **`text/template`** (string-shaped fragments) | Programmatic Go AST with auto-managed imports; `gofmt` always |
 | Definition format (v1) | **Fluent Go builder** ingested into an internal model | In-language, type-checked, refactor-friendly; YAML deferred |
@@ -41,7 +41,7 @@ The reason "generator stack" and "runtime stack" are separated below is the same
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Go | 1.24.x (1.25 once available) | Toolchain | Tool directives in `go.mod` (replaces the `tools.go` hack), generic type aliases land fully, Swiss Tables runtime gives 2-3% CPU back, `synctest` graduates to GA. Released Feb 2025; current patch 1.24.13 (Feb 2026). [Confidence: HIGH] |
+| Go | 1.25.x floor; CI matrix 1.25 + 1.26 | Toolchain | Tool directives in `go.mod`, generic type aliases, Swiss Tables runtime, `go.work` workspaces. Go 1.25 floor per Phase 0 CONTEXT.md decision; user runs 1.26.1. [Confidence: HIGH] |
 | `dave/jennifer` | v1.7.x | Programmatic Go source generation | Auto-tracks imports across conditional emission paths (the killer feature templates can't match); produces `gofmt`-clean output; widely used as the foundation of Go code generators (zerogen, go-contentful-generator, jennifer's own genjen). The code we're emitting (per-resource handlers, repos, validators, filter compilers, PATCH appliers) is exactly the "complex with conditional logic and many imports" case the project documentation flags as Jennifer-shaped. [Confidence: HIGH] |
 | `text/template` | stdlib | String-shaped fragments only | For SQL DDL, `main.go` skeleton, README, Makefile — output that isn't Go AST. Mark all rendered files with the `// Code generated ... DO NOT EDIT.` regex from `golang.org/s/generatedcode`. Run all `.go` output through `go/format.Source` before write. [Confidence: HIGH] |
 | `go/parser` + `go/format` | stdlib | Validate emitted Go before writing to disk | Parse-then-write catches malformed templates at generation time, not at user-build time. Cheap insurance. [Confidence: HIGH] |
@@ -74,7 +74,7 @@ The hard rule: **the runtime support library must stay drastically smaller than 
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Go | 1.24+ | Same as generator | Generated code targets the same minimum |
+| Go | 1.25+ | Same as generator | Generated code targets the same minimum |
 | `net/http` | stdlib | HTTP handler contract | Project decision: generated server is a plain `http.Handler`. Go 1.22's enhanced `ServeMux` (`mux.HandleFunc("GET /Users/{id}", ...)`) is now sufficient for SCIM's REST surface — no third-party router needed inside the generated code. The user mounts on chi/gorilla/gin/whatever they want at the application level. [Confidence: HIGH] |
 | `database/sql` | stdlib | SQL driver interface | The pluggable persistence abstraction is built on `database/sql`'s `driver.Driver` indirection. Each generated repo speaks `database/sql` directly; the SQLite/Postgres/MySQL choice is a runtime config of which `_ import` the user adds. [Confidence: HIGH] |
 | `log/slog` | stdlib | Pluggable logging | Generated code accepts an `*slog.Logger` (or a small interface that `*slog.Logger` satisfies). Stdlib means zero deps in the runtime; user wires Datadog/OTel/Loki via slog handlers. The Handler/Record/Logger split is the canonical "pluggable backend" shape — exactly what the project's "Pluggable observability" requirement asks for. [Confidence: HIGH] |
@@ -191,7 +191,7 @@ go-scim/
 
 ```
 # Generator go.mod
-go 1.24
+go 1.25
 
 require (
     github.com/dave/jennifer v1.7.1
@@ -200,7 +200,7 @@ require (
     github.com/google/go-cmp v0.6.0
 )
 
-# Tool directive (Go 1.24+)
+# Tool directive (Go 1.25+)
 tool (
     github.com/imulab/go-scim/generator/cmd/scimgen
 )
@@ -208,7 +208,7 @@ tool (
 
 ```
 # Runtime go.mod
-go 1.24
+go 1.25
 
 require (
     github.com/google/uuid v1.6.0
@@ -262,9 +262,9 @@ require (
 
 | Package A | Compatible With | Notes |
 |-----------|-----------------|-------|
-| `modernc.org/sqlite` v1.49+ | Go 1.24+ | December 2025 prepared-statement fix is in v1.46.1+ — pin minimum at 1.46.1 to get the perf fix |
+| `modernc.org/sqlite` v1.49+ | Go 1.25+ | December 2025 prepared-statement fix is in v1.46.1+ — pin minimum at 1.46.1 to get the perf fix |
 | `dave/jennifer` v1.7+ | Go 1.18+ | No generics requirement; safe to bump Go floor without re-evaluating |
-| Go 1.22+ ServeMux pattern syntax | Go 1.22+ | If we drop `1.24` floor for any reason, the ServeMux pattern API still requires 1.22 minimum. Don't go below 1.22. |
+| Go 1.22+ ServeMux pattern syntax | Go 1.22+ | If we drop `1.25` floor for any reason, the ServeMux pattern API still requires 1.22 minimum. Don't go below 1.22. |
 | `log/slog` | Go 1.21+ | Stdlib since 1.21; safe assumption |
 | `testify` v1.10 | Go 1.18+ | Drop `suite` package; use `require`/`assert` only |
 | `goccy/go-yaml` (if used) | Go 1.20+ | Active maintenance; not blocked by archived upstream |
@@ -283,7 +283,7 @@ Mapping back to `.planning/codebase/CONCERNS.md`:
 | §4.1 Projection bug | Per-resource generated repos make projection a code-gen concern; the bug class disappears when projection is statically known per resource. |
 | §6 Visitor traversal cost | Generated code doesn't visit a tree — it knows the shape. PATCH/serialize/validate become direct field access. |
 | §7.1 JSON deserializer state machine | Stdlib `encoding/json` with generated structs replaces the 715-line manual scanner. |
-| §10.1 Deprecated `io/ioutil` | Go 1.24 floor; we never write `io/ioutil`. |
+| §10.1 Deprecated `io/ioutil` | Go 1.25 floor; we never write `io/ioutil`. |
 
 ---
 
@@ -334,3 +334,4 @@ Mapping back to `.planning/codebase/CONCERNS.md`:
 *Stack research for: Go SCIM v2 server code-generation toolkit*
 *Researched: 2026-05-07*
 *Researcher: gsd-project-researcher (Stack dimension)*
+*Updated 2026-05-07 (Phase 0 plan) — Go floor bumped 1.24 → 1.25 per CONTEXT.md decision. CI matrix tests 1.25 + 1.26.*

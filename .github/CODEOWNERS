@@ -1,0 +1,23 @@
+# CODEOWNERS — auto-request reviewers for sensitive paths.
+#
+# GitHub applies the LAST matching pattern with the highest precedence
+# (https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
+# Order is intentional: most-specific paths appear LAST so they win for files
+# matched by multiple patterns. There is deliberately no global `* @owner`
+# fallback — CODEOWNERS exists to surface high-stakes paths, not to gate every
+# PR on owner review.
+
+# Project decisions — single source of truth for Key Decisions.
+/PROJECT.md @imulab
+
+# Generator core — must be reviewed by repo owner.
+/gen/ @imulab
+
+# Runtime support library core — must be reviewed by repo owner.
+/rt/ @imulab
+
+# CI / repo-meta — must be reviewed by repo owner.
+/.github/ @imulab
+
+# Architecture rules — most sensitive; appears LAST so it has highest precedence.
+/CONTRIBUTING.md @imulab
