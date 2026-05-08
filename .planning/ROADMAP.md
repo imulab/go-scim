@@ -12,7 +12,7 @@ go-scim v3 is a build-time code generator that takes a SCIM resource definition 
 - Integer phases (0-7): Planned milestone work for v1
 - Decimal phases (e.g., 2.1): Urgent insertions if they arise (marked INSERTED)
 
-- [ ] **Phase 0: Architecture Spike & Repo Setup** - Encode anti-relapse rules; multi-module workspace; emission-engine decision
+- [x] **Phase 0: Architecture Spike & Repo Setup** - Encode anti-relapse rules; multi-module workspace; emission-engine decision
 - [ ] **Phase 1: Definition + IR + Validator** - Fluent Go builder, typed IR, generator-time invariant checks
 - [ ] **Phase 2: Domain Emitter + Generator Pipeline** - End-to-end emit of typed User struct via the multi-emitter pipeline
 - [ ] **Phase 3: Persistence + DDL + ETag (SQLite concrete-first)** - Per-resource generated repo, deterministic DDL, transactional version counter
@@ -131,7 +131,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Architecture Spike & Repo Setup | 2/4 | In Progress |  |
+| 0. Architecture Spike & Repo Setup | 4/4 | Complete | 2026-05-08 |
 | 1. Definition + IR + Validator | 0/TBD | Not started | - |
 | 2. Domain Emitter + Generator Pipeline | 0/TBD | Not started | - |
 | 3. Persistence + DDL + ETag (SQLite) | 0/TBD | Not started | - |

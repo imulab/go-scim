@@ -135,9 +135,9 @@
 
 ### Repo / Workspace / License
 
-- [ ] **REPO-01**: Multi-module workspace via `go.work` (gitignored); CI runs with `GOWORK=off` to validate each module standalone
+- [x] **REPO-01**: Multi-module workspace via `go.work` (gitignored); CI runs with `GOWORK=off` to validate each module standalone
 - [x] **REPO-02**: Two `go.mod` modules: `gen` (generator at `github.com/imulab/go-scim/gen`) and `rt` (runtime support library at `github.com/imulab/go-scim/rt`)
-- [ ] **REPO-03**: License is MIT (matching legacy `.legacy/LICENSE`)
+- [x] **REPO-03**: License is MIT (matching legacy `.legacy/LICENSE`)
 - [x] **REPO-04**: Contributor architecture rules document encodes anti-relapse rules (no generic tree, no runtime schema interpretation, no IdP accommodation)
 - [x] **REPO-05**: PR template asks reviewers to verify changes do not introduce IdP-specific tolerance
 
@@ -282,9 +282,9 @@ Mapped during roadmap creation (2026-05-07). All v1 REQ-IDs map to exactly one p
 | TEST-04 | Phase 7 | Pending |
 | TEST-05 | Phase 7 | Pending |
 | TEST-06 | Phase 7 | Pending |
-| REPO-01 | Phase 0 | Pending |
+| REPO-01 | Phase 0 | Complete |
 | REPO-02 | Phase 0 | Complete |
-| REPO-03 | Phase 0 | Pending |
+| REPO-03 | Phase 0 | Complete |
 | REPO-04 | Phase 0 | Complete |
 | REPO-05 | Phase 0 | Complete |
 
