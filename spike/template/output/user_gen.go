@@ -9,20 +9,19 @@ import (
 	"time"
 )
 
-var userNameRegex = regexp.MustCompile(`^[A-Za-z0-9._-]{1,64}$`)
+var userNameRegex = regexp.MustCompile("^[A-Za-z0-9._-]{1,64}$")
 
+type UserEmail struct {
+	Value   string `json:"value"`
+	Type    string `json:"type"`
+	Primary bool   `json:"primary"`
+}
 type User struct {
 	ID       string      `json:"id"`
 	UserName string      `json:"userName"`
 	Title    string      `json:"title"`
 	Created  time.Time   `json:"created"`
 	Emails   []UserEmail `json:"emails"`
-}
-
-type UserEmail struct {
-	Value   string `json:"value"`
-	Type    string `json:"type"`
-	Primary bool   `json:"primary"`
 }
 
 func (u *User) Validate() error {
