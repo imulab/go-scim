@@ -91,5 +91,90 @@ A developer can describe their SCIM resource set once and get a spec-compliant S
 | Drop legacy `groupsync` | Not a SCIM spec requirement; was an implementation detail of the old project | — Pending |
 | Config = typed `Config` struct, library-style; CLI-emitted main wires env/flags | Library users get type safety; CLI users get 12-factor ergonomics on top | — Pending |
 
+### Recorded decisions with evidence
+
+The table above tracks high-level decisions whose rationale is captured in
+the linked phase research; the section below holds decisions made on direct
+spike evidence (per phase success criteria that demand a documented choice).
+
+#### Emission engine for Go source
+
+- **Decision:** Use `dave/jennifer` (`github.com/dave/jennifer/jen` v1.7.1) for
+  emitting Go source from the generator. Continue using `text/template` for
+  non-Go artifacts (SQL DDL, Markdown, Makefile fragments) per `STACK.md`.
+- **Date:** 2026-05-08
+- **Driving phase:** Phase 0 (Architecture Spike & Repo Setup) success
+  criterion #5; resolves the disagreement noted in `ROADMAP.md` "Open
+  decisions to resolve in Phase 0" between `STACK.md` and `ARCHITECTURE.md`.
+- **Spike directories (audit trail, retained permanently):**
+  `spike/template/` and `spike/jennifer/`. Run `./spike/run.sh` to reproduce.
+
+**Evidence per scoring criterion** (criteria verbatim from `00-CONTEXT.md`):
+
+1. **Import management.** `spike/template/user.go.tmpl` carries 8 explicit
+   `{{- if .HasX }}…{{- end }}` guards that hand-route conditional imports
+   for `time`, `regexp`, `slices`, and `fmt` (one guard at the import block
+   plus per-feature guards inside the var/struct/Validate body). Every new
+   IR feature with its own import would add another guard. `spike/jennifer/main.go`
+   has 0 such guards: it makes 7 `jen.Qual(path, name)` calls covering the
+   same 4 packages, and Jennifer's file emitter walks them to generate the
+   import block automatically. Adding a new IR feature with a new import in
+   Jennifer is one more `Qual` at the call site, no separate bookkeeping.
+   **Win: Jennifer.**
+
+2. **Source readability.** `spike/template/user.go.tmpl` (67 lines) reads as
+   the Go file we want, with `{{ }}` toggles where the IR varies — a
+   contributor unfamiliar with the codebase can scan it in seconds. The
+   runner (`spike/template/main.go`, 65 lines) is mostly I/O glue.
+   `spike/jennifer/main.go` (117 lines) is method-chain prose
+   (`jen.Id("ID").String().Tag(...)`); reading it requires familiarity with
+   the Jennifer API to translate chain calls back to the Go source they
+   emit. **Win: text/template.**
+
+3. **Diff stability.** Both engines produce gofmt-clean output and both pass
+   `spike/run.sh`'s deterministic-regen gate (each engine run twice
+   consecutively, output byte-identical across runs). REQ-GEN-06 dry run
+   passes for both. **Tie.**
+
+4. **Mixed-output compatibility.** Jennifer is Go-only by design.
+   `text/template` covers all our other emission targets (SQL DDL, README,
+   Makefile, GitHub Actions YAML). Picking Jennifer for Go does not
+   preclude using `text/template` elsewhere — they coexist in the same
+   `gen/internal/emit/` once Phase 2 starts. **Neutral / hybrid.**
+
+**Tradeoffs accepted (chosen engine — Jennifer):**
+
+- Verbosity at the call site: `jen.Id("ID").String().Tag(...)` is wordier
+  than the template equivalent. The emitter module is a maintained piece of
+  the generator (not an ad-hoc script), so the cost is contained but real.
+- One more third-party dependency in `gen/` (`github.com/dave/jennifer
+  v1.7.1`). MIT-licensed, "stability-stable" badge on the upstream repo,
+  3.6k stars, Sept 2024 release; not aggressively updated, which is the
+  relevant data point for a build-tool dependency.
+- Jennifer is Go-specific; we still need a separate engine
+  (`text/template`) for SQL/Markdown/Makefile output. This is acceptable per
+  criterion 4 — picking Jennifer for Go does not preclude that hybrid.
+
+**Why the win on import management trumps the loss on readability:** the
+generator's IR will carry many more conditional imports as the schema
+surface grows in Phase 1+ (datetime, binary, reference, complex
+sub-attributes each with their own validators). Manual import bookkeeping
+in templates compounds linearly with feature count and is a documented
+foot-gun (`00-RESEARCH.md` "Don't Hand-Roll" — "hand-rolled import tracking
+is the second-most-cited cause of 'regen produces noisy diff' in the Go
+codegen ecosystem"). The readability cost is contained to one module in
+`gen/`; the import-management cost in templates would compound across every
+emitter we add. We chose the structural win over the local readability win.
+
+**Fallback option:** if Jennifer's API ergonomics turn out worse than
+expected during Phase 2, the documented compromise is `text/template` +
+`golang.org/x/tools/imports.Process` (the library form of `goimports`,
+which adds and removes imports based on the rendered Go source). Signals
+that would trigger the swap: emitter modules in `gen/internal/emit/`
+exceeding ~400 LOC of method-chain prose for a single artifact; or new
+contributors repeatedly bouncing off "I can't tell what this Jennifer code
+emits without running it." See `00-RESEARCH.md` Open Question 1 for the
+prototype path.
+
 ---
 *Last updated: 2026-05-07 after initialization*
