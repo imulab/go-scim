@@ -131,7 +131,7 @@ Phases execute in numeric order: 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Architecture Spike & Repo Setup | 1/4 | In Progress|  |
+| 0. Architecture Spike & Repo Setup | 2/4 | In Progress |  |
 | 1. Definition + IR + Validator | 0/TBD | Not started | - |
 | 2. Domain Emitter + Generator Pipeline | 0/TBD | Not started | - |
 | 3. Persistence + DDL + ETag (SQLite) | 0/TBD | Not started | - |
