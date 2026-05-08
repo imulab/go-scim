@@ -1,0 +1,44 @@
+# lefthook configuration — local pre-commit + commit-msg hooks.
+# https://lefthook.dev/configuration/
+#
+# These hooks are a developer-experience optimization, not the security
+# boundary. The CI mirror in .github/workflows/ci.yml (Plan 02) re-runs the
+# same regex set on every PR; --no-verify bypasses these hooks but not CI.
+#
+# Forbidden-symbol regex set is verbatim with the CI grep gate for parity.
+# See CONTRIBUTING.md "How this is enforced" for the full rationale.
+
+pre-commit:
+  parallel: true
+  commands:
+    no-go-work:
+      run: |
+        if echo {staged_files} | tr ' ' '\n' | grep -qE '(^|/)go\.work(\.sum)?$'; then
+          echo "Refusing to commit go.work / go.work.sum (per .gitignore convention)."
+          exit 1
+        fi
+
+    forbidden-symbols-source:
+      glob: "{gen,rt}/**/*.go"
+      run: |
+        if echo {staged_files} | xargs -r grep -lEn 'os\.ReadFile.*[Ss]chema|interface\s*\{\s*Path\(|Property\s+interface'; then
+          echo "Forbidden symbol detected. See CONTRIBUTING.md."
+          exit 1
+        fi
+
+    forbidden-vendor-names-source:
+      glob: "{gen,rt}/**/*.go"
+      run: |
+        if echo {staged_files} | xargs -r grep -liE 'Entra|Okta|Azure\s*AD|AzureAD'; then
+          echo "Vendor name in source. See CONTRIBUTING.md Rule 3."
+          exit 1
+        fi
+
+commit-msg:
+  commands:
+    vendor-names:
+      run: |
+        if grep -iE 'Entra|Okta|Azure\s*AD|AzureAD' {1}; then
+          echo "Commit message contains vendor name. See CONTRIBUTING.md Rule 3."
+          exit 1
+        fi
