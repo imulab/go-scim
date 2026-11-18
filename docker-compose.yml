@@ -9,7 +9,7 @@ services:
       - 'mongo_data:/data/db'
 
   db:
-    image: "bitnami/mongodb:latest"
+    image: "soldevelo/mongodb:latest"
     environment:
       - MONGODB_EXTRA_FLAGS=--wiredTigerCacheSizeGB=2 --bind_ip_all
       - MONGODB_USERNAME=user
@@ -23,7 +23,7 @@ services:
       - app-tier
 
   rabbit:
-    image: "bitnami/rabbitmq:latest"
+    image: "soldevelo/rabbitmq:latest"
     environment:
       - RABBITMQ_USERNAME=user
       - RABBITMQ_PASSWORD=password123
